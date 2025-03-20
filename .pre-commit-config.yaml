@@ -1,0 +1,60 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+    - id: check-added-large-files
+    - id: check-merge-conflict
+    - id: trailing-whitespace
+    - id: end-of-file-fixer
+    - id: check-json
+    - id: check-toml
+    - id: check-yaml
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+    - id: python-check-blanket-noqa
+    - id: python-no-eval
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.0
+    hooks:
+      - id: ruff
+        args: [ "--fix", "--unsafe-fixes", "--exit-non-zero-on-fix"]
+      - id: ruff-format
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+    - id: codespell
+      additional_dependencies:
+        - tomli
+      args: [--write-changes]
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+    # Running mypy from the top will result in:
+    # scim-udm-transformer-lib/tests/conftest.py: error: Duplicate module named "tests.conftest" (also at "scim-server/tests/conftest.py")
+    # So, instead we run it separately for each directory.
+    - id: mypy
+      name: "mypy scim-server"
+      files: "^scim-server"
+      additional_dependencies: ["fastapi>=0.115", "httpx>=0.28", "Jinja2>=3", "mypy-extensions>=1.0", "pydantic-settings>=2", "types-requests>=2.32"]
+    - id: mypy
+      name: "mypy scim-udm-transformer-lib"
+      files: "^scim-udm-transformer-lib"
+      additional_dependencies: ["fastapi>=0.115", "httpx>=0.28", "Jinja2>=3", "mypy-extensions>=1.0", "pydantic-settings>=2", "types-requests>=2.32"]
+    - id: mypy
+      name: "mypy udm-to-scim-sync"
+      files: "^udm-to-scim-sync"
+      additional_dependencies: ["fastapi>=0.115", "httpx>=0.28", "Jinja2>=3", "mypy-extensions>=1.0", "pydantic-settings>=2", "types-requests>=2.32"]
+  - repo: https://github.com/jackdewinter/pymarkdown
+    rev: v0.9.29
+    hooks:
+      - id: pymarkdown
+        args:
+          - -d line-length,no-bare-urls,no-duplicate-heading,no-duplicate-header
+          - scan
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.6.6
+    hooks:
+      - id: uv-lock

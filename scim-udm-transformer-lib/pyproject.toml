@@ -1,0 +1,16 @@
+[project]
+name = "scim-udm-transformer-lib"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "Jinja2>=3.1.6",
+]
+[project.urls]
+Homepage = "https://git.knut.univention.de/dtroeder/bugzilla2gitlab/gl-move"
+Documentation = "https://git.knut.univention.de/dtroeder/bugzilla2gitlab/gl-move/README.md"
+Repository = "https://git.knut.univention.de/dtroeder/bugzilla2gitlab.git"
+Issues = "https://git.knut.univention.de/dtroeder/bugzilla2gitlab/-/issues"
+Changelog = "https://git.knut.univention.de/dtroeder/bugzilla2gitlab/gl-move/CHANGELOG.md"
+
+[tool.uv]
+package = true

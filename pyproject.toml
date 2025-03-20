@@ -1,0 +1,47 @@
+[project]
+name = "scim-services"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "lancelog>=0.1.1",
+    "pydantic-settings>=2.8.1",
+]
+
+[tool.uv.sources]
+scim-server = { path = "scim-server" }
+scim-udm-transformer-lib = { path = "scim-udm-transformer-lib" }
+udm-to-scim-sync = { path = "udm-to-scim-sync" }
+
+[tool.uv.workspace]
+members = ["scim-server", "scim-udm-transformer-lib", "udm-to-scim-sync"]
+
+[[tool.uv.index]]
+url = "https://git.knut.univention.de/api/v4/projects/1449/packages/pypi/simple"  # lancelog
+
+### linters ###
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
+pretty = true
+python_version = "3.11"
+strict = true
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle
+    "F",  # Pyflakes
+    "UP",  # pyupgrade
+    "B",  # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "I",  # isort
+]
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+combine-as-imports = true
+lines-after-imports = 2
