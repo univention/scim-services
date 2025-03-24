@@ -283,11 +283,17 @@ Three Python libraries should be evaluated:
   It is born from the wish for a cleaner API.
   It does not yet support the same features, but is expected to do so soon;
   at least those, that are interesting for this project.
-- [Dependency injector](https://python-dependency-injector.ets-labs.org/) is a mature, production-ready, well-tested,
+- [Dependency Injector](https://python-dependency-injector.ets-labs.org/) is a mature, production-ready, well-tested,
   documented, and supported dependency injection framework with lots of contributors and users.
   It supports everything the "port-loader" does and much more.
   It's so powerful, it is a bit overwhelming.
   But the good examples and documentation help to find what you need.
+
+### Example code
+
+An example application implementing Hexagonal architecture,
+and using the _Dependency Injector_ framework can be found at:
+https://git.knut.univention.de/univention/dev/docs/dev-guidelines/-/tree/main/examples/dependency-injector
 
 ## Development milestones
 
