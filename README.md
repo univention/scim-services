@@ -59,6 +59,33 @@ TODO
     as _workspace members_.
 - ...
 
+### Scim server
+
+**Move into server folder:**
+
+```bash
+cd scim-server
+```
+
+**Install dependencies:**
+
+```bash
+uv pip install --requirements pyproject.toml
+```
+
+**Run locally in dev mode:**
+
+```bash
+uv run uvicorn src.univention.scim.server.main:app --reload
+```
+
+**Run tests:**
+
+```bash
+uv pip install pytest
+PYTHONPATH=. uv run pytest
+```
+
 ### Tests
 
 - To start unit tests:  TODO
