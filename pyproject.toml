@@ -45,3 +45,8 @@ select = [
 case-sensitive = true
 combine-as-imports = true
 lines-after-imports = 2
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+]
