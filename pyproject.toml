@@ -3,8 +3,10 @@ name = "scim-services"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
-    "lancelog>=0.1.1",
+    "fastapi>=0.115.12",
+    "lancelog>=0.1.0",
     "pydantic-settings>=2.8.1",
+    "uvicorn>=0.34.0",
 ]
 
 [tool.uv.sources]
