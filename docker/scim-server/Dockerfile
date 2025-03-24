@@ -81,4 +81,3 @@ RUN \
   .venv/bin/python3.11 -V && \
   .venv/bin/python3.11 -m site && \
   .venv/bin/python3.11 -c 'import univention.scim.server'
-
