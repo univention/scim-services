@@ -1,0 +1,14 @@
+sequenceDiagram
+  actor UDM Client
+  participant UDM REST as «REST»<br/>UDM
+  participant OpenLDAP
+  participant Provisioning
+  participant UDM 2 SCIM Consumer as «Consumer»<br/>UDM 2 SCIM
+
+  UDM Client ->>+ UDM REST: DELETE/PATCH/POST/PUT (UDM)
+  UDM REST ->>+ OpenLDAP: LDAP
+  OpenLDAP ->> Provisioning: Event (UDM)
+  OpenLDAP -->>- UDM REST: LDAP
+  UDM REST ->>- UDM Client: HTTP 20x, no object
+  Provisioning ->> UDM 2 SCIM Consumer: Event (UDM)
+  Note over UDM 2 SCIM Consumer:Continues asynchronously<br/>in "UDM 2 SCIM Consumer".

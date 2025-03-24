@@ -1,0 +1,302 @@
+# Nubus SCIM service architecture
+
+[[_TOC_]]
+
+## Introduction / Business Case
+
+The System for Cross-domain Identity Management (SCIM) is a standard for exchanging user identity information.
+The specification is split up into multiple RFCs.
+Links can be found in the [README](../README.md).
+
+Nubus already has an API for that purpose: The Univention Directory Manager (UDM).
+UDM is not a standard.
+Thus, Univention and customers are forced to create and maintain dedicated integrations.
+
+Nubus' SCIM service offers access to the data in Nubus' UDM database.
+That allows Univention and customers to reduce development and maintenance effort,
+when they use the same standardized interface that other IAM providers like Okta, Entra ID, etc. offer.
+
+TODO: Input from PM here please.
+
+## Use cases
+
+TODO: Input from PM here please.
+
+## Requirements
+
+A [Scenario description](https://git.knut.univention.de/univention/requirements-management/-/issues/297) exists in the
+Requirements Management Board.
+Use cases and requirements are missing.
+
+The following requirements were extracted from an email (2025-02-19).
+The following list is my understanding of the email.
+It has not been vetted by PM yet (2025-02-21):
+
+- The SCIM service MUST function in environments with over 100,000 users.
+  - Clarification needed: What does "function" mean?
+- The SCIM service MUST handle parallel requests to the same object.
+  - Clarification needed: Handle how?
+- The SCIM service MUST safely handle asynchronous changes to data in the UDM backend.
+  E.g., when the AD connector changes data.
+- Asynchronous processes like connectors and consumers MUST handle situations where the objects referenced by an event
+  changed or were deleted in the database.
+- Under load, the SCIM service MUST behave consistently towards other services.
+  - Clarification needed: What does "behave consistently towards other services" mean?
+- The UDM <-> SCIM attribute mapping does not need to be configurable.
+- Performance: see section [Performance](#Performance)
+- Observability: see section [Observability](#Observability)
+- Authentication: see section [Authentication](#Authentication)
+- Authorization: see section [Authorization](#Authorization)
+- Brute-force prevention and rate limiting SHOULD be implemented in a later development iteration.
+- The SCIM service initially only needs to support the management of user and group objects.
+- The SCIM schema and the SCIM<->UDM mapping are configurable.
+  - SCIM schema extensions are supported.
+  - UDM extended attributes are supported.
+  - A mapping will not be generated automatically, but can be configured.
+
+### Authentication
+
+The SCIM RFCs purposefully do not specify authentication or authorization.
+It is left up to the SCIM service provider to implement those according to their needs,
+e.g. ensuring that only authorized SCIM clients have access.
+The specification recommends using industry-standard authentication protocols like OAuth 2.0.
+
+From the PM email (2025-02-19):
+
+- The SCIM service MUST NOT be used unauthenticated.
+- The SCIM service MUST support OAuth authentication.
+  - MS1: Successful validation of the tokens signature is sufficient to gain access.
+    The content of the token does not matter.
+  - MS2: The user in the token must exist in the SCIM database and must be member of a certain group in the SCIM DB.
+  - Other SCIM providers:
+    - Entra ID requires an OAuth token
+      (see [Microsoft SCIM docs](https://learn.microsoft.com/de-de/entra/identity/app-provisioning/use-scim-to-provision-users-and-groups)).
+    - Okta recommends using the OAuth 2.0 authorization, but also supports basic auth and header token auth options
+      (see [SCIM technical questions](https://developer.okta.com/docs/concepts/scim/faqs/)).
+    - Slack requires an OAuth token (see [Slack - Accessing the SCIM API](https://api.slack.com/admins/scim#access)).
+
+### Authorization
+
+Like with authentication, SCIM does not define any authorization mechanism.
+
+From the PM email (2025-02-19):
+
+- No use cases are known atm.
+  In later development iterations fine-granular authorizations, using the Guardian, SHOULD be possible.
+  - Clients SHOULD be able to enquire what attributes they are allowed to change.
+    - @dtroeder: Please note that [RFC 7644, section 4, "Service Provider Configuration Endpoints"](https://datatracker.ietf.org/doc/html/rfc7644#section-4)
+      "defines three endpoints to facilitate discovery of SCIM service provider features and schema."
+      When the visibility or writability of an attribute is limited for a connecting user,
+      those endpoints can be used to communicate that.
+  - A Nubus operator SHOULD be able to configure which UDM attributes a SCIM service account can read and write.
+    - Clarification needed: Shouldn't SCIM and UDM adhere to the same RAM rules?
+
+### Performance
+
+From the PM email (2025-02-19):
+
+- The SCIM service MUST have "acceptable response times".
+  - Clarification needed: Need numbers / KPIs. "Acceptable" is not verifiable.
+  - TODO: Investigate what other offerings (Entra ID, Okta, …) declare.
+- The SCIM service SHOULD be able to "initialize" the user database with 100,000 users in less than a week.
+  Better would be in one day.
+  Parallelization of client requests can be expected.
+- The SCIM service SHOULD achieve five or more updates of an existing user object per second.
+  Parallelization of client requests can be expected.
+
+### Observability
+
+#### Logging
+
+From the PM email (2025-02-19):
+
+- The SCIM service, the UDM REST API and the Provisioning services SHOULD log the same unique object and request IDs.
+- The SCIM service error messages SHOULD contain information and hints that help operators to handle the problems.
+- The SCIM service SHOULD log in a format that can be processed by 3rd party software like log collectors.
+  - Univention has released multiple ADRs regarding logging. They must be followed:
+    - [ADR dev/0005 Log Levels](https://git.knut.univention.de/univention/decision-records/-/blob/main/dev/0005-log-levels.md) defines what log levels exist and how to use them.
+    - [ADR dev/0006 Log Format](https://git.knut.univention.de/univention/decision-records/-/blob/main/dev/0006-log-format.md) defines the content and format of log messages.
+    - [ADR dev/0007 Log Messages](https://git.knut.univention.de/univention/decision-records/-/blob/main/dev/0007-log-messages.md) defines the content and metadata of log messages.
+    - [ADR dev/0008 Structured Logging](https://git.knut.univention.de/univention/decision-records/-/blob/main/dev/0008-structured-logging.md) defines the use of structured logging.
+  - The [liblancelog](https://git.knut.univention.de/univention/dev/libraries/lancelog) library MUST be used to
+    configure logging.
+
+#### Metrics
+
+- The SCIM server collects metrics and makes them available to operators.
+  - Non-exhaustive list of metrics:
+    - Number of requests, separate _counter_ (label) for each HTTP method (`GET`, `POST`, `PATCH`, `PUT`, `DELETE`) and resource (`User`, `Group`).
+    - Duration of requests, separate _histogram_ (label) for each HTTP method and resource.
+    - Number of errors on the SCIM REST interface, separate _counter_ (label) for each HTTP method and resource.
+    - Number of requests to the UDM REST API, separate _counter_ (label) for each HTTP method and resource.
+    - Number of errors talking to the UDM REST API, separate _counter_ (label) for each HTTP method and resource.
+    - Duration of requests to the UDM REST API, separate _histogram_ (label) for each HTTP method and resource.
+    - Number of synchronization requests by the UDM2SCIM consumer to the SCIM REST API, separate _counter_ (label) for each HTTP method and resource.
+    - Number of synchronization errors by the UDM2SCIM consumer.
+    - Duration of synchronization requests by the UDM2SCIM consumer to the SCIM REST API, separate _histogram_ (label) for each HTTP method and resource.
+    - Number of errors by the Model->Mapping component, separate _counters_ (labels) for mapping from SCIM to UDM and UDM to SCIM, and for each resource.
+  - The metrics are exposed as a Prometheus endpoint.
+  - _TODO:_ Clarify if authentication is required for scraping.
+- The SCIM server provides a healthcheck endpoint for the Kubernetes API.
+
+#### Tracing
+
+From the PM email (2025-02-19):
+
+- No requirements from PM.
+  @dtroeder: But we should evaluate instrumentation using OpenTelemetry.
+  That would support implementing the goal the unique object and request IDs in logs have: Traceability.
+- @dtroeder: Having traces massively reduces debug time.
+  Finding out where a request fails in a call chain, or which component is slowing the system down, becomes very easy.
+  This leads to reduced development and support efforts.
+
+## Relation with UDM
+
+The SCIM service for Nubus is designed to work independently of UDM, and UDM to work independently of SCIM.
+The availability and performance of one service does not affect the availability or performance of the other service.
+
+The system is deliberately designed not to have (or require) a single source of truth.
+This setup allows us to incrementally replace UDM clients with SCIM clients and eventually completely deprecate UDM.
+
+The above is not a requirement of the current customer project or by product management.
+It is part of the software architect's long-term development strategy to modernize Nubus.
+
+A [bijective](https://en.wikipedia.org/wiki/Bijection) mapping is imperative to achieve data consistency between the two data models.
+It ensures that each UDM property is synchronized with exactly one SCIM attribute and vice versa.
+The bidirectional synchronization depends on the bijective mapping to prevent an infinite loop.
+The mapping can be found in the [Mapping UDM <-> SCIM v2](../udm-scim-mapping.md) document.
+
+The bijective function does not need to be complete.
+It is allowed for attributes not to be synchronized.
+But if they are synchronized, a one-to-one correspondence is mandatory.
+
+## Database choice
+
+The SCIM specification is database agnostic, as an API should be.
+We must strive to not leak implementation details, like database-specific references, to API clients.
+The mistakes that were made in the design of the UDM API,
+tying all applications strongly to a specific implementation,
+must not be repeated.
+
+In SCIM, references (e.g., group membership) contain relational data.
+From UCS@school and the Guardian we know the performance problems relational data causes with an LDAP database.
+
+The namespacing in SCIM schemas allows the database schema to be normalized.
+Relational databases allow applications to move the effort of joining the normalized data to the database server.
+
+Thus, the SCIM service should be implemented using a relational database.
+The integration of a different data model with the existing one (UDM) is part of the modernization of Nubus.
+See [New architecture for UCS@school](https://dtroeder.gitpages.knut.univention.de/future-of-nubus/ucsschool-software-architecture.html#new-architecture-for-ucs-school).
+
+The Command and Query Responsibility Segregation (CQRS) pattern allows us to optimize for different use cases and performance requirements
+(see the respective section in the [Milestone 2](milestone2.md) page).
+
+Relational Database Management System (RDBMS) are commodity software.
+A few Nubus components already require an SQL database.
+In UCS, Debian's Univention-supported PostgreSQL is used.
+In Nubus for Kubernetes customers are expected to provide their own database (cluster).
+
+## Configuration
+
+- All configuration including secrets must be loaded and validated at startup.
+- Default values are _not_ specified in the source code, but instead are the responsibility of the deployment code
+  (Helm / Docker Compose).
+- At startup, the service should validate as much settings as possible, so it can fail early.
+- Configuration is not reloaded at runtime.
+  Instead, the process must be restarted for any environment variable or secret file changes to take effect.
+- In Python, all configuration is loaded by [Pydantic Settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/)
+  objects.
+- The configuration is logged at service start.
+  Secrets are masked in the output.
+
+## Secrets handling
+
+The SCIM service's components read all sensitive data they need for operations,
+so-called "secrets" (passwords, certificates etc.),
+from files whose paths are in environment variables.
+
+If for example the SCIM 2 UDM Consumer wants to access the UDM REST API,
+then it can find its hostname (FQDN) and the account (an LDAP DN) in the environment,
+e.g. in `UDM_HOST` or `UDM_URI` and `UDM_USER_DN`.
+
+The password however is stored in a file (e.g., `/run/secrets/udm_password`) inside the container,
+and an environment variable contains that files path, e.g. `UDM_PASSWORD_FILE=/run/secrets/udm_password`.
+The path must not be hard coded in Python.
+
+There might be data, like for example an SSL certificate, that is better stored in a file than an environment variable.
+Their paths must also be read from the environment, and not be hard coded in Python.
+
+The names of environment variables for file paths should end in `_FILE`.
+That is a convention used by popular container images.
+
+- Official documentation about secrets handling for [Docker Compose](https://docs.docker.com/compose/how-tos/use-secrets/).
+- Official documentation about secrets handling for [Kubernetes](https://kubernetes.io/docs/concepts/configuration/secret/).
+
+## Deliverables
+
+The SCIM service will be provided to Nubus for Kubernetes and UCS customers.
+Thus, it must be packaged for use by the Helm package manager and the Univention App Center.
+
+Details change from milestone to milestone.
+
+## Hexagonal architecture
+
+Components of the service are structured using ["Hexagonal architecture"](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software))
+(also known as "Ports and Adapters architecture"),
+which is a subset of the "clean architecture" proposed by Robert C. Martin.
+
+This architecture promotes loose coupling of components,
+a strict separation of application and environment,
+and makes components easily exchangeable.
+
+The latter comes in handy during development, e.g., when the data backends change from milestone to milestone,
+or when we decide to change the method how UDM<->SCIM mappings are implemented.
+
+But it can also provide fall-backs at operation or delivery time for problematic situations like, e.g.,
+when there is not enough time to fix a case of inconsistency in an asynchronous call chain,
+we can swap the asynchronous implementation with a synchronous one that may be slower but safer.
+
+Requisites for Hexagonal architecture are [dependency inversion](https://en.wikipedia.org/wiki/Dependency_inversion_principle)
+and [inversion of control](https://en.wikipedia.org/wiki/Inversion_of_control).
+Using dependency injection helps implement it.
+
+### Dependency injection
+
+To further promote the loose coupling of components, [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection)
+is used to separate the construction and the use of objects.
+
+It is also helpful when running code in different configurations or environments,  e.g. on different platforms.
+
+Additionally, this helps when writing tests, because mocking and patching are not needed.
+No patching reduces the effort for the long term maintenance of tests.
+
+Three Python libraries should be evaluated:
+
+- [port-loader](https://git.knut.univention.de/univention/components/port-loader) was developed for and is used by the
+  [Guardian](https://git.knut.univention.de/univention/components/authorization-engine/guardian) to help implement its
+  hexagonal architecture.
+  It supports loading dependencies from [Python Entry Points](https://setuptools.pypa.io/en/latest/userguide/entry_point.html)
+  and offers per-port configuration classes.
+  The Guardian is in production and the "port-loader" has proven useful during production and maintenance.
+  Its API is a bit clunky, but not that bad.
+- [pytheca](https://github.com/SamuelYaron/pytheca) is a new project by the main developer of the "port-loader".
+  It is born from the wish for a cleaner API.
+  It does not yet support the same features, but is expected to do so soon;
+  at least those, that are interesting for this project.
+- [Dependency injector](https://python-dependency-injector.ets-labs.org/) is a mature, production-ready, well-tested,
+  documented, and supported dependency injection framework with lots of contributors and users.
+  It supports everything the "port-loader" does and much more.
+  It's so powerful, it is a bit overwhelming.
+  But the good examples and documentation help to find what you need.
+
+## Development milestones
+
+The development of the SCIM service is done in three milestones.
+In each MS the way data is read and written changes.
+Please continue with Milestone 1.
+
+- [Milestone 1: Minimal viable product | Synchronous adapter in front of UDM](milestone1.md)
+- ([Milestone 1 OLD: Standalone SCIM server](milestone1-old.md))
+- [Milestone 2: Synchronous writes to UDM, reads from SQL](milestone2.md)
+- [Milestone 2.1: Metrics, Provisioning, ...](milestone2.1.md)
+- [Milestone 3: Asynchronous writes to UDM](milestone3.md)

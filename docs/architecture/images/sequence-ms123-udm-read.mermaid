@@ -1,0 +1,9 @@
+sequenceDiagram
+  actor UDM Client
+  participant UDM REST as «REST»<br/>UDM
+  participant OpenLDAP
+
+  UDM Client ->>+ UDM REST: GET (UDM)
+  UDM REST ->>+ OpenLDAP: LDAP
+  OpenLDAP -->>- UDM REST: LDAP
+  UDM REST -->>- UDM Client: UDM object

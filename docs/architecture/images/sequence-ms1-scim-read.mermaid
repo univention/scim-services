@@ -1,0 +1,12 @@
+sequenceDiagram
+  actor SCIM Client
+  participant SCIM REST as «REST»<br/>SCIM
+  participant UDM REST as «REST»<br/>UDM
+  participant OpenLDAP
+
+  SCIM Client ->>+ SCIM REST: GET (SCIM)
+  SCIM REST ->>+ UDM REST: GET (UDM)
+  UDM REST ->>+ OpenLDAP: LDAP
+  OpenLDAP -->>- UDM REST: LDAP
+  UDM REST -->>- SCIM REST: UDM object
+  SCIM REST -->>- SCIM Client: SCIM object

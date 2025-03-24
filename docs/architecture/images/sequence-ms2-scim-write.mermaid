@@ -1,0 +1,19 @@
+sequenceDiagram
+  actor SCIM Client
+  participant SCIM REST as «REST»<br/>SCIM
+  participant UDM REST as «REST»<br/>UDM
+  participant OpenLDAP
+  participant PostgreSQL
+  participant Provisioning
+
+  SCIM Client ->>+ SCIM REST: DELETE/PATCH/POST/PUT (SCIM)
+  SCIM REST ->>+ UDM REST: UDM
+  UDM REST ->>+ OpenLDAP: LDAP
+  OpenLDAP ->> Provisioning: Event (UDM)
+  Note over Provisioning:Continues asynchronously<br/>in "UDM 2 SCIM Consumer".
+  OpenLDAP -->>- UDM REST: LDAP
+  UDM REST -->>- SCIM REST: HTTP 20x, no object
+  SCIM REST ->>+ PostgreSQL: SQL
+  PostgreSQL -->>- SCIM REST: SQL
+  SCIM REST ->> Provisioning: Event (SCIM)
+  SCIM REST -->>- SCIM Client: SCIM object

@@ -1,0 +1,14 @@
+sequenceDiagram
+  actor SCIM Client
+  participant SCIM REST as «REST»<br/>SCIM
+  participant PostgreSQL
+  participant Provisioning
+  participant SCIM 2 UDM Consumer as «Consumer»<br/>SCIM 2 UDM
+
+  SCIM Client ->>+ SCIM REST: DELETE/PATCH/POST/PUT (SCIM)
+  SCIM REST ->>+ PostgreSQL: SQL
+  PostgreSQL -->>- SCIM REST: SQL
+  SCIM REST ->> Provisioning: Event (SCIM)
+  Provisioning ->> SCIM 2 UDM Consumer: Event (SCIM)
+  Note over SCIM 2 UDM Consumer:Continues asynchronously<br/>in "SCIM 2 UDM Consumer".
+  SCIM REST -->>- SCIM Client: SCIM object

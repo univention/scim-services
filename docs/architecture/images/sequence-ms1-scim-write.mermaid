@@ -1,0 +1,50 @@
+sequenceDiagram
+  actor SCIM Client
+  participant SCIM REST as «REST»<br/>SCIM
+  participant UDM REST as «REST»<br/>UDM
+  participant OpenLDAP
+
+  SCIM Client ->>+ SCIM REST: DELETE/PATCH/POST/PUT (SCIM)
+  SCIM REST ->>+ UDM REST: GET (UDM)
+  UDM REST ->>+ OpenLDAP: LDAP
+  OpenLDAP -->>- UDM REST: LDAP
+  UDM REST -->>- SCIM REST: UDM object
+  alt UDM object exist.
+    alt Create (POST) or update (PATCH/PUT) operation.
+      SCIM REST ->>+ UDM REST: PATCH (UDM)
+      UDM REST ->>+ OpenLDAP: LDAP
+      OpenLDAP ->> Provisioning: Event (UDM)
+      OpenLDAP -->>- UDM REST: LDAP
+      UDM REST -->>- SCIM REST: HTTP 204, no object
+      SCIM REST ->>+ UDM REST: GET (UDM)
+      UDM REST ->>+ OpenLDAP: LDAP
+      OpenLDAP -->>- UDM REST: LDAP
+      UDM REST -->>- SCIM REST: UDM object
+      SCIM REST -->> SCIM Client: HTTP 200|201, SCIM object
+    else Delete (DELETE) operation.
+      SCIM REST ->>+ UDM REST: DELETE (UDM)
+      UDM REST ->>+ OpenLDAP: LDAP
+      OpenLDAP ->> Provisioning: Event (UDM)
+      OpenLDAP -->>- UDM REST: LDAP
+      UDM REST -->>- SCIM REST: HTTP 204, no object
+      SCIM REST -->> SCIM Client: HTTP 204, no object
+    end
+  else UDM object doesn't exist.
+    alt Create (POST) operation.
+        SCIM REST ->>+ UDM REST: POST (UDM)
+        UDM REST ->>+ OpenLDAP: LDAP
+        OpenLDAP ->> Provisioning: Event (UDM)
+        OpenLDAP -->>- UDM REST: LDAP
+        UDM REST -->>- SCIM REST: HTTP 201, no object
+        SCIM REST ->>+ UDM REST: GET (UDM)
+        UDM REST ->>+ OpenLDAP: LDAP
+        OpenLDAP -->>- UDM REST: LDAP
+        UDM REST -->>- SCIM REST: UDM object
+        SCIM REST -->> SCIM Client: HTTP 201, SCIM object
+    else Update (PATCH/PUT) operation.
+      SCIM REST -->> SCIM Client: HTTP 404
+    else Delete (DELETE) operation.
+      Note over SCIM REST: Log warning
+      SCIM REST -->> SCIM Client: HTTP 204, no object
+    end
+  end

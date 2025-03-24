@@ -1,0 +1,50 @@
+sequenceDiagram
+  participant UDM 2 SCIM Consumer as «Consumer»<br/>UDM 2 SCIM
+  participant SCIM REST as «REST»<br/>SCIM
+  participant PostgreSQL
+  participant Provisioning
+
+  Provisioning ->> UDM 2 SCIM Consumer: Event (UDM)
+  UDM 2 SCIM Consumer ->>+ SCIM REST: GET (SCIM)
+  SCIM REST ->>+ PostgreSQL: SQL
+  PostgreSQL -->>- SCIM REST: SQL
+  SCIM REST -->>- UDM 2 SCIM Consumer: SCIM object
+  alt SCIM object exists.
+    alt Same sequence numbers in UDM and SCIM objects.
+      alt Same data in UDM and SCIM objects.
+        Note over UDM 2 SCIM Consumer: Sync success.
+      else Different data.
+        Note over UDM 2 SCIM Consumer: Sync error<br/>(Mapping not bijective).
+      end
+    else Sequence numbers differ.
+      alt Create (POST) or update (PATCH/PUT) operation.
+        Note over UDM 2 SCIM Consumer: If create: Log warning.
+        UDM 2 SCIM Consumer ->>+ SCIM REST: PATCH (SCIM)
+        SCIM REST ->>+ PostgreSQL: SQL
+        PostgreSQL -->>- SCIM REST: SQL
+        SCIM REST ->> Provisioning: Event (SCIM)
+        Note over Provisioning: Continues asynchronously<br/>in "SCIM 2 UDM Consumer".
+        SCIM REST -->>- UDM 2 SCIM Consumer: SCIM object
+      else Delete (DELETE) operation.
+        UDM 2 SCIM Consumer ->>+ SCIM REST: DELETE (SCIM)
+        SCIM REST ->>+ PostgreSQL: SQL
+        PostgreSQL -->>- SCIM REST: SQL
+        SCIM REST ->> Provisioning: Event (SCIM)
+        Note over Provisioning: Continues asynchronously<br/>in "SCIM 2 UDM Consumer".
+        SCIM REST -->>- UDM 2 SCIM Consumer: HTTP 204, no object
+      end
+    end
+  else SCIM object doesn't exist.
+    alt Create (POST) operation.
+      UDM 2 SCIM Consumer ->>+ SCIM REST: POST (SCIM)
+      SCIM REST ->>+ PostgreSQL: SQL
+      PostgreSQL -->>- SCIM REST: SQL
+      SCIM REST ->> Provisioning: Event (SCIM)
+      Note over Provisioning: Continues asynchronously<br/>in "SCIM 2 UDM Consumer".
+      SCIM REST -->>- UDM 2 SCIM Consumer: SCIM object
+    else Update (PATCH/PUT) operation.
+      Note over UDM 2 SCIM Consumer: Skip: No sync to SCIM needed.<br/>(Delete of UDM object<br/>should already be queued.)
+    else Delete (DELETE) operation.
+      Note over UDM 2 SCIM Consumer: Log warning, end.
+    end
+  end

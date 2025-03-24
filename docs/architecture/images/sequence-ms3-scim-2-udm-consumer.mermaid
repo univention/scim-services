@@ -1,0 +1,49 @@
+sequenceDiagram
+  participant SCIM 2 UDM Consumer as «Consumer»<br/>SCIM 2 UDM
+  participant UDM REST as «REST»<br/>UDM
+  participant OpenLDAP
+  participant Provisioning
+
+  Provisioning ->> SCIM 2 UDM Consumer: Event (SCIM)
+  SCIM 2 UDM Consumer ->>+ UDM REST: GET (UDM)
+  UDM REST ->>+ OpenLDAP: LDAP
+  OpenLDAP -->>- UDM REST: LDAP
+  UDM REST -->>- SCIM 2 UDM Consumer: UDM object
+  alt SCIM object exists.
+    alt Same sequence numbers in UDM and SCIM objects.
+      alt Same data in UDM and SCIM objects.
+        Note over SCIM 2 UDM Consumer: Sync success.
+      else Different data.
+        Note over SCIM 2 UDM Consumer: Sync error<br/>(Mapping not bijective).
+      end
+    else Sequence numbers differ
+      alt Create (POST) or update (PATCH/PUT) operation.
+        SCIM 2 UDM Consumer ->>+ UDM REST: PATCH (UDM)
+        UDM REST ->>+ OpenLDAP: LDAP
+        OpenLDAP ->> Provisioning: Event (UDM)
+        Note over Provisioning:Continues asynchronously<br/>in "UDM 2 SCIM Consumer".
+        OpenLDAP -->>- UDM REST: LDAP
+        UDM REST -->>- SCIM 2 UDM Consumer: HTTP 204, no object
+      else Delete (DELETE) operation.
+        SCIM 2 UDM Consumer ->>+ UDM REST: DELETE (UDM)
+        UDM REST ->>+ OpenLDAP: LDAP
+        OpenLDAP ->> Provisioning: Event (UDM)
+        Note over Provisioning:Continues asynchronously<br/>in "UDM 2 SCIM Consumer".
+        OpenLDAP -->>- UDM REST: LDAP
+        UDM REST -->>- SCIM 2 UDM Consumer: HTTP 204, no object
+      end
+    end
+  else SCIM object doesn't exist.
+    alt Create (POST) operation.
+        SCIM 2 UDM Consumer ->>+ UDM REST: POST (UDM)
+        UDM REST ->>+ OpenLDAP: LDAP
+        OpenLDAP ->> Provisioning: Event (UDM)
+        Note over Provisioning:Continues asynchronously<br/>in "UDM 2 SCIM Consumer".
+        OpenLDAP -->>- UDM REST: LDAP
+        UDM REST -->>- SCIM 2 UDM Consumer: HTTP 201, no object
+    else Update (PATCH/PUT) operation.
+      Note over SCIM 2 UDM Consumer: Skip: No sync to UDM needed.<br/>(Delete of SCIM object<br/>should already be queued.)
+    else Delete (DELETE) operation.
+      Note over SCIM 2 UDM Consumer: Log warning, end.
+    end
+  end
