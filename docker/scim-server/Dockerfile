@@ -4,42 +4,36 @@
 
 # Inspired by: https://hynek.me/articles/docker-uv/
 
-ARG UCS_BASE_IMAGE_TAG=0.16.1-build-2025-02-20
-ARG UCS_BASE_IMAGE=gitregistry.knut.univention.de/univention/components/ucs-base-image/ucs-base-520
+ARG UCS_BASE_IMAGE_TAG=0.16.1-2025-02-14@sha256:8c25ce5b41977cb59b1e5da1363a4320d985a77d6903d2d9b0dfee1afc1fd22c
+ARG UCS_BASE_IMAGE=gitregistry.knut.univention.de/univention/components/ucs-base-image/ucs-base-python-520
 
+###############################################
 FROM ${UCS_BASE_IMAGE}:${UCS_BASE_IMAGE_TAG} AS build
 SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
 
 COPY --from=ghcr.io/astral-sh/uv:0.5.8@sha256:0bc959d4cc56e42cbd9aa9b63374d84481ee96c32803eea30bd7f16fd99d8d56 /uv /usr/local/bin/uv
 
-RUN apt-get --assume-yes --verbose-versions --no-install-recommends install \
-      build-essential \
-      python3-dev \
-      python3 \
-      libldap2-dev \
-      libsasl2-dev \
-      libssl-dev \
-      ldap-utils\
-      slapd \
-    && rm -fr /var/lib/apt/lists/* /var/cache/apt/archives/*
-
 ENV UV_LINK_MODE=copy \
   UV_COMPILE_BYTECODE=1 \
   UV_PYTHON_DOWNLOADS=never \
   UV_PYTHON=python3.11
-  # UV_PROJECT_ENVIRONMENT=/app
+
+COPY scim-udm-transformer-lib /app/scim-udm-transformer-lib
+COPY pyproject.toml README.md /app/
+COPY scim-server/pyproject.toml scim-server/uv.lock /app/scim-server/
 
 WORKDIR /app
-COPY scim-server/pyproject.toml uv.lock README.md ./
 RUN --mount=type=cache,target=/root/.cache \
   uv sync \
-    --frozen \
+    --project scim-server/ \
+    --locked \
     --no-dev \
-    --no-install-project
+    --no-install-project && \
+  uv export -o ./scim-server/requirements.txt
 
-COPY scim-server/src/ ./
+COPY scim-server/src /app/scim-server/src
 RUN --mount=type=cache,target=/root/.cache \
-  uv sync --frozen --no-dev --no-editable
+  uv sync --locked --no-dev --no-editable --project scim-server/
 
 
 ##########################################################################
@@ -48,34 +42,29 @@ SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
 WORKDIR /app
 
 RUN --mount=type=cache,target=/root/.cache \
-  uv sync
+  uv sync --project scim-server/ --dev
 
-COPY --from=alpine/helm:3.17.1@sha256:e8d29e13b8218a8cb7b117a10a5210922474a74467bf70b6f3f1f7d9c1818ab0 /usr/bin/helm /usr/local/bin/helm
-
-COPY docker/scim-server/activate_venv.envsh /entrypoint.d/
+# Only necessary once we add helm unittests
+# COPY --from=alpine/helm:3.17.1@sha256:e8d29e13b8218a8cb7b117a10a5210922474a74467bf70b6f3f1f7d9c1818ab0 /usr/bin/helm /usr/local/bin/helm
 
 ##########################################################################
 FROM ${UCS_BASE_IMAGE}:${UCS_BASE_IMAGE_TAG} AS final
 SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
 
+ENV PYTHONUNBUFFERED=1 \
+    PATH=/app/scim-server/.venv/bin:$PATH
+
 RUN \
-    groupadd -r app -g 1000 && \
-    useradd -r -d /app -g app -N app -u 1000
+    groupadd -r scim-server -g 1000 && \
+    useradd -r -d /app -g scim-server -N scim-server -u 1000
 
-RUN apt-get --assume-yes --verbose-versions --no-install-recommends install \
-      python3 \
-      libldap-2.5-0 \
-    && rm -fr /var/lib/apt/lists/* /var/cache/apt/archives/*
+COPY --from=build --chown=app:app /app/scim-server/.venv /app/scim-server/.venv
+COPY --from=build --chown=app:app /app/scim-server/requirements.txt /app/scim-server/
 
-COPY --from=ghcr.io/astral-sh/uv:0.5.8@sha256:0bc959d4cc56e42cbd9aa9b63374d84481ee96c32803eea30bd7f16fd99d8d56 /uv /usr/local/bin/uv
+USER scim-server
+WORKDIR /app/scim-server
 
-COPY --from=build --chown=app:app /app /app
-COPY docker/scim-server/activate_venv.envsh /entrypoint.d/
-
-USER app
-WORKDIR /app
-
-CMD ["uv", "run", "uvicorn", "univention.scim.server.main:app", "--host", "0.0.0.0"]
+CMD ["scim-server"]
 
 RUN \
   .venv/bin/python3.11 -V && \

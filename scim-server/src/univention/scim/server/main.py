@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+import uvicorn
 from fastapi import FastAPI
 
 
@@ -15,3 +16,20 @@ async def root() -> dict[str, str]:
 @app.get("/healthcheck", response_model=dict)
 def healthcheck() -> dict[str, str]:
     return {"status": "ok", "message": "SCIM API is running"}
+
+
+def run():
+    # settings = app_settings()
+    # assert settings
+    # setup_logging(settings.log_level)
+    print("Ready to recieve requests")
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=7777,
+        log_config=None,
+    )
+
+
+if __name__ == "__main__":
+    run()
