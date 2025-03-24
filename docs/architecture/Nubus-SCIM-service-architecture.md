@@ -135,6 +135,7 @@ From the PM email (2025-02-19):
     - Number of synchronization errors by the UDM2SCIM consumer.
     - Duration of synchronization requests by the UDM2SCIM consumer to the SCIM REST API, separate _histogram_ (label) for each HTTP method and resource.
     - Number of errors by the Model->Mapping component, separate _counters_ (labels) for mapping from SCIM to UDM and UDM to SCIM, and for each resource.
+    - Number of objects in the SCIM database, separate _counters_ (labels) for each resource (`User`, `Group`).
   - The metrics are exposed as a Prometheus endpoint.
   - _TODO:_ Clarify if authentication is required for scraping.
 - The SCIM server provides a healthcheck endpoint for the Kubernetes API.
