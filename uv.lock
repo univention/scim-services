@@ -343,12 +343,14 @@ version = "0.1.0"
 source = { virtual = "scim-server" }
 dependencies = [
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "pytest" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115.11" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "pytest", specifier = ">=8.3.5" },
 ]
 
