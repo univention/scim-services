@@ -18,11 +18,11 @@ def healthcheck() -> dict[str, str]:
     return {"status": "ok", "message": "SCIM API is running"}
 
 
-def run():
+def run() -> None:
     # settings = app_settings()
     # assert settings
     # setup_logging(settings.log_level)
-    print("Ready to recieve requests")
+    print("Ready to receive requests")
     uvicorn.run(
         app,
         host="0.0.0.0",
