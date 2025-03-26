@@ -5,10 +5,8 @@ include:
       - "defaults/stages.yaml"
       - "defaults/nubus-workflow.yaml"
       - "jobs/lint-pre-commit.yaml"
-      - "jobs/lint-commit-messages.yaml"
       - "jobs/semantic-release-env.yaml"
       - "jobs/container-build-external.yaml"
-      # - "jobs/package-and-publish-helm-charts-external.yaml"
       - "jobs/check-debian-updates.yaml"
 
   - project: "univention/dist/docker-services"
