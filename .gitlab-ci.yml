@@ -1,11 +1,54 @@
 include:
-  - project: univention/dist/docker-services
+  - project: "univention/customers/dataport/upx/common-ci"
+    ref: "v1.36.2"
     file:
-      - pre-commit.yml
+      - "defaults/stages.yaml"
+      - "defaults/nubus-workflow.yaml"
+      - "jobs/lint-pre-commit.yaml"
+      - "jobs/lint-commit-messages.yaml"
+      - "jobs/semantic-release-env.yaml"
+      - "jobs/container-build-external.yaml"
+      - "jobs/package-and-publish-helm-charts-external.yaml"
+      - "jobs/check-debian-updates.yaml"
 
-stages:
-  - lint
+  - project: "univention/dist/docker-services"
+    ref: "master"
+    file:
+      - "dind.yml"
 
-run_pre_commit:
-  stage: lint
-  extends: .pre-commit
+.build-matrix: &build-matrix
+  - IMAGE_NAME: "scim-server"
+    KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
+    DOCKERFILE_PATH: "docker/scim-server/Dockerfile"
+  - IMAGE_NAME: "testrunner"
+    KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
+    DOCKERFILE_PATH: "docker/scim-server/Dockerfile"
+    KANIKO_ARGS: "--target=test"
+
+# Separate publish matrix to accomodate testrunner images
+# that should not be mirrored to artifacts.software-univention.de
+.publish-matrix: &publish-matrix
+  - IMAGE_NAME:
+      - "scim-server"
+
+container-build:
+  parallel:
+    matrix: *build-matrix
+
+container-malware-scan:
+  parallel:
+    matrix: *publish-matrix
+
+push-image-external:
+  parallel:
+    matrix: *publish-matrix
+
+container-sign-external:
+  parallel:
+    matrix: *publish-matrix
+
+check-debian-updates:
+  parallel:
+    matrix: *build-matrix
+  variables:
+    TARGET_IMAGE: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:latest"
