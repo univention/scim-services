@@ -71,8 +71,8 @@ RUN \
     groupadd -r scim-server -g 1000 && \
     useradd -r -d /app -g scim-server -N scim-server -u 1000
 
-COPY --from=build --chown=app:app /app/scim-server/.venv /app/scim-server/.venv
-COPY --from=build --chown=app:app /app/scim-server/requirements.txt /app/scim-server/
+COPY --from=build --chown=scim-server:scim-server /app/scim-server/.venv /app/scim-server/.venv
+COPY --from=build --chown=scim-server:scim-server /app/scim-server/requirements.txt /app/scim-server/
 
 USER scim-server
 WORKDIR /app/scim-server
