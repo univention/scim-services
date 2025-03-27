@@ -5,14 +5,21 @@ include:
       - "defaults/stages.yaml"
       - "defaults/nubus-workflow.yaml"
       - "jobs/lint-pre-commit.yaml"
+      - "jobs/lint-commit-messages.yaml"
       - "jobs/semantic-release-env.yaml"
       - "jobs/container-build-external.yaml"
+      - "jobs/package-and-publish-helm-charts-external.yaml"
       - "jobs/check-debian-updates.yaml"
 
   - project: "univention/dist/docker-services"
     ref: "master"
     file:
       - "dind.yml"
+
+lint-pre-commit:
+  before_script:
+    # Compose lint would fail without the referenced env files
+    - helm repo add bitnami https://charts.bitnami.com/bitnami
 
 .build-matrix: &build-matrix
   - IMAGE_NAME: "scim-server"
