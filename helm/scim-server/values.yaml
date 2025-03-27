@@ -93,11 +93,11 @@ configFile:
     password: null
     timeout: 5
     search_pagesize: 500
-    # search paramaters for groups
+    # search parameters for groups
     group_base: "CN=Groups,DC=ad,DC=test"
     group_scope: "sub"
     #group_filter: "(&(objectClass=group)(!(|(isCriticalSystemObject=TRUE)(cn=Domain *)(cn=* Controllers))))"
-    # search paramaters for users
+    # search parameters for users
     user_base: "CN=Users,DC=ad,DC=test"
     user_scope: "sub"
     user_filter: "(&(objectClass=user)(sAMAccountType=805306368)(givenName=*)(sn=*)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
