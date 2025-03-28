@@ -6,6 +6,7 @@ from importlib.metadata import version  # move to top of file
 
 import uvicorn
 from fastapi import FastAPI
+from lancelog import setup_logging
 
 
 app = FastAPI(title="SCIM API", description="A FastAPI-based SCIM API for identity provisioning", version="1.0.0")
@@ -39,11 +40,11 @@ def run() -> None:
         logging.info("Server shut down cleanly.")
 
 
-def setup_logging(log_level: str = "INFO") -> None:
-    logging.captureWarnings(True)
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-    )
+# def setup_logging(log_level: str = "INFO") -> None:
+#     logging.captureWarnings(True)
+#     logging.basicConfig(
+#         level=logging.INFO, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+#     )
 
 
 if __name__ == "__main__":
