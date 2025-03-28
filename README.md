@@ -72,7 +72,9 @@ cd scim-server
 ```bash
 uv pip install --requirements pyproject.toml
 ```
+
 or for dev dependencies also:
+
 ```bash
 uv pip install --all-extras
 ```

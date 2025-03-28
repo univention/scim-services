@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-import uvicorn
-from fastapi import FastAPI
 import logging
 from importlib.metadata import version  # move to top of file
+
+import uvicorn
+from fastapi import FastAPI
 
 
 app = FastAPI(title="SCIM API", description="A FastAPI-based SCIM API for identity provisioning", version="1.0.0")
@@ -18,6 +19,7 @@ async def root() -> dict[str, str]:
 @app.get("/healthcheck", response_model=dict)
 def healthcheck() -> dict[str, str]:
     return {"status": "ok", "message": "SCIM API is running"}
+
 
 def run() -> None:
     setup_logging()
@@ -40,13 +42,9 @@ def run() -> None:
 def setup_logging(log_level: str = "INFO") -> None:
     logging.captureWarnings(True)
     logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
+        level=logging.INFO, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
 
-    
-            
+
 if __name__ == "__main__":
     run()
-
