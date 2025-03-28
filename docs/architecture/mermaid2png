@@ -12,7 +12,7 @@ function finish {
 trap finish EXIT
 
 python3 -c "import sys; import base64; import zlib; print(base64.urlsafe_b64encode(zlib.compress(sys.stdin.read().encode('utf-8'), 9)).decode('ascii'))" < "$path_with_ext" > "$tmp_path"
-curl "http://127.0.0.1:8000/mermaid/png/$(<$tmp_path)" -o "$path_no_ext.png"
+curl "http://127.0.0.1:8000/mermaid/png/$(<"$tmp_path")" -o "$path_no_ext.png"
 
 echo "-------------------"
 ls -l "$path_with_ext" "$path_no_ext.png"

@@ -85,7 +85,7 @@ configFile:
     group_primary_key_property: "univentionObjectIdentifier"
 
   source:
-    ldap_uri: "ldap://my_active_directory_server.test:1234" # "ldaps://"
+    ldap_uri: "ldap://my_active_directory_server.test:1234"
     bind_dn: "CN=readonly-ad-machine-user,CN=Users,DC=ad,DC=test"
     # ca_cert: "/etc/ssl/certs/ca-certificates-ad.crt"
     # This configuration is not used by the directory-importer because the env value takes precedence.
@@ -96,7 +96,6 @@ configFile:
     # search parameters for groups
     group_base: "CN=Groups,DC=ad,DC=test"
     group_scope: "sub"
-    #group_filter: "(&(objectClass=group)(!(|(isCriticalSystemObject=TRUE)(cn=Domain *)(cn=* Controllers))))"
     # search parameters for users
     user_base: "CN=Users,DC=ad,DC=test"
     user_scope: "sub"
@@ -127,7 +126,7 @@ containerSecurityContext:
   allowPrivilegeEscalation: false
   capabilities:
     drop:
-    - ALL
+      - ALL
   privileged: false
   readOnlyRootFilesystem: true
   runAsGroup: 1000

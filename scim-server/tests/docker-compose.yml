@@ -9,7 +9,7 @@ services:
       context: ../../
       dockerfile: docker/scim-server/Dockerfile
       target: test
-    #image: gitregistry.knut.univention.de/dev/projects/scim/scim-services/scim-server/testrunner:${IMAGE_TAG:-latest}
+    image: gitregistry.knut.univention.de/dev/projects/scim/scim-services/scim-server/testrunner:${IMAGE_TAG:-latest}
     cap_drop:
       - ALL
     volumes:
