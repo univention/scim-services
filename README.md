@@ -72,6 +72,10 @@ cd scim-server
 ```bash
 uv pip install --requirements pyproject.toml
 ```
+or for dev dependencies also:
+```bash
+uv pip install --all-extras
+```
 
 **Run locally in dev mode:**
 
@@ -82,8 +86,7 @@ uv run uvicorn src.univention.scim.server.main:app --reload
 **Run tests:**
 
 ```bash
-uv pip install pytest
-PYTHONPATH=. uv run pytest
+uv run pytest
 ```
 
 ### Tests
