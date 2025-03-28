@@ -58,3 +58,7 @@ repos:
     rev: 0.6.6
     hooks:
       - id: uv-lock
+  - repo: "https://git.knut.univention.de/univention/customers/dataport/upx/kyverno-test-pre-commit"
+    rev: "v0.3.0"
+    hooks:
+      - id: "kyverno-test"
