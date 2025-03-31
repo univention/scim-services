@@ -9,9 +9,7 @@ from fastapi.testclient import TestClient
 from univention.scim.server.authn.authn import Authentication
 
 
-# FastAPI Depends are not cleaned up together with the TestClient so we need to make sure that the
-# authenticator used within a Depends is also not recreated
-@pytest.fixture(scope="module")  # type: ignore
+@pytest.fixture
 def authenticator_mock() -> Authentication:
     mock = MagicMock(spec=Authentication)
 

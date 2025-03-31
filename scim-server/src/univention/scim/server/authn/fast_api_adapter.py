@@ -4,6 +4,8 @@
 from fastapi import HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+# Internal imports
+from univention.scim.server.container import ApplicationContainer
 
 class JWTBearer(HTTPBearer):
     def __init__(self, auto_error: bool = True):
@@ -12,4 +14,4 @@ class JWTBearer(HTTPBearer):
     async def __call__(self, request: Request) -> HTTPAuthorizationCredentials | None:
         credentials: HTTPAuthorizationCredentials | None = await super().__call__(request)
 
-        return credentials;
+        return await ApplicationContainer.authenticator().authenticate(credentials)
