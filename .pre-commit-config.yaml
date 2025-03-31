@@ -49,15 +49,15 @@ repos:
     - id: mypy
       name: "mypy scim-server"
       files: "^scim-server"
-      additional_dependencies: ["fastapi>=0.115", "httpx>=0.28", "Jinja2>=3", "mypy-extensions>=1.0", "pydantic-settings>=2", "types-requests>=2.32"]
+      additional_dependencies: ["fastapi>=0.115", "httpx>=0.28", "Jinja2>=3", "mypy-extensions>=1.0", "pydantic-settings>=2", "types-requests>=2.32", "pytest>=8"]
     - id: mypy
       name: "mypy scim-udm-transformer-lib"
       files: "^scim-udm-transformer-lib"
-      additional_dependencies: ["fastapi>=0.115", "httpx>=0.28", "Jinja2>=3", "mypy-extensions>=1.0", "pydantic-settings>=2", "types-requests>=2.32"]
+      additional_dependencies: ["fastapi>=0.115", "httpx>=0.28", "Jinja2>=3", "mypy-extensions>=1.0", "pydantic-settings>=2", "types-requests>=2.32", "pytest>=8"]
     - id: mypy
       name: "mypy udm-to-scim-sync"
       files: "^udm-to-scim-sync"
-      additional_dependencies: ["fastapi>=0.115", "httpx>=0.28", "Jinja2>=3", "mypy-extensions>=1.0", "pydantic-settings>=2", "types-requests>=2.32"]
+      additional_dependencies: ["fastapi>=0.115", "httpx>=0.28", "Jinja2>=3", "mypy-extensions>=1.0", "pydantic-settings>=2", "types-requests>=2.32", "pytest>=8"]
 
   - repo: https://github.com/jackdewinter/pymarkdown
     rev: v0.9.29
