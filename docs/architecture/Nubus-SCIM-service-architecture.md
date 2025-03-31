@@ -121,6 +121,19 @@ From the PM email (2025-02-19):
   - The [liblancelog](https://git.knut.univention.de/univention/dev/libraries/lancelog) library MUST be used to
     configure logging.
 
+- All SCIM HTTP requests have a unique ID.
+  - This "request ID" can be passed in by SCIM HTTP clients in the `X-Request-ID` HTTP header.
+  - If not received from the client, the SCIM REST server creates a UUID.
+  - Univention has in the past used the [asgi-correlation-id](https://github.com/snok/asgi-correlation-id) Python library for this purpose.
+- All SCIM HTTP responses contain the request ID from the previous bullet point in the `X-Request-ID` HTTP header.
+All log lines MUST:
+  - … be _prefixed_ with the request ID (see bullet points above).
+    The UUID can be shortened to 10 characters.
+  - … contain the `id` field of the object that is being worked on, in the context variables.
+  - … contain the `externalId` field, if it is not empty, in the context variables.
+  - … contain the `univentionObjectIdentifier` field, if it is not empty, in the context variables.
+  - … contain the `dn` field, if `univentionObjectIdentifier` is empty and `dn` is not, in the context variables.
+
 #### Metrics
 
 - The SCIM server collects metrics and makes them available to operators.

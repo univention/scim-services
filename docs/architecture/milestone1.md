@@ -24,8 +24,11 @@ Goals of this development stage:
 ## Result
 
 - In this MS the SCIM server is an _adapter_ that converts the UDM REST API to the SCIM API.
-- SCIM reads and writes go directly to the UDM REST API.
-  No data is stored outside the LDAP server.
+- SCIM reads and writes are translated to calls to the UDM REST API.
+  The LDAP server is the only data source.
+- The SCIM server returns UDM errors to the SCIM client,
+  transforming them to SCIM error messages that adhere to
+    [RFC 7644 section 3.12](https://datatracker.ietf.org/doc/html/rfc7644#section-3.12).
 - The SCIM service's availability and performance are directly dependent to the UDM REST API's and the LDAP server's.
 - The SCIM server does _not_ yet issue events to the Provisioning system.
   This feature is postponed to a later MS.
@@ -88,8 +91,10 @@ Goals of this development stage:
 - Restrictions in the UDM data model and business logic apply,
   when changes are forwarded _synchronously_ by the SCIM server.
   The SCIM server returns UDM errors to the SCIM client.
-  - UDM REST API error messages are transformed to SCIM error messages that adhere to
-    [RFC 7644 section 3.12](https://datatracker.ietf.org/doc/html/rfc7644#section-3.12).
+
+## Implementation details
+
+- In calls to the UDM REST API, the language header is hard coded to _English_.
 
 ## Deliverables
 
