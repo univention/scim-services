@@ -15,8 +15,6 @@ di = dependency_injection_settings()
 # TODO: Not sure why but mypy complains about type of DeclarativeContainer -> ignore error for now
 # subclass "DeclarativeContainer" (has type "Any")  [misc]
 #     class ApplicationContainer(DeclarativeContainer):
-
-
 class ApplicationContainer(DeclarativeContainer):  # type: ignore
     settings = Singleton(application_settings)
 

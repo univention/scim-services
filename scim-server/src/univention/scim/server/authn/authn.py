@@ -13,7 +13,7 @@ class Authentication(ABC):
     """
 
     @abstractmethod
-    async def authenticate(self, credentials: HTTPAuthorizationCredentials) -> HTTPAuthorizationCredentials:
+    async def authenticate(self, credentials: HTTPAuthorizationCredentials) -> dict:
         """
         Authenticate credentions.
 
@@ -21,7 +21,7 @@ class Authentication(ABC):
             credentials: The FastAPI HTTPAuthorizationCredentials object
 
         Returns:
-            HTTPAuthorizationCredentials: User information if authentication succeeds
+            dict: User information if authentication succeeds
 
         Raises:
             HTTPException: If authentication fails

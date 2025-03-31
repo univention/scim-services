@@ -13,7 +13,7 @@ class AllowAllBearerAuthentication(Authentication):
     This is a placeholder implementation for development purposes.
     """
 
-    async def authenticate(self, credentials: HTTPAuthorizationCredentials) -> HTTPAuthorizationCredentials:
+    async def authenticate(self, credentials: HTTPAuthorizationCredentials) -> dict:
         """
         Authenticate using HTTP Bearer authentication, allow all bearers.
 
@@ -21,7 +21,7 @@ class AllowAllBearerAuthentication(Authentication):
             credentials: The FastAPI HTTPAuthorizationCredentials object
 
         Returns:
-            HTTPAuthorizationCredentials: User information if authentication succeeds
+            dict: User information if authentication succeeds
 
         Raises:
             HTTPException: If authentication fails
@@ -33,4 +33,4 @@ class AllowAllBearerAuthentication(Authentication):
             raise HTTPException(status_code=403, detail="Invalid authentication scheme.")
 
         # Allow all tokens so no validation
-        return credentials
+        return {"username": "admin", "roles": ["admin"]}
