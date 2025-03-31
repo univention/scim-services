@@ -1,1 +1,15 @@
-**/*.bkp
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Recursively ignore __pycache__ directories anywhere
+**/__pycache__/
+
+# Optional: ignore .mypy_cache, .ruff_cache, .pytest_cache, etc.
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+**/kyverno-test.yaml
+**/*.tgz
+**/.kyverno/manifest.yaml

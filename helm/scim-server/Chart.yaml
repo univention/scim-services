@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2023 Univention GmbH
+---
+apiVersion: "v2"
+type: "application"
+name: "scim-server"
+description: "A Helm chart for the scim server"
+home: "https://www.univention.de/"
+# Chart version
+# Apply Semantic Versioning (https://semver.org/)
+version: "0.0.1"
+dependencies:
+  - name: "common"
+    version: "^2.x.x"
+    repository: "oci://registry-1.docker.io/bitnamicharts"

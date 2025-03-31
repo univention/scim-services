@@ -11,6 +11,11 @@ repos:
     - id: check-json
     - id: check-toml
     - id: check-yaml
+      args:
+          # Allow custom tags like Gitlab's "!reference" tag.
+          - "--unsafe"
+      exclude: "^helm/.+/templates/"
+
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0
     hooks:
@@ -58,3 +63,7 @@ repos:
     rev: 0.6.6
     hooks:
       - id: uv-lock
+  - repo: "https://git.knut.univention.de/univention/customers/dataport/upx/kyverno-test-pre-commit"
+    rev: "v0.3.0"
+    hooks:
+      - id: "kyverno-test"

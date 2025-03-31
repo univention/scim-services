@@ -1,14 +1,13 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2025 Univention GmbH
+
 services:
   core:
     image: yuzutech/kroki
     depends_on:
       - mermaid
-#      - bpmn
-#      - excalidraw
     environment:
       - KROKI_MERMAID_HOST=mermaid
-#      - KROKI_BPMN_HOST=bpmn
-#      - KROKI_EXCALIDRAW_HOST=excalidraw
     ports:
       - "8000:8000"
   mermaid:
