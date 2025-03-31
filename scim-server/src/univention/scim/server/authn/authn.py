@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 from abc import ABC, abstractmethod
 
-from fastapi import Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 
 class Authentication(ABC):
@@ -13,15 +13,15 @@ class Authentication(ABC):
     """
 
     @abstractmethod
-    async def authenticate(self, request: Request) -> dict:
+    async def authenticate(self, credentials: HTTPAuthorizationCredentials) -> HTTPAuthorizationCredentials:
         """
-        Authenticate a request.
+        Authenticate credentions.
 
         Args:
-            request: The FastAPI request object
+            credentials: The FastAPI HTTPAuthorizationCredentials object
 
         Returns:
-            dict: User information if authentication succeeds
+            HTTPAuthorizationCredentials: User information if authentication succeeds
 
         Raises:
             HTTPException: If authentication fails

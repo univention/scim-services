@@ -10,8 +10,8 @@ from loguru import logger
 from scim2_models import Error
 
 # Internal imports
-from univention.scim.server.config import settings
 from univention.scim.server.configure_logging import configure_logging
+from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.domain.group_service_impl import GroupServiceImpl
 from univention.scim.server.domain.repo.crud_scim_impl import CrudScimImpl
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
@@ -20,9 +20,11 @@ from univention.scim.server.rest.api import router as api_router
 from univention.scim.server.rest.groups import set_group_service
 from univention.scim.server.rest.users import set_user_service
 
+# Container for dependency injection
+container = ApplicationContainer()
 
 # Configure logging
-configure_logging()
+configure_logging(container.settings().log_level)
 
 # Create FastAPI app
 app = FastAPI(
@@ -34,7 +36,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=container.settings().cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -65,7 +67,7 @@ set_user_service(user_service)
 set_group_service(group_service)
 
 # Include API router
-app.include_router(api_router, prefix=settings.api_prefix)
+app.include_router(api_router, prefix=container.settings().api_prefix)
 
 
 @app.get("/")
@@ -78,6 +80,7 @@ async def root():
 async def startup_event():
     """Initialization tasks when the application starts."""
     logger.info("Starting SCIM server")
+
     # Load schemas and perform startup tasks
     try:
         await schema_loader.get_user_schema()
@@ -98,8 +101,8 @@ async def shutdown_event():
 
 def run():
     """Entry point for running the application."""
-    port = int(os.environ.get("PORT", settings.port))
-    uvicorn.run("univention.scim.server.main:app", host=settings.host, port=port)
+    port = int(os.environ.get("PORT", container.settings().port))
+    uvicorn.run("univention.scim.server.main:app", host=container.settings().host, port=port)
 
 
 if __name__ == "__main__":

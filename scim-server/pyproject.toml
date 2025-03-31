@@ -11,6 +11,7 @@ dependencies = [
     "lancelog>=0.1.0",
     "scim2-models>=0.3.2",
     "pydantic>=2.10.6",
+    "dependency-injector>=4"
 ]
 
 [tool.uv.sources]

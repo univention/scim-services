@@ -1,10 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+
+from functools import lru_cache
+
 from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Internal imports
+from univention.scim.server.interfaces.config import AuthenticatorConfig
 
 
-class Settings(BaseSettings):
+class ApplicationSettings(BaseSettings):
     """
     Application settings with support for environment variables and .env files.
 
@@ -26,9 +32,24 @@ class Settings(BaseSettings):
 
     # Authentication and authorization
     auth_enabled: bool = Field(False, env="AUTH_ENABLED")
+    authenticator: AuthenticatorConfig
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "case_sensitive": False}
 
 
-# Create global settings instance
-settings = Settings()
+class DependencyInjectionSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_file="dependency-injection.env", env_file_encoding="utf-8")
+
+    # TODO: change for real implementation, allow all just for dev now
+    di_authenticator: str = "univention.scim.server.authn.authn_impl.AllowAllBearerAuthentication"
+
+
+@lru_cache(maxsize=1)
+def application_settings() -> ApplicationSettings:
+    authenticator = AuthenticatorConfig()
+    return ApplicationSettings(authenticator=authenticator)
+
+
+@lru_cache(maxsize=1)
+def dependency_injection_settings() -> DependencyInjectionSettings:
+    return DependencyInjectionSettings()

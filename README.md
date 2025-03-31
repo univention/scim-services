@@ -82,7 +82,7 @@ uv pip install --all-extras
 **Run locally in dev mode:**
 
 ```bash
-uv run uvicorn src.univention.scim.server.main:app --reload
+TOKEN_VALIDATION_ENDPOINT="test" uv run uvicorn src.univention.scim.server.main:app --reload
 ```
 
 **Run tests:**

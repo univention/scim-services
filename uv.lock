@@ -64,6 +64,63 @@ wheels = [
 ]
 
 [[package]]
+name = "dependency-injector"
+version = "4.46.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/43/86/4b571dbd26c06d2492176ed533d8af744bc536a98fb47d5a5e59a8593920/dependency_injector-4.46.0.tar.gz", hash = "sha256:14da7974b0a749e4f7616247e8adcbaf86556989084958b08f66e782e8e14edf", size = 1112411 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/85/9c/79a7433155201497b4f51a635f5eacc04a732b77898295196e87615b2bbb/dependency_injector-4.46.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:ece07b8e5545fb474eddf7703f7e189f27afcec27d14d601911aced6bb828c5a", size = 1843900 },
+    { url = "https://files.pythonhosted.org/packages/a4/24/3f50458dd3d8aba4ea8b224f7d0ff6266e6fd2de137a5362a3fbf0025394/dependency_injector-4.46.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0a5c03cdcae214c329b88cd50c0b91098384013a07a6977600db025cd80e0311", size = 7006925 },
+    { url = "https://files.pythonhosted.org/packages/b6/37/77ec4727f25c38bae1f959a10cb3acecdc009c5fef073752ae5ef6bb8451/dependency_injector-4.46.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1781dc7a21726d48da3c5ff00bc8a84aac0bc206bff7c676842773d87018ebe0", size = 7040972 },
+    { url = "https://files.pythonhosted.org/packages/d6/6c/f1c2d88aaf3e65358a3d12527df032458312b44aca0862c139db088da653/dependency_injector-4.46.0-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:5a5fc167fb296a6502566e7faee39438437a21a8a099903dc15cb1709dce8123", size = 6572374 },
+    { url = "https://files.pythonhosted.org/packages/42/a9/2b8e597212ace9c57c1f6df14228a5d92a3647e54922a4a4cea437ed1fe0/dependency_injector-4.46.0-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:2ec104a9664ca633bdc23e13710f11fb2d0e3afbb9fac2460200f9b130d7a316", size = 6650134 },
+    { url = "https://files.pythonhosted.org/packages/0c/90/539224b39c981ae4ee1cb90531db573a583209b95be560bab300af611921/dependency_injector-4.46.0-cp311-cp311-musllinux_1_2_i686.whl", hash = "sha256:7407fa315d10bf6fd90deb2e9c631f4a11a9f09a4a862fac6c6962332c6b4c23", size = 6479959 },
+    { url = "https://files.pythonhosted.org/packages/65/64/d6ca8db52404cd20f310b2d9ccf3de9d2c9880f7494b15fb6e9ecd55ac6d/dependency_injector-4.46.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:16d3c026765317f57a85521690f7fbd94ac28594a29a50514fef1f156df0f9fa", size = 6838913 },
+    { url = "https://files.pythonhosted.org/packages/91/74/6d9393bce644778008bbe1c3c4f19895c94322d713afadff8819a96c6dd5/dependency_injector-4.46.0-cp311-cp311-win32.whl", hash = "sha256:935790394b165aacebab998cd0f8a23a0f36af7a065beed1d2fe46f9c734d812", size = 1652051 },
+    { url = "https://files.pythonhosted.org/packages/53/b4/0a4cc33660473f922ae7af66fb8e3b16ca76129f9d13cc7064476c2a6468/dependency_injector-4.46.0-cp311-cp311-win_amd64.whl", hash = "sha256:101a6462bed57129c551872aea177bae2ffec94348eaa198f721957f19718b3c", size = 1786267 },
+    { url = "https://files.pythonhosted.org/packages/85/ba/33cac24b4feb5fa0783eeea46dbfb0cd1a94fdd796e036177d38568a2f48/dependency_injector-4.46.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:e8aa252a555cb7fc9b22c31821c5c94e5ac57460db57a12ff5cd4e59ff695f83", size = 1852638 },
+    { url = "https://files.pythonhosted.org/packages/cd/ce/e2d5f1c5df76c4a5c2e340b43ccdc1ccabc8f16e34f4a35b0c70650126aa/dependency_injector-4.46.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:71749472618f82f966f9fafde212ef1b2316bdd7afde4c48cdc6d6f961685793", size = 6777251 },
+    { url = "https://files.pythonhosted.org/packages/02/d4/c3f45d5e9095b28b105bd419b84dfa5a7346091a78283e1744762a40b1fb/dependency_injector-4.46.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:66733ee93317d97a2e1c2ef27da3bacea6d4521fcb441524c7a7a66fe038c071", size = 6899455 },
+    { url = "https://files.pythonhosted.org/packages/79/94/896367942aa5480e1fe6b77027ac6f49a408ab4ee29a67f7542a71fe0b5b/dependency_injector-4.46.0-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:155ac135f8a556e087622067edbb1fb04ae0590b08649e0fc366ed7f3e8d7598", size = 6369976 },
+    { url = "https://files.pythonhosted.org/packages/5e/8d/ee70b78ae4f59f9b74d79edb710b56099da2baad2e8e55ee32bbdbdd6694/dependency_injector-4.46.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:dd6d39f7464420303e0b6e04df9e81c246dbfc2f7f89b12445bfe26fcf91dcd7", size = 6437025 },
+    { url = "https://files.pythonhosted.org/packages/5d/8e/d3a440689efb94ba4b154da89c66d2a9727baabccae74ec1c6f6e2a4f3e3/dependency_injector-4.46.0-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:337279da82e39f6e70c9e7bff507bc16ac6e6cf815711708f064f7104a5037af", size = 6267535 },
+    { url = "https://files.pythonhosted.org/packages/0e/ab/fef3c6714ab86d5587e84dac195593650c0fb82e70f65383a5641133c746/dependency_injector-4.46.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:5f37540062a0dea5bee1fb0756022327656af1d21de3b1dd583afdd5293ac6d2", size = 6671561 },
+    { url = "https://files.pythonhosted.org/packages/66/08/124c0d640ce42b17069587da1d47738d53496ae32a5af9b428574260832b/dependency_injector-4.46.0-cp312-cp312-win32.whl", hash = "sha256:4a4e67a7994b882806030e5257243164b9ddfe24c09210b44fc5b5fca4effaf5", size = 1646831 },
+    { url = "https://files.pythonhosted.org/packages/b3/5a/2fae936f19033624716a113eea3e106be3f7d1f7c090c53f9af55edc212f/dependency_injector-4.46.0-cp312-cp312-win_amd64.whl", hash = "sha256:3b24c85ba7a7d5883b91ad8a8150c40f9c2c3335971646fe67ef5ea6045715b1", size = 1763076 },
+    { url = "https://files.pythonhosted.org/packages/68/5c/a052c83321dc7404a09eb2daf6e618655354fd287bec13b3bb2ac89975a9/dependency_injector-4.46.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:6e7704d6286f4371dff5db56c124c1eac22922ecac7c9e96ef87a3842c21b9e2", size = 1843456 },
+    { url = "https://files.pythonhosted.org/packages/a2/da/d07a74d678474c32c291813671ccc5bbd563459ff3f268053b7d574dd71e/dependency_injector-4.46.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3dcc19b41f78a62bb1c566c1885bba34a9228e51b65d993f3ac3b192935c48de", size = 6780631 },
+    { url = "https://files.pythonhosted.org/packages/fb/85/84846f63950cf0dd885ce40e5249f43e67eff20bebc950ae3765ac0c62ee/dependency_injector-4.46.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4732b68af723a1ce014540b7662cbf53388608600add34b558d32f698504de95", size = 6912886 },
+    { url = "https://files.pythonhosted.org/packages/55/8e/621c7ada63e691d8eba70d36ce5e11a55b601e15f7a7d6c41c1d13f65437/dependency_injector-4.46.0-cp313-cp313-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:02be5d2c6309a514b5164c05b8be7357a763bd42c503960d40c346dbf1f47faa", size = 6362736 },
+    { url = "https://files.pythonhosted.org/packages/eb/df/c26c47e65c288ed7e3419859c35c3ff97c93fefdfcf7c9a3e4e502d55851/dependency_injector-4.46.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:538b039bb11ec95edd993a8bf1862166ab299fc0fe44d8cbde37d4b0c2676267", size = 6503442 },
+    { url = "https://files.pythonhosted.org/packages/0c/ba/ac6827fdccb1b3cd1764e356aa903837c4b3087277249e572e4c8fb6a823/dependency_injector-4.46.0-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:b5302b31ec9327421a4f311d9839f1d639b6419a0dbe3f11af15e2728cb46073", size = 6293894 },
+    { url = "https://files.pythonhosted.org/packages/c2/98/20b25dff08c18f0926b7df1f1f3fc9d826e23451128cc3b9c805b301cccf/dependency_injector-4.46.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:a7838e1e1ca35b88ba456484a9c28107197b208144042d2bba6435429dc84c27", size = 6712383 },
+    { url = "https://files.pythonhosted.org/packages/16/1c/d3dd9c80a4b365d2f51e637611b0b0fdc126fa2735bd3e471503d6dd841f/dependency_injector-4.46.0-cp313-cp313-win32.whl", hash = "sha256:e201905263b08e7fa52aac92596be45b76739218c799790d9687e33dd62aed60", size = 1648007 },
+    { url = "https://files.pythonhosted.org/packages/27/e1/da261f8a8f0fb2dac6589a585010640ed55198edc12e3ccb89eccfee9406/dependency_injector-4.46.0-cp313-cp313-win_amd64.whl", hash = "sha256:360c0ece97c37ddb1742028f7b96081d3331f37dfeb96a5514827fc65ddbead4", size = 1762580 },
+]
+
+[[package]]
+name = "dnspython"
+version = "2.7.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b5/4a/263763cb2ba3816dd94b08ad3a33d5fdae34ecb856678773cc40a3605829/dnspython-2.7.0.tar.gz", hash = "sha256:ce9c432eda0dc91cf618a5cedf1a4e142651196bbcd2c80e89ed5a907e5cfaf1", size = 345197 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/68/1b/e0a87d256e40e8c888847551b20a017a6b98139178505dc7ffb96f04e954/dnspython-2.7.0-py3-none-any.whl", hash = "sha256:b4c34b7d10b51bcc3a5071e7b8dee77939f1e878477eeecc965e9835f63c6c86", size = 313632 },
+]
+
+[[package]]
+name = "email-validator"
+version = "2.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dnspython" },
+    { name = "idna" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/48/ce/13508a1ec3f8bb981ae4ca79ea40384becc868bfae97fd1c942bb3a001b1/email_validator-2.2.0.tar.gz", hash = "sha256:cb690f344c617a714f22e66ae771445a1ceb46821152df8e165c5f9a364582b7", size = 48967 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d7/ee/bf0adb559ad3c786f12bcbc9296b3f5675f529199bef03e2df281fa1fadb/email_validator-2.2.0-py3-none-any.whl", hash = "sha256:561977c2d73ce3611850a06fa56b414621e0c8faa9d66f2611407d87465da631", size = 33521 },
+]
+
+[[package]]
 name = "fastapi"
 version = "0.115.12"
 source = { registry = "https://pypi.org/simple" }
@@ -259,6 +316,11 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/f4/3c/8cc1cc84deffa6e25d2d0c688ebb80635dfdbf1dbea3e30c541c8cf4d860/pydantic-2.10.6-py3-none-any.whl", hash = "sha256:427d664bf0b8a2b34ff5dd0f5a18df00591adcee7198fbd71981054cef37b584", size = 431696 },
 ]
 
+[package.optional-dependencies]
+email = [
+    { name = "email-validator" },
+]
+
 [[package]]
 name = "pydantic-core"
 version = "2.27.2"
@@ -354,21 +416,27 @@ name = "scim-server"
 version = "0.1.0"
 source = { editable = "scim-server" }
 dependencies = [
+    { name = "dependency-injector" },
     { name = "fastapi" },
     { name = "httpx" },
     { name = "lancelog" },
+    { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "pytest" },
+    { name = "scim2-models" },
     { name = "uvicorn" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "dependency-injector", specifier = ">=4" },
     { name = "fastapi", specifier = ">=0.115.12" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "lancelog", specifier = ">=0.1.0", index = "https://git.knut.univention.de/api/v4/projects/1449/packages/pypi/simple" },
+    { name = "pydantic", specifier = ">=2.10.6" },
     { name = "pydantic-settings", specifier = ">=2.8.1" },
     { name = "pytest", specifier = ">=8.3.5" },
+    { name = "scim2-models", specifier = ">=0.3.2" },
     { name = "uvicorn", specifier = ">=0.34.0" },
 ]
 
@@ -401,6 +469,18 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [{ name = "jinja2", specifier = ">=3.1.6" }]
+
+[[package]]
+name = "scim2-models"
+version = "0.3.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic", extra = ["email"] },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6f/83/bc307071bfeb82f99f6845bc165bfea928f5966d040497ffaeaa02c67fb3/scim2_models-0.3.2.tar.gz", hash = "sha256:0875ef83ba241af50a276b4d0ff11db943cfa5403021cf7b04cfe71807838981", size = 135898 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/60/27/461d92ed886e9be784f9ada9bf6bf76856b9a083776d3586e55539351bc9/scim2_models-0.3.2-py3-none-any.whl", hash = "sha256:f4fec22b61fd8830744a74f1d9be9aa6d71d594c2acae07639f6c7529f722483", size = 40743 },
+]
 
 [[package]]
 name = "sniffio"

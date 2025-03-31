@@ -1,41 +1,36 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from loguru import logger
 from univention.scim.server.authn.authn import Authentication
 
 
-class BasicAuthentication(Authentication):
+class AllowAllBearerAuthentication(Authentication):
     """
-    Implements basic authentication for the SCIM API.
+    Implements bearer authentication for the SCIM API.
 
     This is a placeholder implementation for development purposes.
     """
 
-    async def authenticate(self, request: Request) -> dict:
+    async def authenticate(self, credentials: HTTPAuthorizationCredentials) -> HTTPAuthorizationCredentials:
         """
-        Authenticate using HTTP Basic authentication.
+        Authenticate using HTTP Bearer authentication, allow all bearers.
 
         Args:
-            request: The FastAPI request object
+            credentials: The FastAPI HTTPAuthorizationCredentials object
 
         Returns:
-            dict: User information if authentication succeeds
+            HTTPAuthorizationCredentials: User information if authentication succeeds
 
         Raises:
             HTTPException: If authentication fails
         """
-        # Example implementation
-        auth_header = request.headers.get("Authorization")
+        if not credentials:
+            raise HTTPException(status_code=403, detail="Invalid authorization code.")
 
-        if not auth_header or not auth_header.startswith("Basic "):
-            logger.warning("Missing or invalid Authorization header")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials",
-                headers={"WWW-Authenticate": "Basic"},
-            )
+        if not credentials.scheme == "Bearer":
+            raise HTTPException(status_code=403, detail="Invalid authentication scheme.")
 
-        # In a real implementation, decode and validate credentials
-        # For now, return a dummy user
-        return {"username": "admin", "roles": ["admin"]}
+        # Allow all tokens so no validation
+        return credentials

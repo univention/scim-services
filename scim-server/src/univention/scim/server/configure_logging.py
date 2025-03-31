@@ -3,15 +3,12 @@
 import os
 
 from lancelog import setup_logging
-from univention.scim.server.config import settings
 
 
-def configure_logging():
+def configure_logging(log_level: str):
     """
     Configure logging for the application using lancelog and loguru.
     """
-    # Get log level from settings or environment
-    log_level = os.environ.get("LOG_LEVEL", settings.log_level)
 
     # Use lancelog for structured logging setup
     setup_logging(
