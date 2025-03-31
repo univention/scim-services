@@ -70,48 +70,6 @@ udm:
         # a key with a different name.
         password: null
 
-configFile:
-  udm:
-    uri: "https://nubus-kubernetes-deployment.test/univention/udm/"
-    user: "Administrator"
-    # This configuration is not used by the directory-importer because the env value takes precedence.
-    # The udm password needs to be configured in udm.auth.password
-    password: null
-    # ca_cert: "/etc/ssl/certs/ca-certificates-nubus.crt"
-    skip_writes: false
-    user_ou: "ou=ad-domain-example"
-    user_primary_key_property: "univentionObjectIdentifier"
-    group_ou: "ou=ad-domain-example"
-    group_primary_key_property: "univentionObjectIdentifier"
-
-  source:
-    ldap_uri: "ldap://my_active_directory_server.test:1234"
-    bind_dn: "CN=readonly-ad-machine-user,CN=Users,DC=ad,DC=test"
-    # ca_cert: "/etc/ssl/certs/ca-certificates-ad.crt"
-    # This configuration is not used by the directory-importer because the env value takes precedence.
-    # The source password needs to be configured in sourcDirectory.auth.password
-    password: null
-    timeout: 5
-    search_pagesize: 500
-    # search parameters for groups
-    group_base: "CN=Groups,DC=ad,DC=test"
-    group_scope: "sub"
-    # search parameters for users
-    user_base: "CN=Users,DC=ad,DC=test"
-    user_scope: "sub"
-    user_filter: "(&(objectClass=user)(sAMAccountType=805306368)(givenName=*)(sn=*)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
-    user_attrs:
-      - "objectGUID"
-      - "sAMAccountName"
-      - "givenName"
-      - "description"
-      - "sn"
-      - "ou"
-      - "o"
-      - "street"
-      - "l"
-      - "postalCode"
-      - "st"
 
 resources:
   limits:
