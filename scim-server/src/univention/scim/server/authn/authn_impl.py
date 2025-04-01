@@ -1,8 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+from typing import Any
+
 from fastapi import HTTPException
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from loguru import logger
+from fastapi.security import HTTPAuthorizationCredentials
+
+# Internal imports
 from univention.scim.server.authn.authn import Authentication
 
 
@@ -13,7 +16,7 @@ class AllowAllBearerAuthentication(Authentication):
     This is a placeholder implementation for development purposes.
     """
 
-    async def authenticate(self, credentials: HTTPAuthorizationCredentials) -> dict:
+    async def authenticate(self, credentials: HTTPAuthorizationCredentials) -> dict[str, Any]:
         """
         Authenticate using HTTP Bearer authentication, allow all bearers.
 

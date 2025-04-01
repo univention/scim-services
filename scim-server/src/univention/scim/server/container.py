@@ -12,10 +12,8 @@ from univention.scim.server.config import application_settings, dependency_injec
 di = dependency_injection_settings()
 
 
-# TODO: Not sure why but mypy complains about type of DeclarativeContainer -> ignore error for now
-# subclass "DeclarativeContainer" (has type "Any")  [misc]
-#     class ApplicationContainer(DeclarativeContainer):
-class ApplicationContainer(DeclarativeContainer):  # type: ignore
+class ApplicationContainer(DeclarativeContainer):
     settings = Singleton(application_settings)
 
-    authenticator = Singleton(di.di_authenticator, config=settings().authenticator)
+    if settings().auth_enabled:
+        authenticator = Singleton(di.di_authenticator, config=settings().authenticator)

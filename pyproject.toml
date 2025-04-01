@@ -29,6 +29,8 @@ ignore_missing_imports = true
 pretty = true
 python_version = "3.11"
 strict = true
+# mypy does not like ABC abstract classes so force allow subclassing from them
+disallow_subclassing_any = false
 
 [tool.ruff]
 target-version = "py311"

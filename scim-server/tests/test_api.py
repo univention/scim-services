@@ -1,9 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+from typing import Any
+
 import pytest
 from fastapi.testclient import TestClient
 from scim2_models import Email, Group, Name, User
+
 
 # Test data
 test_user = User(
@@ -31,7 +34,7 @@ test_group = Group(
 class TestUserAPI:
     """Tests for the User endpoints of the SCIM API."""
 
-    def test_list_users(self, client: TestClient):
+    def test_list_users(self, client: TestClient) -> None:
         """Test listing users."""
         response = client.get("/scim/v2/Users")
         assert response.status_code == 200
@@ -44,7 +47,7 @@ class TestUserAPI:
         assert "Resources" in data
         assert isinstance(data["Resources"], list)
 
-    def test_create_user(self, client: TestClient):
+    def test_create_user(self, client: TestClient) -> Any:
         """Test creating a user."""
         response = client.post("/scim/v2/Users", json=test_user.model_dump(by_alias=True, exclude_none=True))
         assert response.status_code == 201
@@ -60,7 +63,7 @@ class TestUserAPI:
         user_id = data["id"]
         return user_id
 
-    def test_get_user(self, client: TestClient):
+    def test_get_user(self, client: TestClient) -> None:
         """Test retrieving a user."""
         # First create a user
         user_id = self.test_create_user(client)
@@ -76,7 +79,7 @@ class TestUserAPI:
         assert data["name"]["givenName"] == test_user.name.given_name
         assert data["name"]["familyName"] == test_user.name.family_name
 
-    def test_update_user(self, client: TestClient):
+    def test_update_user(self, client: TestClient) -> None:
         """Test updating a user."""
         # First create a user
         user_id = self.test_create_user(client)
@@ -97,7 +100,7 @@ class TestUserAPI:
         assert data["name"]["givenName"] == updated_user.name.given_name
         assert data["name"]["familyName"] == updated_user.name.family_name
 
-    def test_delete_user(self, client: TestClient):
+    def test_delete_user(self, client: TestClient) -> None:
         """Test deleting a user."""
         # First create a user
         user_id = self.test_create_user(client)
@@ -110,22 +113,22 @@ class TestUserAPI:
         response = client.get(f"/scim/v2/Users/{user_id}")
         assert response.status_code == 404
 
-    def test_get_nonexistent_user(self, client: TestClient):
+    def test_get_nonexistent_user(self, client: TestClient) -> None:
         """Test getting a nonexistent user."""
         response = client.get("/scim/v2/Users/nonexistent")
         assert response.status_code == 404
 
-    def test_update_nonexistent_user(self, client: TestClient):
+    def test_update_nonexistent_user(self, client: TestClient) -> None:
         """Test updating a nonexistent user."""
         response = client.put("/scim/v2/Users/nonexistent", json=test_user.model_dump(by_alias=True, exclude_none=True))
         assert response.status_code == 404
 
-    def test_delete_nonexistent_user(self, client: TestClient):
+    def test_delete_nonexistent_user(self, client: TestClient) -> None:
         """Test deleting a nonexistent user."""
         response = client.delete("/scim/v2/Users/nonexistent")
         assert response.status_code == 404
 
-    def test_filter_users(self, client: TestClient):
+    def test_filter_users(self, client: TestClient) -> None:
         """Test filtering users."""
         # First create a user
         self.test_create_user(client)
@@ -143,7 +146,7 @@ class TestUserAPI:
 class TestGroupAPI:
     """Tests for the Group endpoints of the SCIM API."""
 
-    def test_list_groups(self, client: TestClient):
+    def test_list_groups(self, client: TestClient) -> None:
         """Test listing groups."""
         response = client.get("/scim/v2/Groups")
         # For now, this might return 501 Not Implemented
@@ -160,7 +163,7 @@ class TestGroupAPI:
         assert "Resources" in data
         assert isinstance(data["Resources"], list)
 
-    def test_create_group(self, client: TestClient):
+    def test_create_group(self, client: TestClient) -> Any:
         """Test creating a group."""
         response = client.post("/scim/v2/Groups", json=test_group.model_dump(by_alias=True, exclude_none=True))
 
@@ -179,7 +182,7 @@ class TestGroupAPI:
         group_id = data["id"]
         return group_id
 
-    def test_get_group(self, client: TestClient):
+    def test_get_group(self, client: TestClient) -> None:
         """Test retrieving a group."""
         try:
             # First create a group
@@ -205,7 +208,7 @@ class TestGroupAPI:
 class TestServiceProviderConfig:
     """Tests for the ServiceProviderConfig endpoint."""
 
-    def test_get_service_provider_config(self, client: TestClient):
+    def test_get_service_provider_config(self, client: TestClient) -> None:
         """Test retrieving the service provider configuration."""
         response = client.get("/scim/v2/ServiceProviderConfig")
         assert response.status_code == 200

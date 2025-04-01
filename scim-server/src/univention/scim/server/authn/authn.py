@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 from abc import ABC, abstractmethod
+from typing import Any
 
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPAuthorizationCredentials
 
 
 class Authentication(ABC):
@@ -13,7 +14,7 @@ class Authentication(ABC):
     """
 
     @abstractmethod
-    async def authenticate(self, credentials: HTTPAuthorizationCredentials) -> dict:
+    async def authenticate(self, credentials: HTTPAuthorizationCredentials) -> dict[str, Any]:
         """
         Authenticate credentions.
 

@@ -82,7 +82,13 @@ uv pip install --all-extras
 **Run locally in dev mode:**
 
 ```bash
-TOKEN_VALIDATION_ENDPOINT="test" uv run uvicorn src.univention.scim.server.main:app --reload
+uv run uvicorn --factory --reload src.univention.scim.server.main:cretae_app
+```
+
+To disable authentication use:
+
+```bash
+AUTH_ENABLED=false uv run uvicorn --factory --reload src.univention.scim.server.main:cretae_app
 ```
 
 **Run tests:**
