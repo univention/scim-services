@@ -29,7 +29,7 @@
 ### Bug Fixes
 
 * Add some more logging ([9506cfd](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/9506cfdbec7fc000793d702468e5f572deeb6734))
-* Get the project and dockerfile into propper shape ([af9336d](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/af9336da4aa2616a7bd96a2426b05dd7213259de))
+* Get the project and dockerfile into proper shape ([af9336d](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/af9336da4aa2616a7bd96a2426b05dd7213259de))
 * pre commit ([3610140](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/36101405bcab0c4a358b37f8ebb5c086c28610e0))
 * pre commit for conf files ([ed86e05](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/ed86e055eccd40c5d41be547673118953fca2f6f))
 * reactivate and fix private lancelog dependency ([99fe3d4](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/99fe3d4796b808e6b6c6fa89a51b45d3b3077db7))

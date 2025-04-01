@@ -22,7 +22,7 @@ repos:
     - id: python-check-blanket-noqa
     - id: python-no-eval
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.0
+    rev: v0.11.2
     hooks:
       - id: ruff
         args: [ "--fix", "--unsafe-fixes", "--exit-non-zero-on-fix"]
@@ -60,7 +60,7 @@ repos:
           - -d line-length,no-bare-urls,no-duplicate-heading,no-duplicate-header
           - scan
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.6.6
+    rev: 0.6.11
     hooks:
       - id: uv-lock
   - repo: "https://git.knut.univention.de/univention/customers/dataport/upx/kyverno-test-pre-commit"
