@@ -82,3 +82,10 @@ repos:
     hooks:
       - id: "addlicense"
         name: "Check or add license headers to files"
+
+  - repo: "https://github.com/compilerla/conventional-pre-commit"
+    rev: "v3.3.0"
+    hooks:
+      - id: "conventional-pre-commit"
+        name: "Conventional Commit"
+        stages: ["commit-msg"]
