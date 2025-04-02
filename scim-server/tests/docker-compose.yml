@@ -13,8 +13,9 @@ services:
     cap_drop:
       - ALL
     volumes:
-      - ./:/app/tests:ro
-      - ../helm:/app/helm:ro
+      - ../src:/app/src:ro
+      - ../tests:/app/tests:ro
+      - ../pyproject.toml:/app/pyproject.toml:ro
     extra_hosts:
       - "WIN-N8V5GD1V1L.ad.test:10.207.116.197"
 
