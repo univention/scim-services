@@ -11,14 +11,12 @@ from univention.scim.server.domain.user_service import UserService
 class UserServiceImpl(UserService):
     """
     Implementation of the UserService interface.
-
     Provides domain logic for user management operations.
     """
 
     def __init__(self, user_repository: CrudScim):
         """
         Initialize the user service.
-
         Args:
             user_repository: Repository for user data
         """
@@ -32,14 +30,14 @@ class UserServiceImpl(UserService):
             raise ValueError(f"User with ID {user_id} not found")
         return user
 
-    async def list_users(self, filter_str: str = None, start_index: int = 1, count: int = None) -> ListResponse[User]:
+    async def list_users(
+        self, filter_str: str | None = None, start_index: int = 1, count: int | None = None
+    ) -> ListResponse:
         """List users with optional filtering and pagination."""
         logger.debug(f"Listing users with filter: {filter_str}, start_index: {start_index}, count: {count}")
-
         users = await self.user_repository.list(filter_str, start_index, count)
         total = await self.user_repository.count(filter_str)
-
-        return ListResponse[User](
+        return ListResponse(
             schemas=["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
             total_results=total,
             resources=users,
@@ -50,64 +48,50 @@ class UserServiceImpl(UserService):
     async def create_user(self, user: User) -> User:
         """Create a new user."""
         logger.debug("Creating new user")
-
         # Validate user data
         self._validate_user(user)
-
         # Generate ID if not provided
         if not user.id:
             user.id = str(uuid4())
-
         # Create user in repository
         created_user = await self.user_repository.create(user)
         logger.info(f"Created user with ID: {created_user.id}")
-
         return created_user
 
     async def update_user(self, user_id: str, user: User) -> User:
         """Update an existing user."""
         logger.debug(f"Updating user with ID: {user_id}")
-
         # Check if user exists
         existing_user = await self.user_repository.get(user_id)
         if not existing_user:
             raise ValueError(f"User with ID {user_id} not found")
-
         # Validate user data
         self._validate_user(user)
-
         # Ensure ID matches
         user.id = user_id
-
         # Update user in repository
         updated_user = await self.user_repository.update(user_id, user)
         logger.info(f"Updated user with ID: {user_id}")
-
         return updated_user
 
     async def delete_user(self, user_id: str) -> bool:
         """Delete a user."""
         logger.debug(f"Deleting user with ID: {user_id}")
-
         # Check if user exists
         existing_user = await self.user_repository.get(user_id)
         if not existing_user:
             raise ValueError(f"User with ID {user_id} not found")
-
         # Delete user from repository
-        success = await self.user_repository.delete(user_id)
-        if success:
+        result = await self.user_repository.delete(user_id)
+        if result:
             logger.info(f"Deleted user with ID: {user_id}")
-
-        return success
+        return bool(result)
 
     def _validate_user(self, user: User) -> None:
         """
         Validate user data.
-
         Args:
             user: The user to validate
-
         Raises:
             ValueError: If validation fails
         """

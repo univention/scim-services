@@ -8,15 +8,13 @@ from univention.scim.server.domain.rules.rule import Rule
 class RuleEvaluator:
     """
     Evaluates a set of rules against resources.
-
     This class is responsible for applying multiple rules in sequence
     to SCIM resources.
     """
 
-    def __init__(self, rules: list[Rule] = None):
+    def __init__(self, rules: list[Rule] | None = None):
         """
         Initialize the rule evaluator.
-
         Args:
             rules: List of rules to evaluate
         """
@@ -25,7 +23,6 @@ class RuleEvaluator:
     def add_rule(self, rule: Rule) -> None:
         """
         Add a rule to the evaluator.
-
         Args:
             rule: The rule to add
         """
@@ -34,18 +31,14 @@ class RuleEvaluator:
     async def evaluate(self, resource: Resource) -> Resource:
         """
         Evaluate all rules against a resource.
-
         Args:
             resource: The resource to evaluate
-
         Returns:
             The transformed resource after applying all rules
-
         Raises:
             ValueError: If any rule fails
         """
         logger.debug(f"Evaluating rules for resource {resource.id}")
-
         result = resource
         for rule in self.rules:
             try:
@@ -53,5 +46,4 @@ class RuleEvaluator:
             except ValueError as e:
                 logger.error(f"Rule {rule.get_name()} failed for resource {resource.id}: {e}")
                 raise
-
         return result
