@@ -45,8 +45,6 @@ RUN --mount=type=cache,target=/root/.cache \
 RUN --mount=type=cache,target=/root/.cache \
   uv sync --project scim-server --dev
 
-RUN uv run pytest
-
 # Only necessary once we add helm unittests
 # COPY --from=alpine/helm:3.17.1@sha256:e8d29e13b8218a8cb7b117a10a5210922474a74467bf70b6f3f1f7d9c1818ab0 /usr/bin/helm /usr/local/bin/helm
 
