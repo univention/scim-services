@@ -2,7 +2,6 @@
 
 ## 0.0.1 (2025-03-31)
 
-
 ### Features
 
 * Add  simple docker compose file and stuff for compose file to dockerfile, add deps for testing, add copied base and base default conf from directory importer ([f2a57c1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/f2a57c140afeaf347d643eff0d9b64cabc1c1c3e))
@@ -24,7 +23,6 @@
 * gitlab file changes to include image build and publish ([137ec6c](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/137ec6c166a7496e7c641af93860f2ae36355543))
 * pytest for dev deps only ([f2f04bb](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/f2f04bb2f839f45b5cca379992fa96d8550704d4))
 * uv lock changes, formatting changes ([b91d3c1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/b91d3c118bda12ef8902120ecf0349e1335a9736))
-
 
 ### Bug Fixes
 
