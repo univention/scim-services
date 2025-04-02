@@ -17,3 +17,11 @@ class ApplicationContainer(DeclarativeContainer):
 
     if settings().auth_enabled:
         authenticator = Singleton(di.di_authenticator, config=settings().authenticator)
+
+    user_repo = Singleton(di.di_user_repo)
+    user_service = Singleton(di.di_user_service, user_repository=user_repo)
+
+    group_repo = Singleton(di.di_group_repo)
+    group_service = Singleton(di.di_group_service, group_repository=group_repo)
+
+    schema_loader = Singleton(di.di_schema_loader)

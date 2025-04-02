@@ -3,6 +3,7 @@
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from functools import partial
 
 import uvicorn
 from fastapi import FastAPI, Request
@@ -14,36 +15,15 @@ from scim2_models import Error
 # Internal imports
 from univention.scim.server.configure_logging import configure_logging
 from univention.scim.server.container import ApplicationContainer
-from univention.scim.server.domain.group_service_impl import GroupServiceImpl
-from univention.scim.server.domain.repo.crud_scim_impl import CrudScimImpl
-from univention.scim.server.domain.user_service_impl import UserServiceImpl
-from univention.scim.server.model_service.load_schemas_impl import LoadSchemasImpl
+from univention.scim.server.model_service.load_schemas import LoadSchemas
 from univention.scim.server.rest.api import get_api_router
-from univention.scim.server.rest.groups import set_group_service
-from univention.scim.server.rest.users import set_user_service
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(schema_loader: LoadSchemas, app: FastAPI) -> AsyncIterator[None]:
     """Manage lifespan of FastAPI app"""
     # Initialization tasks when the application starts.
     logger.info("Starting SCIM server")
-
-    # TODO: move to di
-    # Initialize dependencies
-    schema_loader = LoadSchemasImpl()
-
-    # Create repositories
-    user_repository = CrudScimImpl()
-    group_repository = CrudScimImpl()
-
-    # Create services
-    user_service = UserServiceImpl(user_repository)
-    group_service = GroupServiceImpl(group_repository)
-
-    # Inject services into routers
-    set_user_service(user_service)
-    set_group_service(group_service)
 
     # Load schemas and perform startup tasks
     try:
@@ -76,7 +56,7 @@ def create_app() -> FastAPI:
         title="Univention SCIM Server",
         description="SCIM 2.0 API implementation for Univention",
         version="0.1.0",
-        lifespan=lifespan,
+        lifespan=partial(lifespan, container.schema_loader()),
     )
 
     # Add CORS middleware
@@ -101,7 +81,7 @@ def create_app() -> FastAPI:
         return {"msg": "Hello World"}
 
     # Include API router
-    app.include_router(get_api_router(), prefix=container.settings().api_prefix)
+    app.include_router(get_api_router(container), prefix=container.settings().api_prefix)
 
     return app
 

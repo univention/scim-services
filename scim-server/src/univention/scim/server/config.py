@@ -45,6 +45,14 @@ class DependencyInjectionSettings(BaseSettings):
     # TODO: change for real implementation, allow all just for dev now
     di_authenticator: str = "univention.scim.server.authn.authn_impl.AllowAllBearerAuthentication"
 
+    di_user_repo: str = "univention.scim.server.domain.repo.crud_scim_impl.CrudScimImpl"
+    di_user_service: str = "univention.scim.server.domain.user_service_impl.UserServiceImpl"
+
+    di_group_repo: str = "univention.scim.server.domain.repo.crud_scim_impl.CrudScimImpl"
+    di_group_service: str = "univention.scim.server.domain.group_service_impl.GroupServiceImpl"
+
+    di_schema_loader: str = "univention.scim.server.model_service.load_schemas_impl.LoadSchemasImpl"
+
 
 @lru_cache(maxsize=1)
 def application_settings() -> ApplicationSettings:
