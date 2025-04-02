@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+from typing import Any
+
 from loguru import logger
 from scim2_models import Group, User
 
@@ -11,7 +13,7 @@ class ScimToUdmMapper:
     Converts SCIM objects to the property format expected by UDM.
     """
 
-    def map_user(self, user: User) -> dict:
+    def map_user(self, user: User) -> dict[str, Any]:
         """
         Map a SCIM User to UDM user properties.
 
@@ -59,7 +61,7 @@ class ScimToUdmMapper:
 
         return properties
 
-    def map_group(self, group: Group) -> dict:
+    def map_group(self, group: Group) -> dict[str, Any]:
         """
         Map a SCIM Group to UDM group properties.
 

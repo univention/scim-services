@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+from typing import Any
+
 from loguru import logger
 
 
@@ -10,7 +12,7 @@ class UdmClient:
     Provides methods for retrieving and manipulating UDM objects.
     """
 
-    def __init__(self, base_url: str = None, username: str = None, password: str = None):
+    def __init__(self, base_url: str | None = None, username: str | None = None, password: str | None = None):
         """
         Initialize the UDM client.
 
@@ -23,7 +25,7 @@ class UdmClient:
         self.username = username
         self.password = password
 
-    async def get_object(self, module: str, object_id: str) -> dict:
+    async def get_object(self, module: str, object_id: str) -> dict[str, Any]:
         """
         Get a UDM object by ID.
 
@@ -50,7 +52,9 @@ class UdmClient:
             },
         }
 
-    async def list_objects(self, module: str, filter_str: str = None, position: str = None) -> list[dict]:
+    async def list_objects(
+        self, module: str, filter_str: str | None = None, position: str | None = None
+    ) -> list[dict[str, Any]]:
         """
         List UDM objects.
 
@@ -68,7 +72,9 @@ class UdmClient:
         # For now, just return an empty list
         return []
 
-    async def create_object(self, module: str, properties: dict, position: str = None) -> dict:
+    async def create_object(
+        self, module: str, properties: dict[str, Any], position: str | None = None
+    ) -> dict[str, Any]:
         """
         Create a UDM object.
 
@@ -86,7 +92,7 @@ class UdmClient:
         # For now, just return the input properties with a dummy DN
         return {"dn": "uid=new,cn=users,dc=example,dc=com", "props": properties}
 
-    async def modify_object(self, module: str, object_id: str, properties: dict) -> dict:
+    async def modify_object(self, module: str, object_id: str, properties: dict[str, Any]) -> dict[str, Any]:
         """
         Modify a UDM object.
 
