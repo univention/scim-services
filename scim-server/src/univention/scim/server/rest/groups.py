@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, Path, Query, Response
 from loguru import logger
 from scim2_models import Group, ListResponse
@@ -12,7 +14,7 @@ router = APIRouter()
 _group_service = None
 
 
-def set_group_service(service):
+def set_group_service(service: Any) -> None:
     """
     Set the group service.
 
@@ -32,7 +34,7 @@ async def list_groups(
     count: int | None = Query(None, ge=0, description="Maximum number of results"),
     attributes: str | None = Query(None, description="Comma-separated list of attributes to include"),
     excluded_attributes: str | None = Query(None, description="Comma-separated list of attributes to exclude"),
-):
+) -> ListResponse[Group]:
     """
     List groups with optional filtering and pagination.
 
@@ -47,7 +49,7 @@ async def list_groups(
         return await _group_service.list_groups(filter, start_index, count)
     except Exception as e:
         logger.error(f"Error listing groups: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/{group_id}", response_model=Group)
@@ -55,7 +57,7 @@ async def get_group(
     group_id: str = Path(..., description="Group ID"),
     attributes: str | None = Query(None, description="Comma-separated list of attributes to include"),
     excluded_attributes: str | None = Query(None, description="Comma-separated list of attributes to exclude"),
-):
+) -> Group:
     """
     Get a specific group by ID.
 
@@ -70,14 +72,14 @@ async def get_group(
         group = await _group_service.get_group(group_id)
         return group
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error getting group {group_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("", response_model=Group, status_code=201)
-async def create_group(group: Group, response: Response):
+async def create_group(group: Group, response: Response) -> Group:
     """
     Create a new group.
 
@@ -93,17 +95,17 @@ async def create_group(group: Group, response: Response):
         response.headers["Location"] = f"/Groups/{created_group.id}"
         return created_group
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error creating group: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.put("/{group_id}", response_model=Group)
 async def update_group(
     group_id: str = Path(..., description="Group ID"),
     group: Group = ...,
-):
+) -> Group:
     """
     Replace a group.
 
@@ -118,15 +120,15 @@ async def update_group(
         return await _group_service.update_group(group_id, group)
     except ValueError as e:
         if "not found" in str(e):
-            raise HTTPException(status_code=404, detail=str(e))
-        raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error updating group {group_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.patch("/{group_id}")
-async def patch_group(group_id: str):
+async def patch_group(group_id: str) -> None:
     """
     Patch a group - not implemented yet.
 
@@ -137,7 +139,7 @@ async def patch_group(group_id: str):
 
 
 @router.delete("/{group_id}", status_code=204)
-async def delete_group(group_id: str = Path(..., description="Group ID")):
+async def delete_group(group_id: str = Path(..., description="Group ID")) -> Response:
     """
     Delete a group.
 
@@ -154,7 +156,7 @@ async def delete_group(group_id: str = Path(..., description="Group ID")):
             raise HTTPException(status_code=404, detail=f"Group {group_id} not found")
         return Response(status_code=204)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error deleting group {group_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

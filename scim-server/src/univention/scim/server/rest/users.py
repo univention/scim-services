@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, Path, Query, Response
 from loguru import logger
 from scim2_models import ListResponse, User
@@ -12,7 +14,7 @@ router = APIRouter()
 _user_service = None
 
 
-def set_user_service(service):
+def set_user_service(service: Any) -> None:
     """
     Set the user service.
 
@@ -32,7 +34,7 @@ async def list_users(
     count: int | None = Query(None, ge=0, description="Maximum number of results"),
     attributes: str | None = Query(None, description="Comma-separated list of attributes to include"),
     excluded_attributes: str | None = Query(None, description="Comma-separated list of attributes to exclude"),
-):
+) -> ListResponse[User]:
     """
     List users with optional filtering and pagination.
 
@@ -47,7 +49,7 @@ async def list_users(
         return await _user_service.list_users(filter, start_index, count)
     except Exception as e:
         logger.error(f"Error listing users: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/{user_id}", response_model=User)
@@ -55,7 +57,7 @@ async def get_user(
     user_id: str = Path(..., description="User ID"),
     attributes: str | None = Query(None, description="Comma-separated list of attributes to include"),
     excluded_attributes: str | None = Query(None, description="Comma-separated list of attributes to exclude"),
-):
+) -> User:
     """
     Get a specific user by ID.
 
@@ -70,14 +72,14 @@ async def get_user(
         user = await _user_service.get_user(user_id)
         return user
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error getting user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("", response_model=User, status_code=201)
-async def create_user(user: User, response: Response):
+async def create_user(user: User, response: Response) -> User:
     """
     Create a new user.
 
@@ -93,17 +95,17 @@ async def create_user(user: User, response: Response):
         response.headers["Location"] = f"/Users/{created_user.id}"
         return created_user
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error creating user: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.put("/{user_id}", response_model=User)
 async def update_user(
     user_id: str = Path(..., description="User ID"),
     user: User = ...,
-):
+) -> User:
     """
     Replace a user.
 
@@ -118,15 +120,15 @@ async def update_user(
         return await _user_service.update_user(user_id, user)
     except ValueError as e:
         if "not found" in str(e):
-            raise HTTPException(status_code=404, detail=str(e))
-        raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error updating user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.patch("/{user_id}")
-async def patch_user(user_id: str):
+async def patch_user(user_id: str) -> None:
     """
     Patch a user - not implemented yet.
 
@@ -137,7 +139,7 @@ async def patch_user(user_id: str):
 
 
 @router.delete("/{user_id}", status_code=204)
-async def delete_user(user_id: str = Path(..., description="User ID")):
+async def delete_user(user_id: str = Path(..., description="User ID")) -> Response:
     """
     Delete a user.
 
@@ -154,7 +156,7 @@ async def delete_user(user_id: str = Path(..., description="User ID")):
             raise HTTPException(status_code=404, detail=f"User {user_id} not found")
         return Response(status_code=204)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error deleting user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
