@@ -7,9 +7,9 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-scim-server = { path = "scim-server" }
-scim-udm-transformer-lib = { path = "scim-udm-transformer-lib" }
-udm-to-scim-sync = { path = "udm-to-scim-sync" }
+scim-server = { workspace = true }
+scim-udm-transformer-lib = { workspace = true }
+udm-to-scim-sync = { workspace = true }
 lancelog = { index = "gitlab" }
 
 [tool.uv.workspace]
