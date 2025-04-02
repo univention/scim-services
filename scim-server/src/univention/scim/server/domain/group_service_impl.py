@@ -32,12 +32,12 @@ class GroupServiceImpl(GroupService):
 
     async def list_groups(
         self, filter_str: str | None = None, start_index: int = 1, count: int | None = None
-    ) -> ListResponse:
+    ) -> ListResponse[Group]:
         """List groups with optional filtering and pagination."""
         logger.debug(f"Listing groups with filter: {filter_str}, start_index: {start_index}, count: {count}")
         groups = await self.group_repository.list(filter_str, start_index, count)
         total = await self.group_repository.count(filter_str)
-        return ListResponse(
+        return ListResponse[Group](
             schemas=["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
             total_results=total,
             resources=groups,

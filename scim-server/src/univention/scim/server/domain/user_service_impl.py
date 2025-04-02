@@ -32,12 +32,12 @@ class UserServiceImpl(UserService):
 
     async def list_users(
         self, filter_str: str | None = None, start_index: int = 1, count: int | None = None
-    ) -> ListResponse:
+    ) -> ListResponse[User]:
         """List users with optional filtering and pagination."""
         logger.debug(f"Listing users with filter: {filter_str}, start_index: {start_index}, count: {count}")
         users = await self.user_repository.list(filter_str, start_index, count)
         total = await self.user_repository.count(filter_str)
-        return ListResponse(
+        return ListResponse[User](
             schemas=["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
             total_results=total,
             resources=users,

@@ -27,7 +27,7 @@ class GroupService(ABC):
     @abstractmethod
     async def list_groups(
         self, filter_str: str | None = None, start_index: int = 1, count: int | None = None
-    ) -> ListResponse:
+    ) -> ListResponse[Group]:
         """
         List groups with optional filtering and pagination.
         Args:
