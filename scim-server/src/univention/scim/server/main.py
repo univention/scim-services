@@ -87,10 +87,9 @@ def create_app() -> FastAPI:
 
 
 def run() -> None:
-    create_app()
     """Entry point for running the application."""
     uvicorn.run(
-        "univention.scim.server.main:app",
+        "univention.scim.server.main:create_app",
         host=ApplicationContainer.settings().host,
         port=ApplicationContainer.settings().port,
     )

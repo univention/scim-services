@@ -19,21 +19,14 @@ ENV UV_LINK_MODE=copy \
   UV_PYTHON=python3.11
 
 COPY scim-udm-transformer-lib /app/scim-udm-transformer-lib
+COPY scim-server /app/scim-server
+COPY udm-to-scim-sync /app/udm-to-scim-sync
 COPY pyproject.toml README.md /app/
-COPY scim-server/pyproject.toml scim-server/uv.lock /app/scim-server/
 
 WORKDIR /app
-RUN --mount=type=cache,target=/root/.cache \
-  uv sync \
-    --project scim-server/ \
-    --locked \
-    --no-dev \
-    --no-install-project && \
-  uv export -o ./scim-server/requirements.txt
-
-COPY scim-server/src /app/scim-server/src
-RUN --mount=type=cache,target=/root/.cache \
-  uv sync --locked --no-dev --no-editable --project scim-server/
+RUN --mount=type=cache,target=/root/.cache uv build scim-udm-transformer-lib
+RUN --mount=type=cache,target=/root/.cache uv build udm-to-scim-sync
+RUN --mount=type=cache,target=/root/.cache uv build scim-server
 
 ##########################################################################
 # Test stage: dev deps + tests
@@ -41,21 +34,18 @@ FROM build AS test
 SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
 WORKDIR /app
 
+# unbuffered output
+ENV PYTHONUNBUFFERED=1
+
 # Install dev dependencies for scim-server
 RUN --mount=type=cache,target=/root/.cache \
-  uv sync --project scim-server/ --dev
+  uv sync --project scim-udm-transformer-lib --dev
+RUN --mount=type=cache,target=/root/.cache \
+  uv sync --project udm-to-scim-sync --dev
+RUN --mount=type=cache,target=/root/.cache \
+  uv sync --project scim-server --dev
 
-# Add test files
-COPY scim-server/tests /app/scim-server/tests
-
-# Venv path + unbuffered output
-ENV PYTHONUNBUFFERED=1 \
-    PATH=/app/scim-server/.venv/bin:$PATH
-
-# Avoid pytest cache warnings
-RUN mkdir -p /app/scim-server/.pytest_cache
-
-WORKDIR /app/scim-server
+RUN uv run pytest
 
 # Only necessary once we add helm unittests
 # COPY --from=alpine/helm:3.17.1@sha256:e8d29e13b8218a8cb7b117a10a5210922474a74467bf70b6f3f1f7d9c1818ab0 /usr/bin/helm /usr/local/bin/helm
@@ -64,22 +54,18 @@ WORKDIR /app/scim-server
 FROM ${UCS_BASE_IMAGE}:${UCS_BASE_IMAGE_TAG} AS final
 SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
 
-ENV PYTHONUNBUFFERED=1 \
-    PATH=/app/scim-server/.venv/bin:$PATH
+ENV PYTHONUNBUFFERED=1
 
 RUN \
     groupadd -r scim-server -g 1000 && \
     useradd -r -d /app -g scim-server -N scim-server -u 1000
 
-COPY --from=build --chown=scim-server:scim-server /app/scim-server/.venv /app/scim-server/.venv
-COPY --from=build --chown=scim-server:scim-server /app/scim-server/requirements.txt /app/scim-server/
+COPY --from=build --chown=scim-server:scim-server /app/dist/ /app/
 
+RUN apt install -y python3-pip
+RUN pip3 install --break-system-packages --no-cache-dir --extra-index-url https://git.knut.univention.de/api/v4/projects/1449/packages/pypi/simple /app/*.whl
+
+WORKDIR /app/
 USER scim-server
-WORKDIR /app/scim-server
 
 CMD ["scim-server"]
-
-RUN \
-  .venv/bin/python3.11 -V && \
-  .venv/bin/python3.11 -m site && \
-  .venv/bin/python3.11 -c 'import univention.scim.server'
