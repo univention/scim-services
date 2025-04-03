@@ -5,6 +5,8 @@ requires-python = ">=3.11"
 dependencies = [
     "lancelog>=0.1.0",
 ]
+authors = [{ name = "Univention GmbH", email = "packages@univention.de" }]
+license = "AGPL-3.0-only"
 
 [tool.uv.sources]
 scim-server = { workspace = true }

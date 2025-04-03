@@ -2,14 +2,12 @@
 
 ## [0.1.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.0.1...v0.1.0) (2025-04-03)
 
-
 ### Features
 
 * Add dependency injection and add authentication stub allow all ([2bf94de](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/2bf94de72155965a9d4499af2f10df77be6018f7)), closes [univention/dev/internal/team-nubus#1097](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1097)
 * Add unit test for authentication ([2aaf5f0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/2aaf5f04926083f16d3ac4a798b1716c14befbf1)), closes [univention/dev/internal/team-nubus#1097](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1097)
 * boilerplate code ([8e9e999](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/8e9e999088d5d2be6453f9e76d51cd1aae07cbe5))
 * **dependency-injection:** Move services and repos to dependency injection ([5313a45](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/5313a450fc9f671630533a964e3df9337310d817)), closes [univention/dev/internal/team-nubus#1097](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1097)
-
 
 ### Bug Fixes
 
@@ -19,7 +17,7 @@
 * Improve auth Depends ([1e34144](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/1e34144a9bd036c9031e3f71600a8f35ad9f7c3d)), closes [univention/dev/internal/team-nubus#1097](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1097)
 * **pipeline:** Add conventional-pre-commit pre-commit for common-ci lint-commit-message job ([fc64225](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/fc64225377ef91fb15d8a991ab230a0312848892)), closes [univention/dev/internal/team-nubus#1097](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1097)
 * **tests:** Allow running tests without the need of rebuilding the test docker image ([b712f6f](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/b712f6f271eb5786114141e485f58196da057432)), closes [univention/dev/internal/team-nubus#1097](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1097)
-* **tests:** Fix runnig tests in pipeline ([87c211e](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/87c211eb7a1390e6a1c79f785d292cacebc26cdc)), closes [univention/dev/internal/team-nubus#1097](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1097)
+* **tests:** Fix running tests in pipeline ([87c211e](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/87c211eb7a1390e6a1c79f785d292cacebc26cdc)), closes [univention/dev/internal/team-nubus#1097](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1097)
 * **tests:** Improve unit tests and fix pre commit hooks ([e85bca9](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/e85bca9f45136f669c19c3a2061f28985c98d973)), closes [univention/dev/internal/team-nubus#1097](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1097)
 * type hints in domain ([c397442](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/c397442cf6867629e86c77f4c1f50e66f247977a))
 * typo in file name ([eee71b2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/eee71b290451ec5c015758bfd2856ee7f9792577))

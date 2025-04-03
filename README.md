@@ -47,7 +47,7 @@ TODO
 
 ## Documentation
 
-- Development documentation: see [scim-dev-docs](https://git.knut.univention.de/univention/dev/projects/scim/scim-dev-docs).
+- Development documentation is in the [docs](docs) directory.
 - Public documentation: TODO
 
 ## Development
