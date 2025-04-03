@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.1.0...v0.1.1) (2025-04-03)
+
+
+### Bug Fixes
+
+* **project:** Add license information to package ([909a7b9](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/909a7b924473b78649dcd6e8291519285daf66eb))
+
 ## [0.1.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.0.1...v0.1.0) (2025-04-03)
 
 ### Features
