@@ -1,11 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+from typing import Generic, TypeVar
+
 from loguru import logger
 from scim2_models import Resource
 from univention.scim.server.domain.rules.rule import Rule
 
 
-class RuleEvaluator:
+T = TypeVar("T", bound=Resource)
+
+
+class RuleEvaluator(Generic[T]):
     """
     Evaluates a set of rules against resources.
     This class is responsible for applying multiple rules in sequence
@@ -28,7 +33,7 @@ class RuleEvaluator:
         """
         self.rules.append(rule)
 
-    async def evaluate(self, resource: Resource) -> Resource:
+    async def evaluate(self, resource: T) -> T:
         """
         Evaluate all rules against a resource.
         Args:

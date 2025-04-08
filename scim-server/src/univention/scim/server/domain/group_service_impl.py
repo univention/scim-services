@@ -4,8 +4,10 @@ from uuid import uuid4
 
 from loguru import logger
 from scim2_models import Group, ListResponse
-from univention.scim.server.domain.crud_scim import CrudScim
 from univention.scim.server.domain.group_service import GroupService
+from univention.scim.server.domain.repo.crud_manager import CrudManager
+from univention.scim.server.domain.rules.evaluate import RuleEvaluator
+from univention.scim.server.domain.rules.loader import RuleLoader
 
 
 class GroupServiceImpl(GroupService):
@@ -14,13 +16,15 @@ class GroupServiceImpl(GroupService):
     Provides domain logic for group management operations.
     """
 
-    def __init__(self, group_repository: CrudScim):
+    def __init__(self, group_repository: CrudManager[Group], rule_evaluator: RuleEvaluator | None = None) -> None:
         """
         Initialize the group service.
         Args:
-            group_repository: Repository for group data
+            group_repository: Repository manager for group data
+            rule_evaluator: Evaluator for business rules, if None will be loaded from RuleLoader
         """
         self.group_repository = group_repository
+        self.rule_evaluator = rule_evaluator or RuleLoader.get_group_rule_evaluator()
 
     async def get_group(self, group_id: str) -> Group:
         """Get a group by ID."""
@@ -50,9 +54,14 @@ class GroupServiceImpl(GroupService):
         logger.debug("Creating new group")
         # Validate group data
         self._validate_group(group)
+
         # Generate ID if not provided
         if not group.id:
             group.id = str(uuid4())
+
+        # Apply business rules
+        group = await self.rule_evaluator.evaluate(group)
+
         # Create group in repository
         created_group = await self.group_repository.create(group)
         logger.info(f"Created group with ID: {created_group.id}")
@@ -65,13 +74,19 @@ class GroupServiceImpl(GroupService):
         existing_group = await self.group_repository.get(group_id)
         if not existing_group:
             raise ValueError(f"Group with ID {group_id} not found")
+
         # Validate group data
         self._validate_group(group)
+
         # Ensure ID matches
         group.id = group_id
+
+        # Apply business rules
+        group = await self.rule_evaluator.evaluate(group)
+
         # Update group in repository
         updated_group = await self.group_repository.update(group_id, group)
-        logger.info(f"Updated group with ID: {group_id}")
+        logger.info("Updated group.", id=group_id)
         return updated_group
 
     async def delete_group(self, group_id: str) -> bool:
@@ -81,6 +96,7 @@ class GroupServiceImpl(GroupService):
         existing_group = await self.group_repository.get(group_id)
         if not existing_group:
             raise ValueError(f"Group with ID {group_id} not found")
+
         # Delete group from repository
         result = await self.group_repository.delete(group_id)
         if result:

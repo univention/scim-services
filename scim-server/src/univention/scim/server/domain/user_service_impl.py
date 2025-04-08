@@ -1,10 +1,13 @@
+# src/univention/scim/server/domain/user_service_impl.py
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 from uuid import uuid4
 
 from loguru import logger
 from scim2_models import ListResponse, User
-from univention.scim.server.domain.crud_scim import CrudScim
+from univention.scim.server.domain.repo.crud_manager import CrudManager
+from univention.scim.server.domain.rules.evaluate import RuleEvaluator
+from univention.scim.server.domain.rules.loader import RuleLoader
 from univention.scim.server.domain.user_service import UserService
 
 
@@ -14,13 +17,15 @@ class UserServiceImpl(UserService):
     Provides domain logic for user management operations.
     """
 
-    def __init__(self, user_repository: CrudScim):
+    def __init__(self, user_repository: CrudManager[User], rule_evaluator: RuleEvaluator | None = None) -> None:
         """
         Initialize the user service.
         Args:
-            user_repository: Repository for user data
+            user_repository: Repository manager for user data
+            rule_evaluator: Evaluator for business rules, if None will be loaded from RuleLoader
         """
         self.user_repository = user_repository
+        self.rule_evaluator = rule_evaluator or RuleLoader.get_user_rule_evaluator()
 
     async def get_user(self, user_id: str) -> User:
         """Get a user by ID."""
@@ -50,9 +55,14 @@ class UserServiceImpl(UserService):
         logger.debug("Creating new user")
         # Validate user data
         self._validate_user(user)
+
         # Generate ID if not provided
         if not user.id:
             user.id = str(uuid4())
+
+        # Apply business rules
+        user = await self.rule_evaluator.evaluate(user)
+
         # Create user in repository
         created_user = await self.user_repository.create(user)
         logger.info(f"Created user with ID: {created_user.id}")
@@ -65,10 +75,16 @@ class UserServiceImpl(UserService):
         existing_user = await self.user_repository.get(user_id)
         if not existing_user:
             raise ValueError(f"User with ID {user_id} not found")
+
         # Validate user data
         self._validate_user(user)
+
         # Ensure ID matches
         user.id = user_id
+
+        # Apply business rules
+        user = await self.rule_evaluator.evaluate(user)
+
         # Update user in repository
         updated_user = await self.user_repository.update(user_id, user)
         logger.info(f"Updated user with ID: {user_id}")
@@ -81,6 +97,7 @@ class UserServiceImpl(UserService):
         existing_user = await self.user_repository.get(user_id)
         if not existing_user:
             raise ValueError(f"User with ID {user_id} not found")
+
         # Delete user from repository
         result = await self.user_repository.delete(user_id)
         if result:
