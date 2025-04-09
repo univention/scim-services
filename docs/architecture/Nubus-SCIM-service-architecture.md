@@ -246,6 +246,31 @@ That is a convention used by popular container images.
 - Official documentation about secrets handling for [Docker Compose](https://docs.docker.com/compose/how-tos/use-secrets/).
 - Official documentation about secrets handling for [Kubernetes](https://kubernetes.io/docs/concepts/configuration/secret/).
 
+## Logging
+
+Logging MUST follow the rules laid out in the following ADRs:
+
+- [ADR 0004 Logging Topology](https://git.knut.univention.de/univention/decision-records/-/blob/main/dev/0004-logging-topology.md)
+- [ADR 0005 Log levels](https://git.knut.univention.de/univention/decision-records/-/blob/main/dev/0005-log-levels.md)
+- [ADR 0006 Log format](https://git.knut.univention.de/univention/decision-records/-/blob/main/dev/0006-log-format.md)
+- [ADR 0007 Log messages](https://git.knut.univention.de/univention/decision-records/-/blob/main/dev/0007-log-messages.md)
+- [ADR 0008 Structured logging](https://git.knut.univention.de/univention/decision-records/-/blob/main/dev/0008-structured-logging.md)
+
+To implement a compatible logging setup, use the [Lancelog](https://git.knut.univention.de/univention/dev/libraries/lancelog) library.
+
+Structured logging is MANDATORY.
+It is not only about the output format.
+For your logs to be well parsable by humans and machines, _the event and the data must be separately recognizable_.
+
+Basically, log the event in the text message and data as separate arguments:
+
+```diff
+- logger.info(f"Created {num} users in {ou} using {request.method}.")
++ logger.info("Created users.", amount=num, ou=ou, method=request.method)
+```
+
+See the README of Lancelog for more syntactic sugar.
+
 ## Deliverables
 
 The SCIM service will be provided to Nubus for Kubernetes and UCS customers.
