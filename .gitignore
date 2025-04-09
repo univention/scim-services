@@ -11,5 +11,6 @@ __pycache__/
 .ruff_cache/
 .pytest_cache/
 **/kyverno-test.yaml
+**/*.bkp
 **/*.tgz
 **/.kyverno/manifest.yaml
