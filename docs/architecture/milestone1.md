@@ -76,8 +76,10 @@ Goals of this development stage:
 - To use the SCIM REST API the client must send an OAuth token with the request.
   - Successful validation of the token is sufficient to gain access.
   - The content of the token does not matter and is ignored.
-  - A certificate to verify the OAuth tokens is provided as a (bind mounted) file.
-  - The path to the certificate file can be read from an environment variable.
+  - The certificate to verify the OAuth tokens is downloaded from Keycloak every time the service starts
+    (see https://www.keycloak.org/securing-apps/oidc-layers for endpoints).
+    - The IdP's configuration can be found at `https://<idp-url>/realms/{realm-name}/.well-known/openid-configuration`.
+    - The IdP's public certificate can be found at `https://<idp-url>/realms/{realm-name}/protocol/openid-connect/certs`.
 - The SCIM REST server reads the UDM REST API's connection settings from the environment.
   - Secrets (passwords, certificates etc.) are read from files whose paths are in environment variables.
   - The LDAP account (the "bind dn") is configurable.
