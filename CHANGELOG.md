@@ -2,7 +2,6 @@
 
 ## [0.3.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.2.0...v0.3.0) (2025-04-11)
 
-
 ### Features
 
 * **authentication:** Implement OpenID connect authentication ([5da8175](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/5da817558b581d0af3d336021ee796cd555bb4c1)), closes [univention/dev/internal/team-nubus#1098](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1098)
