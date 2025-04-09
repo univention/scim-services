@@ -32,6 +32,9 @@ class RepositoryContainer(containers.DeclarativeContainer):
         scim2udm_mapper=scim2udm_mapper,
         udm2scim_mapper=udm2scim_mapper,
         resource_class=User,
+        udm_url=config.settings.udm.udm_url,
+        udm_username=config.settings.udm.udm_username,
+        udm_password=config.settings.udm.udm_password,
     )
 
     group_repository: CrudUdm[Group] = providers.Factory(
@@ -40,6 +43,9 @@ class RepositoryContainer(containers.DeclarativeContainer):
         scim2udm_mapper=scim2udm_mapper,
         udm2scim_mapper=udm2scim_mapper,
         resource_class=Group,
+        udm_url=config.settings.udm.udm_url,
+        udm_username=config.settings.udm.udm_username,
+        udm_password=config.settings.udm.udm_password,
     )
 
     # CRUD Manager factories
@@ -54,7 +60,9 @@ class RepositoryContainer(containers.DeclarativeContainer):
     # Generic factory method for creating crud managers for any resource type
     # This is provided for backward compatibility and explicit creation
     @staticmethod
-    def create_for_udm(resource_type: str, resource_class: type[T]) -> CrudManager[T]:
+    def create_for_udm(
+        resource_type: str, resource_class: type[T], udm_url: str, udm_username: str, udm_password: str
+    ) -> CrudManager[T]:
         """
         Create a CrudManager that uses UDM as the primary repository.
         This is a static helper method that doesn't use the container providers,
@@ -63,6 +71,9 @@ class RepositoryContainer(containers.DeclarativeContainer):
         Args:
             resource_type: The type of resource to manage ('User' or 'Group')
             resource_class: The class of resource being managed (e.g., User, Group)
+            udm_url: URL of the UDM REST API
+            udm_username: Username for UDM authentication
+            udm_password: Password for UDM authentication
         Returns:
             A CrudManager instance configured for UDM
         """
@@ -74,6 +85,9 @@ class RepositoryContainer(containers.DeclarativeContainer):
             scim2udm_mapper=scim2udm_mapper,
             udm2scim_mapper=udm2scim_mapper,
             resource_class=resource_class,
+            udm_url=udm_url,
+            udm_username=udm_username,
+            udm_password=udm_password,
         )
 
         return CrudManager(primary_repo, resource_type)

@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
-
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -66,9 +65,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.error(f"Failed to load schemas: {e}")
         raise
-
     yield
-
     # Cleanup tasks when the application is shutting down
     logger.info("Shutting down SCIM server")
 

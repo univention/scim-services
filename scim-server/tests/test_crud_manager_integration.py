@@ -1,5 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+import contextlib
+import os
+import socket
+import urllib.parse
+from collections.abc import AsyncGenerator
 
 import pytest
 from scim2_models import Email, Group, Name, User
@@ -11,20 +16,39 @@ from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
 
 
-@pytest.mark.asyncio
-async def test_user_service() -> None:
-    """Test the UserService implementation with CrudManager."""
-    print("\n=== Testing User Service ===")
+def is_server_reachable(url: str, timeout: int = 2) -> bool:
+    """Check if a server is reachable by making a connection to its host and port."""
+    parsed_url = urllib.parse.urlparse(url)
+    host = parsed_url.hostname
+    port = parsed_url.port or (443 if parsed_url.scheme == "https" else 80)
 
-    # Create a CrudManager for User resources
-    # Use the repository container instead of the direct method
-    user_crud_manager = RepositoryContainer.create_for_udm("User", User)
+    if not host:
+        return False
 
-    # Create the UserService with the CrudManager
-    user_service = UserServiceImpl(user_crud_manager)
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except (TimeoutError, ConnectionRefusedError, OSError):
+        return False
 
-    # Create a test user
-    new_user = User(
+
+def skip_if_no_udm() -> bool:
+    """Check if UDM URL is reachable or if unit test only mode is enabled."""
+    # Check if we're in unit tests only mode
+    if os.environ.get("UNIT_TESTS_ONLY") == "1":
+        return True
+
+    # Check if UDM URL is reachable
+    udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
+    return not is_server_reachable(udm_url)
+
+
+# Fixtures for test resources
+@pytest.fixture
+def test_user() -> User:
+    """Create a test user."""
+    return User(
+        id="32a210b8-536c-4ad5-8339-a54fffbd9426",  # Use fixed ID for predictable tests
         schemas=["urn:ietf:params:scim:schemas:core:2.0:User"],
         user_name="jane.doe",
         name=Name(given_name="Jane", family_name="Doe"),
@@ -32,11 +56,67 @@ async def test_user_service() -> None:
         active=True,
     )
 
+
+@pytest.fixture
+def test_group() -> Group:
+    """Create a test group."""
+    return Group(
+        id="a8b90015-cbbc-4579-aa37-ef363452ec9a",  # Use fixed ID for predictable tests
+        schemas=["urn:ietf:params:scim:schemas:core:2.0:Group"],
+        display_name="Engineering Team",
+    )
+
+
+@pytest.fixture
+async def user_fixture(test_user: User) -> AsyncGenerator[User, None]:
+    """Fixture that creates and then cleans up a user."""
+    # Create a CrudManager for User resources
+    user_crud_manager = RepositoryContainer.create_for_udm("User", User, "http://test.local", "test", "test")
+    user_service = UserServiceImpl(user_crud_manager)
+
     # Create the user
-    print("Creating user...")
-    created_user = await user_service.create_user(new_user)
-    print(f"User created with ID: {created_user.id}")
-    print(f"Display name: {created_user.display_name}")  # Should be set by UserDisplayNameRule
+    created_user = await user_service.create_user(test_user)
+
+    # Yield the created user for test use
+    yield created_user
+
+    # Clean up after test
+    with contextlib.suppress(Exception):
+        await user_service.delete_user(created_user.id)
+
+
+@pytest.fixture
+async def group_fixture(test_group: Group) -> AsyncGenerator[Group, None]:
+    """Fixture that creates and then cleans up a group."""
+    # Create a CrudManager for Group resources
+    group_crud_manager = RepositoryContainer.create_for_udm("Group", Group, "http://test.local", "test", "test")
+    group_service = GroupServiceImpl(group_crud_manager)
+
+    # Create the group
+    created_group = await group_service.create_group(test_group)
+
+    # Yield the created group for test use
+    yield created_group
+
+    # Clean up after test
+    with contextlib.suppress(Exception):
+        await group_service.delete_group(created_group.id)
+
+
+@pytest.mark.asyncio
+@pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
+async def test_user_service(user_fixture: User) -> None:
+    """Test the UserService implementation with CrudManager."""
+    print("\n=== Testing User Service ===")
+
+    # Create a CrudManager for User resources
+    user_crud_manager = RepositoryContainer.create_for_udm("User", User, "http://test.local", "test", "test")
+    user_service = UserServiceImpl(user_crud_manager)
+
+    # We already have a user created by the fixture
+    created_user = user_fixture
+    print(f"Using user with ID: {created_user.id}")
+    print(f"Display name: {created_user.display_name}")
 
     # Retrieve the user
     print("\nRetrieving user...")
@@ -55,34 +135,20 @@ async def test_user_service() -> None:
     print(f"Total users: {users_response.total_results}")
     print(f"First user: {users_response.resources[0].display_name}")
 
-    # Delete the user
-    print("\nDeleting user...")
-    delete_result = await user_service.delete_user(created_user.id)
-    print(f"User deleted: {delete_result}")
-
 
 @pytest.mark.asyncio
-async def test_group_service(user_id: str = "test") -> None:
+@pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
+async def test_group_service(group_fixture: Group) -> None:
     """Test the GroupService implementation with CrudManager."""
     print("\n=== Testing Group Service ===")
 
     # Create a CrudManager for Group resources
-    # Use the repository container instead of the direct method
-    group_crud_manager = RepositoryContainer.create_for_udm("Group", Group)
-
-    # Create the GroupService with the CrudManager
+    group_crud_manager = RepositoryContainer.create_for_udm("Group", Group, "http://test.local", "test", "test")
     group_service = GroupServiceImpl(group_crud_manager)
 
-    # Create a test group
-    new_group = Group(
-        schemas=["urn:ietf:params:scim:schemas:core:2.0:Group"],
-        display_name="Engineering Team",
-    )
-
-    # Create the group
-    print("Creating group...")
-    created_group = await group_service.create_group(new_group)
-    print(f"Group created with ID: {created_group.id}")
+    # We already have a group created by the fixture
+    created_group = group_fixture
+    print(f"Using group with ID: {created_group.id}")
 
     # Retrieve the group
     print("\nRetrieving group...")
@@ -100,11 +166,6 @@ async def test_group_service(user_id: str = "test") -> None:
     groups_response = await group_service.list_groups()
     print(f"Total groups: {groups_response.total_results}")
     print(f"First group: {groups_response.resources[0].display_name}")
-
-    # Delete the group
-    print("\nDeleting group...")
-    delete_result = await group_service.delete_group(created_group.id)
-    print(f"Group deleted: {delete_result}")
 
 
 @pytest.mark.asyncio

@@ -2,13 +2,28 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 from functools import lru_cache
+from typing import Annotated
 
 from lancelog import LogLevel
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class AuthenticatorConfig(BaseSettings):
+    model_config = SettingsConfigDict(extra="allow")
     idp_openid_configuration_url: str = ""
+
+
+class UdmConfig(BaseSettings):
+    """
+    UDM REST API configuration settings.
+    """
+
+    model_config = SettingsConfigDict(extra="allow")
+
+    udm_url: Annotated[str, Field("http://localhost:9979/univention/udm", env="UDM_URL")]
+    udm_username: Annotated[str, Field("", env="UDM_USERNAME")]
+    udm_password: Annotated[str, Field("", env="UDM_PASSWORD")]
 
 
 class ApplicationSettings(BaseSettings):
@@ -23,6 +38,7 @@ class ApplicationSettings(BaseSettings):
         case_sensitive=False,
         env_nested_delimiter="_",
         env_nested_max_split=1,
+        extra="allow",
     )
 
     # API settings
@@ -37,6 +53,8 @@ class ApplicationSettings(BaseSettings):
     # Authentication and authorization
     auth_enabled: bool = True
     authenticator: AuthenticatorConfig = AuthenticatorConfig()
+    # UDM configuration
+    udm: UdmConfig = UdmConfig()
 
 
 class DependencyInjectionSettings(BaseSettings):
@@ -47,11 +65,9 @@ class DependencyInjectionSettings(BaseSettings):
     di_oidc_configuration: str = "univention.scim.server.authn.oidc_configuration_impl.OpenIDConnectConfigurationImpl"
     di_authenticator: str = "univention.scim.server.authn.authn_impl.OpenIDConnectAuthentication"
 
-    # Use in-memory implementation by default, but can be overridden to use UDM repositories
-    # Set these to "univention.scim.server.domain.repo.container.RepositoryContainer.user_crud_manager"
-    # to use the UDM-backed repositories
-    di_user_repo: str = "univention.scim.server.domain.repo.crud_scim_impl.CrudScimImpl"
-    di_group_repo: str = "univention.scim.server.domain.repo.crud_scim_impl.CrudScimImpl"
+    # Use UDM-backed repositories for users
+    di_user_repo: str = "univention.scim.server.domain.repo.container.RepositoryContainer.user_crud_manager"
+    di_group_repo: str = "univention.scim.server.domain.repo.container.RepositoryContainer.group_crud_manager"
 
     di_user_service: str = "univention.scim.server.domain.user_service_impl.UserServiceImpl"
     di_group_service: str = "univention.scim.server.domain.group_service_impl.GroupServiceImpl"

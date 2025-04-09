@@ -29,9 +29,9 @@ class UdmToScimMapper:
 
         props = udm_user.get("props", {})
 
-        # Extract user ID from DN
-        # This is a simplistic approach; real implementation would need proper ID extraction
-        user_id = props.get("username", "unknown")
+        # Get univentionObjectIdentifier for user ID
+        # This is the key change for the ticket implementation
+        user_id = props.get("univentionObjectIdentifier", props.get("username", "unknown"))
 
         # Create User object
         user = User(
@@ -94,9 +94,8 @@ class UdmToScimMapper:
 
         props = udm_group.get("props", {})
 
-        # Extract group ID from DN
-        # This is a simplistic approach; real implementation would need proper ID extraction
-        group_id = props.get("name", "unknown")
+        # Extract group ID from univentionObjectIdentifier
+        group_id = props.get("univentionObjectIdentifier", props.get("name", "unknown"))
 
         # Create Group object
         group = Group(
