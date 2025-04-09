@@ -82,13 +82,13 @@ uv pip install --all-extras
 **Run locally in dev mode:**
 
 ```bash
-uv run uvicorn --factory --reload src.univention.scim.server.main:cretae_app
+AUTH_ENABLED=false uv run uvicorn --factory --reload src.univention.scim.server.main:create_app
 ```
 
-To disable authentication use:
+To use authentication an IDP configuration URL must be given:
 
 ```bash
-AUTH_ENABLED=false uv run uvicorn --factory --reload src.univention.scim.server.main:cretae_app
+AUTHENTICATOR_IDP_OPENID_CONFIGURATION_URL="https://accounts.google.com/.well-known/openid-configuration" uv run uvicorn --factory --reload src.univention.scim.server.main:create_app
 ```
 
 **Run tests:**

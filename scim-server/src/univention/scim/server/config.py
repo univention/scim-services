@@ -1,15 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 from functools import lru_cache
-from typing import Annotated
 
 from lancelog import LogLevel
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class AuthenticatorConfig(BaseSettings):
-    token_validation_endpoint: Annotated[str, Field("", env="TOKEN_VALIDATION_ENDPOINT")]
+    idp_openid_configuration_url: str = ""
 
 
 class ApplicationSettings(BaseSettings):
@@ -17,6 +15,14 @@ class ApplicationSettings(BaseSettings):
     Application settings with support for environment variables and .env files.
     All settings can be overridden using environment variables.
     """
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        env_nested_delimiter="_",
+        env_nested_max_split=1,
+    )
 
     # API settings
     api_prefix: str = "/scim/v2"
@@ -29,14 +35,16 @@ class ApplicationSettings(BaseSettings):
     cors_origins: list[str] = ["*"]
     # Authentication and authorization
     auth_enabled: bool = True
-    authenticator: AuthenticatorConfig
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "case_sensitive": False}
+    authenticator: AuthenticatorConfig = AuthenticatorConfig()
 
 
 class DependencyInjectionSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file="dependency-injection.env", env_file_encoding="utf-8")
-    # TODO: change for real implementation, allow all just for dev now
-    di_authenticator: str = "univention.scim.server.authn.authn_impl.AllowAllBearerAuthentication"
+    model_config = SettingsConfigDict(
+        env_file="dependency-injection.env", env_file_encoding="utf-8", case_sensitive=False
+    )
+
+    di_oidc_configuration: str = "univention.scim.server.authn.oidc_configuration_impl.OpenIDConnectConfigurationImpl"
+    di_authenticator: str = "univention.scim.server.authn.authn_impl.OpenIDConnectAuthentication"
 
     # Use in-memory implementation by default, but can be overridden to use UDM repositories
     # Set these to "univention.scim.server.domain.repo.container.RepositoryContainer.user_crud_manager"
@@ -51,8 +59,7 @@ class DependencyInjectionSettings(BaseSettings):
 
 @lru_cache(maxsize=1)
 def application_settings() -> ApplicationSettings:
-    authenticator = AuthenticatorConfig()
-    return ApplicationSettings(authenticator=authenticator)
+    return ApplicationSettings()
 
 
 @lru_cache(maxsize=1)

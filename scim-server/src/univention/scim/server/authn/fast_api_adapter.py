@@ -4,17 +4,22 @@
 from typing import Any
 
 from fastapi import Request
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import OAuth2AuthorizationCodeBearer
 
 # Internal imports
 from univention.scim.server.container import ApplicationContainer
 
 
-class JWTBearer(HTTPBearer):
-    def __init__(self, auto_error: bool = True):
-        super().__init__(auto_error=auto_error)
+class FastAPIAuthAdapter(OAuth2AuthorizationCodeBearer):
+    def __init__(self) -> None:
+        configuration = ApplicationContainer.oidc_configuration().get_configuration()
+        super().__init__(
+            authorizationUrl=configuration["authorization_endpoint"],
+            tokenUrl=configuration["token_endpoint"],
+            scopes={"openid": "scope for openid"},
+        )
 
     async def __call__(self, request: Request) -> Any:
-        credentials: HTTPAuthorizationCredentials | None = await super().__call__(request)
+        token: str | None = await super().__call__(request)
 
-        return await ApplicationContainer.authenticator().authenticate(credentials)
+        return await ApplicationContainer.authenticator().authenticate(token)

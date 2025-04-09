@@ -13,7 +13,7 @@ from univention.scim.server.main import create_app
 @pytest.fixture(autouse=True)
 def application_settings(monkeypatch) -> ApplicationSettings:  #  type: ignore
     env = {
-        "TOKEN_VALIDATION_ENDPOINT": os.environ.get("TOKEN_VALIDATION_ENDPOINT", "test"),
+        "IDP_OPENID_CONFIGURATION_URL": os.environ.get("IDP_OPENID_CONFIGURATION_URL", "test"),
     }
     for k, v in env.items():
         monkeypatch.setenv(k, v)
@@ -25,12 +25,13 @@ def application_settings(monkeypatch) -> ApplicationSettings:  #  type: ignore
 
 @pytest.fixture(autouse=True)
 def allow_all_bearer(application_settings: ApplicationSettings) -> Generator[None, None, None]:
-    from univention.scim.server.authn.authn_impl import AllowAllBearerAuthentication
+    from helpers.allow_all_authn import AllowAllBearerAuthentication, OpenIDConnectConfigurationMock
     from univention.scim.server.container import ApplicationContainer
 
     # Make sure that for tests we allow all bearer
     with (
         ApplicationContainer.authenticator.override(AllowAllBearerAuthentication()),
+        ApplicationContainer.oidc_configuration.override(OpenIDConnectConfigurationMock()),
         ApplicationContainer.settings.override(application_settings),
     ):
         yield

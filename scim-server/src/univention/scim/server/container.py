@@ -19,7 +19,8 @@ class ApplicationContainer(DeclarativeContainer):
     repositories = Singleton(RepositoryContainer)
 
     if settings().auth_enabled:
-        authenticator = Singleton(di.di_authenticator, config=settings().authenticator)
+        oidc_configuration = Singleton(di.di_oidc_configuration, config=settings().authenticator)
+        authenticator = Singleton(di.di_authenticator, oidc_configuration=oidc_configuration)
 
     # Use repositories from the repository container if specified in DI settings
     # Otherwise use the default implementations

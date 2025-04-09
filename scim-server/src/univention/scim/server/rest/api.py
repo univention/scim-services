@@ -3,14 +3,16 @@
 from fastapi import APIRouter, Security
 
 # Internal imports
-from univention.scim.server.authn.fast_api_adapter import JWTBearer
+from univention.scim.server.authn.fast_api_adapter import FastAPIAuthAdapter
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.rest import groups, service_provider, users
 
 
 def get_api_router(container: ApplicationContainer) -> APIRouter:
     # Create main API router
-    router = APIRouter(dependencies=[Security(JWTBearer())]) if container.settings().auth_enabled else APIRouter()
+    router = (
+        APIRouter(dependencies=[Security(FastAPIAuthAdapter())]) if container.settings().auth_enabled else APIRouter()
+    )
 
     # Include sub-routers
     router.include_router(users.get_api_router(container), prefix="/Users", tags=["Users"])

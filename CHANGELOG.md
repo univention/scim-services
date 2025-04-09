@@ -2,7 +2,6 @@
 
 ## [0.2.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.1.1...v0.2.0) (2025-04-08)
 
-
 ### Features
 
 * add CrudManager intermediate layer ([d1faa7c](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/d1faa7c5572e0755d72eac64e5b753c5256f8c17))
