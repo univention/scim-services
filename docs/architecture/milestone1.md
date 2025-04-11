@@ -79,7 +79,7 @@ Goals of this development stage:
   - The certificate to verify the OAuth tokens is downloaded from Keycloak every time the service starts
     (see https://www.keycloak.org/securing-apps/oidc-layers for endpoints).
     - The IdP's configuration can be found at `https://<idp-url>/realms/{realm-name}/.well-known/openid-configuration`.
-    - The IdP's public certificate can be found at `https://<idp-url>/realms/{realm-name}/protocol/openid-connect/certs`.
+    - The public keys for validating the token should be fetched from the URL defined in the `jwks_uri` field of the IdP's configuration.
 - The SCIM REST server reads the UDM REST API's connection settings from the environment.
   - Secrets (passwords, certificates etc.) are read from files whose paths are in environment variables.
   - The LDAP account (the "bind dn") is configurable.
