@@ -7,13 +7,14 @@ import urllib.parse
 from collections.abc import AsyncGenerator
 
 import pytest
-from scim2_models import Email, Group, Name, User
+from scim2_models import Address, Email, Group, Name, PhoneNumber, User
 
 from univention.scim.server.domain.group_service_impl import GroupServiceImpl
 from univention.scim.server.domain.repo.container import RepositoryContainer
 from univention.scim.server.domain.rules.display_name import UserDisplayNameRule
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
+from univention.scim.server.model_service.udm2scim import UdmToScimMapper
 
 
 def is_server_reachable(url: str, timeout: int = 2) -> bool:
@@ -47,14 +48,40 @@ def skip_if_no_udm() -> bool:
 @pytest.fixture
 def test_user() -> User:
     """Create a test user."""
-    return User(
+    user = User(
         id="32a210b8-536c-4ad5-8339-a54fffbd9426",  # Use fixed ID for predictable tests
-        schemas=["urn:ietf:params:scim:schemas:core:2.0:User"],
+        schemas=[
+            "urn:ietf:params:scim:schemas:core:2.0:User",
+        ],
         user_name="jane.doe",
         name=Name(given_name="Jane", family_name="Doe"),
-        emails=[Email(value="jane.doe@example.com", primary=True, type="work")],
+        display_name="Jane Doe",
+        title="Senior Engineer",
+        emails=[
+            Email(value="jane.doe@example.com", primary=True, type="work"),
+            Email(value="jane.personal@example.com", type="home"),
+        ],
+        phone_numbers=[
+            PhoneNumber(value="+1-555-123-4567", type="work"),
+            PhoneNumber(value="+1-555-987-6543", type="mobile"),
+        ],
+        addresses=[
+            Address(
+                formatted="123 Main St\nAnytown, CA 12345\nUSA",
+                street_address="123 Main St",
+                locality="Anytown",
+                region="CA",
+                postal_code="12345",
+                country="USA",
+                type="work",
+            )
+        ],
         active=True,
+        preferred_language="en-US",
+        user_type="employee",
     )
+
+    return user
 
 
 @pytest.fixture
@@ -135,6 +162,21 @@ async def test_user_service(user_fixture: User) -> None:
     print(f"Total users: {users_response.total_results}")
     print(f"First user: {users_response.resources[0].display_name}")
 
+    # Check for extended attributes in retrieved user
+    if retrieved_user.emails:
+        print(f"User has {len(retrieved_user.emails)} email(s)")
+    if retrieved_user.phone_numbers:
+        print(f"User has {len(retrieved_user.phone_numbers)} phone number(s)")
+    if retrieved_user.addresses:
+        print(f"User has {len(retrieved_user.addresses)} address(es)")
+
+    # Check for enterprise extension
+    enterprise_ext = getattr(retrieved_user, "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User", None)
+    if enterprise_ext:
+        print("Enterprise extension found:")
+        for key, value in enterprise_ext.items():
+            print(f"  {key}: {value}")
+
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
@@ -185,3 +227,186 @@ async def test_rule_application() -> None:
     updated_user = await rule_evaluator.evaluate(user)
     print(f"After rules: {updated_user.display_name=}")
     assert updated_user.display_name == "John Smith", "Display name rule failed"
+
+
+@pytest.mark.asyncio
+async def test_udm_to_scim_mapper() -> None:
+    """Test the UDM to SCIM mapper with comprehensive attributes from the mapping table."""
+    print("\n=== Testing UDM to SCIM Mapper ===")
+
+    # Create a mock UDM user with attributes from our mapping table
+    # This structure mimics the actual UDM REST API response format
+    udm_user = {
+        "dn": "uid=test.user,cn=users,dc=example,dc=com",
+        "uri": "/univention/udm/users/user/test-uuid-1234",
+        "props": {
+            "univentionObjectIdentifier": "test-uuid-1234",
+            "username": "test.user",
+            "firstname": "Test",
+            "lastname": "User",
+            "displayName": "Test User",
+            "title": "Test Engineer",
+            "disabled": False,
+            "createTimestamp": "20230101000000Z",
+            "modifyTimestamp": "20230201000000Z",
+            "mailPrimaryAddress": "test.user@example.com",
+            "mailAlternativeAddress": ["alt.user@example.com", "another@example.com"],
+            "phone": ["+1-555-111-2222"],
+            "mobileTelephoneNumber": ["+1-555-333-4444"],
+            "homeTelephoneNumber": ["+1-555-555-6666"],
+            "pagerTelephoneNumber": ["+1-555-777-8888"],
+            "street": "456 Test St",
+            "city": "Test City",
+            "postcode": "12345",
+            "country": "Test Country",
+            "preferredLanguage": "en",
+            "employeeType": "contractor",
+            # Enterprise attributes
+            "employeeNumber": "E54321",
+            "departmentNumber": ["QA", "Test"],
+            "organisation": "Test Organization",
+            "secretary": ["manager1", "manager2"],
+            # Certificate attributes
+            "userCertificate": "Q0VSVDY0MjQK",
+            "certificateSubjectCommonName": "Test User Cert",
+        },
+        "position": "cn=users,dc=example,dc=com",
+        "objectType": "users/user",
+        "options": {"posix": True, "samba": True},
+        "policies": {"policies/umc": ["cn=default-umc-policy,cn=policies,dc=example,dc=com"]},
+    }
+
+    # Create the mapper
+    mapper = UdmToScimMapper()
+
+    # Map the UDM user to SCIM
+    base_url = "https://scim.example.com"
+    scim_user = mapper.map_user(udm_user, base_url)
+
+    # Verify core attributes
+    print(f"Mapped user ID: {scim_user.id}")
+    assert scim_user.id == "test-uuid-1234", "ID mapping failed"
+    assert scim_user.user_name == "test.user", "Username mapping failed"
+    assert scim_user.active is True, "Active status mapping failed"
+    assert scim_user.display_name == "Test User", "Display name mapping failed"
+    assert scim_user.title == "Test Engineer", "Title mapping failed"
+    assert scim_user.preferred_language == "en", "Preferred language mapping failed"
+    assert scim_user.user_type == "contractor", "User type mapping failed"
+
+    # Verify metadata
+    assert scim_user.meta.resource_type == "User", "Resource type mapping failed"
+    assert scim_user.meta.location == f"{base_url}/Users/test-uuid-1234", "Location mapping failed"
+
+    # Handle datetime or string format for timestamps
+    created_str = (
+        scim_user.meta.created.strftime("%Y-%m-%dT%H:%M:%SZ")
+        if hasattr(scim_user.meta.created, "strftime")
+        else scim_user.meta.created
+    )
+    assert created_str == "2023-01-01T00:00:00Z", "Created timestamp mapping failed"
+
+    modified_str = (
+        scim_user.meta.last_modified.strftime("%Y-%m-%dT%H:%M:%SZ")
+        if hasattr(scim_user.meta.last_modified, "strftime")
+        else scim_user.meta.last_modified
+    )
+    assert modified_str == "2023-02-01T00:00:00Z", "Modified timestamp mapping failed"
+
+    # Verify name
+    assert scim_user.name.given_name == "Test", "Given name mapping failed"
+    assert scim_user.name.family_name == "User", "Family name mapping failed"
+    assert scim_user.name.formatted == "Test User", "Formatted name mapping failed"
+
+    # Verify emails
+    assert len(scim_user.emails) == 3, "Email count mapping failed"
+    assert any(e.value == "test.user@example.com" and e.primary for e in scim_user.emails), (
+        "Primary email mapping failed"
+    )
+    assert any(e.value == "alt.user@example.com" for e in scim_user.emails), "Alternative email mapping failed"
+    assert any(e.value == "another@example.com" for e in scim_user.emails), "Multiple alternative emails mapping failed"
+
+    # Verify phone numbers
+    assert len(scim_user.phone_numbers) == 4, "Phone number count mapping failed"
+    assert any(p.value == "+1-555-111-2222" and p.type == "work" for p in scim_user.phone_numbers), (
+        "Work phone mapping failed"
+    )
+    assert any(p.value == "+1-555-333-4444" and p.type == "mobile" for p in scim_user.phone_numbers), (
+        "Mobile phone mapping failed"
+    )
+    assert any(p.value == "+1-555-555-6666" and p.type == "home" for p in scim_user.phone_numbers), (
+        "Home phone mapping failed"
+    )
+    assert any(p.value == "+1-555-777-8888" and p.type == "pager" for p in scim_user.phone_numbers), (
+        "Pager mapping failed"
+    )
+
+    # Verify address
+    assert len(scim_user.addresses) == 1, "Address count mapping failed"
+    assert scim_user.addresses[0].street_address == "456 Test St", "Street address mapping failed"
+    assert scim_user.addresses[0].locality == "Test City", "City mapping failed"
+    assert scim_user.addresses[0].postal_code == "12345", "Postal code mapping failed"
+    assert scim_user.addresses[0].country == "Test Country", "Country mapping failed"
+
+    # Verify certificates
+    assert len(scim_user.x509_certificates) == 1, "Certificate count mapping failed"
+    assert scim_user.x509_certificates[0].value
+    assert scim_user.x509_certificates[0].display == "Test User Cert", "Certificate display mapping failed"
+
+    # Not testing the enterprise extension as this functionality has been removed
+    print("Enterprise extension: Disabled")
+
+
+@pytest.mark.asyncio
+async def test_udm_to_scim_mapper_edge_cases() -> None:
+    """Test the UDM to SCIM mapper with edge cases and missing data."""
+    print("\n=== Testing UDM to SCIM Mapper Edge Cases ===")
+
+    # Create a minimal UDM user with only required fields
+    minimal_udm_user = {
+        "dn": "uid=minimal.user,cn=users,dc=example,dc=com",
+        "props": {
+            "username": "minimal.user",
+            # Include a non-standard timestamp format to test robustness
+            "createTimestamp": "2023-01-15T12:30:45Z",
+            # No other fields provided
+        },
+    }
+
+    # Create the mapper
+    mapper = UdmToScimMapper()
+
+    # Map the minimal UDM user to SCIM
+    scim_user = mapper.map_user(minimal_udm_user)
+
+    # Verify basic mapping still works
+    assert scim_user.user_name == "minimal.user", "Username mapping failed for minimal user"
+    assert scim_user.id == "minimal.user", "ID fallback to username failed"
+    assert scim_user.active is True, "Active default status failed"
+    # Verify timestamp is properly handled
+    assert scim_user.meta.created is not None, "Timestamp handling failed"
+    # Allow for either string or datetime type in timestamp
+    timestamp_str = (
+        scim_user.meta.created
+        if isinstance(scim_user.meta.created, str)
+        else scim_user.meta.created.strftime("%Y-%m-%dT%H:%M:%SZ")
+    )
+    assert timestamp_str == "2023-01-15T12:30:45Z", "ISO timestamp handling failed"
+
+    # Test with empty props
+    empty_props_user = {"dn": "uid=empty.user,cn=users,dc=example,dc=com", "props": {}}
+
+    empty_user = mapper.map_user(empty_props_user)
+    assert empty_user.id == "unknown", "Default ID handling failed"
+
+    # Test with malformed email list
+    malformed_email_user = {
+        "dn": "uid=malformed.user,cn=users,dc=example,dc=com",
+        "props": {
+            "username": "malformed.user",
+            "mailAlternativeAddress": "not.a.list@example.com",  # String instead of list
+        },
+    }
+
+    email_user = mapper.map_user(malformed_email_user)
+    assert len(email_user.emails) == 1, "Malformed email list handling failed"
+    assert email_user.emails[0].value == "not.a.list@example.com", "Single string email conversion failed"

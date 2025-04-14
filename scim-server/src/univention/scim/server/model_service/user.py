@@ -5,6 +5,7 @@ from loguru import logger
 from scim2_models import User
 
 from univention.scim.server.model_service.udm import UdmClient
+from univention.scim.server.model_service.udm2scim import UdmToScimMapper
 
 
 class UserModel:
@@ -14,21 +15,24 @@ class UserModel:
     Provides methods for mapping between SCIM User and UDM user objects.
     """
 
-    def __init__(self, udm_client: UdmClient = None):
+    def __init__(self, udm_client: UdmClient = None, udm_mapper: UdmToScimMapper = None):
         """
         Initialize the user model service.
 
         Args:
             udm_client: UDM client for UDM operations
+            udm_mapper: Mapper between UDM and SCIM objects
         """
         self.udm_client = udm_client or UdmClient()
+        self.udm_mapper = udm_mapper or UdmToScimMapper()
 
-    async def get_user_by_id(self, user_id: str) -> User:
+    async def get_user_by_id(self, user_id: str, base_url: str = "") -> User:
         """
         Get a SCIM User by ID.
 
         Args:
             user_id: User ID
+            base_url: Base URL for resource location
 
         Returns:
             SCIM User object
@@ -41,16 +45,8 @@ class UserModel:
         # Get UDM user
         udm_user = await self.udm_client.get_object("users/user", user_id)
 
-        # Map UDM user to SCIM User
-        # TODO: Implement proper mapping
-        user = User(
-            id=user_id,
-            user_name=udm_user["props"]["username"],
-            name={
-                "given_name": udm_user["props"].get("firstname", ""),
-                "family_name": udm_user["props"].get("lastname", ""),
-            },
-        )
+        # Map UDM user to SCIM User using the mapper
+        user = self.udm_mapper.map_user(udm_user, base_url)
 
         return user
 
