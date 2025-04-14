@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.3.0...v0.3.1) (2025-04-14)
+
+
+### Bug Fixes
+
+* bad markdown by semantic-release-bot ([1af3720](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/1af37202fee01b40db1426c2a05049d8894dbe96))
+
 ## [0.3.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.2.0...v0.3.0) (2025-04-11)
 
 ### Features
