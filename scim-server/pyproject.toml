@@ -26,15 +26,6 @@ explicit = true
 default = false
 
 
-
-
-
-
-
-
-
-
-
 [project.scripts]
 scim-server = "univention.scim.server.main:run"
 
@@ -50,6 +41,7 @@ dev = [
     "pytest>=8.3.5",
     "pytest-asyncio>=0.26.0",
     "pytest-httpserver>=1.1.2",
+    "pytestarch>=3",
 ]
 
 [tool.pytest.ini_options]

@@ -430,6 +430,15 @@ wheels = [
 ]
 
 [[package]]
+name = "networkx"
+version = "3.4.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/fd/1d/06475e1cd5264c0b870ea2cc6fdb3e37177c1e565c43f56ff17a10e3937f/networkx-3.4.2.tar.gz", hash = "sha256:307c3669428c5362aab27c8a1260aa8f47c4e91d3891f48be0141738d8d053e1", size = 2151368 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b9/54/dd730b32ea14ea797530a4479b2ed46a6fb250f682a9cfb997e968bf0261/networkx-3.4.2-py3-none-any.whl", hash = "sha256:df5d4365b724cf81b8c6a7312509d0c22386097011ad1abe274afd5e9d3bbc5f", size = 1723263 },
+]
+
+[[package]]
 name = "packaging"
 version = "24.2"
 source = { registry = "https://pypi.org/simple" }
@@ -594,6 +603,18 @@ wheels = [
 ]
 
 [[package]]
+name = "pytestarch"
+version = "4.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "networkx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b9/28/79d7544f592d88faedd5a505ad85cfc768077f77eb84d96176f582243207/pytestarch-4.0.0.tar.gz", hash = "sha256:eb0cf9e105ec976374976cddc164c7eee8e2d5fcd4a97463d8534194c668a4a2", size = 42719 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ab/89/c39a7b9a76c0900a200561404c6ebcff8b73310a92e2facebed033dc330b/pytestarch-4.0.0-py3-none-any.whl", hash = "sha256:e497c2e5e91ed933a389bab97ee52e66d45aab08bd42e0232ff208d5c18d6cc5", size = 61978 },
+]
+
+[[package]]
 name = "python-dotenv"
 version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -639,6 +660,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-httpserver" },
+    { name = "pytestarch" },
 ]
 
 [package.metadata]
@@ -660,6 +682,7 @@ dev = [
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "pytest-asyncio", specifier = ">=0.26.0" },
     { name = "pytest-httpserver", specifier = ">=1.1.2" },
+    { name = "pytestarch", specifier = ">=3" },
 ]
 
 [[package]]
