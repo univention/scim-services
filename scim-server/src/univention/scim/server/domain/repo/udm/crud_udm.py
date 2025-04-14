@@ -6,9 +6,9 @@ from __future__ import annotations
 import builtins
 from typing import Any, Generic, TypeVar, cast
 
-import httpx
 from loguru import logger
 from scim2_models import Group, Resource, User
+from univention.admin.rest.client import UDM
 
 from univention.scim.server.domain.crud_scim import CrudScim
 
@@ -19,7 +19,7 @@ T = TypeVar("T", bound=Resource)
 class CrudUdm(Generic[T], CrudScim[T]):
     """
     Implementation of CrudScim that uses UDM (Univention Directory Manager)
-    for CRUD operations on resources.
+    REST API client for CRUD operations on resources.
     """
 
     def __init__(
@@ -47,15 +47,18 @@ class CrudUdm(Generic[T], CrudScim[T]):
         self.resource_class = resource_class
         self.scim2udm_mapper = scim2udm_mapper
         self.udm2scim_mapper = udm2scim_mapper
-        self.udm_module = f"users/{resource_type.lower()}"
+        self.udm_module_name = "users/user" if resource_class == User else "groups/group"
 
         # UDM REST API configuration
         self.udm_url = udm_url.rstrip("/")
         self.udm_username = udm_username
         self.udm_password = udm_password
 
+        # Initialize UDM client
+        self.udm_client = UDM.http(self.udm_url, self.udm_username, self.udm_password)
+
         self.logger = logger.bind(resource_type=resource_type)
-        self.logger.info("Initialized UDM CRUD.")
+        self.logger.info("Initialized UDM CRUD with UDM REST API client")
 
     async def get(self, resource_id: str) -> T:
         """
@@ -72,50 +75,35 @@ class CrudUdm(Generic[T], CrudScim[T]):
         if not resource_id:
             raise ValueError(f"Invalid {self.resource_type} ID: {resource_id}")
 
-        # Construct filter for UDM REST API to find by univentionObjectIdentifier
-        filter_str = f"univentionObjectIdentifier={resource_id}"
-
         try:
-            async with httpx.AsyncClient() as client:
-                # Request UDM object by filter
-                # Determine the correct module path based on resource type
-                module_path = "users/user" if self.resource_class == User else "groups/group"
+            # Get the module
+            module = self.udm_client.get(self.udm_module_name)
 
-                response = await client.get(
-                    f"{self.udm_url}/{module_path}",
-                    params={"filter": filter_str},
-                    auth=(self.udm_username, self.udm_password),
-                    timeout=10.0,
-                )
+            # Construct filter for UDM REST API to find by univentionObjectIdentifier
+            filter_str = f"univentionObjectIdentifier={resource_id}"
 
-                response.raise_for_status()
-                results = response.json().get("_embedded", {}).get("udm:object", [])
+            # Search for the object
+            results = list(module.search(filter_str))
 
-                if not results:
-                    raise ValueError(f"{self.resource_type} with ID {resource_id} not found")
+            if not results:
+                raise ValueError(f"{self.resource_type} with ID {resource_id} not found")
 
-                # Get the first matching object (should be only one)
-                udm_obj = results[0]
+            # Get the first matching object (should be only one)
+            udm_obj = results[0].open()
 
-                # Convert UDM object to SCIM resource
-                if self.resource_class == User:
-                    scim_resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.udm_url)
-                elif self.resource_class == Group:
-                    scim_resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.udm_url)
-                else:
-                    raise ValueError(f"Unsupported resource class: {self.resource_class}")
+            # Convert UDM object to SCIM resource
+            if self.resource_class == User:
+                scim_resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.udm_url)
+            elif self.resource_class == Group:
+                scim_resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.udm_url)
+            else:
+                raise ValueError(f"Unsupported resource class: {self.resource_class}")
 
-                return cast(T, scim_resource)
+            return cast(T, scim_resource)
 
-        except httpx.HTTPStatusError as e:
-            self.logger.error(f"HTTP error fetching UDM object: {e}")
-            raise ValueError(f"Error retrieving {self.resource_type}: {str(e)}") from e
-        except httpx.RequestError as e:
-            self.logger.error(f"Request error fetching UDM object: {e}")
-            raise ValueError(f"Error connecting to UDM: {str(e)}") from e
         except Exception as e:
-            self.logger.error(f"Unexpected error: {e}")
-            raise ValueError(f"Unexpected error retrieving {self.resource_type}: {str(e)}") from e
+            self.logger.error(f"Error retrieving {self.resource_type}: {e}")
+            raise ValueError(f"Error retrieving {self.resource_type}: {str(e)}") from e
 
     async def list(
         self, filter_str: str | None = None, start_index: int = 1, count: int | None = None
@@ -135,54 +123,44 @@ class CrudUdm(Generic[T], CrudScim[T]):
         udm_filter = self._convert_scim_filter_to_udm(filter_str) if filter_str else None
 
         try:
-            async with httpx.AsyncClient() as client:
-                # Build query params
-                params: dict[str, str] = {}
-                if udm_filter:
-                    params["filter"] = udm_filter
-                if count:
-                    params["limit"] = str(count)
-                if start_index > 1 and count:
-                    # UDM uses offset-based pagination, convert from 1-based to 0-based
-                    params["offset"] = str(start_index - 1)
+            # Get the module
+            module = self.udm_client.get(self.udm_module_name)
 
-                # Determine the correct module path based on resource type
-                module_path = "users/user" if self.resource_class == User else "groups/group"
+            # Set pagination parameters
+            # UDM uses index-based pagination (start from 0), so we need to convert from 1-based
+            offset = start_index - 1 if start_index > 1 else 0
+            limit = count if count else None
 
-                # Request UDM objects
-                response = await client.get(
-                    f"{self.udm_url}/{module_path}",
-                    params=params,
-                    auth=(self.udm_username, self.udm_password),
-                    timeout=10.0,
+            # Search for objects
+            results = list(
+                module.search(
+                    udm_filter,
+                    position=None,  # Search everywhere
+                    scope="sub",  # Subtree search
+                    hidden=False,  # Don't include hidden objects
+                    offset=offset,
+                    limit=limit,
                 )
+            )
 
-                response.raise_for_status()
-                results = response.json().get("_embedded", {}).get("udm:object", [])
+            # Convert UDM objects to SCIM resources
+            resources: builtins.list[T] = []
+            for result in results:
+                udm_obj = result.open()
+                if self.resource_class == User:
+                    resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.udm_url)
+                elif self.resource_class == Group:
+                    resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.udm_url)
+                else:
+                    continue
 
-                # Convert UDM objects to SCIM resources
-                resources: builtins.list[T] = []
-                for udm_obj in results:
-                    if self.resource_class == User:
-                        resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.udm_url)
-                    elif self.resource_class == Group:
-                        resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.udm_url)
-                    else:
-                        continue
+                resources.append(cast(T, resource))
 
-                    resources.append(cast(T, resource))
+            return resources
 
-                return resources
-
-        except httpx.HTTPStatusError as e:
-            self.logger.error(f"HTTP error listing UDM objects: {e}")
-            raise ValueError(f"Error listing {self.resource_type}s: {str(e)}") from e
-        except httpx.RequestError as e:
-            self.logger.error(f"Request error listing UDM objects: {e}")
-            raise ValueError(f"Error connecting to UDM: {str(e)}") from e
         except Exception as e:
-            self.logger.error(f"Unexpected error: {e}")
-            raise ValueError(f"Unexpected error listing {self.resource_type}s: {str(e)}") from e
+            self.logger.error(f"Error listing {self.resource_type}s: {e}")
+            raise ValueError(f"Error listing {self.resource_type}s: {str(e)}") from e
 
     async def count(self, filter_str: str | None = None) -> int:
         """
@@ -198,37 +176,24 @@ class CrudUdm(Generic[T], CrudScim[T]):
         udm_filter = self._convert_scim_filter_to_udm(filter_str) if filter_str else None
 
         try:
-            async with httpx.AsyncClient() as client:
-                # Build query params
-                params: dict[str, str] = {"limit": "1"}  # We only need count, not actual data
-                if udm_filter:
-                    params["filter"] = udm_filter
+            # Get the module
+            module = self.udm_client.get(self.udm_module_name)
 
-                # Determine the correct module path based on resource type
-                module_path = "users/user" if self.resource_class == User else "groups/group"
-
-                # Request UDM objects count
-                response = await client.get(
-                    f"{self.udm_url}/{module_path}",
-                    params=params,
-                    auth=(self.udm_username, self.udm_password),
-                    timeout=10.0,
+            # Count the objects by fetching them (UDM client doesn't have a dedicated count method)
+            results = list(
+                module.search(
+                    udm_filter,
+                    position=None,  # Search everywhere
+                    scope="sub",  # Subtree search
+                    hidden=False,  # Don't include hidden objects
                 )
+            )
 
-                response.raise_for_status()
-                # Extract total count from response
-                total = response.json().get("total", 0)
-                return int(total)
+            return len(results)
 
-        except httpx.HTTPStatusError as e:
-            self.logger.error(f"HTTP error counting UDM objects: {e}")
-            raise ValueError(f"Error counting {self.resource_type}s: {str(e)}") from e
-        except httpx.RequestError as e:
-            self.logger.error(f"Request error counting UDM objects: {e}")
-            raise ValueError(f"Error connecting to UDM: {str(e)}") from e
         except Exception as e:
-            self.logger.error(f"Unexpected error: {e}")
-            raise ValueError(f"Unexpected error counting {self.resource_type}s: {str(e)}") from e
+            self.logger.error(f"Error counting {self.resource_type}s: {e}")
+            raise ValueError(f"Error counting {self.resource_type}s: {str(e)}") from e
 
     async def create(self, resource: T) -> T:
         """
@@ -240,22 +205,37 @@ class CrudUdm(Generic[T], CrudScim[T]):
         """
         self.logger.trace("Creating resource in UDM")
 
-        # For testing purposes, let's just return the resource with an ID if it doesn't have one
-        if not resource.id:
-            import uuid
+        try:
+            # Get the module
+            module = self.udm_client.get(self.udm_module_name)
 
-            resource.id = str(uuid.uuid4())
+            # Create a new object
+            udm_obj = module.new()
 
-        # Update metadata properly using model's properties
-        from scim2_models import Meta
+            # Convert SCIM resource to UDM properties
+            if self.resource_class == User:
+                self.scim2udm_mapper.map_user(resource, udm_obj)
+            elif self.resource_class == Group:
+                self.scim2udm_mapper.map_group(resource, udm_obj)
+            else:
+                raise ValueError(f"Unsupported resource class: {self.resource_class}")
 
-        resource.meta = Meta(
-            resource_type=self.resource_type, location=f"{self.udm_url}/{self.resource_type}s/{resource.id}"
-        )
+            # Save the object
+            udm_obj.save()
 
-        # In a real implementation, we would convert to UDM and create via API
-        # This simplified version is for the GET /Users endpoint implementation
-        return resource
+            # Convert the saved UDM object back to SCIM resource
+            if self.resource_class == User:
+                created_resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.udm_url)
+            elif self.resource_class == Group:
+                created_resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.udm_url)
+            else:
+                raise ValueError(f"Unsupported resource class: {self.resource_class}")
+
+            return cast(T, created_resource)
+
+        except Exception as e:
+            self.logger.error(f"Error creating {self.resource_type}: {e}")
+            raise ValueError(f"Error creating {self.resource_type}: {str(e)}") from e
 
     async def update(self, resource_id: str, resource: T) -> T:
         """
@@ -270,21 +250,49 @@ class CrudUdm(Generic[T], CrudScim[T]):
         """
         self.logger.trace("Updating resource in UDM", id=resource_id)
 
-        # For testing purposes, let's just return the resource with the specified ID
-        # In a real implementation, we would check if the resource exists, convert to UDM, and update via API
+        try:
+            # First retrieve the existing object
+            await self.get(resource_id)
 
-        # Ensure the ID is set correctly
-        resource.id = resource_id
+            # Get the module
+            module = self.udm_client.get(self.udm_module_name)
 
-        # Update metadata properly using model's properties
-        from scim2_models import Meta
+            # Construct filter for UDM REST API to find by univentionObjectIdentifier
+            filter_str = f"univentionObjectIdentifier={resource_id}"
 
-        resource.meta = Meta(
-            resource_type=self.resource_type, location=f"{self.udm_url}/{self.resource_type}s/{resource_id}"
-        )
+            # Get the object
+            results = list(module.search(filter_str))
 
-        # This simplified version is for the GET /Users endpoint implementation
-        return resource
+            if not results:
+                raise ValueError(f"{self.resource_type} with ID {resource_id} not found")
+
+            # Get the first matching object (should be only one)
+            udm_obj = results[0].open()
+
+            # Update the UDM object with the new resource data
+            if self.resource_class == User:
+                self.scim2udm_mapper.map_user(resource, udm_obj)
+            elif self.resource_class == Group:
+                self.scim2udm_mapper.map_group(resource, udm_obj)
+            else:
+                raise ValueError(f"Unsupported resource class: {self.resource_class}")
+
+            # Save the updated object
+            udm_obj.save()
+
+            # Convert the saved UDM object back to SCIM resource
+            if self.resource_class == User:
+                updated_resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.udm_url)
+            elif self.resource_class == Group:
+                updated_resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.udm_url)
+            else:
+                raise ValueError(f"Unsupported resource class: {self.resource_class}")
+
+            return cast(T, updated_resource)
+
+        except Exception as e:
+            self.logger.error(f"Error updating {self.resource_type}: {e}")
+            raise ValueError(f"Error updating {self.resource_type}: {str(e)}") from e
 
     async def delete(self, resource_id: str) -> bool:
         """
@@ -298,11 +306,30 @@ class CrudUdm(Generic[T], CrudScim[T]):
         """
         self.logger.trace("Deleting resource from UDM", id=resource_id)
 
-        # For testing purposes, let's just return True to indicate success
-        # In a real implementation, we would check if the resource exists and delete via the UDM API
+        try:
+            # Get the module
+            module = self.udm_client.get(self.udm_module_name)
 
-        # This simplified version is for the GET /Users endpoint implementation
-        return True
+            # Construct filter for UDM REST API to find by univentionObjectIdentifier
+            filter_str = f"univentionObjectIdentifier={resource_id}"
+
+            # Search for the object
+            results = list(module.search(filter_str))
+
+            if not results:
+                raise ValueError(f"{self.resource_type} with ID {resource_id} not found")
+
+            # Get the first matching object (should be only one)
+            udm_obj = results[0].open()
+
+            # Delete the object
+            udm_obj.delete()
+
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Error deleting {self.resource_type}: {e}")
+            raise ValueError(f"Error deleting {self.resource_type}: {str(e)}") from e
 
     def _convert_scim_filter_to_udm(self, scim_filter: str) -> str:
         """

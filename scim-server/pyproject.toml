@@ -12,7 +12,8 @@ dependencies = [
     "pydantic>=2.10.6",
     "dependency-injector>=4",
     "requests>=2.32.3",
-    "jwcrypto>=1.5.6"
+    "jwcrypto>=1.5.6",
+    "udm-rest-api-client[async]>=0.0.2",
 ]
 
 [dependency-groups]
