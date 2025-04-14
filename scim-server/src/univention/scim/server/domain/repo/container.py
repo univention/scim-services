@@ -20,12 +20,12 @@ class RepositoryContainer(containers.DeclarativeContainer):
     config = providers.Configuration()
 
     # Mappers
-    scim2udm_mapper = providers.Singleton(ScimToUdmMapper)
+    scim2udm_mapper: ScimToUdmMapper = providers.Singleton(ScimToUdmMapper)
 
-    udm2scim_mapper = providers.Singleton(UdmToScimMapper)
+    udm2scim_mapper: UdmToScimMapper = providers.Singleton(UdmToScimMapper)
 
     # Repository factories
-    user_repository = providers.Factory(
+    user_repository: CrudUdm[User] = providers.Factory(
         CrudUdm[User],
         resource_type="User",
         scim2udm_mapper=scim2udm_mapper,
@@ -33,7 +33,7 @@ class RepositoryContainer(containers.DeclarativeContainer):
         resource_class=User,
     )
 
-    group_repository = providers.Factory(
+    group_repository: CrudUdm[Group] = providers.Factory(
         CrudUdm[Group],
         resource_type="Group",
         scim2udm_mapper=scim2udm_mapper,
@@ -42,9 +42,11 @@ class RepositoryContainer(containers.DeclarativeContainer):
     )
 
     # CRUD Manager factories
-    user_crud_manager = providers.Factory(CrudManager[User], primary_repository=user_repository, resource_type="User")
+    user_crud_manager: CrudManager[User] = providers.Factory(
+        CrudManager[User], primary_repository=user_repository, resource_type="User"
+    )
 
-    group_crud_manager = providers.Factory(
+    group_crud_manager: CrudManager[Group] = providers.Factory(
         CrudManager[Group], primary_repository=group_repository, resource_type="Group"
     )
 

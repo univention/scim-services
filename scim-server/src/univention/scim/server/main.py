@@ -3,27 +3,39 @@
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from functools import partial
 
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Security, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
 from scim2_models import Error
 
+from univention.scim.server.authn.fast_api_adapter import FastAPIAuthAdapter
+
 # Internal imports
+from univention.scim.server.config import application_settings
 from univention.scim.server.configure_logging import configure_logging
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.model_service.load_schemas import LoadSchemas
-from univention.scim.server.rest.api import get_api_router
+from univention.scim.server.rest.groups import router as groups_router
+from univention.scim.server.rest.service_provider import router as service_provider_router
+from univention.scim.server.rest.users import router as users_router
+
+
+settings = application_settings()
 
 
 @asynccontextmanager
-async def lifespan(schema_loader: LoadSchemas, app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Manage lifespan of FastAPI app"""
     # Initialization tasks when the application starts.
     logger.info("Starting SCIM server")
+
+    container = ApplicationContainer()
+    container.wire(packages=["univention.scim.server.rest"])
+
+    schema_loader: LoadSchemas = container.schema_loader()
 
     # Load schemas and perform startup tasks
     try:
@@ -42,56 +54,52 @@ async def lifespan(schema_loader: LoadSchemas, app: FastAPI) -> AsyncIterator[No
     logger.info("Shutting down SCIM server")
 
 
+# Configure logging
+configure_logging(settings.log_level)
+
 # Setup app
-# Don't use global variables it easily interferes with testing because
-# objects are only created once and keep there state between several tests
-def create_app() -> FastAPI:
-    # Container for dependency injection
-    container = ApplicationContainer()
+app = FastAPI(
+    title="Univention SCIM Server",
+    description="SCIM 2.0 API implementation for Univention",
+    version="0.1.0",
+    lifespan=lifespan,
+    dependencies=[Security(FastAPIAuthAdapter)] if settings.auth_enabled else None,
+)
 
-    # Configure logging
-    configure_logging(container.settings().log_level)
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    app = FastAPI(
-        title="Univention SCIM Server",
-        description="SCIM 2.0 API implementation for Univention",
-        version="0.1.0",
-        lifespan=partial(lifespan, container.schema_loader()),
+app.include_router(users_router, prefix=f"{settings.api_prefix}/Users", tags=["Users"])
+app.include_router(groups_router, prefix=f"{settings.api_prefix}/Groups", tags=["Groups"])
+app.include_router(
+    service_provider_router, prefix=f"{settings.api_prefix}/ServiceProviderConfig", tags=["ServiceProviderConfig"]
+)
+
+
+# Setup error handling
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.exception(f"Unhandled exception: {exc}")
+    error = Error(
+        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=str(exc),
+        schemas=["urn:ietf:params:scim:api:messages:2.0:Error"],
     )
-
-    # Add CORS middleware
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=container.settings().cors_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-    # Setup error handling
-    @app.exception_handler(Exception)
-    async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-        logger.exception(f"Unhandled exception: {exc}")
-        error = Error(status="500", detail=str(exc), schemas=["urn:ietf:params:scim:api:messages:2.0:Error"])
-        return JSONResponse(status_code=500, content=error.model_dump(scim_ctx=None))
-
-    @app.get("/")
-    async def root() -> dict[str, str]:
-        """Welcome endpoint with link to documentation."""
-        return {"msg": "Hello World"}
-
-    # Include API router
-    app.include_router(get_api_router(container), prefix=container.settings().api_prefix)
-
-    return app
+    return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=error.model_dump(scim_ctx=None))
 
 
 def run() -> None:
     """Entry point for running the application."""
     uvicorn.run(
         "univention.scim.server.main:create_app",
-        host=ApplicationContainer.settings().host,
-        port=ApplicationContainer.settings().port,
+        host=settings.host,
+        port=settings.port,
     )
 
 

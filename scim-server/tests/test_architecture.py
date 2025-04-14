@@ -24,7 +24,7 @@ def architecture() -> LayeredArchitecture:
         .layer("model_service")  # or we could split "repo", "repo.udm", and "rules" from "domain".
         .containing_modules(["univention.scim.server.model_service"])
         .layer("rest")
-        .containing_modules(["univention.scim.server.rest"])
+        .containing_modules(["univention.scim.server.main", "univention.scim.server.rest"])
     )
 
 
@@ -49,7 +49,7 @@ def evaluable(base_path: Path) -> EvaluableArchitecture:
         ("domain", "model_service"),
         ("rest", "authn"),
         # TODO: ("rest", "authz"),  # not implemented
-        # TODO: ("rest", "domain"),  # import hidden: DI
+        ("rest", "domain"),
     ],
 )
 def test_layer_should(
@@ -72,8 +72,7 @@ def test_layer_should(
     list(itertools.product(["authn"], ["authz", "domain", "rest"]))
     + list(itertools.product(["authz"], ["authn", "domain", "model_service", "rest"]))
     + list(itertools.product(["domain"], ["authn", "authz", "rest"]))
-    + list(itertools.product(["model_service"], ["authn", "authz", "domain", "rest"]))
-    + list(itertools.product(["rest"], ["model_service"])),
+    + list(itertools.product(["model_service"], ["authn", "authz", "domain", "rest"])),
 )
 def test_layer_should_not(
     architecture: LayeredArchitecture, evaluable: EvaluableArchitecture, importer: str, imported: str

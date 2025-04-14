@@ -1,143 +1,152 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
-from fastapi import APIRouter, HTTPException, Path, Query, Response
+
+from typing import Annotated
+
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, status
 from loguru import logger
 from scim2_models import ListResponse, User
 
 # Internal imports
 from univention.scim.server.container import ApplicationContainer
+from univention.scim.server.domain.user_service import UserService
 
 
-def get_api_router(container: ApplicationContainer) -> APIRouter:
-    router = APIRouter()
+router = APIRouter()
 
-    @router.get("", response_model=ListResponse[User])
-    async def list_users(
-        filter: str | None = Query(None, description="SCIM filter expression"),
-        start_index: int = Query(1, ge=1, description="Start index (1-based)"),
-        count: int | None = Query(None, ge=0, description="Maximum number of results"),
-        attributes: str | None = Query(None, description="Comma-separated list of attributes to include"),
-        excluded_attributes: str | None = Query(None, description="Comma-separated list of attributes to exclude"),
-    ) -> ListResponse[User]:
-        """
-        List users with optional filtering and pagination.
 
-        Returns a paginated list of users that match the specified filter.
-        """
-        logger.debug("REST: List users with", filter=filter, start_index=start_index, count=count)
+@router.get("", response_model=ListResponse[User])
+@inject
+async def list_users(
+    user_service: Annotated[UserService, Depends(Provide[ApplicationContainer.user_service])],
+    filter: str | None = Query(None, description="SCIM filter expression"),
+    start_index: int = Query(1, ge=1, description="Start index (1-based)"),
+    count: int | None = Query(None, ge=0, description="Maximum number of results"),
+    attributes: str | None = Query(None, description="Comma-separated list of attributes to include"),
+    excluded_attributes: str | None = Query(None, description="Comma-separated list of attributes to exclude"),
+) -> ListResponse[User]:
+    """
+    List users with optional filtering and pagination.
 
-        if not container.user_service():
-            raise HTTPException(status_code=500, detail="User service not configured")
+    Returns a paginated list of users that match the specified filter.
+    """
+    logger.debug("REST: List users with", filter=filter, start_index=start_index, count=count)
 
-        try:
-            return await container.user_service().list_users(filter, start_index, count)
-        except Exception as e:
-            logger.error("Error listing users", error=e)
-            raise HTTPException(status_code=500, detail=str(e)) from e
+    try:
+        return await user_service.list_users(filter, start_index, count)
+    except Exception as e:
+        logger.error("Error listing users", error=e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
-    @router.get("/{user_id}", response_model=User)
-    async def get_user(
-        user_id: str = Path(..., description="User ID"),
-        attributes: str | None = Query(None, description="Comma-separated list of attributes to include"),
-        excluded_attributes: str | None = Query(None, description="Comma-separated list of attributes to exclude"),
-    ) -> User:
-        """
-        Get a specific user by ID.
 
-        Returns the user with the specified ID.
-        """
-        logger.debug("REST: Get user with ID", id=user_id)
+@router.get("/{user_id}", response_model=User)
+@inject
+async def get_user(
+    user_service: Annotated[UserService, Depends(Provide[ApplicationContainer.user_service])],
+    user_id: str = Path(..., description="User ID"),
+    attributes: str | None = Query(None, description="Comma-separated list of attributes to include"),
+    excluded_attributes: str | None = Query(None, description="Comma-separated list of attributes to exclude"),
+) -> User:
+    """
+    Get a specific user by ID.
 
-        if not container.user_service():
-            raise HTTPException(status_code=500, detail="User service not configured")
+    Returns the user with the specified ID.
+    """
+    logger.debug("REST: Get user with ID", id=user_id)
 
-        try:
-            user = await container.user_service().get_user(user_id)
-            return user
-        except ValueError as e:
-            raise HTTPException(status_code=404, detail=str(e)) from e
-        except Exception as e:
-            logger.error("Error getting user", id=user_id, error=e)
-            raise HTTPException(status_code=500, detail=str(e)) from e
+    try:
+        user = await user_service.get_user(user_id)
+        return user
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+    except Exception as e:
+        logger.error("Error getting user", id=user_id, error=e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
-    @router.post("", response_model=User, status_code=201)
-    async def create_user(user: User, response: Response) -> User:
-        """
-        Create a new user.
 
-        Creates a user with the provided attributes and returns the created user.
-        """
-        logger.debug("REST: Create user")
+@router.post("", response_model=User, status_code=status.HTTP_201_CREATED)
+@inject
+async def create_user(
+    user_service: Annotated[UserService, Depends(Provide[ApplicationContainer.user_service])],
+    user: User,
+    response: Response,
+) -> User:
+    """
+    Create a new user.
 
-        if not container.user_service():
-            raise HTTPException(status_code=500, detail="User service not configured")
+    Creates a user with the provided attributes and returns the created user.
+    """
+    logger.debug("REST: Create user")
 
-        try:
-            created_user = await container.user_service().create_user(user)
-            response.headers["Location"] = f"/Users/{created_user.id}"
-            return created_user
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e)) from e
-        except Exception as e:
-            logger.error("Error creating user", error=e)
-            raise HTTPException(status_code=500, detail=str(e)) from e
+    try:
+        created_user = await user_service.create_user(user)
+        response.headers["Location"] = f"/Users/{created_user.id}"
+        return created_user
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+    except Exception as e:
+        logger.error("Error creating user", error=e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
-    @router.put("/{user_id}", response_model=User)
-    async def update_user(
-        user_id: str = Path(..., description="User ID"),
-        user: User = ...,
-    ) -> User:
-        """
-        Replace a user.
 
-        Replaces all attributes of the specified user and returns the updated user.
-        """
-        logger.debug("REST: Update user with ID", id=user_id)
+@router.put("/{user_id}", response_model=User)
+@inject
+async def update_user(
+    user_service: Annotated[UserService, Depends(Provide[ApplicationContainer.user_service])],
+    user_id: str = Path(..., description="User ID"),
+    user: User = ...,
+) -> User:
+    """
+    Replace a user.
 
-        if not container.user_service():
-            raise HTTPException(status_code=500, detail="User service not configured")
+    Replaces all attributes of the specified user and returns the updated user.
+    """
+    logger.debug("REST: Update user with ID", id=user_id)
 
-        try:
-            return await container.user_service().update_user(user_id, user)
-        except ValueError as e:
-            if "not found" in str(e):
-                raise HTTPException(status_code=404, detail=str(e)) from e
-            raise HTTPException(status_code=400, detail=str(e)) from e
-        except Exception as e:
-            logger.error("Error updating user", user_id=user_id, error=e)
-            raise HTTPException(status_code=500, detail=str(e)) from e
+    try:
+        return await user_service.update_user(user_id, user)
+    except ValueError as e:
+        if "not found" in str(e):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+    except Exception as e:
+        logger.error("Error updating user", user_id=user_id, error=e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
-    @router.patch("/{user_id}")
-    async def patch_user(user_id: str) -> None:
-        """
-        Patch a user - not implemented yet.
 
-        Updates specified attributes of the user and returns the updated user.
-        """
-        logger.debug("REST: Patch user with ID", id=user_id)
-        raise HTTPException(status_code=501, detail="PATCH method not implemented")
+@router.patch("/{user_id}")
+@inject
+async def patch_user(user_id: str) -> None:
+    """
+    Patch a user - not implemented yet.
 
-    @router.delete("/{user_id}", status_code=204)
-    async def delete_user(user_id: str = Path(..., description="User ID")) -> Response:
-        """
-        Delete a user.
+    Updates specified attributes of the user and returns the updated user.
+    """
+    logger.debug("REST: Patch user with ID", id=user_id)
+    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="PATCH method not implemented")
 
-        Deletes the specified user and returns no content.
-        """
-        logger.debug("REST: Delete user with ID", id=user_id)
 
-        if not container.user_service():
-            raise HTTPException(status_code=500, detail="User service not configured")
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@inject
+async def delete_user(
+    user_service: Annotated[UserService, Depends(Provide[ApplicationContainer.user_service])],
+    user_id: str = Path(..., description="User ID"),
+) -> Response:
+    """
+    Delete a user.
 
-        try:
-            success = await container.user_service().delete_user(user_id)
-            if not success:
-                raise HTTPException(status_code=404, detail=f"User {user_id} not found")
-            return Response(status_code=204)
-        except ValueError as e:
-            raise HTTPException(status_code=404, detail=str(e)) from e
-        except Exception as e:
-            logger.error("Error deleting user", id=user_id, error=e)
-            raise HTTPException(status_code=500, detail=str(e)) from e
+    Deletes the specified user and returns no content.
+    """
+    logger.debug("REST: Delete user with ID", id=user_id)
 
-    return router
+    try:
+        success = await user_service.delete_user(user_id)
+        if not success:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found")
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+    except Exception as e:
+        logger.error("Error deleting user", id=user_id, error=e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e

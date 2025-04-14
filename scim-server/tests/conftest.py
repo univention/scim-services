@@ -5,13 +5,15 @@ import os
 from collections.abc import Generator
 
 import pytest
+from _pytest.logging import LogCaptureFixture
 from fastapi.testclient import TestClient
+from loguru import logger
 from univention.scim.server.config import ApplicationSettings, AuthenticatorConfig
-from univention.scim.server.main import create_app
+from univention.scim.server.main import app
 
 
 @pytest.fixture(autouse=True)
-def application_settings(monkeypatch) -> ApplicationSettings:  #  type: ignore
+def application_settings(monkeypatch: pytest.MonkeyPatch) -> Generator[ApplicationSettings, None, None]:
     env = {
         "IDP_OPENID_CONFIGURATION_URL": os.environ.get("IDP_OPENID_CONFIGURATION_URL", "test"),
     }
@@ -39,5 +41,18 @@ def allow_all_bearer(application_settings: ApplicationSettings) -> Generator[Non
 
 @pytest.fixture
 def client() -> Generator[TestClient, None, None]:
-    with TestClient(create_app(), headers={"Authorization": "Bearer let-me-in"}) as client:
+    with TestClient(app, headers={"Authorization": "Bearer let-me-in"}) as client:
         yield client
+
+
+@pytest.fixture
+def caplog(caplog: LogCaptureFixture) -> Generator[LogCaptureFixture, None, None]:
+    handler_id = logger.add(
+        caplog.handler,
+        format="{message}",
+        level=0,
+        filter=lambda record: record["level"].no >= caplog.handler.level,
+        enqueue=False,  # Set to 'True' if your test is spawning child processes.
+    )
+    yield caplog
+    logger.remove(handler_id)

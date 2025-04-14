@@ -3,7 +3,7 @@
 import json
 from typing import Any
 
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from jwcrypto.common import JWKeyNotFound
 from jwcrypto.jwk import JWKSet
 from jwcrypto.jwt import JWT, JWTMissingClaim
@@ -48,13 +48,15 @@ class OpenIDConnectAuthentication(Authentication):
         except JWKeyNotFound as e:
             if not retry:
                 logger.error("Token validation failed: Invalid signature", error=e)
-                raise HTTPException(status_code=403, detail="Invalid token.") from e
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token.") from e
 
             try:
                 jwks = self.oidc_configuration.get_jwks(True)
             except Exception:
                 logger.error("Token validation failed: Invalid OpenID connect configuration")
-                raise HTTPException(status_code=403, detail="Invalid OpenID connect configuration.") from e
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN, detail="Invalid OpenID connect configuration."
+                ) from e
 
             return self._validate_token(token, jwks, algs, False)
         except JWTMissingClaim as e:
@@ -62,7 +64,7 @@ class OpenIDConnectAuthentication(Authentication):
         except Exception:
             logger.error("Token validation failed: Generic error")
 
-        raise HTTPException(status_code=403, detail="Invalid token.")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token.")
 
     async def authenticate(self, token: str) -> dict[str, Any]:
         """
@@ -81,12 +83,16 @@ class OpenIDConnectAuthentication(Authentication):
             configuration = self.oidc_configuration.get_configuration()
             if "id_token_signing_alg_values_supported" not in configuration:
                 logger.error("Token validation failed: Invalid OpenID connect configuration")
-                raise HTTPException(status_code=403, detail="Invalid OpenID connect configuration.")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN, detail="Invalid OpenID connect configuration."
+                )
 
             jwks = self.oidc_configuration.get_jwks()
         except Exception as e:
             logger.error("Token validation failed: Invalid OpenID connect configuration")
-            raise HTTPException(status_code=403, detail="Invalid OpenID connect configuration.") from e
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Invalid OpenID connect configuration."
+            ) from e
 
         jwt = self._validate_token(token, jwks, configuration["id_token_signing_alg_values_supported"], True)
         jwt_claims = json.loads(jwt.claims)
