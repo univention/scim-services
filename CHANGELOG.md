@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.3](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.3.2...v0.3.3) (2025-04-15)
+
+
+### Bug Fixes
+
+* imports and file headers ([30d14d2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/30d14d288a64e28021e6e16f89b08c2a342536fc))
+* use FastAPI dependencies, make imports of DI transparent, simplify REST setup, use HTTP status constants ([b36d218](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/b36d218a88ecfa4ad65406c5ce71da3467019baf))
+
 ## [0.3.2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.3.1...v0.3.2) (2025-04-15)
 
 
