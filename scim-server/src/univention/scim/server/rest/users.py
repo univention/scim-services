@@ -8,7 +8,6 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, st
 from loguru import logger
 from scim2_models import ListResponse, User
 
-# Internal imports
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.domain.user_service import UserService
 

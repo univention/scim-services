@@ -10,7 +10,6 @@ from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from loguru import logger
 
-# Internal imports
 from univention.scim.server.authn.authn import Authentication
 from univention.scim.server.authn.fast_api_adapter import FastAPIAuthAdapter
 from univention.scim.server.config import ApplicationSettings

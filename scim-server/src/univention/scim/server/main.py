@@ -12,8 +12,6 @@ from loguru import logger
 from scim2_models import Error
 
 from univention.scim.server.authn.fast_api_adapter import FastAPIAuthAdapter
-
-# Internal imports
 from univention.scim.server.config import application_settings
 from univention.scim.server.configure_logging import configure_logging
 from univention.scim.server.container import ApplicationContainer

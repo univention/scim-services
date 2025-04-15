@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Singleton
 from scim2_models import Group, User
+
 from univention.scim.server.authn.authn import Authentication
 from univention.scim.server.authn.oidc_configuration import OpenIDConnectConfiguration
-
-# Internal imports
 from univention.scim.server.config import ApplicationSettings, application_settings, dependency_injection_settings
 from univention.scim.server.domain.group_service import GroupService
 from univention.scim.server.domain.repo.container import RepositoryContainer

@@ -1,10 +1,11 @@
-# scim-server/src/univention/scim/server/domain/repo/container.py
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+
 from typing import TypeVar
 
 from dependency_injector import containers, providers
 from scim2_models import Group, Resource, User
+
 from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.repo.udm.crud_udm import CrudUdm
 from univention.scim.server.model_service.scim2udm import ScimToUdmMapper

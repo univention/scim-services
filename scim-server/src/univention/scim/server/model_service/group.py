@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+
 from loguru import logger
 from scim2_models import Group
+
 from univention.scim.server.model_service.udm import UdmClient
 
 

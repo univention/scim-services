@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+
 from uuid import uuid4
 
 from loguru import logger
 from scim2_models import Group, ListResponse
+
 from univention.scim.server.domain.group_service import GroupService
 from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator

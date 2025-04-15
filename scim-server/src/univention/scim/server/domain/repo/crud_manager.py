@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+
 from __future__ import annotations
 
 from typing import Generic, TypeVar, cast
 
 from loguru import logger
 from scim2_models import Resource
+
 from univention.scim.server.domain.crud_scim import CrudScim
 
 

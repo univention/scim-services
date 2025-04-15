@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+
 from typing import Any
 
 import requests
@@ -7,7 +8,6 @@ from jwcrypto.common import JWException
 from jwcrypto.jwk import JWKSet
 from loguru import logger
 
-# Internal imports
 from univention.scim.server.authn.oidc_configuration import OpenIDConnectConfiguration
 from univention.scim.server.config import AuthenticatorConfig
 

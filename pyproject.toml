@@ -52,6 +52,7 @@ select = [
 case-sensitive = true
 combine-as-imports = true
 lines-after-imports = 2
+known-first-party = ["helpers", "univention.scim"]
 
 [dependency-groups]
 dev = [

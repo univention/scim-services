@@ -7,8 +7,9 @@ import itertools
 from pathlib import Path
 
 import pytest
-import univention.scim.server
 from pytestarch import EvaluableArchitecture, LayerRule, LayeredArchitecture, Rule, get_evaluable_architecture
+
+import univention.scim.server
 
 
 @pytest.fixture(scope="session")

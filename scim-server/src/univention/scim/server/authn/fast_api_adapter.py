@@ -5,6 +5,7 @@ from typing import Any
 
 from fastapi import Request
 from fastapi.security import OAuth2AuthorizationCodeBearer
+
 from univention.scim.server.authn.authn import Authentication
 from univention.scim.server.container import ApplicationContainer
 

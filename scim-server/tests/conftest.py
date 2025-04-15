@@ -8,7 +8,10 @@ import pytest
 from _pytest.logging import LogCaptureFixture
 from fastapi.testclient import TestClient
 from loguru import logger
+
+from helpers.allow_all_authn import AllowAllBearerAuthentication, OpenIDConnectConfigurationMock
 from univention.scim.server.config import ApplicationSettings, AuthenticatorConfig
+from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.main import app
 
 
@@ -27,9 +30,6 @@ def application_settings(monkeypatch: pytest.MonkeyPatch) -> Generator[Applicati
 
 @pytest.fixture(autouse=True)
 def allow_all_bearer(application_settings: ApplicationSettings) -> Generator[None, None, None]:
-    from helpers.allow_all_authn import AllowAllBearerAuthentication, OpenIDConnectConfigurationMock
-    from univention.scim.server.container import ApplicationContainer
-
     # Make sure that for tests we allow all bearer
     with (
         ApplicationContainer.authenticator.override(AllowAllBearerAuthentication()),

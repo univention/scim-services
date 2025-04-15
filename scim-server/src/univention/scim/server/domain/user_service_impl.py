@@ -1,10 +1,11 @@
-# src/univention/scim/server/domain/user_service_impl.py
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+
 from uuid import uuid4
 
 from loguru import logger
 from scim2_models import ListResponse, User
+
 from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.rules.loader import RuleLoader

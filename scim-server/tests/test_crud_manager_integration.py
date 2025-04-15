@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+
 import pytest
 from scim2_models import Email, Group, Name, User
+
 from univention.scim.server.domain.group_service_impl import GroupServiceImpl
 from univention.scim.server.domain.repo.container import RepositoryContainer
 from univention.scim.server.domain.rules.display_name import UserDisplayNameRule

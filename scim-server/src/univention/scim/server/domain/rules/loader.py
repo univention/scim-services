@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+
 from loguru import logger
+
 from univention.scim.server.domain.rules.display_name import UserDisplayNameRule
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 
