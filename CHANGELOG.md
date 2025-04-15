@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.3.1...v0.3.2) (2025-04-15)
+
+
+### Bug Fixes
+
+* **logging:** Use structured logging in rest API ([1768597](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/176859713e773d14fb532892e15dd26c69484633)), closes [univention/dev/internal/team-nubus#1098](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1098)
+* **rest-api:** User generic id as logger key for all ids ([785416e](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/785416ef5005dc80fd0063915e9f447329c96bc5)), closes [univention/dev/internal/team-nubus#1098](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1098)
+
 ## [0.3.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.3.0...v0.3.1) (2025-04-14)
 
 
