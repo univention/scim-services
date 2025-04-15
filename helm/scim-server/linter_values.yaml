@@ -2,6 +2,9 @@
 # SPDX-FileCopyrightText: 2024 Univention GmbH
 
 ---
+global:
+  ingressClass: "nginx"
+
 udm:
   auth:
     password: "stub-password"
@@ -9,3 +12,8 @@ udm:
 config:
   keycloak:
     url: "https://www.keycloak.test"
+
+ingress:
+  host: "scim.example.test"
+  tls:
+    secretName: "scim-server-tls"

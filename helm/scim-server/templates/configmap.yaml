@@ -33,7 +33,8 @@ metadata:
   annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.additionalAnnotations "context" . ) | nindent 4 }}
   {{- end }}
 data:
-  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  API_PREFIX: {{ .Values.config.api_prefix | quote }}
+  LOG_LEVEL: {{ .Values.config.log_level | quote }}
   AUTHENTICATOR_IDP_OPENID_CONFIGURATION_URL: {{ printf "%s/.well-known/openid-configuration" (include "scim-server.keycloak.url" .) }}
   HOST: {{ .Values.config.listen_address | quote }}
   PORT: {{ .Values.config.port | quote }}

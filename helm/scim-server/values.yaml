@@ -19,25 +19,24 @@ global:
   #
   imagePullPolicy: "IfNotPresent"
 
+  ingressClass: ""
+
 # -- Container image configuration
 image:
   registry: ""
   repository: "nubus-dev/images/scim-server"
   imagePullPolicy: ""
-<<<<<<< Updated upstream
-  tag: "0.3.3"
-=======
   tag: "latest"
->>>>>>> Stashed changes
   # -- Define image sha256 as an alternative to `tag`
   sha256: null
 
 replicaCount: 1
 
 config:
-  logLevel: "INFO"
+  api_prefix: "/scim/v2"
+  log_level: "INFO"
   listen_address: "0.0.0.0"
-  port: 8000
+  port: &port 80
   cors_origins: '["*"]'
   auth:
     enabled: true
@@ -103,6 +102,50 @@ containerSecurityContext:
   # -- Run container as a user.
   runAsNonRoot: true
 
+#  Configure extra options for containers probes.
+probes:
+  readiness:
+    # -- Number of failed executions until container is terminated.
+    failureThreshold: 10
+    # -- Delay after container start until LivenessProbe is executed.
+    initialDelaySeconds: 15
+    # -- Time between probe executions.
+    periodSeconds: 20
+    # -- Number of successful executions after failed ones until container is marked healthy.
+    successThreshold: 1
+    # -- Timeout for command return.
+    timeoutSeconds: 5
+    tcpSocket:
+      port: *port
+  startup:
+    # -- Delay after container start until StartupProbe is executed.
+    initialDelaySeconds: 15
+    # -- Number of failed executions until container is terminated.
+    failureThreshold: 10
+    # -- Time between probe executions.
+    periodSeconds: 20
+    # -- Number of successful executions after failed ones until container is marked healthy.
+    successThreshold: 1
+    # -- Timeout for command return.
+    timeoutSeconds: 5
+    tcpSocket:
+      # -- The port to connect to the container.
+      port: *port
+  liveness:
+    # -- Number of failed executions until container is terminated.
+    failureThreshold: 10
+    # -- Delay after container start until LivenessProbe is executed.
+    initialDelaySeconds: 15
+    # -- Time between probe executions.
+    periodSeconds: 20
+    # -- Number of successful executions after failed ones until container is marked healthy.
+    successThreshold: 1
+    # -- Timeout for command return.
+    timeoutSeconds: 5
+    tcpSocket:
+      # -- The port to connect to the container.
+      port: *port
+
 tolerations: []
 
 # -- Optionally specify a secret to create (primarily intended to be used in development environments to provide custom certificates)
@@ -131,6 +174,84 @@ init:
     # -- Define image sha256 as an alternative to `tag`
     # sha256: null
 
+# Define and create Kubernetes Ingress.
+#
+# Ref.: https://kubernetes.io/docs/concepts/services-networking/ingress/
+ingress:
+  # -- Enable creation of Ingress.
+  enabled: true
+
+  # -- Define the Fully Qualified Domain Name (FQDN) where application should be reachable.
+  host: ""
+
+  # Request certificates via cert-manager.io annotation
+  certManager:
+    # -- Enable cert-manager.io annotation.
+    enabled: true
+
+    # Issuer reference.
+    issuerRef:
+      # -- Name of cert-manager.io Issuer resource.
+      name: ""
+      # -- Type of Issuer, f.e. "Issuer" or "ClusterIssuer".
+      kind: "ClusterIssuer"
+
+  # -- Define the Ingress paths.
+  paths:
+  - path: /scim/v2/
+    pathType: ImplementationSpecific
+  - path: /docs
+    pathType: ImplementationSpecific
+  - path: /openapi.json
+    pathType: ImplementationSpecific
+
+  # -- The Ingress controller class name.
+  ingressClassName: ""
+
+  # -- Define custom ingress annotations.
+  # annotations:
+  #   nginx.ingress.kubernetes.io/rewrite-target: /
+
+  # -- Secure an Ingress by specifying a Secret that contains a TLS private key and certificate.
+  #
+  # Ref.: https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
+  tls:
+    # -- Enable TLS/SSL/HTTPS for Ingress.
+    enabled: true
+
+    # -- The name of the kubernetes secret which contains a TLS private key and certificate.
+    # Hint: This secret is not created by this chart and must be provided.
+    secretName: ""
+
+# Define and create Kubernetes Service.
+#
+# Ref.: https://kubernetes.io/docs/concepts/services-networking/service
+service:
+  # -- Additional custom annotations.
+  annotations: {}
+  # "ClusterIP" => Exposes the Service on a cluster-internal IP. Choosing this value makes the Service only reachable
+  #                from within the cluster. This is the default that is used if you don't explicitly specify a type for
+  #                a Service.
+  # "NodePort" => Exposes the Service on each Node's IP at a static port (the NodePort). To make the node port
+  #               available, Kubernetes sets up a cluster IP address, the same as if you had requested a Service of
+  #               type: ClusterIP.
+  # "LoadBalancer" => Exposes the Service externally using a cloud provider's load balancer.
+  #
+  # Ref.: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  # -- Choose the kind of Service, one of "ClusterIP", "NodePort" or "LoadBalancer".
+  type: "ClusterIP"
+
+  # Define the ports of Service.
+  # You can set the port value to an arbitrary value, it will map the container port by name.
+  #
+  ports:
+    http:
+      # -- Accessible port.
+      port: *port
+      # -- Internal port.
+      containerPort: *port
+      # -- service protocol.
+      protocol: "TCP"
 
 # Service account to use.
 # Ref.: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
@@ -148,5 +269,3 @@ serviceAccount:
   automountServiceAccountToken: false
   # -- Additional custom labels for the ServiceAccount.
   labels: {}
-
-...

@@ -21,3 +21,17 @@ PROVISIONING Keycloak
 {{- required ".Values.config.keycloak.realm must be defined." .Values.config.keycloak.realm -}}
 {{- end -}}
 {{- end -}}
+
+{{- /*
+PROVISIONING ingress
+*/}}
+
+{{- define "scim-server.ingress.tls.secretName" -}}
+{{- if .Values.ingress.tls.secretName -}}
+{{- tpl .Values.ingress.tls.secretName . -}}
+{{- else if .Values.global.nubusDeployment -}}
+{{- printf "%s-scim-server-tls" .Release.Name -}}
+{{- else -}}
+{{- required ".Values.ingress.tls.secretName must be defined" .Values.ingress.tls.secretName -}}
+{{- end -}}
+{{- end -}}
