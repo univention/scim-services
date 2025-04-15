@@ -2,11 +2,10 @@
 # SPDX-FileCopyrightText: 2024 Univention GmbH
 
 ---
-sourceDirectory:
-  auth:
-    password: "stub-password"
-
 udm:
   auth:
     password: "stub-password"
-...
+
+config:
+  keycloak:
+    url: "https://www.keycloak.test"

@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2024 Univention GmbH
+
+apiVersion: "v1"
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-init" (include "common.names.fullname" .) }}
+  namespace: {{ include "common.names.namespace" . | quote }}
+  labels:
+    {{- include "common.labels.standard" . | nindent 4 }}
+    {{- if .Values.additionalLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.additionalLabels "context" . ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.extraAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.extraAnnotations "context" . ) | nindent 4 }}
+  {{- end }}
+data:
+  KEYCLOAK_URL: {{ include "scim-server.keycloak.url" . | quote }}
+
+---
+
+kind: "ConfigMap"
+apiVersion: "v1"
+metadata:
+  name: {{ printf "%s-env" (include "common.names.fullname" .) }}
+  namespace: {{ include "common.names.namespace" . | quote }}
+  labels:
+    {{- include "common.labels.standard" . | nindent 4 }}
+    {{- if .Values.additionalLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.additionalLabels "context" . ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.additionalAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.additionalAnnotations "context" . ) | nindent 4 }}
+  {{- end }}
+data:
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  AUTHENTICATOR_IDP_OPENID_CONFIGURATION_URL: {{ printf "%s/.well-known/openid-configuration" (include "scim-server.keycloak.url" .) }}
+  HOST: {{ .Values.config.listen_address | quote }}
+  PORT: {{ .Values.config.port | quote }}
+  CORS_ORIGINS: {{ .Values.config.cors_origins | quote }}
+  AUTH_ENABLED: {{ .Values.config.auth.enabled | quote }}

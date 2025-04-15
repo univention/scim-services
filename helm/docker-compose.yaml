@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2025 Univention GmbH
+
+version: "3"
+
+services:
+  test:
+    image:   gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.12.2
+    command: bash -c "helm dependency build helm/scim-server/ &&
+                      pytest --values helm/scim-server/linter_values.yaml tests/helm"
+    profiles:
+      - test
+    volumes:
+      - "../helm/:/app/helm/"
+      - "../tests/:/app/tests"

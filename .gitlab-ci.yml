@@ -95,3 +95,10 @@ test-unit-and-integration:
     expire_in: "1 day"
     when: "always"
     expose_as: "docker compose server logs"
+
+test-helm-charts:
+  stage: test
+  image: "gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.12.2"
+  script:
+    - helm dep build helm/scim-server
+    - pytest tests/helm

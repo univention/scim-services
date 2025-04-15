@@ -43,7 +43,7 @@ spec:
       {{- end }}
       {{- if .Values.podSecurityContext.enabled }}
       securityContext:
-        {{ toYaml .Values.podSecurityContext | nindent 8 | trim }}
+        {{- omit .Values.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}
       {{- $imagePullSecrets := coalesce .Values.imagePullSecrets .Values.global.imagePullSecrets }}
       {{- if $imagePullSecrets }}
@@ -52,27 +52,38 @@ spec:
         - name: "{{ . }}"
         {{- end }}
       {{- end }}
+      initContainers:
+      - name: "wait-for-keycloak-container"
+        {{- if .Values.containerSecurityContext.enabled }}
+        securityContext:
+          {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 10 }}
+        {{- end }}
+        image: "{{ coalesce .Values.init.image.registry .Values.global.imageRegistry }}/{{ .Values.init.image.repository }}{{ if .Values.init.image.sha256 }}@sha256:{{ .Values.init.image.sha256 }}{{ else }}:{{ .Values.init.image.tag }}{{ end }}"
+        imagePullPolicy: {{ coalesce .Values.init.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
+        envFrom:
+          - configMapRef:
+              name: {{ printf "%s-init" (include "common.names.fullname" .) }}
+        command: ["wait-for-keycloak.py"]
+        {{- if .Values.resources }}
+        resources: {{- include "common.tplvalues.render" (dict "value" .Values.resources "context" .) | nindent 10 }}
+        {{- end }}
       containers:
         - name: "scim-server"
           {{- if .Values.containerSecurityContext.enabled }}
           securityContext:
-            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+            {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
           image: "{{ coalesce .Values.image.registry .Values.global.imageRegistry }}/{{ .Values.image.repository }}{{ if .Values.image.sha256 }}@sha256:{{ .Values.image.sha256 }}{{ else }}:{{ .Values.image.tag }}{{ end }}"
           imagePullPolicy: {{ coalesce .Values.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
           envFrom:
             - configMapRef:
-                name: {{ $name }}
+                name: {{ printf "%s-env" (include "common.names.fullname" .) }}
           {{- with .Values.extraEnvVars }}
             {{- . | toYaml | nindent 12 }}
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
-        - name: "config-file"
-          configMap:
-            defaultMode: 0555
-            name: {{ printf "%s-config-file" (include "common.names.fullname" .) | trunc 63 | trimSuffix "-" }}
         {{- if .Values.extraVolumes }}
           {{- include "common.tplvalues.render" (dict "value" .Values.extraVolumes  "context" .) | nindent 8 }}
         {{- end }}
