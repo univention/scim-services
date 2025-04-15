@@ -47,7 +47,7 @@ def get_api_router(container: ApplicationContainer) -> APIRouter:
 
         Returns the group with the specified ID.
         """
-        logger.debug("REST: Get group with ID", group_id=group_id)
+        logger.debug("REST: Get group with ID", id=group_id)
 
         if not container.group_service():
             raise HTTPException(status_code=500, detail="Group service not configured")
@@ -58,7 +58,7 @@ def get_api_router(container: ApplicationContainer) -> APIRouter:
         except ValueError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
         except Exception as e:
-            logger.error("Error getting group", group_id=group_id, error=e)
+            logger.error("Error getting group", id=group_id, error=e)
             raise HTTPException(status_code=500, detail=str(e)) from e
 
     @router.post("", response_model=Group, status_code=201)
@@ -93,7 +93,7 @@ def get_api_router(container: ApplicationContainer) -> APIRouter:
 
         Replaces all attributes of the specified group and returns the updated group.
         """
-        logger.debug("REST: Update group with ID", group_id=group_id)
+        logger.debug("REST: Update group with ID", id=group_id)
 
         if not container.group_service():
             raise HTTPException(status_code=500, detail="Group service not configured")
@@ -105,7 +105,7 @@ def get_api_router(container: ApplicationContainer) -> APIRouter:
                 raise HTTPException(status_code=404, detail=str(e)) from e
             raise HTTPException(status_code=400, detail=str(e)) from e
         except Exception as e:
-            logger.error("Error updating group", group_id=group_id, error=e)
+            logger.error("Error updating group", id=group_id, error=e)
             raise HTTPException(status_code=500, detail=str(e)) from e
 
     @router.patch("/{group_id}")
@@ -115,7 +115,7 @@ def get_api_router(container: ApplicationContainer) -> APIRouter:
 
         Updates specified attributes of the group and returns the updated group.
         """
-        logger.debug("REST: Patch group with ID", group_id=group_id)
+        logger.debug("REST: Patch group with ID", id=group_id)
         raise HTTPException(status_code=501, detail="PATCH method not implemented")
 
     @router.delete("/{group_id}", status_code=204)
@@ -125,7 +125,7 @@ def get_api_router(container: ApplicationContainer) -> APIRouter:
 
         Deletes the specified group and returns no content.
         """
-        logger.debug("REST: Delete group with ID", group_id=group_id)
+        logger.debug("REST: Delete group with ID", id=group_id)
 
         if not container.group_service():
             raise HTTPException(status_code=500, detail="Group service not configured")
@@ -138,7 +138,7 @@ def get_api_router(container: ApplicationContainer) -> APIRouter:
         except ValueError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
         except Exception as e:
-            logger.error("Error deleting group", group_id=group_id, error=e)
+            logger.error("Error deleting group", id=group_id, error=e)
             raise HTTPException(status_code=500, detail=str(e)) from e
 
     return router

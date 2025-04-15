@@ -46,7 +46,7 @@ def get_api_router(container: ApplicationContainer) -> APIRouter:
 
         Returns the user with the specified ID.
         """
-        logger.debug("REST: Get user with ID", user_id=user_id)
+        logger.debug("REST: Get user with ID", id=user_id)
 
         if not container.user_service():
             raise HTTPException(status_code=500, detail="User service not configured")
@@ -57,7 +57,7 @@ def get_api_router(container: ApplicationContainer) -> APIRouter:
         except ValueError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
         except Exception as e:
-            logger.error("Error getting user", user_id=user_id, error=e)
+            logger.error("Error getting user", id=user_id, error=e)
             raise HTTPException(status_code=500, detail=str(e)) from e
 
     @router.post("", response_model=User, status_code=201)
@@ -92,7 +92,7 @@ def get_api_router(container: ApplicationContainer) -> APIRouter:
 
         Replaces all attributes of the specified user and returns the updated user.
         """
-        logger.debug("REST: Update user with ID", user_id=user_id)
+        logger.debug("REST: Update user with ID", id=user_id)
 
         if not container.user_service():
             raise HTTPException(status_code=500, detail="User service not configured")
@@ -114,7 +114,7 @@ def get_api_router(container: ApplicationContainer) -> APIRouter:
 
         Updates specified attributes of the user and returns the updated user.
         """
-        logger.debug("REST: Patch user with ID", user_id=user_id)
+        logger.debug("REST: Patch user with ID", id=user_id)
         raise HTTPException(status_code=501, detail="PATCH method not implemented")
 
     @router.delete("/{user_id}", status_code=204)
@@ -124,7 +124,7 @@ def get_api_router(container: ApplicationContainer) -> APIRouter:
 
         Deletes the specified user and returns no content.
         """
-        logger.debug("REST: Delete user with ID", user_id=user_id)
+        logger.debug("REST: Delete user with ID", id=user_id)
 
         if not container.user_service():
             raise HTTPException(status_code=500, detail="User service not configured")
@@ -137,7 +137,7 @@ def get_api_router(container: ApplicationContainer) -> APIRouter:
         except ValueError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
         except Exception as e:
-            logger.error("Error deleting user", user_id=user_id, error=e)
+            logger.error("Error deleting user", id=user_id, error=e)
             raise HTTPException(status_code=500, detail=str(e)) from e
 
     return router
