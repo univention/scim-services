@@ -33,15 +33,16 @@
 | UDM REST API field                | avail    | type                 | SCIM attribute     | avail    | type            | RFC 7643          |
 |-----------------------------------|----------|----------------------|--------------------|----------|-----------------|-------------------|
 | -                                 | -        | -                    | schemas            | REQUIRED | list of strings | 3. SCIM Resources |
-| uuid                              | REQUIRED | string (UUID)        | id                 | REQUIRED | string (UUID)   | 3.1 Common Attrs  |
-| univentionObjectIdentifier        | optional | UUID                 | externalId         | optional | string          | 3.1 Common Attrs  |
+| uuid (entryUUID)                  | REQUIRED | string (UUID)        | -                  | -        | -               | -                 |
+| univentionObjectIdentifier        | REQUIRED | UUID                 | id                 | REQUIRED | string (UUID)   | 3.1 Common Attrs  |
+| *configurable*                    | optional | string               | externalId         | optional | string          | 3.1 Common Attrs  |
 | /                                 | /        | /                    | meta               | REQUIRED | complex         | 3.1 Common Attrs  |
 | objectType (univentionObjectType) | REQUIRED | string               | meta .resourceType | REQUIRED | string          |                   |
 | createTimestamp                   | optional | string (*2)          | meta. created      | REQUIRED | DateTime        |                   |
 | modifyTimestamp                   | optional | string (*2)          | meta. lastModified | REQUIRED | DateTime        |                   |
 | uri                               | REQUIRED | URI                  | meta. location     | REQUIRED | URI             |                   |
 | HTTP ETag header                  | optional | string (ETag *1 ?)   | meta. version      | optional | string (*1)     |                   |
-| dn                                | optional | string (DN)          | -                  | -        | -               |                   |
+| dn                                | optional | string (DN)          | - **TODO**         | -        | -               |                   |
 | id (RDN, e.g. cn / uid)           | REQUIRED | string               | -                  | -        | -               |                   |
 | options                           | REQUIRED | complex              | -                  | -        | -               |                   |
 | options .posix, .samba, etc       | optional | boolean              | -                  | -        | -               |                   |

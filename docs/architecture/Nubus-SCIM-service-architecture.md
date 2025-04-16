@@ -164,6 +164,83 @@ From the PM email (2025-02-19):
   Finding out where a request fails in a call chain, or which component is slowing the system down, becomes very easy.
   This leads to reduced development and support efforts.
 
+## Identifiers
+
+Identifiers for objects exist in LDAP, UDM, and SCIM.
+This section describes their purposes and how to map one to the other.
+
+### SCIM
+
+In SCIM the `id` and `externalId` fields are defined in [RFC7643 section 3.1. Common Attributes](https://datatracker.ietf.org/doc/html/rfc7643#section-3.1).
+Important characteristics:
+
+- `id`
+  - Every representation of a SCIM resource MUST include a non-empty `id` value.
+  - The value MUST be unique across the SCIM service provider's entire set of resources.
+  - The value of the `id` attribute is always issued by the service provider and MUST NOT be specified by the client.
+  - The string `bulkId` is a reserved keyword and MUST NOT be used within any unique identifier value.
+  - The attribute characteristics are `caseExact=true`, `mutability=readOnly`, and `returned=always`.
+    The type is `String`, without further limitations.
+- `externalId`
+  - This attribute is OPTIONAL. Each resource MAY include a non-empty `externalId` value.
+  - The value of the `externalId` attribute is always issued by the provisioning client and MUST NOT be specified by the service provider.
+  - While the server does not enforce uniqueness, it is assumed that the value's uniqueness is controlled by the client setting the value.
+  - The service provider MUST always interpret the `externalId` as scoped to the provisioning domain.
+  - The attribute characteristics are `caseExact=true` and `mutability=readWrite`.
+    The type is `String`, without further limitations.
+
+---
+
+We will implement this in the following way:
+
+- `id`
+  - We will map this attribute to the UDM property `univentionObjectIdentifier`.
+    - This mapping is NOT configurable.
+  - The format will be limited to a UUID v4 string (e.g., `9c5b94b1-35ad-49bb-b118-8e8fc24abf80`).
+- `externalId`
+  - The UDM property for the mapping is configurable.
+    - See section _Scoping of `externalId`_ for an additional configuration requirement.
+    - The customer "BaWü" wants us to map `externalId` to the UDM property `dapExternalIdentifier`.
+  - The format will be a `String` without further limitations.
+
+#### Scoping of `externalId`
+
+When the RFC says that the `externalId` MUST be scoped to the provisioning domain, it means that one ID is stored _per client/tenant_.
+
+This feature allows multiple clients or tenants to store an ID from their database in the SCIM service's object,
+without overwriting the values in `externalId` created by other clients.
+
+This is useful when multiple IdPs / upstream systems work with the SCIM service.
+
+[RFC7643 section 9.3 "Privacy"](https://datatracker.ietf.org/doc/html/rfc7643#section-9.3) mentions privacy considerations:
+In the case of `externalId`, if multiple values are supported,
+use access control to restrict access to the client domain that assigned the `externalId` value.
+
+[RFC7644 section 6.1 "Associating Clients to Tenants"](https://datatracker.ietf.org/doc/html/rfc7644#section-6.1) says:
+The service provider MAY use one of the authentication mechanisms discussed in [Section 2](https://datatracker.ietf.org/doc/html/rfc7644#section-2)
+to determine the identity of the client and thus infer the associated Tenant.
+For implementations where a client is associated with more than one Tenant,
+the service provider MAY use one of the three methods below for explicit specification of the Tenant.
+If any of these methods of allowing the client to explicitly specify the Tenant are employed,
+the service provider should ensure that access controls are in place to prevent or allow cross-tenant use cases.
+In all of these methods, the `{tenant_id}` is a unique identifier for the Tenant as defined by the service provider.
+
+- A URL prefix: `https://www.example.com/Tenants/{tenant_id}/v2/Users`.
+- A sub-domain: `https://{tenant_id}.example.com/v2/Groups`.
+- An HTTP header: The service provider may recognize a `{tenant_id}` provided by the client in an HTTP header
+  as the indicator of the desired target Tenant.
+
+---
+
+We will implement this in the following way:
+
+- We will not allow to explicitly specify the tenant.
+- We will not support multiple clients per tenant. Every client is a tenant.
+- The `externalId` will be scoped to the client.
+- The client's ID will be extracted from the OAuth token.
+- Only one `externalId` value will be mapped to UDM/LDAP.
+  - To configure the mapping of `externalId` to UDM/LDAP, one scope/client ID and one UDM property name MUST be supplied.
+
 ## Relation with UDM
 
 The SCIM service for Nubus is designed to work independently of UDM, and UDM to work independently of SCIM.
