@@ -2,7 +2,6 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 from functools import lru_cache
-from typing import Annotated
 
 from lancelog import LogLevel
 from pydantic import Field
@@ -10,7 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class AuthenticatorConfig(BaseSettings):
-    model_config = SettingsConfigDict(extra="allow")
+    model_config = SettingsConfigDict()
     idp_openid_configuration_url: str = ""
 
 
@@ -19,11 +18,11 @@ class UdmConfig(BaseSettings):
     UDM REST API configuration settings.
     """
 
-    model_config = SettingsConfigDict(extra="allow")
+    model_config = SettingsConfigDict()
 
-    udm_url: Annotated[str, Field("http://localhost:9979/univention/udm", env="UDM_URL")]
-    udm_username: Annotated[str, Field("", env="UDM_USERNAME")]
-    udm_password: Annotated[str, Field("", env="UDM_PASSWORD")]
+    url: str = Field(default="http://localhost:9979/univention/udm")
+    username: str = Field(default="admin")
+    password: str = Field(default="univention")
 
 
 class ApplicationSettings(BaseSettings):

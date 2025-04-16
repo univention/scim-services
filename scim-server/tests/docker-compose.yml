@@ -19,8 +19,8 @@ services:
     extra_hosts:
       - "WIN-N8V5GD1V1L.ad.test:10.207.116.197"
     environment:
-      UDM_URL: http://udm-rest-api:9979
-      UDM_USER: cn=admin
+      UDM_URL: http://udm-rest-api:9979/udm/
+      UDM_USERNAME: cn=admin
       UDM_PASSWORD: univention
 
   udm-rest-api:
@@ -33,7 +33,7 @@ services:
       - ./base.conf:/etc/univention/base.conf:ro
     environment:
       DOMAINNAME: univention-organization.intranet
-      HOSTNAME: localhost:9979
+      HOSTNAME: udm-rest-api:9979
       LDAP_HOST: ldap-server
       LDAP_PORT: 389
       LDAP_BASE_DN: dc=univention-organization,dc=intranet

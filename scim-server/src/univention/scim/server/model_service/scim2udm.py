@@ -28,7 +28,7 @@ class ScimToUdmMapper:
 
         properties = {
             "username": user.user_name,
-            "password": "********",  # Placeholder
+            "password": user.password,
             "disabled": not user.active if user.active is not None else False,
         }
 
