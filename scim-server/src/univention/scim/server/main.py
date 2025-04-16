@@ -95,7 +95,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
 def run() -> None:
     """Entry point for running the application."""
     uvicorn.run(
-        "univention.scim.server.main:create_app",
+        "univention.scim.server.main:app",
         host=settings.host,
         port=settings.port,
     )
