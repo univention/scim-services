@@ -207,8 +207,7 @@ Unchanged from MS1:
     Thus, a dedicated service account should be created.
   - For performance reasons, the account should profit from permissive LDAP ACLs.
 - To use the SCIM REST API the client must send an OAuth token with the request.
-  - A certificate to verify the OAuth tokens is provided as a (bind mounted) file.
-  - The path to the certificate file can be read from an environment variable.
+  - For details see [section "Authentication" of the overview page](Nubus-SCIM-service-architecture.md#authentication).
 
 New:
 
@@ -235,6 +234,12 @@ Unchanged from MS1:
   The SCIM server returns UDM errors to the SCIM client.
   - UDM REST API error messages are transformed to SCIM error messages that adhere to
     [RFC 7644 section 3.12](https://datatracker.ietf.org/doc/html/rfc7644#section-3.12).
+
+New:
+
+- The client/user in the token must exist as a user object in the SCIM (SQL) DB and
+  must be member of a certain group object in the SCIM DB.
+  - For details see [section "Authorization" of the overview page](Nubus-SCIM-service-architecture.md#authorization).
 
 ## Deliverables
 

@@ -74,12 +74,7 @@ Goals of this development stage:
 ## Authentication
 
 - To use the SCIM REST API the client must send an OAuth token with the request.
-  - Successful validation of the token is sufficient to gain access.
-  - The content of the token does not matter and is ignored.
-  - The certificate to verify the OAuth tokens is downloaded from Keycloak every time the service starts
-    (see https://www.keycloak.org/securing-apps/oidc-layers for endpoints).
-    - The IdP's configuration can be found at `https://<idp-url>/realms/{realm-name}/.well-known/openid-configuration`.
-    - The public keys for validating the token should be fetched from the URL defined in the `jwks_uri` field of the IdP's configuration.
+  - For details see [section "Authentication" of the overview page](Nubus-SCIM-service-architecture.md#authentication).
 - The SCIM REST server reads the UDM REST API's connection settings from the environment.
   - Secrets (passwords, certificates etc.) are read from files whose paths are in environment variables.
   - The LDAP account (the "bind dn") is configurable.
@@ -93,6 +88,9 @@ Goals of this development stage:
 - Restrictions in the UDM data model and business logic apply,
   when changes are forwarded _synchronously_ by the SCIM server.
   The SCIM server returns UDM errors to the SCIM client.
+- The client/user in the token must exist as a `users/ldap` or `users/user` object in UDM and
+  must be member of a certain `groups/group` object in UDM.
+  - For details see [section "Authorization" of the overview page](Nubus-SCIM-service-architecture.md#authorization).
 
 ## Implementation details
 

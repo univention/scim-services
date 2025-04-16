@@ -65,15 +65,27 @@ From the PM email (2025-02-19):
 
 - The SCIM service MUST NOT be used unauthenticated.
 - The SCIM service MUST support OAuth authentication.
-  - MS1: Successful validation of the tokens signature is sufficient to gain access.
-    The content of the token does not matter.
-  - MS2: The user in the token must exist in the SCIM database and must be member of a certain group in the SCIM DB.
-  - Other SCIM providers:
-    - Entra ID requires an OAuth token
-      (see [Microsoft SCIM docs](https://learn.microsoft.com/de-de/entra/identity/app-provisioning/use-scim-to-provision-users-and-groups)).
-    - Okta recommends using the OAuth 2.0 authorization, but also supports basic auth and header token auth options
-      (see [SCIM technical questions](https://developer.okta.com/docs/concepts/scim/faqs/)).
-    - Slack requires an OAuth token (see [Slack - Accessing the SCIM API](https://api.slack.com/admins/scim#access)).
+
+What other SCIM providers do:
+
+- Entra ID requires an OAuth token
+  (see [Microsoft SCIM docs](https://learn.microsoft.com/de-de/entra/identity/app-provisioning/use-scim-to-provision-users-and-groups)).
+- Okta recommends using the OAuth 2.0 authorization, but also supports basic auth and header token auth options
+  (see [SCIM technical questions](https://developer.okta.com/docs/concepts/scim/faqs/)).
+- Slack requires an OAuth token (see [Slack - Accessing the SCIM API](https://api.slack.com/admins/scim#access)).
+
+---
+
+We will implement this in the following way:
+
+- We require a Bearer token in an HTTP `Authorization` header.
+- We verify the signature of the token against a certificate provided by the IdP (see below).
+  - The certificate to verify the OAuth tokens is downloaded from Keycloak every time the service starts
+    (see https://www.keycloak.org/securing-apps/oidc-layers for endpoints).
+  - The IdP's configuration can be found at `https://<idp-url>/realms/{realm-name}/.well-known/openid-configuration`.
+  - The public keys for validating the token should be fetched from the URL defined in the `jwks_uri` field of the IdP's configuration.
+- We trust the IdP-signed token content.
+- The user in the token is the SCIM _client_ / _tenant_.
 
 ### Authorization
 
@@ -90,6 +102,24 @@ From the PM email (2025-02-19):
       those endpoints can be used to communicate that.
   - A Nubus operator SHOULD be able to configure which UDM attributes a SCIM service account can read and write.
     - Clarification needed: Shouldn't SCIM and UDM adhere to the same RAM rules?
+
+---
+
+We will implement this in the following way:
+
+- MS1: The client/user in the token must exist as a `users/ldap` or `users/user` object in UDM and
+  must be member of a certain `groups/group` object in UDM.
+  - When a request comes in it must be authenticated.
+    Thus, we retrieve the mentioned group from UDM or a cache.
+  - We cache the group data for a _configurable_ number of seconds.
+  - If the client/user is member of that group, then it is permitted access, otherwise denied.
+  - We do not support nested groups.
+- MS2: The client/user in the token must exist as a user object in the SCIM (SQL) DB and
+  must be member of a certain group object in the SCIM DB.
+  - When a request comes in it must be authenticated.
+    Thus, we retrieve the mentioned group from the SCIM DB.
+  - If the client/user is member of that group, then it is permitted access, otherwise denied.
+  - We do not support nested groups.
 
 ### Performance
 
