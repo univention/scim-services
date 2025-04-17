@@ -218,7 +218,8 @@ Important characteristics:
   - This attribute is OPTIONAL. Each resource MAY include a non-empty `externalId` value.
   - The value of the `externalId` attribute is always issued by the provisioning client and MUST NOT be specified by the service provider.
   - While the server does not enforce uniqueness, it is assumed that the value's uniqueness is controlled by the client setting the value.
-  - The service provider MUST always interpret the `externalId` as scoped to the provisioning domain.
+  - The service provider MUST always interpret the `externalId` as scoped to the provisioning domain
+    (see section below for a detailed explanation).
   - The attribute characteristics are `caseExact=true` and `mutability=readWrite`.
     The type is `String`, without further limitations.
 
