@@ -32,13 +32,14 @@ repos:
         args: [ "--fix", "--unsafe-fixes", "--exit-non-zero-on-fix"]
       - id: ruff-format
 
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.1
-    hooks:
-    - id: codespell
-      additional_dependencies:
-        - tomli
-      args: [--write-changes]
+#  - repo: https://github.com/codespell-project/codespell
+#    rev: v2.4.1
+#    hooks:
+#    - id: codespell
+#      additional_dependencies:
+#        - tomli
+#      args: [--write-changes]
+# TODO might remove completely. it sometimes destroys our config files thats why its deactivated.
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.15.0
