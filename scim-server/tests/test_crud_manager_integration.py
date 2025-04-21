@@ -349,9 +349,7 @@ async def test_user_service(user_fixture: User) -> None:
     retrieved_user = udm2scim_mapper.map_user(udm_obj, base_url=udm_url)
     print(f"Retrieved user: {retrieved_user.display_name}")
 
-    assert retrieved_user.id == created_user.id, "User ID mismatch"
-    assert retrieved_user.display_name == created_user.display_name, "Display name mismatch"
-    # TODO
+    assert retrieved_user == created_user
 
 
 @pytest.mark.asyncio
@@ -381,7 +379,11 @@ async def test_group_service(group_fixture: Group) -> None:
 
     assert results, f"Group with ID {created_group.id} not found"
     results[0].open()
-    # TODO
+    udm_object = results[0].open()
+    retrieved_group = UdmToScimMapper().map_group(udm_object, base_url=udm_url)
+    print(f"Retrieved group: {retrieved_group.display_name}")
+
+    assert retrieved_group == created_group
 
 
 @pytest.mark.asyncio

@@ -32,6 +32,9 @@ class ScimToUdmMapper:
             "disabled": not user.active if user.active is not None else False,
         }
 
+        if user.id:
+            properties["univentionObjectIdentifier"] = user.id
+
         # Map name components
         if user.name:
             if user.name.given_name:
@@ -78,6 +81,9 @@ class ScimToUdmMapper:
             "name": group.display_name,
             "description": group.display_name,  # Use display name as description if no description is provided
         }
+
+        if group.id:
+            properties["univentionObjectIdentifier"] = group.id
 
         # Map members
         if group.members:

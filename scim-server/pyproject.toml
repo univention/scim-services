@@ -51,3 +51,4 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 addopts = "-v"
 pythonpath = [".", "tests"]
+asyncio_mode = "auto"
