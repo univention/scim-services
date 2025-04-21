@@ -6,16 +6,14 @@ import random
 import socket
 import urllib.parse
 from collections.abc import AsyncGenerator
+from typing import Any
 
 import pytest
-from scim2_models import Address, Email, Group, Name, PhoneNumber, User
-
-from scim2_models import Address, Email, Group, Name, PhoneNumber, User
-import pytest_asyncio
 import requests
 from faker import Faker
 from scim2_models import Address, Email, Group, Name, User
 from univention.admin.rest.client import UDM
+
 from univention.scim.server.domain.group_service_impl import GroupServiceImpl
 from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.repo.udm.crud_udm import CrudUdm
@@ -27,22 +25,22 @@ from univention.scim.server.model_service.udm2scim import UdmToScimMapper
 
 
 @pytest.fixture(scope="session")
-def directory_importer_config():
+def directory_importer_config() -> Any:
     class ConnectorConfig:
         class UdmConfig:
-            def __init__(self):
+            def __init__(self) -> None:
                 self.uri = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm/")
                 self.user = os.environ.get("UDM_USERNAME", "admin")
                 self.password = os.environ.get("UDM_PASSWORD", "univention")
 
-        def __init__(self):
+        def __init__(self) -> None:
             self.udm = self.UdmConfig()
 
     return ConnectorConfig()
 
 
 @pytest.fixture(scope="session", autouse=True)
-def maildomain(directory_importer_config):
+def maildomain(directory_importer_config: Any) -> Any:
     base_url = f"{directory_importer_config.udm.uri}mail/domain/"
     auth = (directory_importer_config.udm.user, directory_importer_config.udm.password)
     headers = {
@@ -93,7 +91,9 @@ def is_server_reachable(url: str, timeout: int = 2) -> bool:
         return False
 
 
-def create_crud_manager(resource_type: str, resource_class: type, udm_url: str, udm_username: str, udm_password: str):
+def create_crud_manager(
+    resource_type: str, resource_class: type[User | Group], udm_url: str, udm_username: str, udm_password: str
+) -> CrudManager:
     scim2udm_mapper = ScimToUdmMapper()
     udm2scim_mapper = UdmToScimMapper()
 
@@ -122,7 +122,7 @@ fake = Faker()
 
 
 @pytest.fixture
-def random_user_data():
+def random_user_data() -> dict[str, str]:
     """Generate random user data to avoid conflicts with existing users"""
     username = f"test-{fake.user_name().replace('.', '-')}-{random.randint(1000, 9999)}"
     return {
@@ -135,13 +135,13 @@ def random_user_data():
 
 
 @pytest.fixture
-def random_group_data():
+def random_group_data() -> dict[str, str]:
     """Generate random group data to avoid conflicts with existing groups"""
     group_name = f"test-group-{fake.word()}-{random.randint(1000, 9999)}"
     return {"display_name": group_name}
 
 
-async def ensure_user_deleted(udm_client, username=None, user_id=None):
+async def ensure_user_deleted(udm_client: UDM, username: str | None = None, user_id: str | None = None) -> bool:
     """
     Ensure a user is deleted from the system.
     Search by username or user_id and delete if found.
@@ -168,7 +168,7 @@ async def ensure_user_deleted(udm_client, username=None, user_id=None):
         return False
 
 
-async def ensure_group_deleted(udm_client, group_name=None, group_id=None):
+async def ensure_group_deleted(udm_client: UDM, group_name: str | None = None, group_id: str | None = None) -> bool:
     """
     Ensure a group is deleted from the system.
     Search by group_name or group_id and delete if found.
@@ -196,7 +196,7 @@ async def ensure_group_deleted(udm_client, group_name=None, group_id=None):
 
 
 @pytest.fixture
-def test_user(random_user_data) -> User:
+def test_user(random_user_data: dict[str, str]) -> User:
     """Create a test user with random data"""
     user = User(
         id=fake.uuid4(),
@@ -232,7 +232,7 @@ def test_user(random_user_data) -> User:
 
 
 @pytest.fixture
-def test_group(random_group_data) -> Group:
+def test_group(random_group_data: dict[str, str]) -> Group:
     """Create a test group with random data"""
     return Group(
         id=fake.uuid4(),
@@ -241,7 +241,7 @@ def test_group(random_group_data) -> Group:
     )
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def user_fixture(test_user: User) -> AsyncGenerator[User, None]:
     """Create a user fixture with proper cleanup"""
     udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
@@ -279,7 +279,7 @@ async def user_fixture(test_user: User) -> AsyncGenerator[User, None]:
         print(f"Error cleaning up test user: {e}")
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def group_fixture(test_group: Group) -> AsyncGenerator[Group, None]:
     """Create a group fixture with proper cleanup"""
     udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
