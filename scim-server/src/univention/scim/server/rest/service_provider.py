@@ -6,9 +6,7 @@ from typing import Any
 from fastapi import APIRouter
 from scim2_models import ServiceProviderConfig
 
-
 router = APIRouter()
-
 
 @router.get("", response_model=ServiceProviderConfig)
 async def get_service_provider_config() -> Any:
@@ -22,15 +20,16 @@ async def get_service_provider_config() -> Any:
         documentation_uri="https://docs.univention.de/scim-api/",
         patch={"supported": True},
         bulk={"supported": False},
-        filter={"supported": True, "max_results": 100},
-        change_password={"supported": False},
-        sort={"supported": True},
+        filter={"supported": True, "max_results": 100},  # Note: document only 'eq' is supported
+        change_password={"supported": True},
+        sort={"supported": False},
         etag={"supported": False},
         authentication_schemes=[
             {
                 "name": "OAuth Bearer Token",
-                "description": "Authentication using OAuth 2.0 Bearer Token",
-                "spec_uri": "https://oauth.net/2/",
+                "description": "Authentication scheme using the OAuth Bearer Token Standard",
+                "spec_uri": "http://www.rfc-editor.org/info/rfc6750",
+                "documentation_uri": "https://docs.univention.de/scim-api/auth/oauth.html",
                 "type": "oauthbearertoken",
                 "primary": True,
             }
