@@ -20,7 +20,7 @@ class UdmConfig(BaseSettings):
 
     model_config = SettingsConfigDict()
 
-    url: str = Field(default="http://localhost:9979/univention/udm")
+    url: str = Field(default="http://localhost:9979/univention/udm/")
     username: str = Field(default="admin")
     password: str = Field(default="univention")
 

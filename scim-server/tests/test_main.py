@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+import pytest
 from fastapi.testclient import TestClient
 
 
+@pytest.mark.usefixtures("allow_all_bearer")
 def test_main_read_openapi_html(client: TestClient) -> None:
     response = client.get("/docs")
     assert response.status_code == 200

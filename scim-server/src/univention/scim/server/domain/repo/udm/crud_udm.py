@@ -55,7 +55,7 @@ class CrudUdm(Generic[T], CrudScim[T]):
         self.udm_password = udm_password
 
         # Initialize UDM client
-        self.udm_client = UDM.http(self.udm_url, self.udm_username, self.udm_password)
+        self.udm_client = UDM.http(f"{self.udm_url}/", self.udm_username, self.udm_password)
 
         self.logger = logger.bind(resource_type=resource_type)
         self.logger.info("Initialized UDM CRUD with UDM REST API client")
