@@ -5,6 +5,7 @@ from typing import Any
 
 from fastapi import APIRouter
 from scim2_models import ServiceProviderConfig
+from loguru import logger
 
 router = APIRouter()
 
@@ -15,6 +16,7 @@ async def get_service_provider_config() -> Any:
 
     Returns information about the SCIM service provider's capabilities.
     """
+    logger.debug("REST: Get ServiceProviderConfig")
     return ServiceProviderConfig(
         schemas=["urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig"],
         documentation_uri="https://docs.univention.de/scim-api/",
