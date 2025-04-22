@@ -44,6 +44,13 @@ def client() -> Generator[TestClient, None, None]:
     with TestClient(app, headers={"Authorization": "Bearer let-me-in"}) as client:
         yield client
 
+    # remove routes to make sure they are re-added when reusing
+    # global app object with updated parameters like disabled authentication
+    app.router.routes = []
+
+    # setup OpenAPI routes again
+    app.setup()
+
 
 @pytest.fixture
 def caplog(caplog: LogCaptureFixture) -> Generator[LogCaptureFixture, None, None]:

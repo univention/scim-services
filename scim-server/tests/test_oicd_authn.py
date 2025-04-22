@@ -11,10 +11,9 @@ from jwcrypto.jwt import JWT
 from pytest_httpserver.httpserver import HTTPServer
 
 from univention.scim.server.authn.authn_impl import OpenIDConnectAuthentication
-from univention.scim.server.authn.fast_api_adapter import FastAPIAuthAdapter, RealFastAPIAuthAdapter
 from univention.scim.server.authn.oidc_configuration_impl import OpenIDConnectConfigurationImpl
 from univention.scim.server.config import AuthenticatorConfig
-from univention.scim.server.main import app
+from univention.scim.server.container import ApplicationContainer
 
 
 @pytest.fixture
@@ -36,17 +35,15 @@ def oicd_auth(allow_all_bearer: None, httpserver: HTTPServer) -> Generator[JWK, 
     oidc_configuration_obj = OpenIDConnectConfigurationImpl(
         AuthenticatorConfig(idp_openid_configuration_url=httpserver.url_for(oidc_configuration_url))
     )
-    authenticator = OpenIDConnectAuthentication(oidc_configuration_obj)
-    configuration = oidc_configuration_obj.get_configuration()
-    app.dependency_overrides[FastAPIAuthAdapter] = RealFastAPIAuthAdapter(
-        authenticator=authenticator, configuration=configuration
-    )
-    yield key
-    app.dependency_overrides = {}
+
+    with (
+        ApplicationContainer.authenticator.override(OpenIDConnectAuthentication(oidc_configuration_obj)),
+        ApplicationContainer.oidc_configuration.override(oidc_configuration_obj),
+    ):
+        yield key
 
 
-# TODO: no idea how this works, should XFAIL
-# @pytest.mark.xfail(strict=True, raises=ValueError)
+@pytest.mark.xfail(strict=True, raises=ValueError)
 def test_oicd_invalid_configuration(request: Any, oicd_auth: JWK, httpserver: HTTPServer) -> None:
     oidc_configuration = {
         "authorization_endpoint": httpserver.url_for("/authorize"),
@@ -59,8 +56,7 @@ def test_oicd_invalid_configuration(request: Any, oicd_auth: JWK, httpserver: HT
     request.getfixturevalue("client")
 
 
-# TODO: no idea how this works, should XFAIL
-# @pytest.mark.xfail(strict=True, raises=ValueError)
+@pytest.mark.xfail(strict=True, raises=ValueError)
 def test_oicd_no_route(request: Any, oicd_auth: JWK, httpserver: HTTPServer) -> None:
     httpserver.clear_all_handlers()
     # setting up the client should throw an exception because oidc configuration URL is not accessible

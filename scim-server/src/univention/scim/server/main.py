@@ -33,6 +33,27 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     container = ApplicationContainer()
     container.wire(packages=["univention.scim.server.rest"])
 
+    # Use settings from container to allow overriding values in unit tests
+    settings = ApplicationContainer().settings()
+
+    # We don't want network access at initialization time instead it is fetched at runtime
+    # when scim server is starting up
+    dependencies = (
+        [Security(FastAPIAuthAdapter(container.oidc_configuration().get_configuration()))]
+        if settings.auth_enabled
+        else None
+    )
+    app.include_router(users_router, prefix=f"{settings.api_prefix}/Users", tags=["Users"], dependencies=dependencies)
+    app.include_router(
+        groups_router, prefix=f"{settings.api_prefix}/Groups", tags=["Groups"], dependencies=dependencies
+    )
+    app.include_router(
+        service_provider_router,
+        prefix=f"{settings.api_prefix}/ServiceProviderConfig",
+        tags=["ServiceProviderConfig"],
+        dependencies=dependencies,
+    )
+
     schema_loader: LoadSchemas = container.schema_loader()
 
     # Load schemas and perform startup tasks
@@ -61,7 +82,6 @@ app = FastAPI(
     description="SCIM 2.0 API implementation for Univention",
     version="0.1.0",
     lifespan=lifespan,
-    dependencies=[Security(FastAPIAuthAdapter)] if settings.auth_enabled else None,
 )
 
 # Add CORS middleware
@@ -71,12 +91,6 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-)
-
-app.include_router(users_router, prefix=f"{settings.api_prefix}/Users", tags=["Users"])
-app.include_router(groups_router, prefix=f"{settings.api_prefix}/Groups", tags=["Groups"])
-app.include_router(
-    service_provider_router, prefix=f"{settings.api_prefix}/ServiceProviderConfig", tags=["ServiceProviderConfig"]
 )
 
 
