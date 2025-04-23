@@ -257,3 +257,33 @@ class TestServiceProviderConfig:
         assert scheme["specUri"] == "http://www.rfc-editor.org/info/rfc6750"
         assert scheme["documentationUri"] == "https://docs.univention.de/scim-api/auth/oauth.html"
         assert scheme["primary"] is True
+
+
+class TestSchemasEndpoint:
+    """Tests for the Schemas endpoint."""
+
+    def test_get_schemas(self, client: TestClient) -> None:
+        """Test retrieving the SCIM supported schemas."""
+        response = client.get("/scim/v2/Schemas")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) >= 1  # At least one schema expected (User)
+
+        user_schema = next((s for s in data if s["id"] == "urn:ietf:params:scim:schemas:core:2.0:User"), None)
+        assert user_schema is not None
+
+        assert user_schema["name"] == "User"
+        assert user_schema["description"] == "User Account"
+        assert isinstance(user_schema["attributes"], list)
+        assert any(attr["name"] == "username" for attr in user_schema["attributes"])
+
+        # Check some known properties of userName attribute
+        user_name_attr = next(attr for attr in user_schema["attributes"] if attr["name"] == "username")
+        assert user_name_attr["type"] == "string"
+        assert user_name_attr["multiValued"] is False
+        assert user_name_attr["required"] is False
+        assert user_name_attr["mutability"] == "readWrite"
+        assert user_name_attr["returned"] == "default"
+        assert user_name_attr["uniqueness"] == "none"
