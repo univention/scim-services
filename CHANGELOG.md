@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.4](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.3.3...v0.3.4) (2025-04-23)
+
+
+### Bug Fixes
+
+* **authentication:** Fix authentication ([f1eae26](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/f1eae26821b0d62f639ab980f97419091669e354)), closes [univention/dev/internal/team-nubus#1112](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1112)
+* **scim-server:** Fix app startup after refactoring ([82d0764](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/82d0764e8aae48c8c22b908a206093ff55259498)), closes [univention/dev/internal/team-nubus#1112](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1112)
+
 ## [0.3.3](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.3.2...v0.3.3) (2025-04-15)
 
 
