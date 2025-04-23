@@ -17,7 +17,7 @@ from univention.scim.server.container import ApplicationContainer
 
 
 @pytest.fixture
-def oicd_auth(allow_all_bearer: None, httpserver: HTTPServer) -> Generator[JWK, None, None]:
+def oicd_auth(setup_mocks: None, httpserver: HTTPServer) -> Generator[JWK, None, None]:
     jwks_uri = "/oauth2/v3/certs"
     oidc_configuration_url = "/.well-known/openid-configuration"
 

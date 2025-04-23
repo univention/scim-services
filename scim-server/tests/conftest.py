@@ -49,29 +49,18 @@ def application_settings(monkeypatch: pytest.MonkeyPatch) -> Generator[Applicati
 
 
 @pytest.fixture
-def allow_all_bearer(application_settings: ApplicationSettings) -> Generator[None, None, None]:
+def setup_mocks(application_settings: ApplicationSettings) -> Generator[None, None, None]:
     # Create test UDM repositories
-    scim2udm_mapper = ScimToUdmMapper()
-    udm2scim_mapper = UdmToScimMapper()
+    ScimToUdmMapper()
+    UdmToScimMapper()
 
     user_repo = MockCrudUdm[User](
         resource_type="User",
-        scim2udm_mapper=scim2udm_mapper,
-        udm2scim_mapper=udm2scim_mapper,
-        resource_class=User,
         udm_url="http://test.local",
-        udm_username="test",
-        udm_password="test",
     )
 
     group_repo = MockCrudUdm[Group](
         resource_type="Group",
-        scim2udm_mapper=scim2udm_mapper,
-        udm2scim_mapper=udm2scim_mapper,
-        resource_class=Group,
-        udm_url="http://test.local",
-        udm_username="test",
-        udm_password="test",
     )
 
     user_crud_manager = CrudManager[User](user_repo, "User")

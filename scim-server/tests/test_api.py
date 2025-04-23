@@ -34,7 +34,7 @@ test_group = Group(
 class TestUserAPI:
     """Tests for the User endpoints of the SCIM API."""
 
-    @pytest.mark.usefixtures("allow_all_bearer")
+    @pytest.mark.usefixtures("setup_mocks")
     def test_list_users(self, client: TestClient) -> None:
         """Test listing users."""
         response = client.get("/scim/v2/Users")
@@ -48,7 +48,7 @@ class TestUserAPI:
         assert "Resources" in data
         assert isinstance(data["Resources"], list)
 
-    @pytest.mark.usefixtures("allow_all_bearer")
+    @pytest.mark.usefixtures("setup_mocks")
     def test_create_user(self, client: TestClient) -> Any:
         """Test creating a user."""
         response = client.post("/scim/v2/Users", json=test_user.model_dump(by_alias=True, exclude_none=True))
@@ -65,7 +65,7 @@ class TestUserAPI:
         user_id = data["id"]
         return user_id
 
-    @pytest.mark.usefixtures("allow_all_bearer")
+    @pytest.mark.usefixtures("setup_mocks")
     def test_get_user(self, client: TestClient) -> None:
         """Test retrieving a user."""
         # First create a user
@@ -82,7 +82,7 @@ class TestUserAPI:
         assert data["name"]["givenName"] == test_user.name.given_name
         assert data["name"]["familyName"] == test_user.name.family_name
 
-    @pytest.mark.usefixtures("allow_all_bearer")
+    @pytest.mark.usefixtures("setup_mocks")
     def test_update_user(self, client: TestClient) -> None:
         """Test updating a user."""
         # First create a user
@@ -104,7 +104,7 @@ class TestUserAPI:
         assert data["name"]["givenName"] == updated_user.name.given_name
         assert data["name"]["familyName"] == updated_user.name.family_name
 
-    @pytest.mark.usefixtures("allow_all_bearer")
+    @pytest.mark.usefixtures("setup_mocks")
     def test_delete_user(self, client: TestClient) -> None:
         """Test deleting a user."""
         # First create a user
@@ -118,25 +118,25 @@ class TestUserAPI:
         response = client.get(f"/scim/v2/Users/{user_id}")
         assert response.status_code == 404
 
-    @pytest.mark.usefixtures("allow_all_bearer")
+    @pytest.mark.usefixtures("setup_mocks")
     def test_get_nonexistent_user(self, client: TestClient) -> None:
         """Test getting a nonexistent user."""
         response = client.get("/scim/v2/Users/nonexistent")
         assert response.status_code == 404
 
-    @pytest.mark.usefixtures("allow_all_bearer")
+    @pytest.mark.usefixtures("setup_mocks")
     def test_update_nonexistent_user(self, client: TestClient) -> None:
         """Test updating a nonexistent user."""
         response = client.put("/scim/v2/Users/nonexistent", json=test_user.model_dump(by_alias=True, exclude_none=True))
         assert response.status_code == 404
 
-    @pytest.mark.usefixtures("allow_all_bearer")
+    @pytest.mark.usefixtures("setup_mocks")
     def test_delete_nonexistent_user(self, client: TestClient) -> None:
         """Test deleting a nonexistent user."""
         response = client.delete("/scim/v2/Users/nonexistent")
         assert response.status_code == 404
 
-    @pytest.mark.usefixtures("allow_all_bearer")
+    @pytest.mark.usefixtures("setup_mocks")
     def test_filter_users(self, client: TestClient) -> None:
         """Test filtering users."""
         # First create a user
@@ -155,7 +155,7 @@ class TestUserAPI:
 class TestGroupAPI:
     """Tests for the Group endpoints of the SCIM API."""
 
-    @pytest.mark.usefixtures("allow_all_bearer")
+    @pytest.mark.usefixtures("setup_mocks")
     def test_list_groups(self, client: TestClient) -> None:
         """Test listing groups."""
         response = client.get("/scim/v2/Groups")
@@ -173,7 +173,7 @@ class TestGroupAPI:
         assert "Resources" in data
         assert isinstance(data["Resources"], list)
 
-    @pytest.mark.usefixtures("allow_all_bearer")
+    @pytest.mark.usefixtures("setup_mocks")
     def test_create_group(self, client: TestClient) -> Any:
         """Test creating a group."""
         response = client.post("/scim/v2/Groups", json=test_group.model_dump(by_alias=True, exclude_none=True))
@@ -193,7 +193,7 @@ class TestGroupAPI:
         group_id = data["id"]
         return group_id
 
-    @pytest.mark.usefixtures("allow_all_bearer")
+    @pytest.mark.usefixtures("setup_mocks")
     def test_get_group(self, client: TestClient) -> None:
         """Test retrieving a group."""
         try:
@@ -220,7 +220,7 @@ class TestGroupAPI:
 class TestServiceProviderConfig:
     """Tests for the ServiceProviderConfig endpoint."""
 
-    @pytest.mark.usefixtures("allow_all_bearer")
+    @pytest.mark.usefixtures("setup_mocks")
     def test_get_service_provider_config(self, client: TestClient) -> None:
         """Test retrieving the service provider configuration."""
         response = client.get("/scim/v2/ServiceProviderConfig")

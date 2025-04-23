@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 import builtins
 import uuid
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from loguru import logger
 from scim2_models import Meta, Resource, User
@@ -22,28 +22,15 @@ class MockCrudUdm(Generic[T], CrudScim[T]):
     def __init__(
         self,
         resource_type: str,
-        scim2udm_mapper: Any,
-        udm2scim_mapper: Any,
-        resource_class: type[T],
         udm_url: str = "http://test.local",
-        udm_username: str = "test",
-        udm_password: str = "test",
     ):
         """
         Initialize the mock UDM CRUD implementation.
         Args:
             resource_type: The type of resource ('User' or 'Group')
-            scim2udm_mapper: Mapper to convert SCIM objects to UDM
-            udm2scim_mapper: Mapper to convert UDM to SCIM objects
-            resource_class: The class of resource being managed (e.g., User, Group)
         """
         self.resource_type = resource_type
-        self.resource_class = resource_class
-        self.scim2udm_mapper = scim2udm_mapper
-        self.udm2scim_mapper = udm2scim_mapper
         self.udm_url = udm_url
-        self.udm_username = udm_username
-        self.udm_password = udm_password
 
         # In-memory storage
         self.resources: dict[str, T] = {}

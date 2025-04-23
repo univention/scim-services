@@ -26,7 +26,7 @@ def disable_authentication(application_settings: ApplicationSettings) -> Applica
     return application_settings
 
 
-@pytest.mark.usefixtures("allow_all_bearer", "disable_authentication")
+@pytest.mark.usefixtures("setup_mocks", "disable_authentication")
 def test_auth_disabled(authenticator_mock: Authentication, client: TestClient) -> None:
     authenticator_mock.authenticate.side_effect = HTTPException(status_code=403, detail="Auth error in test.")
 
@@ -35,7 +35,7 @@ def test_auth_disabled(authenticator_mock: Authentication, client: TestClient) -
     assert authenticator_mock.authenticate.call_count == 0
 
 
-@pytest.mark.usefixtures("allow_all_bearer")
+@pytest.mark.usefixtures("setup_mocks")
 def test_auth_fail(authenticator_mock: Authentication, client: TestClient) -> None:
     authenticator_mock.authenticate.side_effect = HTTPException(status_code=403, detail="Auth error in test.")
 
@@ -44,7 +44,7 @@ def test_auth_fail(authenticator_mock: Authentication, client: TestClient) -> No
     assert authenticator_mock.authenticate.call_count == 1
 
 
-@pytest.mark.usefixtures("allow_all_bearer")
+@pytest.mark.usefixtures("setup_mocks")
 def test_auth_success(authenticator_mock: Authentication, client: TestClient) -> None:
     authenticator_mock.authenticate.returns = {"username": "admin", "roles": ["admin"]}
 
