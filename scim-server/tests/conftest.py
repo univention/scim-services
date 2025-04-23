@@ -18,6 +18,7 @@ from scim2_models import Address, Email, Group, Name, Resource, User
 from univention.admin.rest.client import UDM
 
 from helpers.allow_all_authn import AllowAllBearerAuthentication, OpenIDConnectConfigurationMock
+from helpers.mock_udm import MockCrudUdm
 from univention.scim.server.authn.authn import Authentication
 from univention.scim.server.config import ApplicationSettings
 from univention.scim.server.container import ApplicationContainer
@@ -49,6 +50,37 @@ def application_settings(monkeypatch: pytest.MonkeyPatch) -> Generator[Applicati
 
 @pytest.fixture
 def allow_all_bearer(application_settings: ApplicationSettings) -> Generator[None, None, None]:
+    # Create test UDM repositories
+    scim2udm_mapper = ScimToUdmMapper()
+    udm2scim_mapper = UdmToScimMapper()
+
+    user_repo = MockCrudUdm[User](
+        resource_type="User",
+        scim2udm_mapper=scim2udm_mapper,
+        udm2scim_mapper=udm2scim_mapper,
+        resource_class=User,
+        udm_url="http://test.local",
+        udm_username="test",
+        udm_password="test",
+    )
+
+    group_repo = MockCrudUdm[Group](
+        resource_type="Group",
+        scim2udm_mapper=scim2udm_mapper,
+        udm2scim_mapper=udm2scim_mapper,
+        resource_class=Group,
+        udm_url="http://test.local",
+        udm_username="test",
+        udm_password="test",
+    )
+
+    user_crud_manager = CrudManager[User](user_repo, "User")
+    group_crud_manager = CrudManager[Group](group_repo, "Group")
+
+    # Create service instances
+    user_service = UserServiceImpl(user_crud_manager)
+    group_service = GroupServiceImpl(group_crud_manager)
+
     # Make sure that for tests we allow all bearer
     with (
         ApplicationContainer.authenticator.override(AllowAllBearerAuthentication()),
@@ -242,7 +274,7 @@ async def ensure_user_deleted(udm_client: UDM, username: str | None = None, user
         if results:
             for result in results:
                 udm_obj = result.open()
-                print(f"Deleting existing user: {udm_obj.properties.username}")
+                print(f"Deleting existing user: {udm_obj.properties['username']}")
                 udm_obj.delete()
             return True
         return False
@@ -269,7 +301,7 @@ async def ensure_group_deleted(udm_client: UDM, group_name: str | None = None, g
         if results:
             for result in results:
                 udm_obj = result.open()
-                print(f"Deleting existing group: {udm_obj.properties.name}")
+                print(f"Deleting existing group: {udm_obj.properties['name']}")
                 udm_obj.delete()
             return True
         return False

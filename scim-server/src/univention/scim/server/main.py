@@ -74,7 +74,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 configure_logging(settings.log_level)
 
 # Setup app
-app = FastAPI(
+app: FastAPI = FastAPI(
     title="Univention SCIM Server",
     description="SCIM 2.0 API implementation for Univention",
     version="0.1.0",

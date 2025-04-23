@@ -12,6 +12,7 @@ def test_main_read_openapi_html(client: TestClient) -> None:
     assert "Univention SCIM Server - Swagger UI" in response.text, repr(response.__dict__)
 
 
+@pytest.mark.usefixtures("allow_all_bearer")
 def test_main_read_openapi_json(client: TestClient) -> None:
     response = client.get("/openapi.json")
     assert response.status_code == 200

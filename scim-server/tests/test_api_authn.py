@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi import HTTPException

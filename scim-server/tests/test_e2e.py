@@ -3,6 +3,7 @@
 
 import os
 from collections.abc import Generator
+from typing import cast
 
 import pytest
 from fastapi import FastAPI
@@ -11,7 +12,7 @@ from scim2_models import Group, User
 
 from univention.scim.server.config import ApplicationSettings
 from univention.scim.server.container import ApplicationContainer
-from univention.scim.server.main import create_app
+from univention.scim.server.main import app
 
 from .conftest import (
     skip_if_no_udm,
@@ -21,14 +22,14 @@ from .conftest import (
 @pytest.fixture
 def test_app() -> FastAPI:
     """Create a test instance of the FastAPI application."""
-    app: FastAPI = create_app()
-    return app
+    return cast(FastAPI, app)
 
 
 @pytest.fixture
-def test_client(test_app: FastAPI) -> TestClient:
-    """Create a test client for the FastAPI application."""
-    return TestClient(test_app)
+def test_client(test_app: FastAPI) -> Generator[TestClient, None, None]:
+    """Create a test client for the FastAPI application that properly handles async lifespan."""
+    with TestClient(test_app) as client:
+        yield client
 
 
 @pytest.fixture

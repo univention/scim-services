@@ -3,14 +3,12 @@
 
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Singleton
-from scim2_models import Group, User
 
 from univention.scim.server.authn.authn import Authentication
 from univention.scim.server.authn.oidc_configuration import OpenIDConnectConfiguration
 from univention.scim.server.config import ApplicationSettings, application_settings, dependency_injection_settings
 from univention.scim.server.domain.group_service import GroupService
 from univention.scim.server.domain.repo.container import RepositoryContainer
-from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.user_service import UserService
 from univention.scim.server.model_service.load_schemas import LoadSchemas
 
@@ -34,14 +32,14 @@ class ApplicationContainer(DeclarativeContainer):
     # Use repositories from the repository container if specified in DI settings
     # Otherwise use the default implementations
     if di.di_user_repo == "univention.scim.server.domain.repo.container.RepositoryContainer.user_crud_manager":
-        user_repo: CrudManager[User] = repositories.user_crud_manager
+        user_repo = repositories.provided.user_crud_manager
     else:
         user_repo = Singleton(di.di_user_repo)
 
     user_service: UserService = Singleton(di.di_user_service, user_repository=user_repo)
 
     if di.di_group_repo == "univention.scim.server.domain.repo.container.RepositoryContainer.group_crud_manager":
-        group_repo: CrudManager[Group] = repositories.group_crud_manager
+        group_repo = repositories.provided.group_crud_manager
     else:
         group_repo = Singleton(di.di_group_repo)
 
