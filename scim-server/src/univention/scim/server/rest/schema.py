@@ -1,13 +1,17 @@
-from typing import Any, List
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2025 Univention GmbH
+
+from typing import Any
 
 from fastapi import APIRouter
 from loguru import logger
-from scim2_models import User, Schema
+from scim2_models import Schema,User
+
 
 router = APIRouter()
 
 
-@router.get("", response_model=List[Schema])
+@router.get("", response_model=list[Schema])
 async def get_schemas() -> Any:
     """
     Get the list of schemas supported by the SCIM service.
@@ -20,15 +24,12 @@ async def get_schemas() -> Any:
     properties = user_schema_raw.get("properties", {})
     required_fields = set(user_schema_raw.get("required", []))
 
-    attributes: List[dict] = []
+    attributes: list[dict[str, Any]] = []
 
     for name, prop in properties.items():
         is_multi = prop.get("type") == "array"
         # Use the inner type for SCIM when array
-        scim_type = (
-            prop.get("items", {}).get("type", "string")
-            if is_multi else prop.get("type", "string")
-        )
+        scim_type = prop.get("items", {}).get("type", "string") if is_multi else prop.get("type", "string")
 
         attr = {
             "name": name,

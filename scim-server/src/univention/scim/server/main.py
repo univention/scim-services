@@ -16,9 +16,9 @@ from univention.scim.server.configure_logging import configure_logging
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.model_service.load_schemas import LoadSchemas
 from univention.scim.server.rest.groups import router as groups_router
+from univention.scim.server.rest.schema import router as schema_router
 from univention.scim.server.rest.service_provider import router as service_provider_router
 from univention.scim.server.rest.users import router as users_router
-from univention.scim.server.rest.schema import router as schema_router
 
 
 settings = application_settings()
