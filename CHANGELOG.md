@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.4.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.3.4...v0.4.0) (2025-04-24)
+
+
+### Features
+
+* extend udm2scim mapping for user attributes ([272da7d](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/272da7d1167671d41799fc90af982393949fe96a))
+* implement UDM ([1d11b6a](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/1d11b6a1a0c6a73ced7b32545873ecbc35b7653e))
+* qa improvements and tests WIP ([c9f64c3](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/c9f64c33164525df569db86f61603cf8586d1198))
+* QA suggestions ([568aed1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/568aed1399803fa55e89ea88d619789b304b98f2))
+* use udm-rest-api-client ([e04cb46](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/e04cb46252a05c450e01d3d5d59009a3fdeed249))
+
+
+### Bug Fixes
+
+* fix problems with running tests locally ([81a85f5](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/81a85f5b11159d032db98a031ebb06379ecb47d2))
+* lint ([9a86981](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/9a869817dc1fc251de5da2ad06307db3abf23a45))
+* refactor fixes ([d742e5d](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/d742e5d11cb017c87f981287faec24af94b4bb5f))
+* remove code spell checking ([c0e603e](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/c0e603e73ac888740380e7dbcdbd231f7259bd32))
+* remove non workign date mappings ([f0dace1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/f0dace1464dca504e69dfc59072536eba04abdf4))
+
 ## [0.3.4](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.3.3...v0.3.4) (2025-04-23)
 
 
