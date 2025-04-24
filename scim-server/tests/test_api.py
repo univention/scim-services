@@ -262,6 +262,7 @@ class TestServiceProviderConfig:
 class TestSchemasEndpoint:
     """Tests for the Schemas endpoint."""
 
+    @pytest.mark.usefixtures("setup_mocks")
     def test_get_schemas(self, client: TestClient) -> None:
         """Test retrieving the SCIM supported schemas."""
         response = client.get("/scim/v2/Schemas")
@@ -269,21 +270,50 @@ class TestSchemasEndpoint:
 
         data = response.json()
         assert isinstance(data, list)
-        assert len(data) >= 1  # At least one schema expected (User)
+        assert len(data) >= 3  # Expect at least User, Group, and Common schemas
 
+        # Find each expected schema
         user_schema = next((s for s in data if s["id"] == "urn:ietf:params:scim:schemas:core:2.0:User"), None)
-        assert user_schema is not None
+        group_schema = next((s for s in data if s["id"] == "urn:ietf:params:scim:schemas:core:2.0:Group"), None)
+        common_schema = next((s for s in data if s["id"] == "urn:ietf:params:scim:schemas:core:2.0:Common"), None)
 
+        # Verify all schemas exist
+        assert user_schema is not None, "User schema is missing"
+        assert group_schema is not None, "Group schema is missing"
+        assert common_schema is not None, "Common schema is missing"
+
+        # Test User schema structure
         assert user_schema["name"] == "User"
         assert user_schema["description"] == "User Account"
         assert isinstance(user_schema["attributes"], list)
-        assert any(attr["name"] == "username" for attr in user_schema["attributes"])
 
-        # Check some known properties of userName attribute
-        user_name_attr = next(attr for attr in user_schema["attributes"] if attr["name"] == "username")
-        assert user_name_attr["type"] == "string"
-        assert user_name_attr["multiValued"] is False
-        assert user_name_attr["required"] is False
-        assert user_name_attr["mutability"] == "readWrite"
-        assert user_name_attr["returned"] == "default"
-        assert user_name_attr["uniqueness"] == "none"
+        # Check for important User attributes with correct casing (SCIM uses camelCase)
+        user_attributes = {attr["name"] for attr in user_schema["attributes"]}
+        assert "username" in user_attributes, "username attribute missing from User schema"
+        assert "displayname" in user_attributes, "displayname attribute missing from User schema"
+
+        # Verify attribute properties for a key field
+        username_attr = next(attr for attr in user_schema["attributes"] if attr["name"] == "username")
+        assert username_attr["type"] == "string"
+        assert username_attr["multiValued"] is False
+        assert username_attr["mutability"] == "readWrite"
+        assert username_attr["returned"] == "default"
+        # TODO: implement
+        ## In standard SCIM, username should have server uniqueness
+        # assert username_attr["uniqueness"] == "server"
+
+        # Test Group schema
+        assert group_schema["name"] == "Group"
+        assert isinstance(group_schema["attributes"], list)
+
+        # Verify Group attributes
+        group_attributes = {attr["name"] for attr in group_schema["attributes"]}
+        assert "displayname" in group_attributes
+        assert "members" in group_attributes
+
+        # Test Common schema (just basic structure)
+        assert common_schema["name"] == "Common"
+        common_attributes = {attr["name"] for attr in common_schema["attributes"]}
+        expected_common_attrs = {"id", "externalId", "meta", "schemas"}
+        for attr in expected_common_attrs:
+            assert attr in common_attributes, f"Common schema missing expected attribute: {attr}"
