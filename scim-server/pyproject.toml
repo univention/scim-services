@@ -14,6 +14,8 @@ dependencies = [
     "requests>=2.32.3",
     "jwcrypto>=1.5.6",
     "udm-rest-api-client[async]>=0.0.2",
+    "scim-udm-transformer-lib",
+    "requests>=2.32.3",
 ]
 
 [dependency-groups]
@@ -23,10 +25,11 @@ dev = [
     "pytest-asyncio>=0.26.0",
     "pytest-httpserver>=1.1.2",
     "pytestarch>=3",
+    "requests>=2.32.3",
 ]
 
 [tool.uv.sources]
-scim-udm-transformer-lib = { path = "../scim-udm-transformer-lib" }
+scim-udm-transformer-lib = { workspace = true }
 lancelog = { index = "gitlab" }
 
 [[tool.uv.index]]

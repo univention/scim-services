@@ -12,8 +12,7 @@ from univention.scim.server.domain.group_service_impl import GroupServiceImpl
 from univention.scim.server.domain.rules.display_name import UserDisplayNameRule
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
-from univention.scim.server.model_service.scim2udm import ScimToUdmMapper
-from univention.scim.server.model_service.udm2scim import UdmToScimMapper
+from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 
 from .conftest import create_crud_manager, skip_if_no_udm
 

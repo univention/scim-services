@@ -5,7 +5,7 @@ from loguru import logger
 from scim2_models import User
 
 from univention.scim.server.model_service.udm import UdmClient
-from univention.scim.server.model_service.udm2scim import UdmToScimMapper
+from univention.scim.transformation import UdmToScimMapper
 
 
 class UserModel:

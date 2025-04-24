@@ -6,10 +6,10 @@ from typing import TypeVar
 from dependency_injector import containers, providers
 from scim2_models import Group, Resource, User
 
+from univention.scim.server.domain.crud_scim import CrudScim
 from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.repo.udm.crud_udm import CrudUdm
-from univention.scim.server.model_service.scim2udm import ScimToUdmMapper
-from univention.scim.server.model_service.udm2scim import UdmToScimMapper
+from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 
 
 T = TypeVar("T", bound=Resource)
@@ -26,7 +26,7 @@ class RepositoryContainer(containers.DeclarativeContainer):
     udm2scim_mapper: UdmToScimMapper = providers.Singleton(UdmToScimMapper)
 
     # Repository factories
-    user_repository: CrudUdm[User] = providers.Factory(
+    user_repository: CrudScim[User] = providers.Factory(
         CrudUdm[User],
         resource_type="User",
         scim2udm_mapper=scim2udm_mapper,
@@ -37,7 +37,7 @@ class RepositoryContainer(containers.DeclarativeContainer):
         udm_password=config.password,
     )
 
-    group_repository: CrudUdm[Group] = providers.Factory(
+    group_repository: CrudScim[Group] = providers.Factory(
         CrudUdm[Group],
         resource_type="Group",
         scim2udm_mapper=scim2udm_mapper,

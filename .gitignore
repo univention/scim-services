@@ -14,3 +14,4 @@ __pycache__/
 **/*.bkp
 **/*.tgz
 **/.kyverno/manifest.yaml
+**/*.egg-info/

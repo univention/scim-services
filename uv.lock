@@ -1039,6 +1039,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "requests" },
+    { name = "scim-udm-transformer-lib" },
     { name = "scim2-models" },
     { name = "udm-rest-api-client", extra = ["async"] },
     { name = "uvicorn" },
@@ -1051,6 +1052,7 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-httpserver" },
     { name = "pytestarch" },
+    { name = "requests" },
 ]
 
 [package.metadata]
@@ -1063,6 +1065,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.10.6" },
     { name = "pydantic-settings", specifier = ">=2.8.1" },
     { name = "requests", specifier = ">=2.32.3" },
+    { name = "scim-udm-transformer-lib", editable = "scim-udm-transformer-lib" },
     { name = "scim2-models", specifier = ">=0.3.2" },
     { name = "udm-rest-api-client", extras = ["async"], specifier = ">=0.0.2" },
     { name = "uvicorn", specifier = ">=0.34.0" },
@@ -1075,6 +1078,7 @@ dev = [
     { name = "pytest-asyncio", specifier = ">=0.26.0" },
     { name = "pytest-httpserver", specifier = ">=1.1.2" },
     { name = "pytestarch", specifier = ">=3" },
+    { name = "requests", specifier = ">=2.32.3" },
 ]
 
 [[package]]
@@ -1102,10 +1106,16 @@ version = "0.1.0"
 source = { editable = "scim-udm-transformer-lib" }
 dependencies = [
     { name = "jinja2" },
+    { name = "loguru" },
+    { name = "scim2-models" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "jinja2", specifier = ">=3.1.6" }]
+requires-dist = [
+    { name = "jinja2", specifier = ">=3.1.6" },
+    { name = "loguru", specifier = ">=0.7.2" },
+    { name = "scim2-models", specifier = ">=0.3.2" },
+]
 
 [[package]]
 name = "scim2-models"

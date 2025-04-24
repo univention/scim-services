@@ -7,4 +7,4 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-scim-udm-transformer-lib = { path = "../scim-udm-transformer-lib" }
+scim-udm-transformer-lib = { workspace = true }

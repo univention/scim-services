@@ -15,10 +15,15 @@ services:
         condition: service_started
     cap_drop:
       - ALL
+    command: >
+      bash -c " \
+        cd scim-server && \
+        uv sync && \
+        uv run pytest -lv"
     volumes:
-      - ../src:/app/src:ro
-      - ../tests:/app/tests:ro
-      - ../pyproject.toml:/app/pyproject.toml:ro
+      - ../../:/app:ro
+      - scim-server-venv:/app/.venv
+      - scim-transfomer-lib-build:/app/scim-udm-transformer-lib/src/scim_udm_transformer_lib.egg-info
     environment:
       UDM_URL: http://udm-rest-api:9979/udm/
       UDM_USERNAME: cn=admin
@@ -69,3 +74,7 @@ services:
         source: ./base.conf
         target: /etc/univention/base.conf
         read_only: true
+
+volumes:
+  scim-server-venv:
+  scim-transfomer-lib-build:

@@ -27,8 +27,7 @@ from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.repo.udm.crud_udm import CrudUdm
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
 from univention.scim.server.main import app
-from univention.scim.server.model_service.scim2udm import ScimToUdmMapper
-from univention.scim.server.model_service.udm2scim import UdmToScimMapper
+from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 
 
 T = TypeVar("T", bound=Resource)

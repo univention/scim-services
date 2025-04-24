@@ -35,6 +35,8 @@ def architecture() -> LayeredArchitecture:
         .containing_modules(["univention.scim.server.model_service"])
         .layer("rest")
         .containing_modules(["univention.scim.server.main", "univention.scim.server.rest"])
+        .layer("transformation")
+        .containing_modules(["univention.scim.transformation"])
     )
 
 
@@ -54,13 +56,13 @@ def evaluable(base_path: Path) -> EvaluableArchitecture:
     -> https://zyskarch.github.io/pytestarch/latest/features/module_import_checks/
     """
     assert str(base_path).endswith("univention")
-    return get_evaluable_architecture(str(base_path), str(base_path))
+    return get_evaluable_architecture(str(base_path), str(base_path), exclude_external_libraries=False)
 
 
 @pytest.mark.parametrize(
     ["importer", "imported"],
     [
-        ("domain", "model_service"),
+        ("domain", "transformation"),
         ("rest", "authn"),
         # TODO: ("rest", "authz"),  # not implemented
         ("rest", "domain"),
