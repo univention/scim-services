@@ -5,7 +5,7 @@ from typing import Any
 
 from fastapi import APIRouter
 from loguru import logger
-from scim2_models import Schema,User
+from scim2_models import Schema, User
 
 
 router = APIRouter()
