@@ -330,6 +330,7 @@ def test_user(random_user_data: dict[str, str]) -> User:
         active=True,
         preferred_language="en-US",
         user_type="employee",
+        meta={},
     )
 
     return user
@@ -354,7 +355,8 @@ async def user_fixture(test_user: User) -> AsyncGenerator[User, None]:
     module = udm_client.get("users/user")
     udm_obj = module.new()
 
-    for key, value in scim2udm_mapper.map_user(test_user).items():
+    user_properties = scim2udm_mapper.map_user(test_user)
+    for key, value in user_properties.items():
         udm_obj.properties[key] = value
 
     udm_obj.save()
@@ -382,6 +384,7 @@ def test_group(random_group_data: dict[str, str]) -> Group:
         id=fake.uuid4(),
         schemas=["urn:ietf:params:scim:schemas:core:2.0:Group"],
         display_name=random_group_data["display_name"],
+        meta={},
     )
 
 

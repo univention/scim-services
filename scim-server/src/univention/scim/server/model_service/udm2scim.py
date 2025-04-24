@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-import re
-from datetime import datetime
 from typing import Any
 
 from loguru import logger
@@ -16,77 +14,24 @@ class UdmToScimMapper:
     Converts UDM properties to SCIM-compatible objects.
     """
 
-    def _convert_udm_timestamp(self, timestamp: str | None) -> datetime | None:
-        """
-        Convert UDM timestamp format to datetime object.
-
-        Args:
-            timestamp: UDM timestamp string (e.g., "Mon, 21 Apr 2025 12:58:41 GMT")
-                       or LDAP format (e.g., "20230101000000Z")
-
-        Returns:
-            datetime object or None if conversion fails
-        """
-        if not timestamp:
-            return None
-
-        # Try to parse HTTP-style date format: "Mon, 21 Apr 2025 12:58:41 GMT"
-        try:
-            return datetime.strptime(timestamp, "%a, %d %b %Y %H:%M:%S %Z")
-        except ValueError:
-            pass
-
-        # If already in ISO format (like "2023-01-15T12:30:45Z"), parse it
-        try:
-            if re.match(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$", timestamp):
-                return datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
-        except ValueError:
-            pass
-
-        # Match LDAP timestamp pattern: YYYYMMDDHHMMSSZ
-        pattern = r"^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z$"
-        match = re.match(pattern, timestamp)
-
-        if match:
-            # Extract components
-            year, month, day, hour, minute, second = match.groups()
-            # Create datetime object
-            try:
-                return datetime(int(year), int(month), int(day), int(hour), int(minute), int(second))
-            except ValueError as e:
-                logger.error(f"Failed to create datetime from LDAP timestamp: {timestamp}. Error: {e}")
-                return None
-
-        # If timestamp is in another format, log and return None
-        logger.debug(f"Timestamp appears to be in unrecognized format: {timestamp}")
-        return None
-
     def map_user(self, udm_user: Any, base_url: str = "") -> User:
         """
         Map UDM user properties to a SCIM User.
-
         Args:
             udm_user: UDM user object
             base_url: Base URL for resource location
-
         Returns:
             SCIM User object
         """
         logger.debug(f"Mapping UDM user {udm_user.dn} to SCIM User")
-
         # Access properties directly from UDM user object
         props = udm_user.properties
-
         # Get univentionObjectIdentifier for user ID, fall back to username
         user_id = props.get("univentionObjectIdentifier", props.get("username", "unknown"))
 
-        # Get timestamp data from UDM
-        udm_created = getattr(udm_user, "created", None)
-        udm_modified = udm_user.last_modified if hasattr(udm_user, "last_modified") else None
-
-        # Convert timestamps to datetime objects
-        created_dt = self._convert_udm_timestamp(udm_created)
-        last_modified_dt = self._convert_udm_timestamp(udm_modified)
+        # Get last_modified timestamp directly from UDM object
+        if hasattr(udm_user, "last_modified"):
+            pass
 
         # Determine resource location
         location = f"{base_url}/Users/{user_id}" if base_url else None
@@ -96,12 +41,6 @@ class UdmToScimMapper:
             "resource_type": "User",
             "location": location,
         }
-
-        # Add timestamps if available and converted successfully
-        if created_dt:
-            meta_data["created"] = created_dt.isoformat().replace("+00:00", "Z")
-        if last_modified_dt:
-            meta_data["last_modified"] = last_modified_dt.isoformat().replace("+00:00", "Z")
 
         # Add version if available from etag
         if hasattr(udm_user, "etag") and udm_user.etag:
@@ -256,41 +195,27 @@ class UdmToScimMapper:
     def map_group(self, udm_group: Any, base_url: str = "") -> Group:
         """
         Map UDM group properties to a SCIM Group.
-
         Args:
             udm_group: UDM group object
             base_url: Base URL for resource location
-
         Returns:
             SCIM Group object
         """
         logger.debug(f"Mapping UDM group {udm_group.dn} to SCIM Group")
-
         # Access properties directly from UDM group object
         props = udm_group.properties
-
         # Extract group ID
         group_id = props.get("univentionObjectIdentifier", props.get("name", "unknown"))
 
-        # Get timestamp data from UDM
-        udm_created = getattr(udm_group, "created", None)
-        udm_modified = udm_group.last_modified if hasattr(udm_group, "last_modified") else None
-
-        # Convert timestamps to datetime objects
-        created_dt = self._convert_udm_timestamp(udm_created)
-        last_modified_dt = self._convert_udm_timestamp(udm_modified)
+        # Get last_modified timestamp directly from UDM object
+        if hasattr(udm_group, "last_modified"):
+            pass
 
         # Prepare meta object
         meta_data = {
             "resource_type": "Group",
             "location": f"{base_url}/Groups/{group_id}" if base_url else None,
         }
-
-        # Add timestamps if available
-        if created_dt:
-            meta_data["created"] = created_dt.isoformat().replace("+00:00", "Z")
-        if last_modified_dt:
-            meta_data["last_modified"] = last_modified_dt.isoformat().replace("+00:00", "Z")
 
         # Add version if available from etag
         if hasattr(udm_group, "etag") and udm_group.etag:
