@@ -4,10 +4,12 @@
 from typing import Any
 
 from fastapi import APIRouter
-from scim2_models import ServiceProviderConfig
 from loguru import logger
+from scim2_models import ServiceProviderConfig
+
 
 router = APIRouter()
+
 
 @router.get("", response_model=ServiceProviderConfig)
 async def get_service_provider_config() -> Any:
