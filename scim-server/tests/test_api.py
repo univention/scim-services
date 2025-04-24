@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -34,6 +33,43 @@ test_group = Group(
 class TestUserAPI:
     """Tests for the User endpoints of the SCIM API."""
 
+    def _create_test_user(self, client: TestClient) -> str:
+        """Helper method to create a test user and return the ID."""
+        response = client.post("/scim/v2/Users", json=test_user.model_dump(by_alias=True, exclude_none=True))
+        assert response.status_code == 201
+        data = response.json()
+        return str(data["id"])
+
+    @pytest.mark.usefixtures("setup_mocks")
+    def test_create_user(self, client: TestClient) -> None:
+        """Test creating a user."""
+        response = client.post("/scim/v2/Users", json=test_user.model_dump(by_alias=True, exclude_none=True))
+        assert response.status_code == 201
+        data = response.json()
+
+        # Verify response data
+        assert data["userName"] == test_user.user_name
+        assert data["name"]["givenName"] == test_user.name.given_name
+        assert data["name"]["familyName"] == test_user.name.family_name
+        assert "id" in data
+
+    @pytest.mark.usefixtures("setup_mocks")
+    def test_get_user(self, client: TestClient) -> None:
+        """Test retrieving a user."""
+        # First create a user
+        user_id = self._create_test_user(client)
+
+        # Get the user
+        response = client.get(f"/scim/v2/Users/{user_id}")
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify response data
+        assert data["id"] == user_id
+        assert data["userName"] == test_user.user_name
+        assert data["name"]["givenName"] == test_user.name.given_name
+        assert data["name"]["familyName"] == test_user.name.family_name
+
     @pytest.mark.usefixtures("setup_mocks")
     def test_list_users(self, client: TestClient) -> None:
         """Test listing users."""
@@ -49,44 +85,10 @@ class TestUserAPI:
         assert isinstance(data["Resources"], list)
 
     @pytest.mark.usefixtures("setup_mocks")
-    def test_create_user(self, client: TestClient) -> Any:
-        """Test creating a user."""
-        response = client.post("/scim/v2/Users", json=test_user.model_dump(by_alias=True, exclude_none=True))
-        assert response.status_code == 201
-        data = response.json()
-
-        # Verify response data
-        assert data["userName"] == test_user.user_name
-        assert data["name"]["givenName"] == test_user.name.given_name
-        assert data["name"]["familyName"] == test_user.name.family_name
-        assert "id" in data
-
-        # Save the ID for other tests
-        user_id = data["id"]
-        return user_id
-
-    @pytest.mark.usefixtures("setup_mocks")
-    def test_get_user(self, client: TestClient) -> None:
-        """Test retrieving a user."""
-        # First create a user
-        user_id = self.test_create_user(client)
-
-        # Get the user
-        response = client.get(f"/scim/v2/Users/{user_id}")
-        assert response.status_code == 200
-        data = response.json()
-
-        # Verify response data
-        assert data["id"] == user_id
-        assert data["userName"] == test_user.user_name
-        assert data["name"]["givenName"] == test_user.name.given_name
-        assert data["name"]["familyName"] == test_user.name.family_name
-
-    @pytest.mark.usefixtures("setup_mocks")
     def test_update_user(self, client: TestClient) -> None:
         """Test updating a user."""
         # First create a user
-        user_id = self.test_create_user(client)
+        user_id = self._create_test_user(client)
 
         # Update the user
         updated_user = test_user.model_copy()
@@ -108,7 +110,7 @@ class TestUserAPI:
     def test_delete_user(self, client: TestClient) -> None:
         """Test deleting a user."""
         # First create a user
-        user_id = self.test_create_user(client)
+        user_id = self._create_test_user(client)
 
         # Delete the user
         response = client.delete(f"/scim/v2/Users/{user_id}")
@@ -155,6 +157,31 @@ class TestUserAPI:
 class TestGroupAPI:
     """Tests for the Group endpoints of the SCIM API."""
 
+    def _create_test_group(self, client: TestClient) -> str:
+        """Helper method to create a test group and return the ID."""
+        response = client.post("/scim/v2/Groups", json=test_group.model_dump(by_alias=True, exclude_none=True))
+        if response.status_code == 501:
+            pytest.skip("Group creation not implemented yet")
+        assert response.status_code == 201
+        data = response.json()
+        return str(data["id"])
+
+    @pytest.mark.usefixtures("setup_mocks")
+    def test_create_group(self, client: TestClient) -> None:
+        """Test creating a group."""
+        response = client.post("/scim/v2/Groups", json=test_group.model_dump(by_alias=True, exclude_none=True))
+
+        # For now, this might return 501 Not Implemented
+        if response.status_code == 501:
+            pytest.skip("Group creation not implemented yet")
+
+        assert response.status_code == 201
+        data = response.json()
+
+        # Verify response data
+        assert data["displayName"] == test_group.display_name
+        assert "id" in data
+
     @pytest.mark.usefixtures("setup_mocks")
     def test_list_groups(self, client: TestClient) -> None:
         """Test listing groups."""
@@ -174,31 +201,11 @@ class TestGroupAPI:
         assert isinstance(data["Resources"], list)
 
     @pytest.mark.usefixtures("setup_mocks")
-    def test_create_group(self, client: TestClient) -> Any:
-        """Test creating a group."""
-        response = client.post("/scim/v2/Groups", json=test_group.model_dump(by_alias=True, exclude_none=True))
-
-        # For now, this might return 501 Not Implemented
-        if response.status_code == 501:
-            pytest.skip("Group creation not implemented yet")
-
-        assert response.status_code == 201
-        data = response.json()
-
-        # Verify response data
-        assert data["displayName"] == test_group.display_name
-        assert "id" in data
-
-        # Save the ID for other tests
-        group_id = data["id"]
-        return group_id
-
-    @pytest.mark.usefixtures("setup_mocks")
     def test_get_group(self, client: TestClient) -> None:
         """Test retrieving a group."""
         try:
             # First create a group
-            group_id = self.test_create_group(client)
+            group_id = self._create_test_group(client)
         except pytest.skip.Exception:
             pytest.skip("Group creation not implemented yet")
 
