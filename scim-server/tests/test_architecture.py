@@ -14,6 +14,15 @@ import univention.scim.server
 
 @pytest.fixture(scope="session")
 def architecture() -> LayeredArchitecture:
+    """
+    Define "layers" for us with "Layer architecture rules".
+    -> https://zyskarch.github.io/pytestarch/latest/features/layer_architecture_checks/
+
+    Our "layers" are the components of the SCIM server.
+
+    Unfortunately I didn't get `have_modules_with_names_matching()` to work.
+    So I couldn't split "repo", "repo.udm", and "rules" from "domain".
+    """
     return (
         LayeredArchitecture()
         .layer("authn")
@@ -40,6 +49,10 @@ def base_path() -> Path:
 
 @pytest.fixture(scope="session")
 def evaluable(base_path: Path) -> EvaluableArchitecture:
+    """
+    Generate the graph of Python module imports for use with "Module Dependency Rules".
+    -> https://zyskarch.github.io/pytestarch/latest/features/module_import_checks/
+    """
     assert str(base_path).endswith("univention")
     return get_evaluable_architecture(str(base_path), str(base_path))
 
@@ -53,9 +66,10 @@ def evaluable(base_path: Path) -> EvaluableArchitecture:
         ("rest", "domain"),
     ],
 )
-def test_layer_should(
+def test_what_layer_should_access(
     architecture: LayeredArchitecture, evaluable: EvaluableArchitecture, importer: str, imported: str
 ) -> None:
+    """Test what "layers" should access other layers."""
     rule = (
         LayerRule()
         .based_on(architecture)
@@ -75,9 +89,10 @@ def test_layer_should(
     + list(itertools.product(["domain"], ["authn", "authz", "rest"]))
     + list(itertools.product(["model_service"], ["authn", "authz", "domain", "rest"])),
 )
-def test_layer_should_not(
+def test_what_layer_should_not_access(
     architecture: LayeredArchitecture, evaluable: EvaluableArchitecture, importer: str, imported: str
 ) -> None:
+    """Test what "layers" should NOT access other layers."""
     rule = (
         LayerRule()
         .based_on(architecture)
@@ -98,6 +113,11 @@ def test_layer_should_not(
     ),
 )
 def test_adapters_dont_import_adapters(evaluable: EvaluableArchitecture, importer: str, imported: str) -> None:
+    """
+    Test that adapters (of ports) don't import other adapters.
+
+    Adapters should be independent of each other, so they can be modified without affecting other parts.
+    """
     rule = (
         Rule()
         .modules_that()
@@ -110,6 +130,11 @@ def test_adapters_dont_import_adapters(evaluable: EvaluableArchitecture, importe
 
 
 def test_business_only_imports_business(evaluable: EvaluableArchitecture) -> None:
+    """
+    Test that the modules of the business layer only import modules of the business layer.
+
+    This is a central concept from the Hexagonal and Clean architecture.
+    """
     rule = (
         Rule()
         .modules_that()

@@ -456,11 +456,31 @@ Three Python libraries should be evaluated:
   It's so powerful, it is a bit overwhelming.
   But the good examples and documentation help to find what you need.
 
+_Update:_ We have decided to on the DI library.
+We have started using the [Python Dependency Injector](https://python-dependency-injector.ets-labs.org/).
+
 ### Example code
 
 An example application implementing Hexagonal architecture,
 and using the _Dependency Injector_ framework can be found at:
 https://git.knut.univention.de/univention/dev/docs/dev-guidelines/-/tree/main/examples/dependency-injector
+
+## Architecture tests
+
+To ensure the implementation adheres to the [intended architecture](#hexagonal-architecture),
+tests have been written (currently in [scim-server/tests/test_architecture.py](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/-/blob/main/scim-server/tests/test_architecture.py)).
+
+The tests use the [PyTestArch](https://zyskarch.github.io/pytestarch/latest/) library.
+The library builds a graph from the imports of all Python modules,
+and then allows to validate rules about those imports.
+
+Tested is for example, that the core business logic doesn't import code from any place outside the business layer.
+That is the central idea of the Hexagonal and Clean architecture.
+
+Another test verifies that adapters (of ports) don't import each other.
+That is not strictly necessary, but improves decoupling and thus independent development.
+If common code exists in adapters, it should be refactored into a separate module.
+That module can be imported by those adapters.
 
 ## Development milestones
 
