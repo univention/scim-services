@@ -44,23 +44,10 @@ config:
     # -- Base URL to the keycloak server
     url: ""
     realm: ""
-
-# -- UDM REST API connection configuration that is not part of the main config file
-udm:
-  auth:
-    # -- The password used to authenticate with the UDM Rest API.
-    # Either this value or an existing Secret has to be specified.
-    password:
-    existingSecret:
-      # -- The name of an existing Secret to use for retrieving the password
-      # to use with the UDM Rest API.
-      #
-      # "udm.auth.password" will be ignored if this value is set.
-      name: null
-      keyMapping:
-        # -- The key to retrieve the password from. Setting this value allows to use
-        # a key with a different name.
-        password: null
+  udm:
+    url: ""
+    username: ""
+    password: null
 
 resources:
   limits:
@@ -170,7 +157,7 @@ init:
 
     registry: ""
     repository: "nubus/images/wait-for-dependency"
-    tag: "0.29.0"
+    tag: "0.31.0"
     # -- Define image sha256 as an alternative to `tag`
     # sha256: null
 

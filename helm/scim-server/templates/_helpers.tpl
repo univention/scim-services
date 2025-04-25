@@ -35,3 +35,17 @@ PROVISIONING ingress
 {{- required ".Values.ingress.tls.secretName must be defined" .Values.ingress.tls.secretName -}}
 {{- end -}}
 {{- end -}}
+
+{{- /*
+PROVISIONING udm
+*/}}
+
+{{- define "scim-server.udm.url" -}}
+{{- if .Values.config.udm.url -}}
+{{- .Values.config.udm.url -}}
+{{- else if .Values.global.nubusDeployment -}}
+{{- printf "http://%s-udm-rest-api:9979/udm/" .Release.Name -}}
+{{- else -}}
+{{- required ".Values.config.udm.url be defined" .Values.config.udm.url -}}
+{{- end -}}
+{{- end -}}

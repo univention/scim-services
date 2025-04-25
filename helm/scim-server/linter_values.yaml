@@ -11,7 +11,9 @@ udm:
 
 config:
   keycloak:
-    url: "https://www.keycloak.test"
+    url: "https://keycloak.univention.test"
+  udm:
+    url: "https://udm.univention.test"
 
 ingress:
   host: "scim.example.test"
