@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.4.0...v0.5.0) (2025-04-25)
+
+
+### Features
+
+* **scim-server:** Add logging ([ac5fc9b](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/ac5fc9bf332f57e7059b10a52050a9ba5f7e4cdb)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+* **scim-server:** Add test adaptions for service configuration endpoint ([e9c25fc](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/e9c25fcee3bf09073af8cba603a12751b0af0707)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+* **scim-server:** Add test adaptions for service configuration endpoint ([711b534](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/711b534ec9365b2460743bc19673e1f0222c2033)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+* **scim-server:** Formats and refactoring ([b794a14](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/b794a149b143571069dc0e97a636a8dcb8eb3e43)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+
 ## [0.4.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.3.4...v0.4.0) (2025-04-24)
 
 
