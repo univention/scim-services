@@ -22,6 +22,7 @@ class ApplicationContainer(DeclarativeContainer):
 
     # Initialize repository container for CRUD operations
     repositories: RepositoryContainer = Singleton(RepositoryContainer)
+    repositories().config.from_pydantic(settings().udm)
 
     if settings().auth_enabled:
         oidc_configuration: OpenIDConnectConfiguration = Singleton(
@@ -32,14 +33,14 @@ class ApplicationContainer(DeclarativeContainer):
     # Use repositories from the repository container if specified in DI settings
     # Otherwise use the default implementations
     if di.di_user_repo == "univention.scim.server.domain.repo.container.RepositoryContainer.user_crud_manager":
-        user_repo = repositories.provided.user_crud_manager
+        user_repo = repositories.provided.user_crud_manager()
     else:
         user_repo = Singleton(di.di_user_repo)
 
     user_service: UserService = Singleton(di.di_user_service, user_repository=user_repo)
 
     if di.di_group_repo == "univention.scim.server.domain.repo.container.RepositoryContainer.group_crud_manager":
-        group_repo = repositories.provided.group_crud_manager
+        group_repo = repositories.provided.group_crud_manager()
     else:
         group_repo = Singleton(di.di_group_repo)
 

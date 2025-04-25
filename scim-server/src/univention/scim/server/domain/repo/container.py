@@ -32,9 +32,9 @@ class RepositoryContainer(containers.DeclarativeContainer):
         scim2udm_mapper=scim2udm_mapper,
         udm2scim_mapper=udm2scim_mapper,
         resource_class=User,
-        udm_url=config.settings.udm.udm_url,
-        udm_username=config.settings.udm.udm_username,
-        udm_password=config.settings.udm.udm_password,
+        udm_url=config.url,
+        udm_username=config.username,
+        udm_password=config.password,
     )
 
     group_repository: CrudUdm[Group] = providers.Factory(
@@ -43,9 +43,9 @@ class RepositoryContainer(containers.DeclarativeContainer):
         scim2udm_mapper=scim2udm_mapper,
         udm2scim_mapper=udm2scim_mapper,
         resource_class=Group,
-        udm_url=config.settings.udm.udm_url,
-        udm_username=config.settings.udm.udm_username,
-        udm_password=config.settings.udm.udm_password,
+        udm_url=config.url,
+        udm_username=config.username,
+        udm_password=config.password,
     )
 
     # CRUD Manager factories
