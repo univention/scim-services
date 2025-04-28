@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.5.0...v0.6.0) (2025-04-28)
+
+
+### Features
+
+* extend schemas and test ([30a560b](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/30a560b39e590addb9d0f6d4a76a51ef42395886))
+* **scim-server:** Add schema endpoint and test ([0a0df3c](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/0a0df3c163fc89406b3b9f66c5fbafd546cc040c)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+* **scim-server:** Formats and refactoring ([55b260e](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/55b260e07b1db508d4e1e1e4b89df3f60d191d06)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+* **scim-server:** Formats and refactoring ([d705fb4](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/d705fb4a89e62ae3aaddff9879bdd298d57f42da)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+* **scim-server:** Working on code review changes ([b128a22](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/b128a22ca66e221d5f36759d33f262486d10736b)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+
 ## [0.5.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.4.0...v0.5.0) (2025-04-25)
 
 
