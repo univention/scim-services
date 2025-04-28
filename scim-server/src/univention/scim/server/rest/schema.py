@@ -27,7 +27,7 @@ def _map_pydantic_type_to_scim(pydantic_type: str, field_name: str) -> str:
 
 def _get_field_uniqueness(model_name: str, field_name: str) -> str:
     """Determine the uniqueness attribute based on field and model."""
-    if model_name == "User" and field_name == "username": #due to our udm model this field is name username
+    if model_name == "User" and field_name == "username":  # due to our udm model this field is name username
         return "server"
     elif model_name == "User" and field_name == "externalId" or model_name == "Group" and field_name == "externalId":
         return "global"
