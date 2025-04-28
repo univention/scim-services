@@ -298,9 +298,9 @@ class TestSchemasEndpoint:
         assert username_attr["multiValued"] is False
         assert username_attr["mutability"] == "readWrite"
         assert username_attr["returned"] == "default"
-        # TODO: implement
+
         ## In standard SCIM, username should have server uniqueness
-        # assert username_attr["uniqueness"] == "server"
+        assert username_attr["uniqueness"] == "server"
 
         # Test Group schema
         assert group_schema["name"] == "Group"
