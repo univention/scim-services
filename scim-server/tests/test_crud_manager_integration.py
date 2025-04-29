@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 import os
+from collections.abc import Callable
 
 import pytest
 from scim2_models import Group, Name, User
@@ -20,7 +21,7 @@ from .conftest import create_crud_manager, skip_if_no_udm
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 @pytest.mark.usefixtures("maildomain")
-async def test_user_service(user_fixture: User) -> None:
+async def test_user_service(create_random_user: Callable[[], User]) -> None:
     print("\n=== Testing User Service ===")
 
     udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
@@ -35,7 +36,7 @@ async def test_user_service(user_fixture: User) -> None:
     user_crud_manager = create_crud_manager("User", User, udm_url, udm_username, udm_password)
     UserServiceImpl(user_crud_manager)
 
-    created_user = user_fixture
+    created_user = await create_random_user()
     print(f"Using user with ID: {created_user.id}")
     print(f"Display name: {created_user.display_name}")
 

@@ -4,7 +4,7 @@ import os
 import random
 import socket
 import urllib.parse
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 from typing import Any, TypeVar
 from unittest.mock import MagicMock
 
@@ -225,7 +225,6 @@ def disable_auththentication(application_settings: ApplicationSettings) -> Appli
 fake = Faker()
 
 
-@pytest.fixture
 def random_user_data() -> dict[str, str]:
     """Generate random user data to avoid conflicts with existing users"""
     username = f"test-{fake.user_name().replace('.', '-')}-{random.randint(1000, 9999)}"
@@ -299,22 +298,23 @@ async def ensure_group_deleted(udm_client: UDM, group_name: str | None = None, g
         return False
 
 
-@pytest.fixture
-def test_user(random_user_data: dict[str, str]) -> User:
+def get_random_user() -> User:
     """Create a test user with random data"""
+    data = random_user_data()
+
     user = User(
         id=fake.uuid4(),
         schemas=[
             "urn:ietf:params:scim:schemas:core:2.0:User",
         ],
-        user_name=random_user_data["username"],
-        name=Name(given_name=random_user_data["given_name"], family_name=random_user_data["family_name"]),
+        user_name=data["username"],
+        name=Name(given_name=data["given_name"], family_name=data["family_name"]),
         password="securepassword",
-        display_name=f"{random_user_data['given_name']} {random_user_data['family_name']}",
+        display_name=f"{data['given_name']} {data['family_name']}",
         title="Senior Engineer",
         emails=[
-            Email(value=random_user_data["email"], primary=True, type="work"),
-            Email(value=random_user_data["personal_email"], type="home"),
+            Email(value=data["email"], primary=True, type="work"),
+            Email(value=data["personal_email"], type="home"),
         ],
         addresses=[
             Address(
@@ -337,7 +337,7 @@ def test_user(random_user_data: dict[str, str]) -> User:
 
 
 @pytest.fixture
-async def user_fixture(test_user: User) -> AsyncGenerator[User, None]:
+async def create_random_user() -> AsyncGenerator[Callable[[], User], None]:
     """Create a user fixture with proper cleanup"""
     udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
     udm_username = os.environ.get("UDM_USERNAME", "admin")
@@ -348,33 +348,37 @@ async def user_fixture(test_user: User) -> AsyncGenerator[User, None]:
 
     udm_client = UDM.http(udm_url, udm_username, udm_password)
 
-    # First, make sure there's no existing user with the same username
-    await ensure_user_deleted(udm_client, username=test_user.user_name)
+    created_users = []
 
-    # Create new user
-    module = udm_client.get("users/user")
-    udm_obj = module.new()
+    async def create_user() -> User:
+        user = get_random_user()
 
-    user_properties = scim2udm_mapper.map_user(test_user)
-    for key, value in user_properties.items():
-        udm_obj.properties[key] = value
+        # First, make sure there's no existing user with the same username
+        await ensure_user_deleted(udm_client, username=user.user_name)
 
-    udm_obj.save()
+        # Create new user
+        module = udm_client.get("users/user")
+        udm_obj = module.new()
 
-    created_user = udm2scim_mapper.map_user(udm_obj, base_url=udm_url)
+        user_properties = scim2udm_mapper.map_user(user)
+        for key, value in user_properties.items():
+            udm_obj.properties[key] = value
 
-    user_crud_manager = create_crud_manager("User", User, udm_url, udm_username, udm_password)
-    user_service = UserServiceImpl(user_crud_manager)
+        udm_obj.save()
 
-    # Override the container's user_service for the duration of the test
-    with ApplicationContainer.user_service.override(user_service):
-        yield created_user
+        created_user = udm2scim_mapper.map_user(udm_obj, base_url=udm_url)
+        created_users.append(created_user)
+
+        return created_user
+
+    yield create_user
 
     # Cleanup - delete the user
-    try:
-        await ensure_user_deleted(udm_client, user_id=created_user.id)
-    except Exception as e:
-        print(f"Error cleaning up test user: {e}")
+    for created_user in created_users:
+        try:
+            await ensure_user_deleted(udm_client, user_id=created_user.id)
+        except Exception as e:
+            print(f"Error cleaning up test user: {e}")
 
 
 @pytest.fixture

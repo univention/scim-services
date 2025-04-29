@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import builtins
+from itertools import islice
 from typing import Any, Generic, TypeVar, cast
 
 from loguru import logger
@@ -132,20 +133,17 @@ class CrudUdm(Generic[T], CrudScim[T]):
             limit = count if count else None
 
             # Search for objects
-            results = list(
-                module.search(
-                    udm_filter,
-                    position=None,  # Search everywhere
-                    scope="sub",  # Subtree search
-                    hidden=False,  # Don't include hidden objects
-                    offset=offset,
-                    limit=limit,
-                )
+            results = module.search(
+                udm_filter,
+                position=None,  # Search everywhere
+                scope="sub",  # Subtree search
+                hidden=False,  # Don't include hidden objects
             )
 
             # Convert UDM objects to SCIM resources
             resources: builtins.list[T] = []
-            for result in results:
+            end_pos = offset + limit if limit else None
+            for result in islice(results, offset, end_pos):
                 udm_obj = result.open()
                 if self.resource_class == User:
                     resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.udm_url)
