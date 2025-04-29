@@ -317,3 +317,46 @@ class TestSchemasEndpoint:
         expected_common_attrs = {"id", "externalId", "meta", "schemas"}
         for attr in expected_common_attrs:
             assert attr in common_attributes, f"Common schema missing expected attribute: {attr}"
+
+
+class TestResourceTypesEndpoint:
+    """Tests for the ResourceTypes endpoint."""
+
+    @pytest.mark.usefixtures("setup_mocks")
+    def test_get_resource_types(self, client: TestClient) -> None:
+        """Test retrieving the SCIM ResourceTypes."""
+        response = client.get("/scim/v2/ResourceTypes")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) == 2  # Only User and Group for now
+
+        user_type = next((r for r in data if r["id"] == "User"), None)
+        group_type = next((r for r in data if r["id"] == "Group"), None)
+
+        # --- User ResourceType checks
+        assert user_type is not None, "User ResourceType missing"
+        assert user_type["schemas"] == ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"]
+        assert user_type["name"] == "User"
+        assert user_type["endpoint"] == "/Users"
+        assert user_type["description"] == "User Account"
+        assert user_type["schema"] == "urn:ietf:params:scim:schemas:core:2.0:User"
+        assert "schemaExtensions" in user_type
+        assert isinstance(user_type["schemaExtensions"], list)
+        assert (
+            user_type["schemaExtensions"][0]["schema"] == "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
+        )
+        assert user_type["schemaExtensions"][0]["required"] is True
+        assert user_type["meta"]["resourceType"] == "ResourceType"
+        assert user_type["meta"]["location"].endswith("/ResourceTypes/User")
+
+        # --- Group ResourceType checks
+        assert group_type is not None, "Group ResourceType missing"
+        assert group_type["name"] == "Group"
+        assert group_type["endpoint"] == "/Groups"
+        assert group_type["description"] == "Group"
+        assert group_type["schema"] == "urn:ietf:params:scim:schemas:core:2.0:Group"
+        assert "schemaExtensions" not in group_type or group_type["schemaExtensions"] is None
+        assert group_type["meta"]["resourceType"] == "ResourceType"
+        assert group_type["meta"]["location"].endswith("/ResourceTypes/Group")
