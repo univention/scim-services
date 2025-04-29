@@ -237,7 +237,6 @@ def random_user_data() -> dict[str, str]:
     }
 
 
-@pytest.fixture
 def random_group_data() -> dict[str, str]:
     """Generate random group data to avoid conflicts with existing groups"""
     group_name = f"test-group-{fake.word()}-{random.randint(1000, 9999)}"
@@ -338,7 +337,7 @@ def get_random_user() -> User:
 
 @pytest.fixture
 async def create_random_user() -> AsyncGenerator[Callable[[], User], None]:
-    """Create a user fixture with proper cleanup"""
+    """Create a user factory fixture with proper cleanup"""
     udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
     udm_username = os.environ.get("UDM_USERNAME", "admin")
     udm_password = os.environ.get("UDM_PASSWORD", "univention")
@@ -381,20 +380,21 @@ async def create_random_user() -> AsyncGenerator[Callable[[], User], None]:
             print(f"Error cleaning up test user: {e}")
 
 
-@pytest.fixture
-def test_group(random_group_data: dict[str, str]) -> Group:
+def get_random_group() -> Group:
     """Create a test group with random data"""
+    data = random_group_data()
+
     return Group(
         id=fake.uuid4(),
         schemas=["urn:ietf:params:scim:schemas:core:2.0:Group"],
-        display_name=random_group_data["display_name"],
+        display_name=data["display_name"],
         meta={},
     )
 
 
 @pytest.fixture
-async def group_fixture(test_group: Group) -> AsyncGenerator[Group, None]:
-    """Create a group fixture with proper cleanup"""
+async def create_random_group() -> AsyncGenerator[Callable[[], Group], None]:
+    """Create a group factory fixture with proper cleanup"""
     udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
     udm_username = os.environ.get("UDM_USERNAME", "admin")
     udm_password = os.environ.get("UDM_PASSWORD", "univention")
@@ -404,30 +404,34 @@ async def group_fixture(test_group: Group) -> AsyncGenerator[Group, None]:
 
     udm_client = UDM.http(udm_url, udm_username, udm_password)
 
-    # First, make sure there's no existing group with the same name
-    await ensure_group_deleted(udm_client, group_name=test_group.display_name)
+    created_groups = []
 
-    # Create new group
-    module = udm_client.get("groups/group")
-    udm_obj = module.new()
+    async def create_group() -> Group:
+        group = get_random_group()
 
-    group_properties = scim2udm_mapper.map_group(test_group)
-    for key, value in group_properties.items():
-        udm_obj.properties[key] = value
+        # First, make sure there's no existing group with the same name
+        await ensure_group_deleted(udm_client, group_name=group.display_name)
 
-    udm_obj.save()
+        # Create new group
+        module = udm_client.get("groups/group")
+        udm_obj = module.new()
 
-    created_group = udm2scim_mapper.map_group(udm_obj, base_url=udm_url)
+        group_properties = scim2udm_mapper.map_group(group)
+        for key, value in group_properties.items():
+            udm_obj.properties[key] = value
 
-    group_crud_manager = create_crud_manager("Group", Group, udm_url, udm_username, udm_password)
-    group_service = GroupServiceImpl(group_crud_manager)
+        udm_obj.save()
 
-    # Override the container's group_service for the duration of the test
-    with ApplicationContainer.group_service.override(group_service):
-        yield created_group
+        created_group = udm2scim_mapper.map_group(udm_obj, base_url=udm_url)
+        created_groups.append(created_group)
+
+        return created_group
+
+    yield create_group
 
     # Cleanup - delete the group
-    try:
-        await ensure_group_deleted(udm_client, group_id=created_group.id)
-    except Exception as e:
-        print(f"Error cleaning up test group: {e}")
+    for created_group in created_groups:
+        try:
+            await ensure_group_deleted(udm_client, group_id=created_group.id)
+        except Exception as e:
+            print(f"Error cleaning up test group: {e}")

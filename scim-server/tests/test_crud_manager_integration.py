@@ -55,7 +55,7 @@ async def test_user_service(create_random_user: Callable[[], User]) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-async def test_group_service(group_fixture: Group) -> None:
+async def test_group_service(create_random_group: Callable[[], Group]) -> None:
     print("\n=== Testing Group Service ===")
 
     udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
@@ -70,7 +70,7 @@ async def test_group_service(group_fixture: Group) -> None:
     group_crud_manager = create_crud_manager("Group", Group, udm_url, udm_username, udm_password)
     GroupServiceImpl(group_crud_manager)
 
-    created_group = group_fixture
+    created_group = await create_random_group()
     print(f"Using group with ID: {created_group.id}")
 
     print("\nRetrieving group with UDM client...")

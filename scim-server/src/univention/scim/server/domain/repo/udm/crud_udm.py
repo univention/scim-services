@@ -178,8 +178,9 @@ class CrudUdm(Generic[T], CrudScim[T]):
             module = self.udm_client.get(self.udm_module_name)
 
             # Count the objects by fetching them (UDM client doesn't have a dedicated count method)
-            results = list(
-                module.search(
+            num_results = sum(
+                1
+                for _ in module.search(
                     udm_filter,
                     position=None,  # Search everywhere
                     scope="sub",  # Subtree search
@@ -187,7 +188,7 @@ class CrudUdm(Generic[T], CrudScim[T]):
                 )
             )
 
-            return len(results)
+            return num_results
 
         except Exception as e:
             self.logger.error(f"Error counting {self.resource_type}s: {e}")

@@ -51,7 +51,7 @@ def e2e_auth_bypass(application_settings: ApplicationSettings) -> Generator[None
 async def test_list_user_endpoint(
     create_random_user: Callable[[], User], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
 ) -> None:
-    """Test retrieving a list of user through the REST API endpoint."""
+    """Test retrieving a list of users through the REST API endpoint."""
     print("\n=== E2E Testing GET Users Endpoint ===")
 
     await create_random_user()
@@ -113,14 +113,53 @@ async def test_get_user_endpoint(
     assert primary_email["value"] in [email.value for email in test_user.emails]
 
 
+@pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-def test_get_group_endpoint(
-    group_fixture: Group, client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+@pytest.mark.usefixtures("maildomain")
+async def test_list_group_endpoint(
+    create_random_group: Callable[[], Group], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+) -> None:
+    """Test retrieving a list of groups through the REST API endpoint."""
+    print("\n=== E2E Testing GET Groups Endpoint ===")
+
+    await create_random_group()
+    await create_random_group()
+    await create_random_group()
+    await create_random_group()
+    await create_random_group()
+
+    list_groups_url = f"{api_prefix}/Groups"
+    response = client.get(list_groups_url, headers=auth_headers)
+
+    assert response.status_code == 200, f"Failed to get list of groups: {response.text}"
+    all_groups = response.json()
+    # Some default groups are available so make sure we have at least 5 groups
+    assert all_groups["totalResults"] >= 5
+    assert all_groups["startIndex"] == 1
+    assert len(all_groups["Resources"]) == all_groups["totalResults"]
+
+    response = client.get(f"{list_groups_url}?start_index=3&count=3", headers=auth_headers)
+
+    assert response.status_code == 200, f"Failed to get partial list of groups: {response.text}"
+    partial_groups = response.json()
+    assert partial_groups["totalResults"] >= 5
+    assert partial_groups["startIndex"] == 3
+    assert len(partial_groups["Resources"]) == 3
+    assert partial_groups["Resources"][0] == all_groups["Resources"][2]
+    assert partial_groups["Resources"][1] == all_groups["Resources"][3]
+    assert partial_groups["Resources"][2] == all_groups["Resources"][4]
+
+
+@pytest.mark.asyncio
+@pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
+async def test_get_group_endpoint(
+    create_random_group: Callable[[], Group], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
 ) -> None:
     """Test retrieving a group through the REST API endpoint."""
     print("\n=== E2E Testing GET Group Endpoint ===")
 
-    group_id = group_fixture.id
+    test_group = await create_random_group()
+    group_id = test_group.id
     group_url = f"{api_prefix}/Groups/{group_id}"
 
     response = client.get(group_url, headers=auth_headers)
@@ -130,4 +169,4 @@ def test_get_group_endpoint(
 
     # Verify essential group properties
     assert group_data["id"] == group_id
-    assert group_data["displayName"] == group_fixture.display_name
+    assert group_data["displayName"] == test_group.display_name
