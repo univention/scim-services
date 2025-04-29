@@ -47,7 +47,7 @@ class ApplicationSettings(BaseSettings):
     # Server
     host: str = "0.0.0.0"
     port: int = 8000
-    base_url: str = "http://localhost:8000/scim/v2" # TODO needs to change
+    base_url: str = "http://localhost:8000/scim/v2"  # TODO needs to change
 
     # CORS
     cors_origins: list[str] = ["*"]
