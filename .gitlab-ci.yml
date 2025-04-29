@@ -84,6 +84,7 @@ test-unit-and-integration:
     - docker compose up --no-build --quiet-pull --wait --wait-timeout 60 ldap-server udm-rest-api
   script:
     - docker compose run --quiet-pull test
+  after_script:
     - docker logs ldap-server >& ldap-server.log
     - docker logs udm-rest-api >& udm-rest-api.log
     - docker compose down --volumes
