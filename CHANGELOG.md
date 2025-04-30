@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.6.0...v0.6.1) (2025-04-30)
+
+
+### Bug Fixes
+
+* **scim-server:** Fix repo dependency injection ([2c5c28f](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/2c5c28f984f1ad21fdaf41451fb511212fb77ec2)), closes [univention/dev/internal/team-nubus#1104](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1104)
+* **tests:** Fix startup of ldap-server docker and cleanup docker-compose file ([ba167eb](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/ba167eb74fd22fc30e900602f23593a5d61d1a5d)), closes [univention/dev/internal/team-nubus#1104](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1104)
+
 ## [0.6.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.5.0...v0.6.0) (2025-04-28)
 
 
