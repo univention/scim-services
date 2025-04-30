@@ -1,4 +1,4 @@
-# Milestone 2.1: Metrics, Provisioning
+# Milestone 2.1: Add metrics, provisioning
 
 [[_TOC_]]
 

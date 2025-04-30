@@ -3,10 +3,10 @@
 ## Architecture
 
 - [Nubus SCIM service architecture](architecture/Nubus-SCIM-service-architecture.md)
-  - [Milestone 1: Milestone 1: Minimal viable product | Synchronous adapter in front of UDM](architecture/milestone1.md)
-  - ([Milestone 1 OLD: Standalone SCIM server](architecture/milestone1-old.md))
-  - [Milestone 2: Synchronous writes to UDM](architecture/milestone2.md)
-  - [Milestone 2.1: Metrics, Provisioning, ...](architecture/milestone2.1.md)
+  - [Milestone 1: Minimal viable product | Synchronous adapter in front of UDM](architecture/milestone1.md)
+  - ([Archived: _Deprecated_ Milestone 1: Standalone SCIM server](architecture/milestone1-old.md))
+  - [Milestone 2: Synchronous writes to UDM, reads from SQL](architecture/milestone2.md)
+  - [Milestone 2.1: Add metrics, provisioning](architecture/milestone2.1.md)
   - [Milestone 3: Asynchronous writes to UDM](architecture/milestone3.md)
 - [UDM <-> SCIM mapping](udm-scim-mapping.md)
 

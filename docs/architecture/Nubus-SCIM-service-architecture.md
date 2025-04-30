@@ -114,6 +114,9 @@ We will implement this in the following way:
   - We cache the group data for a _configurable_ number of seconds.
   - If the client/user is member of that group, then it is permitted access, otherwise denied.
   - We do not support nested groups.
+  - _Update_: We may configure Keycloak to do the authz, and just check the token.
+    The description in this section will be updated when it's clear if that approach works.
+    The work is done in [issue #1151](https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1151).
 - MS2: The client/user in the token must exist as a user object in the SCIM (SQL) DB and
   must be member of a certain group object in the SCIM DB.
   - When a request comes in it must be authenticated.
@@ -317,6 +320,24 @@ A few Nubus components already require an SQL database.
 In UCS, Debian's Univention-supported PostgreSQL is used.
 In Nubus for Kubernetes customers are expected to provide their own database (cluster).
 
+## Handling passwords and password hashes
+
+`password` is a default user attribute in SCIM.
+If a value is sent, it needs to be passed on to UDM.
+
+If no value is set when creating a user, this is also passed on to UDM.
+At the moment UDM does not allow the creation of users with empty passwords.
+
+UDM will be adapted to accept an empty password.
+It will then generate and store a random one.
+
+Until that's implemented, when no password is given by the SCIM client, the workaround is to generate a random one.
+
+The SCIM service itself does not need a password or password hash for authentication,
+because OAuth is used and the authentication is done by the IdP.
+The password or hash can never be read through SCIM.
+So, there is no need to store the password or a password hash in the SCIM DB (MS2+).
+
 ## Configuration
 
 - All configuration including secrets must be loaded and validated at startup.
@@ -448,7 +469,7 @@ In each MS the way data is read and written changes.
 Please continue with Milestone 1.
 
 - [Milestone 1: Minimal viable product | Synchronous adapter in front of UDM](milestone1.md)
-- ([Milestone 1 OLD: Standalone SCIM server](milestone1-old.md))
+- ([Archived: _Deprecated_ Milestone 1: Standalone SCIM server](milestone1-old.md))
 - [Milestone 2: Synchronous writes to UDM, reads from SQL](milestone2.md)
-- [Milestone 2.1: Metrics, Provisioning, ...](milestone2.1.md)
+- [Milestone 2.1: Add metrics, provisioning](milestone2.1.md)
 - [Milestone 3: Asynchronous writes to UDM](milestone3.md)

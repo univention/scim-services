@@ -17,21 +17,31 @@ Goals of this development stage:
   - The code to transform a UDM object to a SCIM object and vice versa is contained in a Python library.
     - The library can be used by the SCIM client project.
       That project allows to configure a synchronization between the LDAP (UDM) and a third party SCIM service.
-- Technical writer can start working on the official documentation of the Nubus SCIM REST service.
-  - Including the documentation of non-conforming parts.
-- Performance tests show worse read and write performance than the UDM REST API.
+- Explore effects of UDM model and business rules on SCIM service and client.
+  - Verification of the service's conformity to SCIM RFCs
+  - Add changed behavior and possible SCIM-non-conformity to public documentation.
+  - Write tests that verify the expected behavior.
+    - Writing to SCIM: handling of UDM value limitations, sync to UDM (successes and errors)
+    - Writing to UDM: sync to SCIM DB
+- Technical writer can start working on the official documentation of the Nubus SCIM REST service (attributes, operations, mapping).
+  - The documentation lists non-conforming parts of the SCIM service (missing attributes, operations, unusual behavior etc.).
+- Performance tests measure the read and write performance.
+- The service cannot be used in production yet, but is good enough for tests by the customer.
+  Functional and non-functional requirements are not met, yet:
+  At least support for extended attributes, configurable mapping and acceptable performance are missing.
+  But that's OK for an MVP.
 
 ## Result
 
 - In this MS the SCIM server is an _adapter_ that converts the UDM REST API to the SCIM API.
-- SCIM reads and writes are translated to calls to the UDM REST API.
+- SCIM reads and writes are translated to synchronous calls to the UDM REST API.
   The LDAP server is the only data source.
 - The SCIM server returns UDM errors to the SCIM client,
   transforming them to SCIM error messages that adhere to
     [RFC 7644 section 3.12](https://datatracker.ietf.org/doc/html/rfc7644#section-3.12).
-- The SCIM service's availability and performance are directly dependent to the UDM REST API's and the LDAP server's.
+- The SCIM service's availability and performance are directly dependent on the UDM REST API's and the LDAP server's.
 - The SCIM server does _not_ yet issue events to the Provisioning system.
-  This feature is postponed to a later MS.
+  This feature is postponed to [Milestone 2.1](milestone2.1.md).
 - Limited feature and attribute set:
   - Minimal mapping:
     - No complex attributes.
@@ -40,18 +50,18 @@ Goals of this development stage:
   - No custom resources (only `User` and `Group`).
     - `GET`, `POST`, `PUT`, and `PATCH` methods are supported for the `User` and `Group` endpoints.
     - `GET` supports only direct access to a single object and listing all objects.
-      - Filtering, pagination, and sorting are not supported.
+      - Filtering, pagination, and sorting are not supported, except for the `eq` filter operator.
   - All requests using other resources, schemas, or attributes are rejected.
   - To prevent DOS situations at the UDM REST API and LDAP services,
     the LDAP database must not contain more than 10,000 users.
 - Performance tests show worse read and write performance of SCIM server than the UDM REST API.
   - The additional requests necessary for resolving UUIDs to DNs have a massive impact on the read and write performance.
     This effect is especially problematic for groups with many members and users with many groups.
-  - The use of a local, short-lived cache for DN <-> UUID mapping is advised.
+  - The use of a local, short-lived cache for DN <-> UUID (displayName, DN, etc.) mapping is advised.
     - Beware: DNs are mutable.
       Thus, there is a trade-off to be made between more cache-hits with a larger TTL and
       a higher likelihood of data corruption because of changed DNs.
-      The Provisioning system can be used to listen for rename / move events and invalidate cache entries.
+    - The Provisioning system can be used to listen for rename / move events and invalidate cache entries.
       But the effort is probably not worth the gain, because this MS is not final.
   - There is no delay between SCIM and UDM databases, as all requests are done synchronously.
 
@@ -79,8 +89,8 @@ Goals of this development stage:
   - Secrets (passwords, certificates etc.) are read from files whose paths are in environment variables.
   - The LDAP account (the "bind dn") is configurable.
   - As BSI base security expects the password to be rotated, the `cn=admin` account shouldn't be used.
-    Thus, a dedicated service account should be created.
-  - For performance reasons, the account should profit from permissive LDAP ACLs.
+    Thus, a dedicated service account should be created in LDAP using the `users/ldap` UDM object type.
+    - For performance reasons, the account should profit from permissive LDAP ACLs.
 
 ## Authorization
 
@@ -108,4 +118,4 @@ Thus, it must only be packaged for use by the Helm package manager.
 
 - Previous chapter: [Nubus SCIM service Architecture](Nubus-SCIM-service-architecture.md)
 - Next chapter: [Milestone 2: Synchronous writes to UDM, reads from SQL](milestone2.md)
-- (Old chapter on MS1: [Milestone 1 OLD: Standalone SCIM server](milestone1-old.md))
+- (Archived: _Deprecated_ [Milestone 1: Standalone SCIM server](milestone1-old.md))
