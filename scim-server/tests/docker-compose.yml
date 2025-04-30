@@ -21,7 +21,10 @@ services:
         uv sync && \
         uv run pytest -lv"
     volumes:
-      - ../../:/app:ro
+      - ../../pyproject.toml:/app/pyproject.toml:ro
+      - ../../scim-server:/app/scim-server:ro
+      - ../../scim-udm-transformer-lib/pyproject.toml:/app/scim-udm-transformer-lib/pyproject.toml:ro
+      - ../../scim-udm-transformer-lib/src/univention:/app/scim-udm-transformer-lib/src/univention:ro
       - scim-server-venv:/app/.venv
       - scim-transfomer-lib-build:/app/scim-udm-transformer-lib/src/scim_udm_transformer_lib.egg-info
     environment:
