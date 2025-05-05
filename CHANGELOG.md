@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.8.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.7.0...v0.8.0) (2025-05-05)
+
+
+### Features
+
+* **helm:** Add ingress ([ecf900f](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/ecf900f99327857ec3999854a4cb78921dc028ce)), closes [univention/dev/internal/team-nubus#1112](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1112)
+* **helm:** Allow configuring UDM parameters ([80530e5](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/80530e50a87476791bd959f7f19feda8c747015c)), closes [univention/dev/internal/team-nubus#1112](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1112)
+* **helm:** Integrate keycloak handling to helm chart ([a6c5289](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/a6c5289db676e6a56a797f394041ff125c4fd1ac)), closes [univention/dev/internal/team-nubus#1112](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1112)
+
 ## [0.7.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.6.1...v0.7.0) (2025-05-05)
 
 
