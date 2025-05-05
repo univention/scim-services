@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.6.1...v0.7.0) (2025-05-05)
+
+
+### Features
+
+* **scim-server:** Implement list groups via Groups endpoint ([7fc6be0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/7fc6be0b64150d6ae4403c6a67829b21a1326194)), closes [univention/dev/internal/team-nubus#1105](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1105)
+* **scim-server:** Implement list users via Users endpoint ([d66c866](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/d66c866579f2a2060fcf1a4156b4c79769af2cdb)), closes [univention/dev/internal/team-nubus#1104](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1104)
+
 ## [0.6.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.6.0...v0.6.1) (2025-04-30)
 
 
