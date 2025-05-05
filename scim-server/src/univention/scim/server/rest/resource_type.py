@@ -1,13 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
-from fastapi import APIRouter, Request
+from typing import Annotated
+
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Depends, Request
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from univention.scim.server.config import application_settings
-
-
-settings = application_settings()
+from univention.scim.server.config import ApplicationSettings
+from univention.scim.server.container import ApplicationContainer
 
 
 router = APIRouter()
@@ -43,7 +44,11 @@ class ResourceType(BaseModel):
 
 
 @router.get("", response_model=list[ResourceType])
-async def get_resource_types(request: Request) -> list[ResourceType]:
+@inject
+async def get_resource_types(
+    request: Request,
+    settings: Annotated[ApplicationSettings, Depends(Provide[ApplicationContainer.settings])],
+) -> list[ResourceType]:
     """
     Get the list of resource types supported by the SCIM service.
 
