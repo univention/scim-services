@@ -171,14 +171,14 @@ async def test_get_group_endpoint(
     assert group_data["id"] == group_id
     assert group_data["displayName"] == test_group.display_name
 
-
+@pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 @pytest.mark.usefixtures("disable_auththentication")
-def test_get_resource_types_endpoint(test_client: TestClient, api_prefix: str, auth_headers: dict[str, str]) -> None:
+def test_get_resource_types_endpoint(client: TestClient, api_prefix: str, auth_headers: dict[str, str]) -> None:
     """E2E test retrieving the SCIM ResourceTypes."""
     print("\n=== E2E Testing GET ResourceTypes Endpoint ===")
 
-    response = test_client.get(f"{api_prefix}/ResourceTypes", headers=auth_headers)
+    response = client.get(f"{api_prefix}/ResourceTypes", headers=auth_headers)
     assert response.status_code == 200
 
     data = response.json()
