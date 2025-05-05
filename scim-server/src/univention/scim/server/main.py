@@ -61,7 +61,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         dependencies=dependencies,
     )
 
-    app.include_router(resources_types_router, prefix=f"{settings.api_prefix}/ResourceTypes", tags=["SCIM"])
+    app.include_router(
+        resources_types_router,
+        prefix=f"{settings.api_prefix}/ResourceTypes",
+        tags=["SCIM"],
+        dependencies=dependencies,
+    )
 
     schema_loader: LoadSchemas = container.schema_loader()
 

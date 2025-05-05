@@ -174,7 +174,6 @@ async def test_get_group_endpoint(
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("disable_auththentication")
 def test_get_resource_types_endpoint(client: TestClient, api_prefix: str, auth_headers: dict[str, str]) -> None:
     """E2E test retrieving the SCIM ResourceTypes."""
     print("\n=== E2E Testing GET ResourceTypes Endpoint ===")

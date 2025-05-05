@@ -340,6 +340,7 @@ class TestResourceTypesEndpoint:
         assert user_type["schemas"] == ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"]
         assert user_type["name"] == "User"
         assert user_type["endpoint"] == "/Users"
+        assert user_type["meta"]["location"] == "http://testserver/scim/v2/ResourceTypes/User"
         assert user_type["description"] == "User Account"
         assert user_type["schema"] == "urn:ietf:params:scim:schemas:core:2.0:User"
         assert "schemaExtensions" in user_type
