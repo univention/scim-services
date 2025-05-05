@@ -171,6 +171,7 @@ async def test_get_group_endpoint(
     assert group_data["id"] == group_id
     assert group_data["displayName"] == test_group.display_name
 
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 @pytest.mark.usefixtures("disable_auththentication")
