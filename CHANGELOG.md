@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.9.0...v0.9.1) (2025-05-06)
+
+
+### Bug Fixes
+
+* **tests:** Make sure test docker compose does not write file outside of container ([16ca0e6](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/16ca0e61ea1e10927c1db0ad4c312d6a99ea2f28)), closes [univention/dev/internal/team-nubus#1099](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1099)
+
 ## [0.9.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.8.0...v0.9.0) (2025-05-06)
 
 
