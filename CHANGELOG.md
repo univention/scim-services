@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.8.0...v0.9.0) (2025-05-06)
+
+
+### Features
+
+* **scim-server:** Adding ResourceType endpoint and tests ([0b4840b](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/0b4840be7033c2fc2acf3fb1cf425d78e8083b5a)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+* **scim-server:** Code Review changes ([1822c23](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/1822c23cb69296e39231e629d3c5a3e1ff9621db)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+* **scim-server:** Code Review changes ([7cd1f85](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/7cd1f855f9fd6b85617ff3e87390d258e0eb89d9)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+* **scim-server:** Code Review changes ([38c6a4a](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/38c6a4a3eff7830a5f553b4ab23073634ecf7650)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+* **scim-server:** E2E Test for ResourceTypes endpoint ([868352f](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/868352f91e5675edbaef1eb94898e146179f848e)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+* **scim-server:** E2E Test for ResourceTypes endpoint adapted to new test config ([d2b2638](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/d2b263855feec028115fcda1d78f1a50e0eb4baa)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+* **scim-server:** formatting and linting ([fdda9b2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/fdda9b2a60736d5c19c9c48cd86442f026a91bdc)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+* **scim-server:** Pin version of ldap-server, fix env vars to reflect current version 0.38.0 ([bd11917](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/bd11917a744195a0e4738f5caf9f53c6e2d02588)), closes [univention/dev/internal/team-nubus#1145](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1145)
+
 ## [0.8.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.7.0...v0.8.0) (2025-05-05)
 
 
