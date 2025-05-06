@@ -12,15 +12,16 @@ from univention.scim.server.domain.group_service_impl import GroupServiceImpl
 from univention.scim.server.domain.rules.display_name import UserDisplayNameRule
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
-from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
+from univention.scim.server.model_service.scim2udm import ScimToUdmMapper
+from univention.scim.server.model_service.udm2scim import UdmToScimMapper
 
 from .conftest import create_crud_manager, skip_if_no_udm
 
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain", "disable_auththentication")
-async def test_user_service(user_fixture: User) -> None:
+@pytest.mark.usefixtures("maildomain")
+async def test_user_service(create_random_user: Callable[[], User]) -> None:
     print("\n=== Testing User Service ===")
 
     udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
@@ -54,8 +55,7 @@ async def test_user_service(user_fixture: User) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("disable_auththentication")
-async def test_group_service(group_fixture: Group) -> None:
+async def test_group_service(create_random_group: Callable[[], Group]) -> None:
     print("\n=== Testing Group Service ===")
 
     udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
