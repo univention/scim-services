@@ -216,6 +216,51 @@ async def test_get_group_endpoint(
     assert group_data["displayName"] == test_group.display_name
 
 
+@pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
+@pytest.mark.usefixtures("maildomain", "disable_auththentication")
+async def test_post_group_endpoint(
+    random_group: Group, client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+) -> None:
+    """Test creating a group through the REST API endpoint."""
+    print("\n=== E2E Testing POST group Endpoint ===")
+
+    test_group = random_group
+
+    # Make sure to not send an ID, as we want the server to generate one
+    test_group.id = None
+
+    group_url = f"{api_prefix}/Groups"
+    test_group_dict = test_group.model_dump(exclude_none=True)
+
+    response = client.post(group_url, json=test_group_dict, headers=auth_headers)
+
+    assert response.status_code == 201, f"Failed to create group: {response.text}"
+    created_group = response.json()
+
+    # Verify Location header
+    assert response.headers.get("Location", "").startswith("/Groups/")
+
+    # Verify essential group properties
+    assert created_group["id"] is not None, "Created group does not have an ID"
+    assert created_group["externalId"] is not None, "Created group does not have an externalId"
+    assert created_group["displayName"] == test_group.display_name
+
+    # Verify meta properties
+    assert "meta" in created_group, "Created group does not have meta information"
+    assert created_group["meta"]["resourceType"] == "Group"
+    assert created_group["meta"]["location"].endswith(f"/Groups/{created_group['id']}")
+    assert created_group["meta"]["version"] is not None
+
+    # Verify schemas
+    assert "schemas" in created_group, "Created group does not have schemas"
+    assert "urn:ietf:params:scim:schemas:core:2.0:Group" in created_group["schemas"]
+
+    # Clean up - delete the created group
+    created_group_id = created_group["id"]
+    delete_response = client.delete(f"{api_prefix}/Groups/{created_group_id}", headers=auth_headers)
+    assert delete_response.status_code == 204, f"Failed to delete created group: {delete_response.text}"
+
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 async def test_get_resource_types_endpoint(client: TestClient, api_prefix: str, auth_headers: dict[str, str]) -> None:

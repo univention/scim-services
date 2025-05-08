@@ -380,7 +380,8 @@ async def create_random_user(random_user: User) -> AsyncGenerator[Callable[[], U
             print(f"Error cleaning up test user: {e}")
 
 
-def get_random_group() -> Group:
+@pytest.fixture
+def random_group() -> Group:
     """Create a test group with random data"""
     data = random_group_data()
 
@@ -393,7 +394,7 @@ def get_random_group() -> Group:
 
 
 @pytest.fixture
-async def create_random_group() -> AsyncGenerator[Callable[[], Group], None]:
+async def create_random_group(random_group: Group) -> AsyncGenerator[Callable[[], Group], None]:
     """Create a group factory fixture with proper cleanup"""
     udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
     udm_username = os.environ.get("UDM_USERNAME", "admin")
@@ -407,7 +408,7 @@ async def create_random_group() -> AsyncGenerator[Callable[[], Group], None]:
     created_groups = []
 
     async def create_group() -> Group:
-        group = get_random_group()
+        group = random_group
 
         # First, make sure there's no existing group with the same name
         await ensure_group_deleted(udm_client, group_name=group.display_name)
