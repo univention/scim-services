@@ -113,6 +113,50 @@ async def test_get_user_endpoint(
     assert primary_email["value"] in [email.value for email in test_user.emails]
 
 
+@pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
+@pytest.mark.usefixtures("maildomain", "disable_auththentication")
+async def test_post_user_endpoint(
+    random_user: User, client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+) -> None:
+    """Test creating a user through the REST API endpoint."""
+    print("\n=== E2E Testing POST User Endpoint ===")
+
+    test_user = random_user
+
+    # Make sure to not send an ID, as we want the server to generate one
+    test_user.id = None
+
+    user_url = f"{api_prefix}/Users"
+    test_user_dict = test_user.model_dump(exclude_none=True)
+
+    response = client.post(user_url, json=test_user_dict, headers=auth_headers)
+
+    assert response.status_code == 201, f"Failed to create user: {response.text}"
+    created_user = response.json()
+
+    # Verify Location header
+    assert response.headers.get("Location", "").startswith("/Users/")
+
+    # Verify essential user properties
+    assert created_user["id"] is not None, "Created user does not have an ID"
+    assert created_user["userName"] == test_user.user_name
+    assert created_user["displayName"] == test_user.display_name
+
+    # Verify nested properties
+    assert created_user["name"]["givenName"] == test_user.name.given_name
+    assert created_user["name"]["familyName"] == test_user.name.family_name
+
+    # Verify email addresses
+    primary_email = next((email for email in created_user["emails"] if email.get("primary", False)), None)
+    assert primary_email is not None, "No primary email found"
+    assert primary_email["value"] in [email.value for email in test_user.emails]
+
+    # Clean up - delete the created user
+    created_user_id = created_user["id"]
+    delete_response = client.delete(f"{api_prefix}/Users/{created_user_id}", headers=auth_headers)
+    assert delete_response.status_code == 204, f"Failed to delete created user: {delete_response.text}"
+
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 @pytest.mark.usefixtures("maildomain")

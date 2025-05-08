@@ -211,13 +211,18 @@ class CrudUdm(Generic[T], CrudScim[T]):
             # Create a new object
             udm_obj = module.new()
 
+            properties: dict[str, Any]
+
             # Convert SCIM resource to UDM properties
             if self.resource_class == User:
-                self.scim2udm_mapper.map_user(resource, udm_obj)
+                properties = self.scim2udm_mapper.map_user(resource)
             elif self.resource_class == Group:
-                self.scim2udm_mapper.map_group(resource, udm_obj)
+                properties = self.scim2udm_mapper.map_group(resource)
             else:
                 raise ValueError(f"Unsupported resource class: {self.resource_class}")
+
+            for key, value in properties.items():
+                udm_obj.properties[key] = value
 
             # Save the object
             udm_obj.save()

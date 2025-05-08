@@ -296,7 +296,8 @@ async def ensure_group_deleted(udm_client: UDM, group_name: str | None = None, g
         return False
 
 
-def get_random_user() -> User:
+@pytest.fixture
+def random_user() -> User:
     """Create a test user with random data"""
     data = random_user_data()
 
@@ -335,7 +336,7 @@ def get_random_user() -> User:
 
 
 @pytest.fixture
-async def create_random_user() -> AsyncGenerator[Callable[[], User], None]:
+async def create_random_user(random_user: User) -> AsyncGenerator[Callable[[], User], None]:
     """Create a user factory fixture with proper cleanup"""
     udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
     udm_username = os.environ.get("UDM_USERNAME", "admin")
@@ -349,7 +350,7 @@ async def create_random_user() -> AsyncGenerator[Callable[[], User], None]:
     created_users = []
 
     async def create_user() -> User:
-        user = get_random_user()
+        user = random_user
 
         # First, make sure there's no existing user with the same username
         await ensure_user_deleted(udm_client, username=user.user_name)
