@@ -297,46 +297,54 @@ async def ensure_group_deleted(udm_client: UDM, group_name: str | None = None, g
 
 
 @pytest.fixture
-def random_user() -> User:
-    """Create a test user with random data"""
-    data = random_user_data()
+def random_user_factory() -> Callable[[], User]:
+    """Create a factory function that returns a random user each time it's called"""
 
-    user = User(
-        id=fake.uuid4(),
-        schemas=[
-            "urn:ietf:params:scim:schemas:core:2.0:User",
-        ],
-        user_name=data["username"],
-        name=Name(given_name=data["given_name"], family_name=data["family_name"]),
-        password="securepassword",
-        display_name=f"{data['given_name']} {data['family_name']}",
-        title="Senior Engineer",
-        emails=[
-            Email(value=data["email"], primary=True, type="work"),
-            Email(value=data["personal_email"], type="home"),
-        ],
-        addresses=[
-            Address(
-                formatted="123 Main St\nAnytown, CA 12345\nUSA",
-                street_address="123 Main St",
-                locality="Anytown",
-                region="CA",
-                postal_code="12345",
-                country="USA",
-                type="work",
-            )
-        ],
-        active=True,
-        preferred_language="en-US",
-        user_type="employee",
-        meta={},
-    )
+    def factory() -> User:
+        data = random_user_data()
 
-    return user
+        user = User(
+            id=fake.uuid4(),
+            schemas=["urn:ietf:params:scim:schemas:core:2.0:User"],
+            user_name=data["username"],
+            name=Name(given_name=data["given_name"], family_name=data["family_name"]),
+            password="securepassword",
+            display_name=f"{data['given_name']} {data['family_name']}",
+            title="Senior Engineer",
+            emails=[
+                Email(value=data["email"], primary=True, type="work"),
+                Email(value=data["personal_email"], type="home"),
+            ],
+            addresses=[
+                Address(
+                    formatted="123 Main St\nAnytown, CA 12345\nUSA",
+                    street_address="123 Main St",
+                    locality="Anytown",
+                    region="CA",
+                    postal_code="12345",
+                    country="USA",
+                    type="work",
+                )
+            ],
+            active=True,
+            preferred_language="en-US",
+            user_type="employee",
+            meta={},
+        )
+
+        return user
+
+    return factory
 
 
 @pytest.fixture
-async def create_random_user(random_user: User) -> AsyncGenerator[Callable[[], User], None]:
+def random_user(random_user_factory: Callable[[], User]) -> User:
+    """Create a single random user (for backwards compatibility)"""
+    return random_user_factory()
+
+
+@pytest.fixture
+async def create_random_user(random_user_factory: Callable[[], User]) -> AsyncGenerator[Callable[[], User], None]:
     """Create a user factory fixture with proper cleanup"""
     udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
     udm_username = os.environ.get("UDM_USERNAME", "admin")
@@ -350,7 +358,8 @@ async def create_random_user(random_user: User) -> AsyncGenerator[Callable[[], U
     created_users = []
 
     async def create_user() -> User:
-        user = random_user
+        # Use the factory to generate a new random user each time
+        user = random_user_factory()
 
         # First, make sure there's no existing user with the same username
         await ensure_user_deleted(udm_client, username=user.user_name)
@@ -381,20 +390,30 @@ async def create_random_user(random_user: User) -> AsyncGenerator[Callable[[], U
 
 
 @pytest.fixture
-def random_group() -> Group:
-    """Create a test group with random data"""
-    data = random_group_data()
+def random_group_factory() -> Callable[[], Group]:
+    """Create a factory function that returns a random group each time it's called"""
 
-    return Group(
-        id=fake.uuid4(),
-        schemas=["urn:ietf:params:scim:schemas:core:2.0:Group"],
-        display_name=data["display_name"],
-        meta={},
-    )
+    def factory() -> Group:
+        data = random_group_data()
+
+        return Group(
+            id=fake.uuid4(),
+            schemas=["urn:ietf:params:scim:schemas:core:2.0:Group"],
+            display_name=data["display_name"],
+            meta={},
+        )
+
+    return factory
 
 
 @pytest.fixture
-async def create_random_group(random_group: Group) -> AsyncGenerator[Callable[[], Group], None]:
+def random_group(random_group_factory: Callable[[], Group]) -> Group:
+    """Create a single random group (for backwards compatibility)"""
+    return random_group_factory()
+
+
+@pytest.fixture
+async def create_random_group(random_group_factory: Callable[[], Group]) -> AsyncGenerator[Callable[[], Group], None]:
     """Create a group factory fixture with proper cleanup"""
     udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
     udm_username = os.environ.get("UDM_USERNAME", "admin")
@@ -408,7 +427,8 @@ async def create_random_group(random_group: Group) -> AsyncGenerator[Callable[[]
     created_groups = []
 
     async def create_group() -> Group:
-        group = random_group
+        # Use the factory to generate a new random group each time
+        group = random_group_factory()
 
         # First, make sure there's no existing group with the same name
         await ensure_group_deleted(udm_client, group_name=group.display_name)
