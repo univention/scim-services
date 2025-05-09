@@ -133,8 +133,6 @@ async def patch_user(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid or missing 'Operations' field in patch body",
             )
-        print("dawdda")
-        print(type(operations))
         updated_user = await user_service.apply_patch_operations(user_id, operations)
         return updated_user
 
