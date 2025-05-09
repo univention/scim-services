@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.9.1...v0.10.0) (2025-05-09)
+
+
+### Features
+
+* create group functionality ([29dcb24](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/29dcb24a3f7228b416b53f477933b18c3d3b12e3))
+* create user functionality ([83dd774](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/83dd77423cf515b024a82482b3208f49f17ee24d))
+
 ## [0.9.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.9.0...v0.9.1) (2025-05-06)
 
 
