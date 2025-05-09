@@ -412,16 +412,6 @@ async def test_patch_user_endpoint(
     user_id = test_user.id
     user_url = f"{api_prefix}/Users/{user_id}"
 
-    # Step 2: Get current state and prep user model
-    get_response = client.get(user_url, headers=auth_headers)
-    assert get_response.status_code == 200, f"Failed to fetch user: {get_response.text}"
-    original_user = get_response.json()
-    # Prepare updates - remove meta section with etag that's causing problems
-    updated_user_data = original_user.copy()
-    if "meta" in updated_user_data:
-        del updated_user_data["meta"]
-    # Send PUT request to actually remove meta tag
-    client.put(user_url, json=updated_user_data, headers=auth_headers)
     # Step 3: Prepare patch operations
     new_display_name = "PatchedFirst PatchedLast"
     new_email_value = f"patched-{test_user.user_name}@example.org"
