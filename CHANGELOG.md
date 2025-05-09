@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.10.0...v0.11.0) (2025-05-09)
+
+
+### Features
+
+* implement PUT user and group ([9ccf1cd](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/9ccf1cdb3bfb8d159e429518966938d63f62611d))
+
 ## [0.10.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.9.1...v0.10.0) (2025-05-09)
 
 
