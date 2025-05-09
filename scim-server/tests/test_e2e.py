@@ -400,6 +400,75 @@ async def test_put_user_endpoint(
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
+@pytest.mark.usefixtures("maildomain")
+async def test_patch_user_endpoint(
+    create_random_user: Callable[[], User], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+) -> None:
+    """Test partially updating a user through the REST API PATCH endpoint."""
+    print("\n=== E2E Testing PATCH User Endpoint ===")
+
+    # Step 1: Create a test user
+    test_user = await create_random_user()
+    user_id = test_user.id
+    user_url = f"{api_prefix}/Users/{user_id}"
+
+    # Step 2: Get current state and prep user model
+    get_response = client.get(user_url, headers=auth_headers)
+    assert get_response.status_code == 200, f"Failed to fetch user: {get_response.text}"
+    original_user = get_response.json()
+    # Prepare updates - remove meta section with etag that's causing problems
+    updated_user_data = original_user.copy()
+    if "meta" in updated_user_data:
+        del updated_user_data["meta"]
+    # Send PUT request to actually remove meta tag
+    client.put(user_url, json=updated_user_data, headers=auth_headers)
+    # Step 3: Prepare patch operations
+    new_display_name = "PatchedFirst PatchedLast"
+    new_email_value = f"patched-{test_user.user_name}@example.org"
+
+    patch_body = {
+        "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+        "Operations": [
+            {"op": "replace", "path": "displayName", "value": new_display_name},
+            {"op": "replace", "path": "name.givenName", "value": "PatchedFirst"},
+            {"op": "replace", "path": "name.familyName", "value": "PatchedLast"},
+            {"op": "add", "path": "emails", "value": [{"value": new_email_value, "type": "work", "primary": True}]},
+        ],
+    }
+
+    # Step 4: Send PATCH request
+    patch_response = client.patch(user_url, json=patch_body, headers=auth_headers)
+    assert patch_response.status_code == 200, f"PATCH failed: {patch_response.text}"
+    patched_user = patch_response.json()
+
+    # Step 5: Assert updated fields
+    assert patched_user["id"] == user_id
+    assert patched_user["displayName"] == new_display_name
+    assert patched_user["name"]["givenName"] == "PatchedFirst"
+    assert patched_user["name"]["familyName"] == "PatchedLast"
+
+    # Step 6: Check updated emails
+    email_values = [e["value"] for e in patched_user["emails"]]
+    assert new_email_value in email_values
+
+    primary_emails = [e for e in patched_user["emails"] if e.get("primary")]
+    assert len(primary_emails) == 1
+    assert primary_emails[0]["value"] == new_email_value
+
+    # Step 7: Re-GET to confirm persistence
+    get_final = client.get(user_url, headers=auth_headers)
+    assert get_final.status_code == 200
+    final_user = get_final.json()
+
+    assert final_user["displayName"] == new_display_name
+    assert final_user["name"]["givenName"] == "PatchedFirst"
+    assert final_user["name"]["familyName"] == "PatchedLast"
+    final_emails = [e["value"] for e in final_user["emails"]]
+    assert new_email_value in final_emails
+
+
+@pytest.mark.asyncio
+@pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 async def test_put_group_endpoint(
     create_random_group: Callable[[], Group], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
 ) -> None:

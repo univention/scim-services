@@ -106,6 +106,50 @@ class TestUserAPI:
         assert data["name"]["givenName"] == updated_user.name.given_name
         assert data["name"]["familyName"] == updated_user.name.family_name
 
+    import pytest
+    from fastapi.testclient import TestClient
+
+    @pytest.mark.usefixtures("setup_mocks")
+    def test_apply_patch_operations(self, client: TestClient) -> None:
+        """Test partially updating a user using PATCH."""
+        # Step 1: Create a user
+        user_id = self._create_test_user(client)
+        user_url = f"/scim/v2/Users/{user_id}"
+
+        # Step 2: Fetch the user before patching
+        pre_patch_response = client.get(user_url)
+        assert pre_patch_response.status_code == 200, f"Failed to fetch user: {pre_patch_response.text}"
+        original_user = pre_patch_response.json()
+        # Assert initial state is different
+        assert original_user["name"]["givenName"] != "Jane2"
+        assert original_user["displayName"] != "Jane2 Smith"
+
+        # Step 3: Prepare SCIM-compliant patch payload
+        patch_operations = {
+            "Operations": [
+                {"op": "replace", "path": "name.givenName", "value": "Jane2"},
+                {"op": "replace", "path": "displayName", "value": "Jane2 Smith"},
+            ]
+        }
+
+        # Step 4: Send PATCH request
+        patch_response = client.patch(
+            user_url,
+            json=patch_operations,
+            headers={"Content-Type": "application/json"},
+        )
+
+        assert patch_response.status_code == 200, f"PATCH failed: {patch_response.text}"
+        data = patch_response.json()
+
+        # Step 5: Verify updated values
+        assert data["id"] == user_id
+        assert data["name"]["givenName"] == "Jane2"
+        assert data["displayName"] == "Jane2 Smith"
+
+        # Step 6: Optionally verify unchanged fields
+        assert "familyName" in data["name"]
+
     @pytest.mark.usefixtures("setup_mocks")
     def test_delete_user(self, client: TestClient) -> None:
         """Test deleting a user."""

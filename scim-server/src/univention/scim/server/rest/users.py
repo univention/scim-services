@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
-
-from typing import Annotated
+from typing import Annotated, Any
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response, status
 from loguru import logger
 from scim2_models import ListResponse, User
 
@@ -114,16 +113,38 @@ async def update_user(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
 
-@router.patch("/{user_id}")
+@router.patch("/{user_id}", response_model=User)
 @inject
-async def patch_user(user_id: str) -> None:
+async def patch_user(
+    user_service: Annotated[UserService, Depends(Provide[ApplicationContainer.user_service])],
+    user_id: Annotated[str, Path(..., description="User ID")],
+    patch_request: Annotated[dict[str, Any], Body(..., description="Raw SCIM-compliant patch request body")],
+) -> User:
     """
-    Patch a user - not implemented yet.
-
-    Updates specified attributes of the user and returns the updated user.
+    Patch a user using a raw SCIM JSON patch body.
+    The request must contain an 'Operations' list, and may optionally contain a 'schemas' field.
     """
     logger.debug("REST: Patch user with ID", id=user_id)
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="PATCH method not implemented")
+
+    try:
+        operations = patch_request.get("Operations") or patch_request.get("operations")
+        if not operations or not isinstance(operations, list):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or missing 'Operations' field in patch body",
+            )
+        print("dawdda")
+        print(type(operations))
+        updated_user = await user_service.apply_patch_operations(user_id, operations)
+        return updated_user
+
+    except ValueError as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+    except Exception as e:
+        logger.error("Error patching user", user_id=user_id, error=e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)

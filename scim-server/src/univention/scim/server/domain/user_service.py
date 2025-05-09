@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 from scim2_models import ListResponse, User
 
@@ -78,4 +79,8 @@ class UserService(ABC):
         Raises:
             ValueError: If the user is not found
         """
+        pass
+
+    @abstractmethod
+    async def apply_patch_operations(self, user_id: str, operations: list[dict[str, Any]]) -> User:
         pass
