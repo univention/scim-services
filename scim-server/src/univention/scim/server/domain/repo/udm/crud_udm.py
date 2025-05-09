@@ -243,7 +243,7 @@ class CrudUdm(Generic[T], CrudScim[T]):
 
     async def update(self, resource_id: str, resource: T) -> T:
         """
-        Update an existing resource.
+        Update an existing resource using PUT semantics (full replacement).
         Args:
             resource_id: The resource's unique identifier
             resource: The updated resource data
@@ -255,16 +255,13 @@ class CrudUdm(Generic[T], CrudScim[T]):
         self.logger.trace("Updating resource in UDM", id=resource_id)
 
         try:
-            # First retrieve the existing object
-            await self.get(resource_id)
-
             # Get the module
             module = self.udm_client.get(self.udm_module_name)
 
             # Construct filter for UDM REST API to find by univentionObjectIdentifier
             filter_str = f"univentionObjectIdentifier={resource_id}"
 
-            # Get the object
+            # Search for the object
             results = list(module.search(filter_str))
 
             if not results:
@@ -273,13 +270,25 @@ class CrudUdm(Generic[T], CrudScim[T]):
             # Get the first matching object (should be only one)
             udm_obj = results[0].open()
 
-            # Update the UDM object with the new resource data
+            # Ensure the resource has the correct ID
+            if not resource.id:
+                resource.id = resource_id
+            elif resource.id != resource_id:
+                raise ValueError(f"Resource ID mismatch: {resource.id} != {resource_id}")
+
+            # Convert SCIM resource to UDM properties
+            properties: dict[str, Any]
+
             if self.resource_class == User:
-                self.scim2udm_mapper.map_user(resource, udm_obj)
+                properties = self.scim2udm_mapper.map_user(resource)
             elif self.resource_class == Group:
-                self.scim2udm_mapper.map_group(resource, udm_obj)
+                properties = self.scim2udm_mapper.map_group(resource)
             else:
                 raise ValueError(f"Unsupported resource class: {self.resource_class}")
+
+            # Update UDM object properties
+            for key, value in properties.items():
+                udm_obj.properties[key] = value
 
             # Save the updated object
             udm_obj.save()
