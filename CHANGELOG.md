@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.11.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.11.0...v0.11.1) (2025-05-10)
+
+
+### Bug Fixes
+
+* move addlicense pre-commit hook ([f739004](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/f739004588d325c221e74a7132a0a3fa3693a5fe))
+* move docker-services ([ca3a759](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/ca3a75950a25957b4dfaffee309a8696a02c5352))
+* update common-ci to main ([3d29386](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/3d29386987c7945f9f71212018f11bda00f33cf4))
+
 ## [0.11.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.10.0...v0.11.0) (2025-05-09)
 
 
