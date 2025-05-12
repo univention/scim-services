@@ -2,11 +2,64 @@
 PROVISIONING Keycloak
 */}}
 
+{{- define "scim-server.provisioning.config.nubusBaseUrl" -}}
+{{- if .Values.provisioning.config.nubusBaseUrl -}}
+{{ .Values.provisioning.config.nubusBaseUrl -}}
+{{- else if .Values.global.nubusDeployment -}}
+{{ printf "https://%s.%s" .Values.global.subDomains.scim .Values.global.domain }}
+{{- else -}}
+{{ required ".Values.provisioning.config.nubusBaseUrl is required" .Values.provisioning.config.nubusBaseUrl -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "scim-server.provisioning.keycloak.connection.protocol" -}}
+{{- if .Values.provisioning.keycloak.connection.protocol -}}
+{{- .Values.provisioning.keycloak.connection.protocol -}}
+{{- else -}}
+http
+{{- end -}}
+{{- end -}}
+
+{{- define "scim-server.provisioning.keycloak.connection.host" -}}
+{{- if .Values.provisioning.keycloak.connection.host -}}
+{{- .Values.provisioning.keycloak.connection.host -}}
+{{- else if .Values.global.nubusDeployment -}}
+{{- printf "%s-keycloak" .Release.Name -}}
+{{- else if not .Values.provisioning.keycloak.connection.baseUrl -}}
+{{- required ".Values.provisioning.keycloak.connection.host must be defined." .Values.provisioning.keycloak.connection.host -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "scim-server.provisioning.keycloak.connection.port" -}}
+{{- if .Values.provisioning.keycloak.connection.port -}}
+{{- .Values.provisioning.keycloak.connection.port -}}
+{{- else -}}
+8080
+{{- end -}}
+{{- end -}}
+
+{{- define "scim-server.provisioning.keycloak.connection.baseUrl" -}}
+{{- if .Values.provisioning.keycloak.connection.baseUrl -}}
+{{- .Values.provisioning.keycloak.connection.baseUrl -}}
+{{- else if .Values.global.nubusDeployment -}}
+{{- $protocol := include "scim-server.provisioning.keycloak.connection.protocol" . -}}
+{{- $host := include "scim-server.provisioning.keycloak.connection.host" . -}}
+{{- $port := include "scim-server.provisioning.keycloak.connection.port" . -}}
+{{- printf "%s://%s:%s" $protocol $host $port -}}
+{{- else -}}
+{{- required ".Values.provisioning.keycloak.connection.baseUrl must be defined." .Values.provisioning.keycloak.connection.baseUrl -}}
+{{- end -}}
+{{- end -}}
+
+{{- /*
+Keycloak
+*/}}
+
 {{- define "scim-server.keycloak.url" -}}
 {{- if .Values.config.keycloak.url -}}
 {{ .Values.config.keycloak.url -}}
 {{- else if .Values.global.nubusDeployment -}}
-{{ printf "http://%s-keycloak:8080/realms/%s" .Release.Name  (include "scim-server.keycloak.realm" .) }}
+{{ printf "https://%s.%s/realms/%s" .Values.global.subDomains.keycloak .Values.global.domain (include "scim-server.keycloak.realm" .) }}
 {{- else -}}
 {{ required ".Values.config.keycloak.url is required" .Values.config.keycloak.url -}}
 {{- end -}}
@@ -23,7 +76,7 @@ PROVISIONING Keycloak
 {{- end -}}
 
 {{- /*
-PROVISIONING ingress
+ingress
 */}}
 
 {{- define "scim-server.ingress.tls.secretName" -}}
@@ -37,7 +90,7 @@ PROVISIONING ingress
 {{- end -}}
 
 {{- /*
-PROVISIONING udm
+udm
 */}}
 
 {{- define "scim-server.udm.url" -}}

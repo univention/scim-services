@@ -34,11 +34,12 @@ metadata:
   annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.additionalAnnotations "context" . ) | nindent 4 }}
   {{- end }}
 data:
-  API_PREFIX: {{ .Values.config.api_prefix | quote }}
-  LOG_LEVEL: {{ .Values.config.log_level | quote }}
+  API_PREFIX: {{ .Values.config.apiPrefix | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
   AUTHENTICATOR_IDP_OPENID_CONFIGURATION_URL: {{ printf "%s/.well-known/openid-configuration" (include "scim-server.keycloak.url" .) }}
-  HOST: {{ .Values.config.listen_address | quote }}
+  AUTHENTICATOR_CLIENT_ID: {{ .Values.oauth.clientId | quote }}
+  HOST: {{ .Values.config.listenAddress | quote }}
   PORT: {{ .Values.config.port | quote }}
-  CORS_ORIGINS: {{ .Values.config.cors_origins | quote }}
+  CORS_ORIGINS: {{ .Values.config.corsOrigins | quote }}
   AUTH_ENABLED: {{ .Values.config.auth.enabled | quote }}
   UDM_URL: {{ include "scim-server.udm.url" . | quote }}

@@ -11,6 +11,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class AuthenticatorConfig(BaseSettings):
     model_config = SettingsConfigDict()
     idp_openid_configuration_url: str = ""
+    client_id: str = ""
+    client_secret: str = ""
 
 
 class UdmConfig(BaseSettings):

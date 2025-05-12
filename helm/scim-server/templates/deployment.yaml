@@ -53,35 +53,34 @@ spec:
         {{- end }}
       {{- end }}
       initContainers:
-      - name: "wait-for-dependency-containers"
-        {{- if .Values.containerSecurityContext.enabled }}
-        securityContext:
-          {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 10 }}
-        {{- end }}
-        image: "{{ coalesce .Values.init.image.registry .Values.global.imageRegistry }}/{{ .Values.init.image.repository }}{{ if .Values.init.image.sha256 }}@sha256:{{ .Values.init.image.sha256 }}{{ else }}:{{ .Values.init.image.tag }}{{ end }}"
-        imagePullPolicy: {{ coalesce .Values.init.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
-        envFrom:
-          - configMapRef:
-              name: {{ printf "%s-init" (include "common.names.fullname" .) }}
-        env:
-          - name: UDM_API_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
-                key: udm_username
-          - name: UDM_API_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
-                key: udm_password
-        command: ["/bin/sh", "-c"]
-        args:
-        - >
-          wait-for-keycloak.py &&
-          wait-for-udm.sh
-        {{- if .Values.resources }}
-        resources: {{- include "common.tplvalues.render" (dict "value" .Values.resources "context" .) | nindent 10 }}
-        {{- end }}
+        - name: "wait-for-dependency-containers"
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext:
+            {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          image: "{{ coalesce .Values.init.image.registry .Values.global.imageRegistry }}/{{ .Values.init.image.repository }}{{ if .Values.init.image.sha256 }}@sha256:{{ .Values.init.image.sha256 }}{{ else }}:{{ .Values.init.image.tag }}{{ end }}"
+          imagePullPolicy: {{ coalesce .Values.init.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
+          envFrom:
+            - configMapRef:
+                name: {{ printf "%s-init" (include "common.names.fullname" .) }}
+          env:
+            - name: UDM_API_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
+                  key: udm_username
+            - name: UDM_API_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
+                  key: udm_password
+          command: ["/bin/sh", "-c"]
+          args:
+          - >
+            wait-for-keycloak.py &&
+            wait-for-udm.sh
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
       containers:
         - name: "scim-server"
           {{- if .Values.containerSecurityContext.enabled }}
@@ -104,6 +103,11 @@ spec:
                 secretKeyRef:
                   name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
                   key: udm_password
+            - name: AUTHENTICATOR_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.oauth.auth.existingSecret "defaultNameSuffix" "keycloak-client-secret" "context" .) | quote }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.oauth.auth.existingSecret "key" "clientSecret") }}
             {{- with .Values.extraEnvVars }}
               {{- . | toYaml | nindent 14 }}
             {{- end }}

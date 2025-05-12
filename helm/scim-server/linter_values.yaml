@@ -12,6 +12,7 @@ udm:
 config:
   keycloak:
     url: "https://keycloak.univention.test"
+    realm: "nubus"
   udm:
     url: "https://udm.univention.test"
 
@@ -19,3 +20,33 @@ ingress:
   host: "scim.example.test"
   tls:
     secretName: "scim-server-tls"
+
+provisioning:
+  config:
+    nubusBaseUrl: "https://scim.univention.test"
+  keycloak:
+    auth:
+      username: "stub_username"
+      existingSecret:
+        name: "scim-server-provisioning-keycloak-secret"
+    connection:
+      baseUrl: "keycloak"
+      host: "keycloak"
+      port: 123
+  user:
+    create: true
+    username: "scim-api"
+    password: "scim-api"
+
+oauth:
+  auth:
+    existingSecret:
+      name: "scim-server-client-secret"
+
+extraSecrets:
+  - name: "scim-server-provisioning-keycloak-secret"
+    stringData:
+      password: "stub_client_secret"
+  - name: "scim-server-client-secret"
+    stringData:
+      clientSecret: "stub_client_secret"

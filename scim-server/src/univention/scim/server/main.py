@@ -89,12 +89,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 # Configure logging
 configure_logging(settings.log_level)
 
+
 # Setup app
 app: FastAPI = FastAPI(
     title="Univention SCIM Server",
     description="SCIM 2.0 API implementation for Univention",
     version="0.1.0",
     lifespan=lifespan,
+    swagger_ui_init_oauth={
+        "clientId": settings.authenticator.client_id,
+        "clientSecret": settings.authenticator.client_secret,
+        "appName": "Nubus SCIM-API documentation",
+    },
 )
 
 # Add timing middleware (before request logging middleware)

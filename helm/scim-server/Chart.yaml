@@ -10,6 +10,6 @@ home: "https://www.univention.de/"
 # Apply Semantic Versioning (https://semver.org/)
 version: "0.0.1"
 dependencies:
-  - name: "common"
-    version: "^2.x.x"
-    repository: "oci://registry-1.docker.io/bitnamicharts"
+  - name: "nubus-common"
+    version: "^0.8.x"
+    repository: "oci://artifacts.software-univention.de/nubus/charts"

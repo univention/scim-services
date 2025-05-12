@@ -33,11 +33,11 @@ image:
 replicaCount: 1
 
 config:
-  api_prefix: "/scim/v2"
-  log_level: "INFO"
-  listen_address: "0.0.0.0"
+  apiPrefix: "/scim/v2"
+  logLevel: "INFO"
+  listenAddress: "0.0.0.0"
   port: &port 80
-  cors_origins: '["*"]'
+  corsOrigins: '["*"]'
   auth:
     enabled: true
   keycloak:
@@ -256,3 +256,93 @@ serviceAccount:
   automountServiceAccountToken: false
   # -- Additional custom labels for the ServiceAccount.
   labels: {}
+
+oauth:
+  clientId: "scim-api"
+  auth:
+    # -- Machine-to-machine secret. Either this value or an existing Secret has to be specified.
+    # The specification of the secret value directly is not supported currently
+    #clientSecret: null
+    existingSecret:
+      # -- The reference to the secret containing `oauthAdapterM2mSecret` secret.
+      name: null
+      # -- The key to retrieve the secret from. Setting this value allows
+      # to use a key with a different name than the default "clientSecret".
+      keyMapping:
+        clientSecret: null
+
+################
+# provisioning #
+################
+
+# -- The SCIM server provisioning job
+provisioning:
+  # -- Whether to run the provisioning job to create the SCIM server client in Keycloak or not.
+  enabled: true
+  restartPolicy: "OnFailure"
+  backoffLimit: 900
+  # -- Time in seconds until the job gets deleted
+  ttlSecondsAfterFinished: 300
+
+  keycloakImage:
+    imagePullSecrets: []
+
+    registry: ""
+    repository: "nubus/images/keycloak-bootstrap"
+    tag: "0.8.0"
+    imagePullPolicy: "IfNotPresent"
+
+  udmImage:
+    imagePullSecrets: []
+
+    registry: ""
+    repository: "nubus/images/udm-rest-api-python-client"
+    tag: "0.30.0"
+    imagePullPolicy: "IfNotPresent"
+
+  image:
+    imagePullSecrets: []
+
+    registry: ""
+    repository: "nubus/images/wait-for-dependency"
+    tag: "0.31.0"
+    # -- Define image sha256 as an alternative to `tag`
+    # sha256: null
+
+  # -- Keycloak specific settings.
+  keycloak:
+    auth:
+      # -- Keycloak user.
+      username: ""
+      # -- Keycloak password.
+      password: ""
+      # -- Keycloak password secret reference.
+      existingSecret:
+        name: null
+        keyMapping:
+          password: null
+    # -- Connection parameters.
+    connection:
+      # -- Keycloak host.
+      host: ""
+      # -- Keycloak port.
+      port: ""
+
+  config:
+    # -- Base URL for setting in Keycloak application URL without backslash.
+    # Example: "https://scim.uv-example.gaia.open-desk.cloud/docs"
+    nubusBaseUrl: ""
+    # Debugging related settings
+    debug:
+      # -- Enable debug output of included Ansible scripts
+      enabled: false
+      # -- Seconds for the job to pause before starting the actual bootstrapping.
+      pauseBeforeScriptStart: 0
+
+  user:
+    # -- Create a new LDAP user which has access to the scim-api
+    create: false
+    username: ""
+    password: ""
+
+  tolerations: []

@@ -44,7 +44,7 @@ class OpenIDConnectAuthentication(Authentication):
             HTTPException: If validation fails
         """
         try:
-            return JWT(jwt=token, key=jwks, algs=algs, check_claims={"sub": None, "scope": None})
+            return JWT(jwt=token, key=jwks, algs=algs, check_claims={"uid": None, "azp": None})
         except JWKeyNotFound as e:
             if not retry:
                 logger.error("Token validation failed: Invalid signature", error=e)
@@ -97,4 +97,4 @@ class OpenIDConnectAuthentication(Authentication):
         jwt = self._validate_token(token, jwks, configuration["id_token_signing_alg_values_supported"], True)
         jwt_claims = json.loads(jwt.claims)
 
-        return {"username": jwt_claims["sub"], "roles": jwt_claims["scope"].split(" ")}
+        return {"username": jwt_claims["uid"]}

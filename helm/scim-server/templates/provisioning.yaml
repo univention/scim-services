@@ -1,0 +1,237 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2024 Univention GmbH
+
+{{- if .Values.provisioning.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ printf "%s-provisioning" (include "common.names.fullname" .) }}
+  namespace: {{ include "common.names.namespace" . | quote }}
+  labels:
+    {{- include "common.labels.standard" ( dict "customLabels" .Values.additionalLabels "context" $ ) | nindent 4 }}
+spec:
+  ttlSecondsAfterFinished: {{ .Values.provisioning.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      name: {{ printf "%s-provisioning" (include "common.names.fullname" .) }}
+      labels:
+        {{- include "common.labels.standard" . | nindent 8 }}
+      annotations:
+        checksum/config: '{{ include (print $.Template.BasePath "/configmap-provisioning.yaml") . | sha256sum }}'
+        {{- if .Values.provisioning.extraAnnotations }}
+        {{ toYaml .Values.provisioning.extraAnnotations | nindent 8 }}
+        {{- end }}
+    spec:
+      restartPolicy: {{ coalesce .Values.provisioning.restartPolicy .Values.global.restartPolicy | quote }}
+      {{- with .Values.provisioning.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext:
+        {{- omit .Values.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: "wait-for-keycloak-containers"
+          image: "{{ coalesce .Values.provisioning.image.registry .Values.global.imageRegistry }}/{{ .Values.provisioning.image.repository }}{{ if .Values.provisioning.image.sha256 }}@sha256:{{ .Values.provisioning.image.sha256 }}{{ else }}:{{ .Values.provisioning.image.tag }}{{ end }}"
+          imagePullPolicy: {{ coalesce .Values.provisioning.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext:
+            {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ printf "%s-provisioning-init" (include "common.names.fullname" .) }}
+          {{- with .Values.provisioning.extraEnvVars }}
+            {{- . | toYaml | nindent 10 }}
+          {{- end }}
+          command: ["/bin/sh", "-c"]
+          args:
+          - >
+            wait-for-keycloak.py
+          {{- with .Values.provisioning.resources }}
+          resources:
+          {{ toYaml . | indent 10 }}
+          {{- end }}
+          volumeMounts:
+            {{- if .Values.provisioning.extraVolumeMounts }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.provisioning.extraVolumeMounts "context" .) | nindent 10 }}
+            {{- end }}
+        {{- if .Values.provisioning.user.create }}
+        - name: "wait-for-udm-containers"
+          image: "{{ coalesce .Values.provisioning.image.registry .Values.global.imageRegistry }}/{{ .Values.provisioning.image.repository }}{{ if .Values.provisioning.image.sha256 }}@sha256:{{ .Values.provisioning.image.sha256 }}{{ else }}:{{ .Values.provisioning.image.tag }}{{ end }}"
+          imagePullPolicy: {{ coalesce .Values.provisioning.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext:
+            {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ printf "%s-provisioning-init" (include "common.names.fullname" .) }}
+          env:
+            - name: UDM_API_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
+                  key: udm_username
+            - name: UDM_API_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
+                  key: udm_password
+          {{- with .Values.provisioning.extraEnvVars }}
+            {{- . | toYaml | nindent 10 }}
+          {{- end }}
+          command: ["/bin/sh", "-c"]
+          args:
+          - >
+            wait-for-udm.sh
+          {{- with .Values.provisioning.resources }}
+          resources:
+          {{ toYaml . | indent 10 }}
+          {{- end }}
+          volumeMounts:
+            {{- if .Values.provisioning.extraVolumeMounts }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.provisioning.extraVolumeMounts "context" .) | nindent 10 }}
+            {{- end }}
+        {{- end }}
+      containers:
+        - name: "keycloak-provisioning"
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext:
+            {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          image: "{{ coalesce .Values.provisioning.keycloakImage.registry .Values.global.imageRegistry }}/{{ .Values.provisioning.keycloakImage.repository }}{{ if .Values.provisioning.keycloakImage.sha256 }}@sha256:{{ .Values.provisioning.keycloakImage.sha256 }}{{ else }}:{{ .Values.provisioning.keycloakImage.tag }}{{ end }}"
+          imagePullPolicy: {{ coalesce .Values.provisioning.keycloakImage.imagePullPolicy .Values.global.imagePullPolicy | quote }}
+          command: ["/bin/sh", "-c"]
+          args:
+          - >
+              univention-keycloak \
+                --keycloak-url ${KEYCLOAK_URL} \
+                --realm ${KEYCLOAK_REALM} \
+                --binduser ${KEYCLOAK_USERNAME} \
+                --bindpwdfile /credentials/keycloak.secret \
+                oidc/rp create \
+                ${SCIM_API_CLIENT_ID} \
+                --service-accounts-enabled \
+                --client-secret ${SCIM_API_CLIENT_SECRET} \
+                --app-url ${KEYCLOAK_APP_BASE_URL} \
+                --redirect-uri ${KEYCLOAK_APP_BASE_URL}/docs/oauth2-redirect \
+                --admin-url ${KEYCLOAK_APP_BASE_URL} \
+                --pkce-code-challenge-method "" \
+                --host-fqdn ${KEYCLOAK_HOST} \
+                --web-origins ${KEYCLOAK_APP_BASE_URL}
+          envFrom:
+            - configMapRef:
+                name: {{ printf "%s-provisioning-env" (include "common.names.fullname" .) }}
+          env:
+            - name: KEYCLOAK_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.provisioning.keycloak.auth.existingSecret "defaultNameSuffix" "provisioning-secret" "context" .) | quote }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.provisioning.keycloak.auth.existingSecret "key" "password") }}
+            - name: SCIM_API_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.oauth.auth.existingSecret "defaultNameSuffix" "keycloak-client-secret" "context" .) | quote }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.oauth.auth.existingSecret "key" "clientSecret") }}
+          {{- with .Values.provisioning.extraEnvVars }}
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.provisioning.args }}
+          args: {{ .Values.provisioning.args }}
+          {{- end }}
+          {{- with .Values.provisioning.resources }}
+          resources:
+          {{ toYaml . | indent 10 }}
+          {{- end }}
+          volumeMounts:
+            - mountPath: "/credentials/keycloak.secret"
+              name: "keycloak-credentials-volume"
+              subPath: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.provisioning.keycloak.auth.existingSecret "key" "password") }}
+            - name: "temp-dir"
+              mountPath: "/tmp"
+            {{- if .Values.provisioning.extraVolumeMounts }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.provisioning.extraVolumeMounts "context" .) | nindent 10 }}
+            {{- end }}
+        {{- if .Values.provisioning.user.create }}
+        - name: "udm-provisioning"
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext:
+            {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          image: "{{ coalesce .Values.provisioning.udmImage.registry .Values.global.imageRegistry }}/{{ .Values.provisioning.udmImage.repository }}{{ if .Values.provisioning.udmImage.sha256 }}@sha256:{{ .Values.provisioning.udmImage.sha256 }}{{ else }}:{{ .Values.provisioning.udmImage.tag }}{{ end }}"
+          imagePullPolicy: {{ coalesce .Values.provisioning.udmImage.imagePullPolicy .Values.global.imagePullPolicy | quote }}
+          command: ["/usr/bin/python3", "/scripts/create-user.py"]
+          envFrom:
+            - configMapRef:
+                name: {{ printf "%s-provisioning-env" (include "common.names.fullname" .) }}
+          env:
+            - name: UDM_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
+                  key: udm_username
+            - name: UDM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
+                  key: udm_password
+            - name: CREATE_USER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ printf "%s-provisioning-create-user-secret" (include "common.names.fullname" .) }}
+                  key: new_user_username
+            - name: CREATE_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ printf "%s-provisioning-create-user-secret" (include "common.names.fullname" .) }}
+                  key: new_user_password
+          {{- with .Values.provisioning.extraEnvVars }}
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.provisioning.args }}
+          args: {{ .Values.provisioning.args }}
+          {{- end }}
+          {{- with .Values.provisioning.resources }}
+          resources:
+          {{ toYaml . | indent 10 }}
+          {{- end }}
+          volumeMounts:
+            - name: "create-user-script"
+              mountPath: "/scripts"
+            {{- if .Values.provisioning.extraVolumeMounts }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.provisioning.extraVolumeMounts "context" .) | nindent 12 }}
+            {{- end }}
+        {{- end }}
+      {{- with .Values.provisioning.nodeSelector }}
+      nodeSelector:
+        {{ toYaml . | indent 8 }}
+      {{- end }}
+      {{- with .Values.provisioning.affinity }}
+      affinity:
+        {{ toYaml . | indent 8 }}
+      {{- end }}
+      {{- with .Values.provisioning.tolerations }}
+      tolerations:
+        {{ toYaml . | indent 8 }}
+      {{- end }}
+      volumes:
+        - name: "keycloak-credentials-volume"
+          secret:
+            secretName: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.provisioning.keycloak.auth.existingSecret "defaultNameSuffix" "provisioning-secret" "context" .) | quote }}
+        - name: "temp-dir"
+          emptyDir:
+            sizeLimit: "20Mi"
+        {{- if .Values.provisioning.user.create }}
+        - name: "create-user-script"
+          configMap:
+            name: {{ printf "%s-provisioning-create-user" (include "common.names.fullname" .) }}
+        {{- end }}
+        {{- if .Values.provisioning.extraVolumes }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.provisioning.extraVolumes  "context" .) | nindent 8 }}
+        {{- end }}
+  backoffLimit: {{ .Values.provisioning.backoffLimit }}
+...
+{{- end }}
