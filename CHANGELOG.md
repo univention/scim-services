@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.12.0...v0.12.1) (2025-05-12)
+
+
+### Bug Fixes
+
+* resource types endpoint response model ([a280928](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/a2809287d3956cd14e99c99be32348101a0bc14c))
+
 ## [0.12.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.11.1...v0.12.0) (2025-05-11)
 
 
