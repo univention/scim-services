@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.12.1...v0.12.2) (2025-05-12)
+
+
+### Bug Fixes
+
+* SCIM schema endpoint to return ListResponse ([6e1963d](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/6e1963d81fbab1c78ad1da518815d6cdb4123eeb))
+
 ## [0.12.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.12.0...v0.12.1) (2025-05-12)
 
 
