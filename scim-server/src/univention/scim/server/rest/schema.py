@@ -6,7 +6,7 @@ from typing import Any
 from fastapi import APIRouter
 from loguru import logger
 from pydantic import BaseModel
-from scim2_models import Group, Schema, User
+from scim2_models import Group, ListResponse, Schema, User
 
 
 router = APIRouter()
@@ -101,7 +101,7 @@ def _create_schema_from_model(model: type[BaseModel], schema_id: str, name: str,
     )
 
 
-@router.get("", response_model=list[Schema])
+@router.get("", response_model=ListResponse[Schema], response_model_exclude_none=True)
 async def get_schemas() -> Any:
     """
     Get the list of schemas supported by the SCIM service.
@@ -224,4 +224,9 @@ async def get_schemas() -> Any:
     )
     schemas.append(common_schema)
 
-    return schemas
+    return ListResponse[Schema](
+        total_results=len(schemas),
+        items_per_page=len(schemas),
+        start_index=1,
+        resources=schemas,
+    )
