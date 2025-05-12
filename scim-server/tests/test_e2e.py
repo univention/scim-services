@@ -264,16 +264,53 @@ async def test_post_group_endpoint(
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 async def test_get_resource_types_endpoint(client: TestClient, api_prefix: str, auth_headers: dict[str, str]) -> None:
-    """E2E test retrieving the SCIM ResourceTypes."""
-    print("\n=== E2E Testing GET ResourceTypes Endpoint ===")
+    """E2E test retrieving the SCIM ResourceTypes using ListResponse."""
+    print("\n=== E2E Testing GET ResourceTypes Endpoint (ListResponse) ===")
 
     response = client.get(f"{api_prefix}/ResourceTypes", headers=auth_headers)
-    assert response.status_code == 200
 
+    # --- Basic Response Validation ---
+    assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
     data = response.json()
-    assert isinstance(data, list)
-    assert any(rt["id"] == "User" for rt in data)
-    assert any(rt["id"] == "Group" for rt in data)
+    assert isinstance(data, dict), f"Expected response data to be a dict, got {type(data)}"
+
+    # --- ListResponse Structure Validation ---
+    # Check for ListResponse schema
+    assert "schemas" in data, "Response missing 'schemas' field"
+    assert isinstance(data["schemas"], list), "'schemas' field should be a list"
+    assert "urn:ietf:params:scim:api:messages:2.0:ListResponse" in data["schemas"], (
+        "ListResponse schema missing from 'schemas'"
+    )
+
+    # Check pagination/list attributes
+    assert "totalResults" in data, "Response missing 'totalResults' field"
+    assert isinstance(data["totalResults"], int), "'totalResults' should be an integer"
+    assert data["totalResults"] >= 0, "'totalResults' should be non-negative"
+
+    assert "itemsPerPage" in data, "Response missing 'itemsPerPage' field"
+    assert isinstance(data["itemsPerPage"], int), "'itemsPerPage' should be an integer"
+
+    assert "startIndex" in data, "Response missing 'startIndex' field"
+    assert isinstance(data["startIndex"], int), "'startIndex' should be an integer"
+
+    # Check for the Resources list
+    assert "Resources" in data, "Response missing 'Resources' field"
+    assert isinstance(data["Resources"], list), "'Resources' field should be a list"
+
+    # --- Content Validation (Resources List) ---
+    resources_list = data["Resources"]
+
+    # Check totalResults matches the number of items in Resources
+    assert data["totalResults"] == len(resources_list), (
+        f"'totalResults' ({data['totalResults']}) does not match number of items in 'Resources' ({len(resources_list)})"
+    )
+
+    # Check if User and Group resource types are present
+    resource_ids = [rt.get("id") for rt in resources_list if isinstance(rt, dict)]
+    assert "User" in resource_ids, "User ResourceType not found in 'Resources'"
+    assert "Group" in resource_ids, "Group ResourceType not found in 'Resources'"
+
+    print("=== GET ResourceTypes Endpoint Test Passed ===")
 
 
 ## PUT

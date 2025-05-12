@@ -324,40 +324,79 @@ class TestResourceTypesEndpoint:
 
     @pytest.mark.usefixtures("setup_mocks")
     def test_get_resource_types(self, client: TestClient) -> None:
-        """Test retrieving the SCIM ResourceTypes."""
+        """Test retrieving the SCIM ResourceTypes in ListResponse format."""
         response = client.get("/scim/v2/ResourceTypes")
-        assert response.status_code == 200
 
+        # --- Basic Response Validation ---
+        assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
         data = response.json()
-        assert isinstance(data, list)
-        assert len(data) == 2  # Only User and Group for now
+        assert isinstance(data, dict), f"Expected response data to be a dict, got {type(data)}"
 
-        user_type = next((r for r in data if r["id"] == "User"), None)
-        group_type = next((r for r in data if r["id"] == "Group"), None)
+        # --- ListResponse Structure Validation ---
+        assert "schemas" in data, "Response missing 'schemas' field"
+        assert isinstance(data["schemas"], list), "'schemas' field should be a list"
+        assert "urn:ietf:params:scim:api:messages:2.0:ListResponse" in data["schemas"], (
+            "ListResponse schema missing from 'schemas'"
+        )
 
-        # --- User ResourceType checks
-        assert user_type is not None, "User ResourceType missing"
-        assert user_type["schemas"] == ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"]
-        assert user_type["name"] == "User"
-        assert user_type["endpoint"] == "/Users"
-        assert user_type["meta"]["location"] == "http://testserver/scim/v2/ResourceTypes/User"
-        assert user_type["description"] == "User Account"
-        assert user_type["schema"] == "urn:ietf:params:scim:schemas:core:2.0:User"
+        assert "totalResults" in data, "Response missing 'totalResults' field"
+        assert isinstance(data["totalResults"], int), "'totalResults' should be an integer"
+        assert data["totalResults"] == 2, (
+            f"Expected totalResults 2, got {data['totalResults']}"
+        )  # Expecting User and Group
+
+        assert "itemsPerPage" in data, "Response missing 'itemsPerPage' field"
+        assert isinstance(data["itemsPerPage"], int), "'itemsPerPage' should be an integer"
+
+        assert "startIndex" in data, "Response missing 'startIndex' field"
+        assert isinstance(data["startIndex"], int), "'startIndex' should be an integer"
+
+        assert "Resources" in data, "Response missing 'Resources' field"
+        assert isinstance(data["Resources"], list), "'Resources' field should be a list"
+
+        # --- Content Validation (Resources List) ---
+        resources_list = data["Resources"]
+        assert len(resources_list) == data["totalResults"], (
+            f"Number of items in 'Resources' ({len(resources_list)}) does not match "
+            "'totalResults' ({data['totalResults']})"
+        )
+
+        # Find User and Group within the Resources list
+        user_type = next((r for r in resources_list if isinstance(r, dict) and r.get("id") == "User"), None)
+        group_type = next((r for r in resources_list if isinstance(r, dict) and r.get("id") == "Group"), None)
+
+        # --- User ResourceType checks ---
+        assert user_type is not None, "User ResourceType missing from 'Resources'"
+        assert "urn:ietf:params:scim:schemas:core:2.0:ResourceType" in user_type.get("schemas", [])
+        assert user_type.get("name") == "User"
+        assert user_type.get("endpoint") == "/Users"
+        assert user_type.get("description") == "User Account"
+        assert user_type.get("schema") == "urn:ietf:params:scim:schemas:core:2.0:User"
+        assert isinstance(user_type.get("meta"), dict)
+        assert user_type["meta"].get("resourceType") == "ResourceType"
+        assert user_type["meta"].get("location", "").endswith("/ResourceTypes/User")
+
+        # Check schemaExtensions for User
         assert "schemaExtensions" in user_type
         assert isinstance(user_type["schemaExtensions"], list)
-        assert (
-            user_type["schemaExtensions"][0]["schema"] == "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
-        )
-        assert user_type["schemaExtensions"][0]["required"] is True
-        assert user_type["meta"]["resourceType"] == "ResourceType"
-        assert user_type["meta"]["location"].endswith("/ResourceTypes/User")
+        assert len(user_type["schemaExtensions"]) == 1, "Expected 1 schemaExtension for User"
+        enterprise_ext = user_type["schemaExtensions"][0]
+        assert isinstance(enterprise_ext, dict)
+        assert enterprise_ext.get("schema") == "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
+        assert enterprise_ext.get("required") is True
 
-        # --- Group ResourceType checks
-        assert group_type is not None, "Group ResourceType missing"
-        assert group_type["name"] == "Group"
-        assert group_type["endpoint"] == "/Groups"
-        assert group_type["description"] == "Group"
-        assert group_type["schema"] == "urn:ietf:params:scim:schemas:core:2.0:Group"
-        assert "schemaExtensions" not in group_type or group_type["schemaExtensions"] is None
-        assert group_type["meta"]["resourceType"] == "ResourceType"
-        assert group_type["meta"]["location"].endswith("/ResourceTypes/Group")
+        # --- Group ResourceType checks ---
+        assert group_type is not None, "Group ResourceType missing from 'Resources'"
+        assert "urn:ietf:params:scim:schemas:core:2.0:ResourceType" in group_type.get("schemas", [])
+        assert group_type.get("name") == "Group"
+        assert group_type.get("endpoint") == "/Groups"
+        assert group_type.get("description") == "Group"
+        assert group_type.get("schema") == "urn:ietf:params:scim:schemas:core:2.0:Group"
+        assert isinstance(group_type.get("meta"), dict)
+        assert group_type["meta"].get("resourceType") == "ResourceType"
+        assert group_type["meta"].get("location", "").endswith("/ResourceTypes/Group")
+
+        # Check schemaExtensions for Group (should be present and empty)
+        assert "schemaExtensions" in group_type
+        assert isinstance(group_type["schemaExtensions"], list)
+        assert len(group_type["schemaExtensions"]) == 0, "Expected empty schemaExtensions list for Group"

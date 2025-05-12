@@ -5,7 +5,10 @@ from typing import Annotated
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, Request
 from loguru import logger
-from pydantic import BaseModel, Field
+
+# Import models from scim2-models
+# Import ListResponse model
+from scim2_models import ListResponse, Meta, ResourceType, SchemaExtension
 
 from univention.scim.server.config import ApplicationSettings
 from univention.scim.server.container import ApplicationContainer
@@ -14,68 +17,60 @@ from univention.scim.server.container import ApplicationContainer
 router = APIRouter()
 
 
-class SchemaExtension(BaseModel):
-    schema_: str = Field(..., alias="schema")  # 👈 rename internally to schema_
-    required: bool
-    model_config = {
-        "populate_by_name": True,
-        "extra": "allow",  # Optional: allows ignoring unexpected fields (robustness)
-    }
-
-
-class Meta(BaseModel):
-    location: str
-    resourceType: str
-
-
-class ResourceType(BaseModel):
-    schemas: list[str] = Field(default=["urn:ietf:params:scim:schemas:core:2.0:ResourceType"])
-    id: str
-    name: str
-    endpoint: str
-    description: str
-    schema_: str = Field(..., alias="schema")  # 👈 rename internally to schema_
-    schemaExtensions: list[SchemaExtension] | None = None
-    meta: Meta
-    model_config = {
-        "populate_by_name": True,
-        "extra": "allow",  # Optional: allows ignoring unexpected fields (robustness)
-    }
-
-
-@router.get("", response_model=list[ResourceType])
+@router.get("", response_model=ListResponse[ResourceType], response_model_exclude_none=True)
 @inject
 async def get_resource_types(
     request: Request,
     settings: Annotated[ApplicationSettings, Depends(Provide[ApplicationContainer.settings])],
-) -> list[ResourceType]:
+) -> ListResponse[ResourceType]:
     """
     Get the list of resource types supported by the SCIM service.
 
-    Returns a list containing User and Group resource types.
+    Returns a ListResponse containing User and Group resource types based on scim2-models.
     """
     logger.debug("REST: Get ResourceTypes")
 
-    base_url = str(request.base_url).rstrip("/") + settings.api_prefix
+    base_url = str(request.base_url).rstrip("/") + settings.api_prefix.rstrip("/")
+
     user_resource_type = ResourceType(
         id="User",
         name="User",
-        endpoint="/Users",
         description="User Account",
+        endpoint="/Users",  # Relative endpoint
         schema_="urn:ietf:params:scim:schemas:core:2.0:User",
-        schemaExtensions=[
-            SchemaExtension(schema_="urn:ietf:params:scim:schemas:extension:enterprise:2.0:User", required=True)
+        schema_extensions=[
+            SchemaExtension(
+                schema_="urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+                required=True,
+            )
         ],
-        meta=Meta(location=f"{base_url}/ResourceTypes/User", resourceType="ResourceType"),
+        meta=Meta(
+            location=f"{base_url}/ResourceTypes/User",
+            resourceType="ResourceType",
+        ),
     )
 
     group_resource_type = ResourceType(
         id="Group",
         name="Group",
-        endpoint="/Groups",
         description="Group",
+        endpoint="/Groups",  # Relative endpoint
         schema_="urn:ietf:params:scim:schemas:core:2.0:Group",
-        meta=Meta(location=f"{base_url}/ResourceTypes/Group", resourceType="ResourceType"),
+        schema_extensions=[],
+        meta=Meta(
+            location=f"{base_url}/ResourceTypes/Group",
+            resourceType="ResourceType",
+        ),
     )
 
-    return [user_resource_type, group_resource_type]
+    # Create the list of resources
+    resources = [user_resource_type, group_resource_type]
+    total_results = len(resources)
+
+    # Construct and return the ListResponse object
+    return ListResponse[ResourceType](
+        total_results=total_results,
+        items_per_page=total_results,  # Assuming no pagination for this endpoint
+        start_index=1,
+        resources=resources,
+    )
