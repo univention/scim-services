@@ -1,9 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
-import operator
-from copy import deepcopy
-from functools import reduce
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 from loguru import logger
@@ -13,6 +10,7 @@ from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.rules.loader import RuleLoader
 from univention.scim.server.domain.user_service import UserService
+from univention.scim.server.domain.utils import patch_resource
 
 
 class UserServiceImpl(UserService):
@@ -103,51 +101,15 @@ class UserServiceImpl(UserService):
         if not existing_user:
             raise ValueError(f"User with ID {user_id} not found")
 
-        user_data = deepcopy(existing_user.model_dump())
-        # Apply each SCIM operation
-        for op in operations:
-            path = op["path"]  # e.g., "name.givenName" or "emails"
-            value = op["value"]
-            op_type = op["op"].lower()
-
-            if not path:
-                raise ValueError(f"Operation missing 'path': {op}")
-
-            # Resolve nested keys
-            path_parts = path.split(".")
-
-            if op_type == "replace" or op_type == "add":
-                try:
-                    # Traverse to one level above the target
-                    target = reduce(operator.getitem, path_parts[:-1], user_data)
-                    target[path_parts[-1]] = value
-                except Exception as e:
-                    raise ValueError(f"Failed to apply '{op_type}' on path '{path}': {e}") from e
-
-            elif op_type == "remove":
-                try:
-                    target = reduce(operator.getitem, path_parts[:-1], user_data)
-                    target.pop(path_parts[-1], None)
-                except Exception as e:
-                    raise ValueError(f"Failed to remove path '{path}': {e}") from e
-
-            else:
-                raise ValueError(f"Unsupported patch operation: {op_type}")
-
-        user_data.pop(
-            "meta", None
-        )  # Remove problematic meta tag for now TODO think about how we can solve this more elegantly?
-        # Rebuild updated User model
-        updated_user = User(**user_data)
-        updated_user.id = user_id
+        updated_user: User = cast(User, await patch_resource(existing_user, user_id, operations))
 
         # Validate and apply business rules
         self._validate_user(updated_user)
-        updated_user = await self.rule_evaluator.evaluate(updated_user)
+        updated_resource = await self.rule_evaluator.evaluate(updated_user)
 
         # Persist the updated user
-        saved_user = await self.user_repository.update(user_id, updated_user)
-        logger.info(f"Patched user with ID: {user_id}")
+        saved_user = await self.user_repository.update(user_id, updated_resource)
+        logger.info(f"Patched resource with ID: {user_id}")
         return saved_user
 
     async def delete_user(self, user_id: str) -> bool:
