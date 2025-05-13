@@ -6,14 +6,14 @@ from uuid import uuid4
 from loguru import logger
 from scim2_models import ListResponse, User
 
+from univention.scim.server.domain.patch_mixin import PatchMixin
 from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.rules.loader import RuleLoader
 from univention.scim.server.domain.user_service import UserService
-from univention.scim.server.domain.utils import patch_resource
 
 
-class UserServiceImpl(UserService):
+class UserServiceImpl(UserService, PatchMixin):
     """
     Implementation of the UserService interface.
     Provides domain logic for user management operations.
@@ -101,7 +101,7 @@ class UserServiceImpl(UserService):
         if not existing_user:
             raise ValueError(f"User with ID {user_id} not found")
 
-        updated_user: User = cast(User, await patch_resource(existing_user, user_id, operations))
+        updated_user: User = cast(User, await self.patch_resource(existing_user, user_id, operations))
 
         # Validate and apply business rules
         self._validate_user(updated_user)
