@@ -1,0 +1,11 @@
+{
+    "name": "scim-consumer",
+    "realms_topics": [
+        {
+            "realm": "udm",
+            "topic": "users/user"
+        }
+    ],
+    "request_prefill": true,
+    "password": "univention"
+}

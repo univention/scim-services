@@ -1,0 +1,34 @@
+[project]
+name = "scim-consumer"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.10.6",
+    "udm-rest-api-client[async]>=0.0.2",
+    "scim-udm-transformer-lib",
+    "nubus-provisioning-consumer>=0.52.0",
+    "scim2-client[httpx]>=0.5.1",
+    "icecream",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.26.0",
+    "requests>=2.32.3",
+]
+
+[tool.uv.sources]
+nubus-provisioning-consumer = { index = "univention" }
+scim-udm-transformer-lib = { workspace = true }
+
+[[tool.uv.index]]
+name = "univention"
+url = "https://git.knut.univention.de/api/v4/projects/882/packages/pypi/simple"
+default = false
+
+[tool.uv]
+package = true
+
+[project.scripts]
+scim-consumer = "univention.scim.consumer.main:run"

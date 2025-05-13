@@ -13,9 +13,10 @@ scim-server = { workspace = true }
 scim-udm-transformer-lib = { workspace = true }
 udm-to-scim-sync = { workspace = true }
 lancelog = { index = "gitlab" }
+scim-consumer = { workspace = true }
 
 [tool.uv.workspace]
-members = ["scim-server", "scim-udm-transformer-lib", "udm-to-scim-sync"]
+members = ["scim-server", "scim-udm-transformer-lib", "udm-to-scim-sync", "scim-consumer"]
 
 [[tool.uv.index]]
 name = "gitlab"
@@ -57,4 +58,5 @@ known-first-party = ["helpers", "univention.scim"]
 [dependency-groups]
 dev = [
     "pytest>=8.3.5",
+    "pre-commit",
 ]
