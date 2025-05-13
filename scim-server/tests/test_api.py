@@ -382,7 +382,7 @@ class TestResourceTypesEndpoint:
         enterprise_ext = user_type["schemaExtensions"][0]
         assert isinstance(enterprise_ext, dict)
         assert enterprise_ext.get("schema") == "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
-        assert enterprise_ext.get("required") is True
+        assert enterprise_ext.get("required") is False
 
         # --- Group ResourceType checks ---
         assert group_type is not None, "Group ResourceType missing from 'Resources'"

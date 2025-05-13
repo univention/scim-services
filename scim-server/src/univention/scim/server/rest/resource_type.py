@@ -41,7 +41,7 @@ async def get_resource_types(
         schema_extensions=[
             SchemaExtension(
                 schema_="urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
-                required=True,
+                required=False,
             )
         ],
         meta=Meta(

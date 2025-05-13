@@ -6,7 +6,7 @@ from typing import Any
 from fastapi import APIRouter
 from loguru import logger
 from pydantic import BaseModel
-from scim2_models import Group, ListResponse, Schema, User
+from scim2_models import EnterpriseUser, Group, ListResponse, Schema, User
 
 
 router = APIRouter()
@@ -114,7 +114,9 @@ async def get_schemas() -> Any:
     schemas = []
 
     # User Schema
-    user_schema = _create_schema_from_model(User, "urn:ietf:params:scim:schemas:core:2.0:User", "User", "User Account")
+    user_schema = _create_schema_from_model(
+        User[EnterpriseUser], "urn:ietf:params:scim:schemas:core:2.0:User", "User", "User Account"
+    )
     schemas.append(user_schema)
 
     # Group Schema
@@ -223,6 +225,21 @@ async def get_schemas() -> Any:
         ],
     )
     schemas.append(common_schema)
+
+    enterprise_schema = Schema(
+        id="urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+        name="EnterpriseUser",
+        description="Enterprise User Extension",
+        attributes=[
+            {
+                "name": "employeeNumber",
+                "type": "string",
+                "multiValued": False,
+                "description": "Numeric or alphanumeric identifier assigned to a person",
+            },
+        ],
+    )
+    schemas.append(enterprise_schema)
 
     return ListResponse[Schema](
         total_results=len(schemas),
