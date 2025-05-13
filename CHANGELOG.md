@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.13.0...v0.13.1) (2025-05-13)
+
+
+### Bug Fixes
+
+* add missing enterprise schema to resource type ([adc3e19](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/adc3e1914ab35e77695206bf4d7c6f31a2a915ab))
+
 ## [0.13.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.12.2...v0.13.0) (2025-05-13)
 
 
