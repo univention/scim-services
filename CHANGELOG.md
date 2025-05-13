@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.12.2...v0.13.0) (2025-05-13)
+
+
+### Features
+
+* add e2e tests for DELETE endpoints ([59c4b99](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/59c4b9991fed40fa74aa9a5564ff717246939994))
+
 ## [0.12.2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.12.1...v0.12.2) (2025-05-12)
 
 
