@@ -56,7 +56,7 @@ class PatchMixin:
         resource_data.pop(
             "meta", None
         )  # Remove problematic meta tag for now TODO think about how we can solve this more elegantly?
-        # Rebuild updated User model
+        # Rebuild updated Resource model
         updated_resource = cls(**resource_data)
         updated_resource.id = resource_id
         return updated_resource
