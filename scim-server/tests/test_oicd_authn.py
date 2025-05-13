@@ -37,7 +37,7 @@ def oicd_auth(setup_mocks: None, httpserver: HTTPServer) -> Generator[JWK, None,
     )
 
     with (
-        ApplicationContainer.authenticator.override(OpenIDConnectAuthentication(oidc_configuration_obj)),
+        ApplicationContainer.authenticator.override(OpenIDConnectAuthentication(oidc_configuration_obj, "scim-api")),
         ApplicationContainer.oidc_configuration.override(oidc_configuration_obj),
     ):
         yield key
@@ -64,7 +64,7 @@ def test_oicd_no_route(request: Any, oicd_auth: JWK, httpserver: HTTPServer) -> 
 
 
 def test_oicd_auth(oicd_auth: JWK, client: TestClient) -> None:
-    claims = {"sub": "Test User", "scope": "read"}
+    claims = {"uid": "Test User", "azp": "scim-api"}
     header = {"alg": oicd_auth.alg}
     jwt = JWT(header=header, claims=claims)
     jwt.make_signed_token(oicd_auth)
@@ -73,8 +73,18 @@ def test_oicd_auth(oicd_auth: JWK, client: TestClient) -> None:
     assert response.status_code == 200
 
 
+def test_oicd_auth_wrong_client_id(oicd_auth: JWK, client: TestClient) -> None:
+    claims = {"uid": "Test User", "azp": "not-scim-api"}
+    header = {"alg": oicd_auth.alg}
+    jwt = JWT(header=header, claims=claims)
+    jwt.make_signed_token(oicd_auth)
+
+    response = client.get("/scim/v2/Users", headers={"Authorization": f"Bearer {jwt.serialize()}"})
+    assert response.status_code == 403
+
+
 def test_oicd_auth_wrong_signature(oicd_auth: JWK, client: TestClient) -> None:
-    claims = {"sub": "Test User", "scope": "read"}
+    claims = {"uid": "Test User", "azp": "scim-api"}
     header = {"alg": oicd_auth.alg}
     jwt = JWT(header=header, claims=claims)
 
@@ -86,7 +96,7 @@ def test_oicd_auth_wrong_signature(oicd_auth: JWK, client: TestClient) -> None:
 
 
 def test_oicd_auth_missing_kid(oicd_auth: JWK, client: TestClient) -> None:
-    claims = {"sub": "Test User", "scope": "read"}
+    claims = {"uid": "Test User", "azp": "scim-api"}
     header = {"alg": oicd_auth.alg}
     jwt = JWT(header=header, claims=claims)
 
@@ -97,8 +107,8 @@ def test_oicd_auth_missing_kid(oicd_auth: JWK, client: TestClient) -> None:
     assert response.status_code == 403
 
 
-def test_oicd_auth_mandatory_claim_sub_missing(oicd_auth: JWK, client: TestClient) -> None:
-    claims = {"scope": "read"}
+def test_oicd_auth_mandatory_claim_uid_missing(oicd_auth: JWK, client: TestClient) -> None:
+    claims = {"azp": "scim-api"}
     header = {"alg": oicd_auth.alg}
     jwt = JWT(header=header, claims=claims)
     jwt.make_signed_token(oicd_auth)
@@ -107,8 +117,8 @@ def test_oicd_auth_mandatory_claim_sub_missing(oicd_auth: JWK, client: TestClien
     assert response.status_code == 403
 
 
-def test_oicd_auth_mandatory_claim_scope_missing(oicd_auth: JWK, client: TestClient) -> None:
-    claims = {"sub": "Test User"}
+def test_oicd_auth_mandatory_claim_azp_missing(oicd_auth: JWK, client: TestClient) -> None:
+    claims = {"uid": "Test User"}
     header = {"alg": oicd_auth.alg}
     jwt = JWT(header=header, claims=claims)
     jwt.make_signed_token(oicd_auth)

@@ -28,7 +28,9 @@ class ApplicationContainer(DeclarativeContainer):
         oidc_configuration: OpenIDConnectConfiguration = Singleton(
             di.di_oidc_configuration, config=settings().authenticator
         )
-        authenticator: Authentication = Singleton(di.di_authenticator, oidc_configuration=oidc_configuration)
+        authenticator: Authentication = Singleton(
+            di.di_authenticator, oidc_configuration=oidc_configuration, client_id=settings().authenticator.client_id
+        )
 
     # Use repositories from the repository container if specified in DI settings
     # Otherwise use the default implementations

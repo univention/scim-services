@@ -86,7 +86,6 @@ data:
     if results:
         for result in results:
             udm_obj = result.open()
-            print(udm_obj.properties)
             print(f"Deleting existing user: {udm_obj.properties['username']}")
             udm_obj.delete()
 

@@ -21,8 +21,9 @@ class OpenIDConnectAuthentication(Authentication):
     Validates an open id connect token against the given open id connect configuration.
     """
 
-    def __init__(self, oidc_configuration: OpenIDConnectConfiguration):
+    def __init__(self, oidc_configuration: OpenIDConnectConfiguration, client_id: str):
         self.oidc_configuration = oidc_configuration
+        self.client_id = client_id
 
     def _validate_token(self, token: str, jwks: JWKSet, algs: str, retry: bool) -> JWT:
         """
@@ -44,7 +45,7 @@ class OpenIDConnectAuthentication(Authentication):
             HTTPException: If validation fails
         """
         try:
-            return JWT(jwt=token, key=jwks, algs=algs, check_claims={"uid": None, "azp": None})
+            return JWT(jwt=token, key=jwks, algs=algs, check_claims={"uid": None, "azp": self.client_id})
         except JWKeyNotFound as e:
             if not retry:
                 logger.error("Token validation failed: Invalid signature", error=e)
