@@ -151,6 +151,76 @@ class TestUserAPI:
         assert "familyName" in data["name"]
 
     @pytest.mark.usefixtures("setup_mocks")
+    def test_patch_nonexistent_user(self, client: TestClient) -> None:
+        """PATCHing a non-existent user should return 404 or a handled error."""
+        non_existent_id = "non-existent-id-123"
+        patch_url = f"/scim/v2/Users/{non_existent_id}"
+
+        patch_operations = {
+            "Operations": [
+                {"op": "replace", "path": "name.givenName", "value": "Ghost"},
+            ]
+        }
+
+        response = client.patch(
+            patch_url,
+            json=patch_operations,
+            headers={"Content-Type": "application/json"},
+        )
+
+        assert response.status_code in (404, 400), f"Expected failure but got: {response.status_code}"
+        assert "not found" in response.text.lower()
+
+    @pytest.mark.usefixtures("setup_mocks")
+    def test_patch_with_invalid_payload(self, client: TestClient) -> None:
+        """PATCH with malformed data should be rejected with 400."""
+        user_id = self._create_test_user(client)
+        user_url = f"/scim/v2/Users/{user_id}"
+
+        pre_patch_response = client.get(user_url)
+        assert pre_patch_response.status_code == 200, f"Failed to fetch user: {pre_patch_response.text}"
+        original_user = pre_patch_response.json()
+        assert original_user["name"]["givenName"] != "Jane2"
+        assert original_user["displayName"] != "Jane2 Smith"
+
+        patch_operations = {
+            "Operations": [
+                {"op": "replace", "path": "bad_field", "value": "oops"},
+            ]
+        }
+        patch_response = client.patch(
+            user_url,
+            json=patch_operations,
+            headers={"Content-Type": "application/json"},
+        )
+
+        assert patch_response.status_code == 400
+        assert " validation error " in patch_response.text
+
+    @pytest.mark.usefixtures("setup_mocks")
+    def test_patch_with_invalid_payload_broken(self, client: TestClient) -> None:
+        """PATCH with malformed data should be rejected with 400."""
+        user_id = self._create_test_user(client)
+        user_url = f"/scim/v2/Users/{user_id}"
+
+        pre_patch_response = client.get(user_url)
+        assert pre_patch_response.status_code == 200, f"Failed to fetch user: {pre_patch_response.text}"
+        original_user = pre_patch_response.json()
+        assert original_user["name"]["givenName"] != "Jane2"
+        assert original_user["displayName"] != "Jane2 Smith"
+
+        invalid_patch = {"bad_field": "oops"}
+
+        patch_response = client.patch(
+            user_url,
+            json=invalid_patch,
+            headers={"Content-Type": "application/json"},
+        )
+
+        assert patch_response.status_code == 400
+        assert "Operations" in patch_response.text or "Invalid" in patch_response.text
+
+    @pytest.mark.usefixtures("setup_mocks")
     def test_delete_user(self, client: TestClient) -> None:
         """Test deleting a user."""
         # First create a user

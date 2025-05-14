@@ -133,16 +133,22 @@ async def patch_user(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid or missing 'Operations' field in patch body",
             )
+
         updated_user = await user_service.apply_patch_operations(user_id, operations)
         return updated_user
+
+    except HTTPException as e:
+        # Already a well-formed client or not-found error, just raise it
+        raise e
 
     except ValueError as e:
         if "not found" in str(e).lower():
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+
     except Exception as e:
-        logger.error("Error patching user", user_id=user_id, error=e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
+        logger.exception("Unexpected error patching user", user_id=user_id)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected error") from e
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
