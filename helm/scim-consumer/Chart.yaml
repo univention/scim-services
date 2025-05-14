@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2023 Univention GmbH
+
+---
+
+apiVersion: "v2"
+name: "scim-consumer"
+description: "A Helm chart for the Nubus SCIM consumer"
+home: "https://www.univention.de/"
+
+type: "application"
+version: "0.0.1"
+
+dependencies:
+  - name: "nubus-common"
+    version: "^0.15.x"
+    repository: "oci://artifacts.software-univention.de/nubus/charts"

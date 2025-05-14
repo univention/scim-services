@@ -99,8 +99,23 @@ AUTH_ENABLED=false uv run uvicorn --reload src.univention.scim.server.main:app
 uv run pytest
 ```
 
-### Tests
+#### Tests
 
 - To start unit tests:  TODO
 - To start integration tests:  TODO
 - To start end-to-end tests:  TODO
+
+### SCIM consumer
+
+#### Tilt setup
+
+To develop the scim-consumer helm chart and container image, you can run it in Tilt.
+
+You can deploy the dependencies via the normal dev-env:
+
+`tilt up keycloak ldap-server ldap-notifier udm-rest-api stack-data-ums provisioning provisioning-udm-listener`
+
+### Helm unittests
+
+To run the helm unittests, execute the following command in the project root:
+`docker compose -f helm/docker-compose.yaml run --rm -it test`
