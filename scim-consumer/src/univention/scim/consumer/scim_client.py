@@ -1,65 +1,150 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-from typing import NamedTuple
-
 from httpx import Client
 from icecream import ic
 from loguru import logger
+from pydantic_settings import BaseSettings
 from scim2_client.engines.httpx import SyncSCIMClient
-from scim2_models import Address, Email, Error, Group, Name, PhoneNumber, SearchRequest, User, X509Certificate
+from scim2_models import Group, Resource, ResourceType, SearchRequest, User
+from scim2_tester import check_server
+
+from univention.scim.consumer.helper import vars_recursive
 
 
-class Config(NamedTuple):
-    base_url: str
-    bearar_token: str
+class ScimClientSettings(BaseSettings):
+    scim_server_base_url: str
+    health_check_enabled: bool = True
+    # TODO Add auth settings
 
 
-def get_config() -> Config:
-    base_url = "http://localhost:8888/"
-    bearar_token = ""
+class ScimClientWrapper:
+    _scim_client: SyncSCIMClient = None
 
-    return Config(
-        base_url=base_url,
-        bearar_token=bearar_token,
-    )
+    def __init__(
+        self,
+        settings: ScimClientSettings | None = None,
+    ):
+        self.settings = settings or ScimClientSettings()
 
-def get_client(config: Config):
-    # client = Client(base_url=config.base_url, headers={"Authorization": f"Bearer {config.bearar_token}"})
-    client = Client(base_url=config.base_url)
-    scim = SyncSCIMClient(client)
-    # Create resources
-    scim.discover()
-    
-    return scim
+    def _create_client(self) -> SyncSCIMClient:
+        client = Client(base_url=self.settings.scim_server_base_url)
 
-# Query resources
-# user = scim.query(User, "2819c223-7f76-453a-919d-413861904646")
-# assert user.user_name == "bjensen@example.com"
-# assert user.meta.last_updated == datetime.datetime(2024, 4, 13, 12, 0, 0, tzinfo=datetime.timezone.utc)
+        scim = SyncSCIMClient(
+            client=client,
+            resource_models=[User, Group],
+            resource_types=[
+                ResourceType(
+                    id="User",
+                    name="User",
+                    schemas=[
+                        "urn:ietf:params:scim:schemas:core:2.0:ResourceType",
+                    ],
+                    endpoint="/Users",
+                    description="User Account",
+                    schema="urn:ietf:params:scim:schemas:core:2.0:User",
+                ),
+                ResourceType(
+                    id="Group",
+                    name="Group",
+                    schemas=[
+                        "urn:ietf:params:scim:schemas:core:2.0:ResourceType",
+                    ],
+                    endpoint="/Groups",
+                    description="User groups",
+                    schema="urn:ietf:params:scim:schemas:core:2.0:Group",
+                ),
+            ],
+        )
 
-# Update resources
-# user.display_name = "Babs Jensen"
-# user = scim.replace(user)
-# assert user.display_name == "Babs Jensen"
-# assert user.meta.last_updated == datetime.datetime(2024, 4, 13, 12, 0, 30, tzinfo=datetime.timezone.utc)
+        # TODO Ask SCIM team why this is not working
+        # Discover resources
+        # scim = SyncSCIMClient(client=client, resource_models=[User, Group])
+        # scim.discover(schemas=True, resource_types=True, service_provider_config=True)
 
-def create_user(scim_client: SyncSCIMClient, user: User):
-    
-    # User = scim_client.get_resource_model("User")
-    # request = User(user_name=user.user_name)
-    logger.debug("Payload:\n{}", ic.format(user.model_dump()))
-    response = scim_client.create(user.model_dump())
-    logger.debug("Response:\n{}", ic.format(vars(response)))
-    
+        return scim
 
-def get_user_by_username(scim_client: SyncSCIMClient, username: str) -> User:
-    search_request = SearchRequest(filter=f'userName sw "{username}"')
-    response = scim_client.query(search_request=search_request)
+    def get_client(self) -> SyncSCIMClient:
+        if not self._scim_client or (self.settings.health_check_enabled and not self.health_check(self._scim_client)):
+            self._scim_client = self._create_client()
 
-    if response.total_results == 1:
-        return response.resources[0]
+        return self._scim_client
 
-    else:
-        raise Exception("To many results!")
-    
+    def health_check(self, client: SyncSCIMClient) -> bool:
+        results = check_server(client)
+        for result in results:
+            logger.debug("SCIM server state: {}: {}", result.status.name, result.title)
+        return True
+
+    def create_resource(self, resource: Resource):
+        logger.info("Create resource")
+        logger.debug("Resource:\n{}", ic.format(resource.model_dump()))
+
+        response = self.get_client().create(resource)
+
+        logger.debug("Response:\n{}", ic.format(vars_recursive(response)))
+
+    def update_resource(self, resource: Resource):
+        logger.info("Update resource")
+        logger.debug("Resource type: {}", type(resource))
+        logger.debug("Resource:\n{}", ic.format(vars_recursive(resource)))
+
+        # Get the existing user from SCIM server
+        try:
+            scim_resource = self.get_resource_by_external_id(resource.external_id)
+        except Exception as e:
+            logger.error(e)
+            return
+
+        logger.debug("SCIM resource type: {}", type(scim_resource))
+        logger.debug("SCIM resource:\n{}", ic.format(vars_recursive(scim_resource)))
+
+        # Add the ID and the meta data from the SCIM server.
+        #   The ID must be set, because we only have the external ID at this point
+        #   and the update URL will be generated, the meta.location URL is not used!
+        resource.id = scim_resource.id
+        resource.meta = scim_resource.meta
+
+        logger.debug("Resource merged:\n{}", ic.format(vars_recursive(resource)))
+
+        response = self.get_client().replace(resource)
+
+        logger.debug("Response:\n{}", ic.format(vars_recursive(response)))
+
+    def delete_resource(self, resource: Resource):
+        logger.info("Delete resource")
+        logger.debug("Resource type: {}", type(resource))
+        logger.debug("Resource:\n{}", ic.format(vars_recursive(resource)))
+
+        # Get the existing user from SCIM server
+        try:
+            scim_resource = self.get_resource_by_external_id(resource.external_id)
+        except Exception as e:
+            logger.error(e)
+            return
+
+        logger.debug("SCIM resource type: {}", type(scim_resource))
+        logger.debug("SCIM resource:\n{}", ic.format(vars_recursive(scim_resource)))
+
+        if scim_resource.meta.resource_type == "User":
+            response = self.get_client().delete(resource_model=User, id=scim_resource.id)
+        elif scim_resource.meta.resource_type == "Group":
+            response = self.get_client().delete(resource_model=Group, id=scim_resource.id)
+        else:
+            raise Exception(f"Resource type {scim_resource.meta.resource_type} is not implemented yet!")
+
+        logger.debug("Response:\n{}", ic.format(vars_recursive(response)))
+
+    def get_resource_by_external_id(self, external_id: str) -> Resource:
+        search_request = SearchRequest(filter=f'externalId eq "{external_id}"')
+        response = self.get_client().query(search_request=search_request)
+
+        if response.total_results == 1:
+            return response.resources[0]
+
+        elif response.total_results == 0:
+            raise Exception("No data found!")
+
+        else:
+            logger.error("SCIM query resources result:\n{}", ic.format(response.resources))
+            raise Exception("To many results!")

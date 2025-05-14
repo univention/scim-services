@@ -19,6 +19,9 @@ services:
       dockerfile: docker/scim-dev-server/Dockerfile
     ports:
       - 8888:8080
+    volumes:
+      - ./conf/scim-server-resource-types.json:/opt/univention/scim-dev-server/resource-types.json
+      - ./conf/scim-server-schemas.json:/opt/univention/scim-dev-server/schemas.json
 
   events-and-consumer-api:
     image: gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-events-and-consumer-api:${IMAGE_TAG:-latest}
@@ -26,7 +29,7 @@ services:
     restart: "on-failure"
     environment:
       LOG_LEVEL: "DEBUG"
-      NATS_HOST: "nats2"
+      NATS_HOST: "nats"
       NATS_PORT: "4222"
       NATS_USER: "api"
       NATS_PASSWORD: "apipass"
@@ -45,40 +48,23 @@ services:
       ROOT_PATH: "/"
       CORS_ALL: "false"
     depends_on:
-      - "nats2"
+      - "nats"
     ports:
       - "7777:7777"
 
-  nats1:
+  nats:
     image: "nats:latest"
-    container_name: nats1
+    container_name: nats
     environment:
       jetstream: "enabled"
     ports:
       - "4222:4222"
       - "8222:8222" # HTTP monitoring port
     volumes:
-      - ./nats.dev.conf:/etc/nats-config/nats.conf
+      - ./conf/nats.dev.conf:/etc/nats-config/nats.conf
       - type: tmpfs
         target: /var/run
-    command: --name nats1 --cluster_name JetStreamCluster --jetstream -m 8222 -p 4222 -config /etc/nats-config/nats.conf --cluster nats://0.0.0.0:4245 --routes nats://nats1:4245,nats://nats2:4245,nats://nats3:4245
-  nats2:
-    image: nats:latest
-    container_name: nats2
-    command: --name nats2 --cluster_name JetStreamCluster --jetstream -m 8222 -p 4222 -config /etc/nats-config/nats.conf --cluster nats://0.0.0.0:4245 --routes nats://nats1:4245,nats://nats2:4245,nats://nats3:4245
-    volumes:
-      - ./nats.dev.conf:/etc/nats-config/nats.conf
-      - type: tmpfs
-        target: /var/run
-  nats3:
-    image: nats:latest
-    container_name: nats3
-    command: --name nats3 --cluster_name JetStreamCluster --jetstream -m 8222 -p 4222 -config /etc/nats-config/nats.conf --cluster nats://0.0.0.0:4245 --routes nats://nats1:4245,nats://nats2:4245,nats://nats3:4245
-    volumes:
-      - ./nats.dev.conf:/etc/nats-config/nats.conf
-      - type: tmpfs
-        target: /var/run
-
+    command: --name nats --cluster_name JetStreamCluster --jetstream -m 8222 -p 4222 -config /etc/nats-config/nats.conf
 
   dispatcher:
     image: gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-dispatcher:${IMAGE_TAG:-latest}
@@ -86,7 +72,7 @@ services:
     restart: "on-failure"
     environment:
       LOG_LEVEL: "DEBUG"
-      NATS_HOST: "nats3"
+      NATS_HOST: "nats"
       NATS_PORT: "4222"
       NATS_USER: "dispatcher"
       NATS_PASSWORD: "dispatcherpass"
@@ -94,7 +80,7 @@ services:
       PROVISIONING_API_HOST: "events-and-consumer-api"
       PROVISIONING_API_PORT: 7777
     depends_on:
-      - "nats3"
+      - "nats"
       - "events-and-consumer-api"
 
   udm-transformer:
@@ -103,7 +89,7 @@ services:
     restart: "on-failure"
     environment:
       LOG_LEVEL: "DEBUG"
-      NATS_HOST: "nats1"
+      NATS_HOST: "nats"
       NATS_PORT: "4222"
       NATS_USER: "udm-transformer"
       NATS_PASSWORD: "udm-transformerpass"
@@ -122,7 +108,7 @@ services:
       LDAP_BIND_DN: "cn=admin,dc=univention-organization,dc=intranet"
       LDAP_BIND_PW: "univention"
     depends_on:
-      - "nats1"
+      - "nats"
       - "events-and-consumer-api"
 
   prefill:
@@ -131,7 +117,7 @@ services:
     restart: "on-failure"
     environment:
       LOG_LEVEL: "DEBUG"
-      NATS_HOST: "nats2"
+      NATS_HOST: "nats"
       NATS_PORT: "4222"
       PROVISIONING_API_HOST: "events-and-consumer-api"
       PROVISIONING_API_PORT: 7777
@@ -146,34 +132,14 @@ services:
       PREFILL_PASSWORD: "prefillpass"
       MAX_PREFILL_ATTEMPTS: 5
     depends_on:
-      - "nats2"
+      - "nats"
       - "events-and-consumer-api"
-
-  ldif-producer:
-    platform: linux/amd64
-    container_name: "ldif-producer"
-    image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/container-ldap/ldif-producer:latest"
-    environment:
-      SOCKET_FILE_LOCATION: "/var/lib/univention-ldap/slapd-sock/sock"
-      NATS_USER: ldif-producer
-      NATS_PASSWORD: ldifpass
-      NATS_HOST: "nats3"
-      NATS_PORT: "4222"
-      NATS_MAX_RECONNECT_ATTEMPTS: 2
-      MAX_IN_FLIGHT_LDAP_MESSAGES: 10
-      BACKPRESSURE_WAIT_TIMEOUT: 10
-      LDAP_THREADS: 5
-      LDAP_BASE_DN: "dc=univention-organization,dc=intranet"
-      IGNORE_TEMPORARY_OBJECTS: "true"
-    volumes:
-      - ./base-defaults.conf:/etc/univention/base-defaults.conf:ro
-      - ldap-socket:/var/lib/univention-ldap/slapd-sock/:rw
 
   udm-listener:
     image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-udm-listener:${IMAGE_TAG:-latest}"
     container_name: "udm-listener"
     environment:
-      NATS_HOST: "nats1"
+      NATS_HOST: "nats"
       NATS_PORT: "4222"
       NATS_USER: ldif-producer
       NATS_PASSWORD: ldifpass
@@ -188,7 +154,7 @@ services:
       LDAP_PASSWORD_FILE: "/var/secrets/ldap_secret"
       LDAP_PORT: 389
     depends_on:
-      - "nats1"
+      - "nats"
       - "ldap-server"
       - "ldap-notifier"
     volumes:
@@ -196,6 +162,7 @@ services:
 
   ldap-notifier:
     platform: linux/amd64
+    # image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-ldap/ldap-notifier:${IMAGE_TAG:-latest}
     image: artifacts.software-univention.de/nubus-dev/images/ldap-notifier:0.16.1-pre-jlohmer-bump-to-508
     container_name: "ldap-notifier"
     depends_on:
@@ -209,7 +176,7 @@ services:
 
   ldap-server:
     platform: linux/amd64
-    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-ldap/ldap-server:latest
+    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-ldap/ldap-server:${IMAGE_TAG:-latest}
     container_name: "ldap-server"
     environment:
       LDAP_CN_ADMIN_PW: univention
@@ -222,17 +189,16 @@ services:
     volumes:
       - ldap-shared-data:/var/lib/univention-ldap/:rw
       - ldap-shared-run:/var/run/slapd/:rw
-      - ${LDAP_SOCKET_LOCATION:-ldap-socket}:/var/lib/univention-ldap/slapd-sock/:rw
-      - ./base-defaults.conf:/etc/univention/base-defaults.conf:ro
+      - ./conf/base-defaults.conf:/etc/univention/base-defaults.conf:ro
 
   udm-rest-api:
-    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-udm-rest/udm-rest-api:latest
+    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-udm-rest/udm-rest-api:${IMAGE_TAG:-latest}
     container_name: "udm-rest-api"
     platform: "linux/amd64"
     ports:
       - 9979:9979
     volumes:
-      - ./base.conf:/etc/univention/base.conf:ro
+      - ./conf/base.conf:/etc/univention/base.conf:ro
     environment:
       DOMAINNAME: univention-organization.intranet
       HOSTNAME: localhost:9979
@@ -244,62 +210,7 @@ services:
       MACHINE_SECRET: univention
       LDAP_CN_ADMIN_PW: univention
 
-  # example-client:
-  #   image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-example-client:${IMAGE_TAG:-latest}"
-  #   build:
-  #     context: .
-  #     dockerfile: docker/example-client/Dockerfile
-  #     # args:
-  #     #   - UCS_BASE_IMAGE_TAG=latest
-  #   container_name: example-client
-  #   environment:
-  #     PROVISIONING_API_USERNAME: "example-client"
-  #     PROVISIONING_API_PASSWORD: "password"
-  #     PROVISIONING_API_BASE_URL: "http://events-and-consumer-api:7777"
-  #     LOG_LEVEL: "DEBUG"
-  #     MAX_ACKNOWLEDGEMENT_RETRIES: 3
-  #   restart: "on-failure"
-
-  # test:
-  #   image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/test:${IMAGE_TAG:-latest}"
-  #   build:
-  #     context: .
-  #     dockerfile: docker/test/Dockerfile
-  #   working_dir: /app
-  #   profiles:
-  #     - test
-  #   platform: "linux/amd64"
-  #   volumes:
-  #     - "./tests:/app/tests"
-  #     - "./src:/app/src"
-  #     - "./pyproject.toml:/app/pyproject.toml"
-
-  # # Environment of the pre-commit linter.
-  # pre-commit:
-  #   profiles:
-  #     - test
-  #   image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-pre-commit/upx-pre-commit:latest
-  #   volumes:
-  #     - type: bind
-  #       source: .
-  #       target: /code
-  #     - type: volume
-  #       # pre-commit installs dependencies, having them cached speeds things up
-  #       # a lot.
-  #       source: pre-commit-cache
-  #       target: /cache
-
-  # # Environment to build the documentation
-  # docs:
-  #   image: docker-registry.knut.univention.de/sphinx:latest
-  #   working_dir: /src/docs
-  #   volumes:
-  #     - ".:/src"
-  #   profiles:
-  #     - docs
-
 volumes:
   ldap-shared-data:
   ldap-shared-run:
   pre-commit-cache:
-  ldap-socket:

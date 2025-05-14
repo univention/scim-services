@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+**/build/
 
 # Recursively ignore __pycache__ directories anywhere
 **/__pycache__/

@@ -46,8 +46,11 @@ class UdmToScimMapper:
         if hasattr(udm_user, "etag") and udm_user.etag:
             meta_data["version"] = udm_user.etag
 
-        # Set up schemas with core schema only
-        schemas = ["urn:ietf:params:scim:schemas:core:2.0:User"]
+        # Set up schemas with core and enterprise schema
+        schemas = [
+            "urn:ietf:params:scim:schemas:core:2.0:User",
+            # "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+        ]
 
         # Create User object with basic properties
         user = User(

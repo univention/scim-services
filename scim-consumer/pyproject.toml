@@ -6,15 +6,18 @@ dependencies = [
     "pydantic>=2.10.6",
     "udm-rest-api-client[async]>=0.0.2",
     "scim-udm-transformer-lib",
-    "nubus-provisioning-consumer>=0.52.0",
+    "nubus-provisioning-consumer>=0.53.0",
     "scim2-client[httpx]>=0.5.1",
+    "scim2-tester>=0.1.14",
     "icecream",
+    "udm-rest-api-client",
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=8.3.5",
     "pytest-asyncio>=0.26.0",
+    "pytest-env>=1.1.5",
     "requests>=2.32.3",
 ]
 

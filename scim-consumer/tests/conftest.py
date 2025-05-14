@@ -1,55 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2025 Univention GmbH
+
+import multiprocessing
+import os
 import random
 import string
-import urllib
 import uuid
-from pprint import pprint
 
 import pytest
 import pytest_asyncio
-import requests
+from aiohttp import ClientResponseError
+from icecream import ic
+from loguru import logger
+from univention.admin.rest.client import UDM
 from univention.provisioning.consumer.api import (
-    MessageHandler,
-    MessageHandlerSettings,
     ProvisioningConsumerClient,
     ProvisioningConsumerClientSettings,
+    RealmTopic,
 )
 
-from univention.scim.consumer.message_handler import handle_udm_message
+from univention.scim.consumer.main import run as scim_client_run
 
 
-@pytest.fixture
-def provisioning_subscription():
-    subscription_data = {
-        "name": "scim-consumer",
-        "realms_topics": [{"realm": "udm", "topic": "users/user"}],
-        "request_prefill": True,
-        "password": "univention",
-    }
-
-    provisioning_base_url = "http://localhost:7777/v1/subscriptions"
-    provisioning_username = "admin"
-    provisioning_password = "provisioning"
-
-    print("Create subscription.")
-    response = requests.post(
-        provisioning_base_url, json=subscription_data, auth=(provisioning_username, provisioning_password)
+@pytest_asyncio.fixture(scope="session")
+async def provisioning_subscription():
+    admin_settings = ProvisioningConsumerClientSettings(
+        provisioning_api_username=os.environ["PROVISIONING_API_ADMIN_USERNAME"],
+        provisioning_api_password=os.environ["PROVISIONING_API_ADMIN_PASSWORD"],
     )
-    print(vars(response))
+    async with ProvisioningConsumerClient(admin_settings) as admin_client:
+        try:
+            await admin_client.create_subscription(
+                name=os.environ["PROVISIONING_API_USERNAME"],
+                password=os.environ["PROVISIONING_API_PASSWORD"],
+                realms_topics=[
+                    RealmTopic(realm="udm", topic="users/user"),
+                    RealmTopic(realm="udm", topic="groups/group"),
+                ],
+                request_prefill=False,
+            )
+            logger.info("Subscription {} created.", os.environ["PROVISIONING_API_USERNAME"])
 
-    yield
-
-    print("Delete subscription.")
-    requests.delete(f"{provisioning_base_url}/scim-consumer")
+        except ClientResponseError as e:
+            logger.warning("{}, Create subscription error.", e)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def udm_user():
-    def random_string_generator(str_size, allowed_chars):
-        return "".join(random.choice(allowed_chars) for x in range(str_size))
-    
     chars = string.ascii_letters
     size = 6
-    random_string = random_string_generator(size, chars)
+    random_string = "".join(random.choice(chars) for x in range(size))
 
     return {
         "username": f"testuser.{random_string}",
@@ -59,49 +59,78 @@ def udm_user():
         "password": "univention",
     }
 
+
 @pytest.fixture
-def create_udm_user(udm_user):
-    
-    udm_username = "cn=admin"
-    udm_password = "univention"
-
-    udm_url = "http://localhost:9979/udm/"
-    url_users = urllib.parse.urljoin(udm_url, "users/user/")
+def udm_user_updated(udm_user):
+    udm_user["displayName"] = "This is a testuser"
+    udm_user["password"] = "univention2"
+    return udm_user
 
 
-    # base_dn = "dc=univention-organization,dc=intranet"
-    # dn = f"uid={properties['username']},cn=users,{base_dn}"
-
-    """Prepare requests to UDM REST API."""
-    session = requests.Session()
-    session.auth = (
-        udm_username,
-        udm_password,
-    )
-    session.headers["accept"] = "application/json"
-    session.headers["content-type"] = "application/json"
-
-    conn = session.post(url_users, json={"properties": udm_user})
-    post_result = conn.json()
-    pprint(conn)
-    pprint(post_result)
-    # new_dn = post_result["dn"]
-    # new_uuid = post_result["uuid"]
-
-    # conn = session.get(f"{url_users}{new_dn}")
-    # result = conn.json()
-    # pprint(result)
+@pytest.fixture
+def udm_client():
+    logger.info("Fixture udm_client started.")
+    udm = UDM.http(os.environ["UDM_BASE_URL"], os.environ["UDM_USERNAME"], os.environ["UDM_PASSWORD"])
+    logger.info("Fixture udm_client stopped.")
+    return udm
 
 
-@pytest_asyncio.fixture
-async def scim_consumer(provisioning_subscription, create_udm_user):
-    pcc_settings = ProvisioningConsumerClientSettings(
-        provisioning_api_base_url="http://localhost:7777/",
-        provisioning_api_username="scim-consumer",
-        provisioning_api_password="univention",
-        log_level="INFO",
-    )
-    mh_settings = MessageHandlerSettings(max_acknowledgement_retries=1)
+@pytest.fixture
+def create_udm_user(udm_client, udm_user):
+    logger.info("Fixture create_udm_user started.")
+    logger.debug("udm_user:\n{}", ic.format(udm_user))
 
-    async with ProvisioningConsumerClient(pcc_settings) as client:
-        await MessageHandler(client, [handle_udm_message], mh_settings, message_limit=1).run()
+    module = udm_client.get("users/user")
+    obj = module.new()
+    for key, value in udm_user.items():
+        obj.properties[key] = value
+    obj.save()
+    logger.info("Fixture create_udm_user stopped.")
+    return True
+
+
+@pytest.fixture
+def update_udm_user(udm_client, udm_user_updated):
+    logger.info("Fixture update_udm_user started.")
+    logger.debug("udm_user_updated:\n{}", ic.format(udm_user_updated))
+
+    module = udm_client.get("users/user")
+    for result in module.search(f"univentionObjectIdentifier={udm_user_updated['univentionObjectIdentifier']}"):
+        logger.info("Found user with uoi: {}", udm_user_updated["univentionObjectIdentifier"])
+        obj = result.open()
+        for key, value in udm_user_updated.items():
+            obj.properties[key] = value
+
+        obj.save()
+        break
+    logger.info("Fixture update_udm_user stopped.")
+    return True
+
+
+@pytest.fixture(scope="function")
+def delete_udm_user(udm_client, udm_user):
+    logger.info("Fixture delete_udm_user started.")
+    logger.debug("udm_user:\n{}", ic.format(udm_user))
+
+    module = udm_client.get("users/user")
+    for result in module.search(f"univentionObjectIdentifier={udm_user['univentionObjectIdentifier']}"):
+        logger.info("Found user with uoi: {}", udm_user["univentionObjectIdentifier"])
+        obj = result.open()
+        obj.delete()
+        break
+    logger.info("Fixture delete_udm_user stopped.")
+    return True
+
+
+@pytest.fixture
+def scim_consumer(provisioning_subscription):
+    logger.info("Fixture scim_consumer started.")
+
+    proc = multiprocessing.Process(target=scim_client_run)
+    proc.start()
+
+    yield
+
+    proc.terminate()
+
+    logger.info("Fixture scim_consumer exited.")

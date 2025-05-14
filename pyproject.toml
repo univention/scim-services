@@ -1,9 +1,13 @@
 [project]
 name = "scim-services"
 version = "0.1.0"
-requires-python = ">=3.11"
+requires-python = "==3.11.*"
 dependencies = [
     "lancelog>=0.1.0",
+    "scim-consumer",
+    "scim-server",
+    "scim-udm-transformer-lib",
+    "udm-to-scim-sync",
 ]
 authors = [{ name = "Univention GmbH", email = "packages@univention.de" }]
 license = "AGPL-3.0-only"
