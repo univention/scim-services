@@ -96,6 +96,31 @@ test-unit-and-integration:
     when: "always"
     expose_as: "docker compose server logs"
 
+test-scim2-compliance:
+  stage: test
+  extends: .dind
+  image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: "never"
+    - when: "on_success"
+  before_script:
+    - cd scim-server/tests
+    - unset DOCKER_API_VERSION
+    - export IMAGE_TAG=${RELEASE_VERSION}
+    - docker compose up -d ldap-server udm-rest-api scim-server
+  script:
+    - docker compose run scim2-tester | tee scim2-tester.log 2>&1
+  after_script:
+    - docker compose down --volumes
+  artifacts:
+    paths:
+      - scim-server/tests/scim2-tester.log
+    expire_in: "1 day"
+    when: "always"
+    expose_as: "SCIM2 Tester logs"
+  allow_failure: true
+
 test-helm-charts:
   stage: test
   image: "gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.12.2"

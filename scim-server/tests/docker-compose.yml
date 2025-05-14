@@ -78,6 +78,40 @@ services:
         target: /etc/univention/base.conf
         read_only: true
 
+  scim-server:
+    build:
+      context: ../../
+      dockerfile: docker/scim-server/Dockerfile
+      target: final
+    environment:
+      UDM_URL: http://udm-rest-api:9979/univention/udm
+      UDM_USERNAME: admin
+      UDM_PASSWORD: secret
+      AUTH_ENABLED: "false"
+      API_PREFIX: /scim/v2
+    ports:
+      - "8000:8000"
+    depends_on:
+      udm-rest-api:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import sys, requests; sys.exit(0) if requests.get('http://localhost:8000/scim/v2/ServiceProviderConfig').status_code == 200 else sys.exit(1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    command: uvicorn univention.scim.server.main:app --host 0.0.0.0 --port 8000
+
+  scim2-tester:
+    image: python:3.11-slim
+    entrypoint: ""
+    command: >
+      bash -c "pip install scim2-cli &&
+      scim2 -u http://scim-server:8000/scim/v2/ test"
+    depends_on:
+      scim-server:
+        condition: service_healthy
+
 volumes:
   scim-server-venv:
   scim-transfomer-lib-build:
