@@ -253,7 +253,9 @@ class TestUserAPI:
     @pytest.mark.usefixtures("setup_mocks")
     def test_patch_add_with_nested_extension_path(self, client: TestClient) -> None:
         """
-        PATCH 'add' operation should create missing intermediate objects if nested fields are missing and not fail with an exception, however, adding some random field should give a 400
+        PATCH 'add' operation should create missing intermediate
+        objects if nested fields are missing and not fail with an exception,
+        however, adding some random field should give a 400
         """
         user_id = self._create_test_user(client)
         user_url = f"/scim/v2/Users/{user_id}"
@@ -280,7 +282,6 @@ class TestUserAPI:
         )
 
         assert patch_response.status_code == 400
-
 
     @pytest.mark.usefixtures("setup_mocks")
     def test_delete_user(self, client: TestClient) -> None:

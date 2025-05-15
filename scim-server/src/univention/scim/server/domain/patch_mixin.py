@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
-import operator
 from copy import deepcopy
-from functools import reduce
 from typing import Any
 
 from loguru import logger
@@ -10,7 +8,9 @@ from scim2_models import Group, Resource, User
 
 
 class PatchMixin:
-    async def patch_resource(self, resource: Resource, resource_id: str, operations: list[dict[str, Any]]) -> None | User | Group:
+    async def patch_resource(
+        self, resource: Resource, resource_id: str, operations: list[dict[str, Any]]
+    ) -> None | User | Group:
         """Apply SCIM patch operations to the resource with the given ID."""
 
         if isinstance(resource, User):
@@ -58,7 +58,7 @@ class PatchMixin:
                     for part in path_parts[:-1]:
                         if part not in target or not isinstance(target[part], dict):
                             # If parent path doesn't exist, nothing to delete
-                            return
+                            return None
                         target = target[part]
 
                     # Remove the final key if it exists, safely
