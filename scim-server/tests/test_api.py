@@ -221,6 +221,68 @@ class TestUserAPI:
         assert "Operations" in patch_response.text or "Invalid" in patch_response.text
 
     @pytest.mark.usefixtures("setup_mocks")
+    def test_patch_remove_attribute(self, client: TestClient) -> None:
+        """PATCH to remove a user attribute should succeed and result in deletion."""
+        user_id = self._create_test_user(client)
+        user_url = f"/scim/v2/Users/{user_id}"
+
+        # Confirm field exists before deletion
+        user_before = client.get(user_url).json()
+        assert "name" in user_before and "givenName" in user_before["name"]
+
+        # Remove the 'givenName' field
+        patch_operations = {
+            "Operations": [
+                {"op": "remove", "path": "name.givenName"},
+            ]
+        }
+
+        patch_response = client.patch(
+            user_url,
+            json=patch_operations,
+            headers={"Content-Type": "application/json"},
+        )
+
+        assert patch_response.status_code == 200
+        user_after = patch_response.json()
+
+        # Expect 'givenName' to be gone (or None)
+        assert "name" in user_after
+        assert "givenName" not in user_after["name"] or user_after["name"]["givenName"] in ("", None)
+
+    @pytest.mark.usefixtures("setup_mocks")
+    def test_patch_add_with_nested_extension_path(self, client: TestClient) -> None:
+        """
+        PATCH 'add' operation should create missing intermediate objects if nested fields are missing and not fail with an exception, however, adding some random field should give a 400
+        """
+        user_id = self._create_test_user(client)
+        user_url = f"/scim/v2/Users/{user_id}"
+
+        # Confirm extension is not present initially
+        user_before = client.get(user_url).json()
+        extension_schema = "unknown_nested_field"
+        assert extension_schema not in user_before
+
+        patch_operations = {
+            "Operations": [
+                {
+                    "op": "add",
+                    "path": f"{extension_schema}.department",
+                    "value": "Engineering",
+                }
+            ]
+        }
+
+        patch_response = client.patch(
+            user_url,
+            json=patch_operations,
+            headers={"Content-Type": "application/json"},
+        )
+
+        assert patch_response.status_code == 400
+
+
+    @pytest.mark.usefixtures("setup_mocks")
     def test_delete_user(self, client: TestClient) -> None:
         """Test deleting a user."""
         # First create a user

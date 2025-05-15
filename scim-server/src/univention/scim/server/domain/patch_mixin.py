@@ -10,7 +10,7 @@ from scim2_models import Group, Resource, User
 
 
 class PatchMixin:
-    async def patch_resource(self, resource: Resource, resource_id: str, operations: list[dict[str, Any]]) -> Resource:
+    async def patch_resource(self, resource: Resource, resource_id: str, operations: list[dict[str, Any]]) -> None | User | Group:
         """Apply SCIM patch operations to the resource with the given ID."""
 
         if isinstance(resource, User):
@@ -27,7 +27,6 @@ class PatchMixin:
         # Apply each SCIM operation
         for op in operations:
             path = op["path"]  # e.g., "name.givenName" or "emails"
-            value = op["value"]
             op_type = op["op"].lower()
 
             if not path:
@@ -37,17 +36,34 @@ class PatchMixin:
             path_parts = path.split(".")
 
             if op_type == "replace" or op_type == "add":
+                value = op["value"]
                 try:
-                    # Traverse to one level above the target
-                    target = reduce(operator.getitem, path_parts[:-1], resource_data)
+                    # Traverse the resource_data dict to reach the parent of the target attribute.
+                    # For example, for path "name.givenName", we go to resource_data["name"],
+                    # and then set target["givenName"] = value.
+                    # If intermediate dicts (like "name") don't exist, we create them.
+                    target = resource_data
+                    for part in path_parts[:-1]:
+                        if part not in target or not isinstance(target[part], dict):
+                            target[part] = {}
+                        target = target[part]
                     target[path_parts[-1]] = value
                 except Exception as e:
                     raise ValueError(f"Failed to apply '{op_type}' on path '{path}': {e}") from e
 
             elif op_type == "remove":
                 try:
-                    target = reduce(operator.getitem, path_parts[:-1], resource_data)
+                    # Traverse to the parent of the attribute to remove.
+                    target = resource_data
+                    for part in path_parts[:-1]:
+                        if part not in target or not isinstance(target[part], dict):
+                            # If parent path doesn't exist, nothing to delete
+                            return
+                        target = target[part]
+
+                    # Remove the final key if it exists, safely
                     target.pop(path_parts[-1], None)
+
                 except Exception as e:
                     raise ValueError(f"Failed to remove path '{path}': {e}") from e
 
