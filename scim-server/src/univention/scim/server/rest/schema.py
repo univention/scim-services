@@ -3,7 +3,7 @@
 
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Path, status
 from loguru import logger
 from pydantic import BaseModel
 from scim2_models import EnterpriseUser, Group, ListResponse, Schema, User
@@ -88,8 +88,6 @@ def _create_schema_from_model(model: type[BaseModel], schema_id: str, name: str,
             "uniqueness": _get_field_uniqueness(name, field_name),
         }
 
-        # [rest of function remains the same]
-
         attributes.append(attr)
 
     # Use the provided description parameter for the schema, not from a field
@@ -101,16 +99,8 @@ def _create_schema_from_model(model: type[BaseModel], schema_id: str, name: str,
     )
 
 
-@router.get("", response_model=ListResponse[Schema], response_model_exclude_none=True)
-async def get_schemas() -> Any:
-    """
-    Get the list of schemas supported by the SCIM service.
-
-    Dynamically builds schema descriptions for all supported SCIM resource types
-    using the built-in Schema model from scim2_models.
-    """
-    logger.debug("REST: Get Schemas")
-
+def _get_schemas() -> list[Schema]:
+    """Helper function to get all schemas."""
     schemas = []
 
     # User Schema
@@ -236,10 +226,47 @@ async def get_schemas() -> Any:
                 "type": "string",
                 "multiValued": False,
                 "description": "Numeric or alphanumeric identifier assigned to a person",
+                "required": False,
+                "caseExact": False,
+                "mutability": "readWrite",
+                "returned": "default",
+                "uniqueness": "none",
             },
         ],
     )
     schemas.append(enterprise_schema)
+
+    return schemas
+
+
+def _get_schema_by_id(schema_id: str) -> Schema:
+    """Helper function to get a specific schema by ID."""
+    schemas = _get_schemas()
+    for schema in schemas:
+        if schema.id == schema_id:
+            return schema
+
+    # Create a SCIM-compliant error
+    error_detail = {
+        "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+        "status": str(status.HTTP_404_NOT_FOUND),
+        "detail": f"Schema '{schema_id}' not found",
+        "scimType": "invalidValue",
+    }
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_detail)
+
+
+@router.get("", response_model=ListResponse[Schema], response_model_exclude_none=True)
+async def get_schemas() -> Any:
+    """
+    Get the list of schemas supported by the SCIM service.
+
+    Dynamically builds schema descriptions for all supported SCIM resource types
+    using the built-in Schema model from scim2_models.
+    """
+    logger.debug("REST: Get Schemas")
+
+    schemas = _get_schemas()
 
     return ListResponse[Schema](
         total_results=len(schemas),
@@ -247,3 +274,30 @@ async def get_schemas() -> Any:
         start_index=1,
         resources=schemas,
     )
+
+
+@router.get("/{schema_id}", response_model=Schema, response_model_exclude_none=True)
+async def get_schema_by_id(
+    schema_id: str = Path(..., description="Schema ID"),
+) -> Schema:
+    """
+    Get a specific schema by ID.
+
+    Returns detailed information about the specified schema.
+    """
+    logger.debug("REST: Get Schema by ID", id=schema_id)
+
+    try:
+        return _get_schema_by_id(schema_id)
+    except HTTPException:
+        # Re-raise HTTPExceptions (these are already properly formatted)
+        raise
+    except Exception as e:
+        logger.error("Error getting schema", id=schema_id, error=e)
+        # Return a proper SCIM error response for server errors
+        error_detail = {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+            "status": str(status.HTTP_500_INTERNAL_SERVER_ERROR),
+            "detail": "An internal server error occurred",
+        }
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_detail) from e

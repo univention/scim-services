@@ -4,17 +4,16 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI, Request, Security, status
+from fastapi import FastAPI, HTTPException, Security
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from loguru import logger
-from scim2_models import Error
 
 from univention.scim.server.authn.fast_api_adapter import FastAPIAuthAdapter
 from univention.scim.server.config import application_settings
 from univention.scim.server.configure_logging import configure_logging
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.model_service.load_schemas import LoadSchemas
+from univention.scim.server.rest.error_handler import generic_exception_handler, scim_exception_handler
 from univention.scim.server.rest.groups import router as groups_router
 from univention.scim.server.rest.resource_type import router as resources_types_router
 from univention.scim.server.rest.schema import router as schema_router
@@ -105,17 +104,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# Setup error handling
-@app.exception_handler(Exception)
-async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    logger.exception(f"Unhandled exception: {exc}")
-    error = Error(
-        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=str(exc),
-        schemas=["urn:ietf:params:scim:api:messages:2.0:Error"],
-    )
-    return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=error.model_dump(scim_ctx=None))
+# Register exception handlers
+app.add_exception_handler(HTTPException, scim_exception_handler)
+app.add_exception_handler(Exception, generic_exception_handler)
 
 
 def run() -> None:
