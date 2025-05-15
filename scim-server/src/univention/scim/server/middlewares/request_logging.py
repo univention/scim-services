@@ -13,6 +13,9 @@ from loguru import logger
 from univention.scim.server.config import application_settings
 
 
+MAX_LENGTH: int = 5000
+
+
 def setup_request_logging_middleware(app: FastAPI) -> None:
     """
     Setup request logging middleware for the FastAPI application.
@@ -74,7 +77,7 @@ async def _log_request(request: Request) -> None:
                 except json.JSONDecodeError:
                     # If not JSON, log as string with length limit
                     body_text = body.decode("utf-8", errors="replace")
-                    log_data["body"] = f"{body_text[:1000]}..." if len(body_text) > 1000 else body_text
+                    log_data["body"] = f"{body_text[:MAX_LENGTH]}..." if len(body_text) > MAX_LENGTH else body_text
 
         except Exception as e:
             log_data["body_error"] = f"Error reading body: {str(e)}"
@@ -111,7 +114,9 @@ async def _log_response(request: Request, response: Response) -> None:
                     else:
                         # Handle memoryview case
                         body_text = bytes(body).decode("utf-8", errors="replace")
-                    log_data["response_body"] = f"{body_text[:1000]}..." if len(body_text) > 1000 else body_text
+                    log_data["response_body"] = (
+                        f"{body_text[:MAX_LENGTH]}..." if len(body_text) > MAX_LENGTH else body_text
+                    )
         except Exception as e:
             log_data["response_body_error"] = f"Error reading response body: {str(e)}"
 
