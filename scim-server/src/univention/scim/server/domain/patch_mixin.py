@@ -11,6 +11,8 @@ from scim2_models import Group, Resource, User
 
 class PatchMixin:
     async def patch_resource(self, resource: Resource, resource_id: str, operations: list[dict[str, Any]]) -> Resource:
+        """Apply SCIM patch operations to the resource with the given ID."""
+
         if isinstance(resource, User):
             cls = User
         elif isinstance(resource, Group):
@@ -18,7 +20,6 @@ class PatchMixin:
         else:
             raise ValueError("Unknown resource type")
 
-        """Apply SCIM patch operations to the resource with the given ID."""
         bound_logger = logger.bind(resource_type=cls.__name__, resource_id=resource_id)
         bound_logger.debug("Applying patch operation.")
 
