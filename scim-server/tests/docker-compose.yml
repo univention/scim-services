@@ -89,6 +89,7 @@ services:
       UDM_PASSWORD: secret
       AUTH_ENABLED: "false"
       API_PREFIX: /scim/v2
+      LOG_LEVEL: DEBUG
     ports:
       - "8000:8000"
     depends_on:

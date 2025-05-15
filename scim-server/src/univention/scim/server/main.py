@@ -12,6 +12,7 @@ from univention.scim.server.authn.fast_api_adapter import FastAPIAuthAdapter
 from univention.scim.server.config import application_settings
 from univention.scim.server.configure_logging import configure_logging
 from univention.scim.server.container import ApplicationContainer
+from univention.scim.server.middlewares.request_logging import setup_request_logging_middleware
 from univention.scim.server.model_service.load_schemas import LoadSchemas
 from univention.scim.server.rest.error_handler import generic_exception_handler, scim_exception_handler
 from univention.scim.server.rest.groups import router as groups_router
@@ -94,6 +95,8 @@ app: FastAPI = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+setup_request_logging_middleware(app)
 
 # Add CORS middleware
 app.add_middleware(
