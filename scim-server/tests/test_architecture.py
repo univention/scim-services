@@ -63,8 +63,6 @@ def evaluable(base_path: Path) -> EvaluableArchitecture:
     ["importer", "imported"],
     [
         ("domain", "transformation"),
-        ("rest", "authn"),
-        # TODO: ("rest", "authz"),  # not implemented
         ("rest", "domain"),
     ],
 )

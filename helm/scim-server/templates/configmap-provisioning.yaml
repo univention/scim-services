@@ -48,6 +48,7 @@ data:
   KEYCLOAK_APP_BASE_URL: {{ include "scim-server.provisioning.config.nubusBaseUrl" . | quote }}
   UDM_URL: {{ include "scim-server.udm.url" . | quote }}
   SCIM_API_CLIENT_ID: {{ .Values.oauth.clientId | quote }}
+  CREATE_GROUP: {{ .Values.provisioning.user.group.create | quote }}
 
 {{- if .Values.provisioning.user.create }}
 ---
@@ -79,7 +80,26 @@ data:
     new_user_username = os.environ.get("CREATE_USER_NAME")
     new_user_password = os.environ.get("CREATE_USER_PASSWORD")
 
+    create_group = os.environ.get("CREATE_GROUP", 'False').lower() == 'true'
+    new_group_name = os.environ.get("CREATE_GROUP_NAME")
+
     udm_client = UDM.http(udm_url, udm_username, udm_password)
+    if create_group:
+        module = udm_client.get("groups/group")
+        results = list(module.search(f"cn={new_group_name}"))
+        if results:
+            for result in results:
+                udm_obj = result.open()
+                print(f"Deleting existing group: {udm_obj.properties['name']}")
+                udm_obj.delete()
+
+        udm_obj = module.new()
+        udm_obj.properties["name"] = new_group_name
+        udm_obj.properties["description"] = "Allow access to SCIM API"
+
+        udm_obj.save()
+        print(f"Created group: {udm_obj.properties['name']}")
+
     module = udm_client.get("users/user")
 
     results = list(module.search(f"uid={new_user_username}"))
@@ -96,7 +116,19 @@ data:
     udm_obj.properties["lastname"] = 'API'
 
     udm_obj.save()
-    print(f"Created scim user user: {udm_obj.properties['username']}")
+    print(f"Created user: {udm_obj.properties['username']}")
+
+    module = udm_client.get("groups/group")
+    results = list(module.search(f"cn={new_group_name}"))
+    if results:
+      for result in results:
+          group_udm_obj = result.open()
+          group_udm_obj.properties["users"].append(udm_obj.dn)
+          group_udm_obj.save()
+          print(f"Added user {udm_obj.properties['username']} to group {group_udm_obj.properties['name']}")
+    else:
+      print(f"Failed to get group {new_group_name}, user could not be added to it")
+
 
 {{- end }}
 {{- end }}

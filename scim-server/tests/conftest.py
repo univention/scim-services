@@ -17,7 +17,7 @@ from loguru import logger
 from scim2_models import Address, Email, Group, Name, Resource, User
 from univention.admin.rest.client import UDM
 
-from helpers.allow_all_authn import AllowAllBearerAuthentication, OpenIDConnectConfigurationMock
+from helpers.allow_all_authn import AllowAllAuthorization, AllowAllBearerAuthentication, OpenIDConnectConfigurationMock
 from helpers.mock_udm import MockCrudUdm
 from univention.scim.server.authn.authn import Authentication
 from univention.scim.server.config import ApplicationSettings
@@ -72,6 +72,7 @@ def setup_mocks(application_settings: ApplicationSettings) -> Generator[None, No
     # Make sure that for tests we allow all bearer
     with (
         ApplicationContainer.authenticator.override(AllowAllBearerAuthentication()),
+        ApplicationContainer.authorization.override(AllowAllAuthorization()),
         ApplicationContainer.oidc_configuration.override(OpenIDConnectConfigurationMock()),
         ApplicationContainer.settings.override(application_settings),
         ApplicationContainer.user_repo.override(user_crud_manager),

@@ -7,19 +7,18 @@ from typing import Any
 from fastapi import Request
 
 
-class Authz(ABC):
+class Authorization(ABC):
     """
     Interface for authorization.
     """
 
     @abstractmethod
-    async def authorize(self, request: Request, user: dict[str, Any], resource_type: str) -> bool:
+    async def authorize(self, request: Request, user: dict[str, Any]) -> bool:
         """
         Authorize a request.
         Args:
             request: The request to authorize
             user: The authenticated user's information
-            resource_type: The type of resource being accessed
         Returns:
             True if authorized, False otherwise
         """

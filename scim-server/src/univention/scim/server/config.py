@@ -13,6 +13,7 @@ class AuthenticatorConfig(BaseSettings):
     idp_openid_configuration_url: str = ""
     client_id: str = ""
     client_secret: str = ""
+    allow_group_dn: str = ""
 
 
 class UdmConfig(BaseSettings):
@@ -66,6 +67,7 @@ class DependencyInjectionSettings(BaseSettings):
 
     di_oidc_configuration: str = "univention.scim.server.authn.oidc_configuration_impl.OpenIDConnectConfigurationImpl"
     di_authenticator: str = "univention.scim.server.authn.authn_impl.OpenIDConnectAuthentication"
+    di_authorization: str = "univention.scim.server.authz.authz_impl.AllowGroup"
 
     # Use UDM-backed repositories for users
     di_user_repo: str = "univention.scim.server.domain.repo.container.RepositoryContainer.user_crud_manager"

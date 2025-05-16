@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+import time
 from collections.abc import Generator
 from typing import Any
 
@@ -64,7 +65,7 @@ def test_oicd_no_route(request: Any, oicd_auth: JWK, httpserver: HTTPServer) -> 
 
 
 def test_oicd_auth(oicd_auth: JWK, client: TestClient) -> None:
-    claims = {"uid": "Test User", "azp": "scim-api"}
+    claims = {"uid": "Test User", "azp": "scim-api", "exp": int(time.time()) + 120}
     header = {"alg": oicd_auth.alg}
     jwt = JWT(header=header, claims=claims)
     jwt.make_signed_token(oicd_auth)
@@ -73,8 +74,18 @@ def test_oicd_auth(oicd_auth: JWK, client: TestClient) -> None:
     assert response.status_code == 200
 
 
+def test_oicd_auth_token_expired(oicd_auth: JWK, client: TestClient) -> None:
+    claims = {"uid": "Test User", "azp": "scim-api", "exp": int(time.time()) - 120}
+    header = {"alg": oicd_auth.alg}
+    jwt = JWT(header=header, claims=claims)
+    jwt.make_signed_token(oicd_auth)
+
+    response = client.get("/scim/v2/Users", headers={"Authorization": f"Bearer {jwt.serialize()}"})
+    assert response.status_code == 403
+
+
 def test_oicd_auth_wrong_client_id(oicd_auth: JWK, client: TestClient) -> None:
-    claims = {"uid": "Test User", "azp": "not-scim-api"}
+    claims = {"uid": "Test User", "azp": "not-scim-api", "exp": int(time.time()) + 120}
     header = {"alg": oicd_auth.alg}
     jwt = JWT(header=header, claims=claims)
     jwt.make_signed_token(oicd_auth)
@@ -84,7 +95,7 @@ def test_oicd_auth_wrong_client_id(oicd_auth: JWK, client: TestClient) -> None:
 
 
 def test_oicd_auth_wrong_signature(oicd_auth: JWK, client: TestClient) -> None:
-    claims = {"uid": "Test User", "azp": "scim-api"}
+    claims = {"uid": "Test User", "azp": "scim-api", "exp": int(time.time()) + 120}
     header = {"alg": oicd_auth.alg}
     jwt = JWT(header=header, claims=claims)
 
@@ -96,7 +107,7 @@ def test_oicd_auth_wrong_signature(oicd_auth: JWK, client: TestClient) -> None:
 
 
 def test_oicd_auth_missing_kid(oicd_auth: JWK, client: TestClient) -> None:
-    claims = {"uid": "Test User", "azp": "scim-api"}
+    claims = {"uid": "Test User", "azp": "scim-api", "exp": int(time.time()) + 120}
     header = {"alg": oicd_auth.alg}
     jwt = JWT(header=header, claims=claims)
 
@@ -108,7 +119,7 @@ def test_oicd_auth_missing_kid(oicd_auth: JWK, client: TestClient) -> None:
 
 
 def test_oicd_auth_mandatory_claim_uid_missing(oicd_auth: JWK, client: TestClient) -> None:
-    claims = {"azp": "scim-api"}
+    claims = {"azp": "scim-api", "exp": int(time.time()) + 120}
     header = {"alg": oicd_auth.alg}
     jwt = JWT(header=header, claims=claims)
     jwt.make_signed_token(oicd_auth)
@@ -118,7 +129,17 @@ def test_oicd_auth_mandatory_claim_uid_missing(oicd_auth: JWK, client: TestClien
 
 
 def test_oicd_auth_mandatory_claim_azp_missing(oicd_auth: JWK, client: TestClient) -> None:
-    claims = {"uid": "Test User"}
+    claims = {"uid": "Test User", "exp": int(time.time()) + 120}
+    header = {"alg": oicd_auth.alg}
+    jwt = JWT(header=header, claims=claims)
+    jwt.make_signed_token(oicd_auth)
+
+    response = client.get("/scim/v2/Users", headers={"Authorization": f"Bearer {jwt.serialize()}"})
+    assert response.status_code == 403
+
+
+def test_oicd_auth_mandatory_claim_exp_missing(oicd_auth: JWK, client: TestClient) -> None:
+    claims = {"uid": "Test User", "azp": "scim-api"}
     header = {"alg": oicd_auth.alg}
     jwt = JWT(header=header, claims=claims)
     jwt.make_signed_token(oicd_auth)

@@ -7,7 +7,7 @@ from typing import Any
 from fastapi import HTTPException, status
 from jwcrypto.common import JWKeyNotFound
 from jwcrypto.jwk import JWKSet
-from jwcrypto.jwt import JWT, JWTMissingClaim
+from jwcrypto.jwt import JWT, JWTExpired, JWTMissingClaim
 from loguru import logger
 
 from univention.scim.server.authn.authn import Authentication
@@ -45,7 +45,7 @@ class OpenIDConnectAuthentication(Authentication):
             HTTPException: If validation fails
         """
         try:
-            return JWT(jwt=token, key=jwks, algs=algs, check_claims={"uid": None, "azp": self.client_id})
+            return JWT(jwt=token, key=jwks, algs=algs, check_claims={"uid": None, "azp": self.client_id, "exp": None})
         except JWKeyNotFound as e:
             if not retry:
                 logger.error("Token validation failed: Invalid signature", error=e)
@@ -62,6 +62,8 @@ class OpenIDConnectAuthentication(Authentication):
             return self._validate_token(token, jwks, algs, False)
         except JWTMissingClaim as e:
             logger.error("Token validation failed: Mandatory claim missing", error=e)
+        except JWTExpired as e:
+            logger.error("Token validation failed: Expired", error=e)
         except Exception:
             logger.error("Token validation failed: Generic error")
 
@@ -98,4 +100,4 @@ class OpenIDConnectAuthentication(Authentication):
         jwt = self._validate_token(token, jwks, configuration["id_token_signing_alg_values_supported"], True)
         jwt_claims = json.loads(jwt.claims)
 
-        return {"username": jwt_claims["uid"]}
+        return {"username": jwt_claims["uid"], "expires": jwt_claims["exp"]}

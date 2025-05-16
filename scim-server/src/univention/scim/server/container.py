@@ -6,6 +6,7 @@ from dependency_injector.providers import Singleton
 
 from univention.scim.server.authn.authn import Authentication
 from univention.scim.server.authn.oidc_configuration import OpenIDConnectConfiguration
+from univention.scim.server.authz.authz import Authorization
 from univention.scim.server.config import ApplicationSettings, application_settings, dependency_injection_settings
 from univention.scim.server.domain.group_service import GroupService
 from univention.scim.server.domain.repo.container import RepositoryContainer
@@ -24,14 +25,6 @@ class ApplicationContainer(DeclarativeContainer):
     repositories: RepositoryContainer = Singleton(RepositoryContainer)
     repositories().config.from_pydantic(settings().udm)
 
-    if settings().auth_enabled:
-        oidc_configuration: OpenIDConnectConfiguration = Singleton(
-            di.di_oidc_configuration, config=settings().authenticator
-        )
-        authenticator: Authentication = Singleton(
-            di.di_authenticator, oidc_configuration=oidc_configuration, client_id=settings().authenticator.client_id
-        )
-
     # Use repositories from the repository container if specified in DI settings
     # Otherwise use the default implementations
     if di.di_user_repo == "univention.scim.server.domain.repo.container.RepositoryContainer.user_crud_manager":
@@ -48,3 +41,16 @@ class ApplicationContainer(DeclarativeContainer):
 
     group_service: GroupService = Singleton(di.di_group_service, group_repository=group_repo)
     schema_loader: LoadSchemas = Singleton(di.di_schema_loader)
+
+    if settings().auth_enabled:
+        oidc_configuration: OpenIDConnectConfiguration = Singleton(
+            di.di_oidc_configuration, config=settings().authenticator
+        )
+        authenticator: Authentication = Singleton(
+            di.di_authenticator, oidc_configuration=oidc_configuration, client_id=settings().authenticator.client_id
+        )
+        # TODO: Switch to using our own UserService if group mapping is implemented.
+        # For now use the UDM REST API directly
+        authorization: Authorization = Singleton(
+            di.di_authorization, group_dn=settings().authenticator.allow_group_dn, udm_settings=settings().udm
+        )

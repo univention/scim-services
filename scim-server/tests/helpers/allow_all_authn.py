@@ -3,10 +3,12 @@
 
 from typing import Any
 
+from fastapi import Request
 from jwcrypto.jwk import JWKSet
 
 from univention.scim.server.authn.authn import Authentication
 from univention.scim.server.authn.oidc_configuration import OpenIDConnectConfiguration
+from univention.scim.server.authz.authz import Authorization
 
 
 class AllowAllBearerAuthentication(Authentication):
@@ -27,7 +29,27 @@ class AllowAllBearerAuthentication(Authentication):
             dict: User information if authentication succeeds
         """
         # Allow all tokens so no validation
-        return {"username": "admin", "roles": ["admin"]}
+        return {"username": "admin"}
+
+
+class AllowAllAuthorization(Authorization):
+    """
+    Implements bearer authentication for the SCIM API.
+
+    This is a placeholder implementation for development purposes.
+    """
+
+    async def authorize(self, request: Request, user: dict[str, Any]) -> bool:
+        """
+        Authorize a request.
+        Args:
+            request: The request to authorize
+            user: The authenticated user's information
+        Returns:
+            True if authorized, False otherwise
+        """
+        # Allow all users
+        return True
 
 
 class OpenIDConnectConfigurationMock(OpenIDConnectConfiguration):

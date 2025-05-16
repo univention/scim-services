@@ -36,10 +36,15 @@ def auth_headers() -> dict[str, str]:
 @pytest.fixture(autouse=True)
 def e2e_auth_bypass(application_settings: ApplicationSettings) -> Generator[None, None, None]:
     """Bypass authentication for E2E tests without replacing repositories"""
-    from helpers.allow_all_authn import AllowAllBearerAuthentication, OpenIDConnectConfigurationMock
+    from helpers.allow_all_authn import (
+        AllowAllAuthorization,
+        AllowAllBearerAuthentication,
+        OpenIDConnectConfigurationMock,
+    )
 
     with (
         ApplicationContainer.authenticator.override(AllowAllBearerAuthentication()),
+        ApplicationContainer.authorization.override(AllowAllAuthorization()),
         ApplicationContainer.oidc_configuration.override(OpenIDConnectConfigurationMock()),
     ):
         yield

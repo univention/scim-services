@@ -43,3 +43,4 @@ data:
   CORS_ORIGINS: {{ .Values.config.corsOrigins | quote }}
   AUTH_ENABLED: {{ .Values.config.auth.enabled | quote }}
   UDM_URL: {{ include "scim-server.udm.url" . | quote }}
+  AUTHENTICATOR_ALLOW_GROUP_DN: {{ tpl .Values.config.auth.allowGroupDn . | quote }}

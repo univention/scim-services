@@ -40,6 +40,8 @@ config:
   corsOrigins: '["*"]'
   auth:
     enabled: true
+    # -- Full DN of the group which allows access to the SCIM API
+    allowGroupDn: ""
   keycloak:
     # -- Base URL to the keycloak server
     url: ""
@@ -340,6 +342,12 @@ provisioning:
       pauseBeforeScriptStart: 0
 
   user:
+    group:
+      # -- Create a new LDAP group, all users of this group will have access to the scim-api
+      # -- If user is created it will be a member of the group
+      create: false
+      name: "scim-api-access"
+
     # -- Create a new LDAP user which has access to the scim-api
     create: false
     username: ""

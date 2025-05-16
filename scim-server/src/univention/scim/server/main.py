@@ -8,12 +8,12 @@ from fastapi import FastAPI, HTTPException, Security
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
-from univention.scim.server.authn.fast_api_adapter import FastAPIAuthAdapter
 from univention.scim.server.config import application_settings
 from univention.scim.server.configure_logging import configure_logging
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.middlewares.request_logging import setup_request_logging_middleware
 from univention.scim.server.middlewares.timing import add_timing_middleware
+from univention.scim.server.fast_api_auth_adapter import FastAPIAuthAdapter
 from univention.scim.server.model_service.load_schemas import LoadSchemas
 from univention.scim.server.rest.error_handler import generic_exception_handler, scim_exception_handler
 from univention.scim.server.rest.groups import router as groups_router
@@ -38,13 +38,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Use settings from container to allow overriding values in unit tests
     settings = ApplicationContainer().settings()
 
-    # We don't want network access at initialization time instead it is fetched at runtime
-    # when scim server is starting up
-    dependencies = (
-        [Security(FastAPIAuthAdapter(container.oidc_configuration().get_configuration()))]
-        if settings.auth_enabled
-        else None
+    # The FastAPI OAuth2AuthorizationCodeBearer requires some information from the IDP
+    # which is fetched via network so initialize it here at runtime because
+    # we don't want network access at initialization time
+    auth = FastAPIAuthAdapter(
+        container.oidc_configuration().get_configuration(), container.authenticator(), container.authorization()
     )
+
+    dependencies = [Security(auth)] if settings.auth_enabled else None
     app.include_router(users_router, prefix=f"{settings.api_prefix}/Users", tags=["Users"], dependencies=dependencies)
     app.include_router(
         groups_router, prefix=f"{settings.api_prefix}/Groups", tags=["Groups"], dependencies=dependencies
