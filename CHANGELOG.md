@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.14.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.13.1...v0.14.0) (2025-05-16)
+
+
+### Features
+
+* **scim-server:** add a more generic patch function ([04f26b1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/04f26b184ea1ea347709a75730022c57e5fe5fa0))
+* **scim-server:** Add more error tests for unhappy paths ([9c42e8a](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/9c42e8accb5cb26f29e7af388e1e33e6c704539b))
+* **scim-server:** comment fixed ([6f01b13](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/6f01b13d40bf5bca4c3203ffc8ed1d5f47e4222c))
+* **scim-server:** format ([0df74e2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/0df74e28c8b530468bab243c050b94916ba081b5))
+* **scim-server:** implement SCIM PATCH support for Users with validation and tests ([1cb846e](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/1cb846e716b86e80c8d7c1f370978f2843a1facd))
+* **scim-server:** Refactor utils to mixin ([c46b34d](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/c46b34de4e09aac5276e5acfc5a5b9ed1b327e89))
+* **scim-server:** remove obsolete prints ([3f95efd](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/3f95efd4783a63ad80686aeacfeeee1fb46fc137))
+
 ## [0.13.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.13.0...v0.13.1) (2025-05-13)
 
 
