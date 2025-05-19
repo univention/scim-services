@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.14.0...v0.15.0) (2025-05-19)
+
+
+### Features
+
+* Add SCIM error handling and schema retrieval improvements ([7c531ab](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/7c531ab5c85b4db260ff64fa869307b02c08493e))
+
 ## [0.14.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.13.1...v0.14.0) (2025-05-16)
 
 
