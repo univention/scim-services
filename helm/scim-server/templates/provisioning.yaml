@@ -73,13 +73,23 @@ spec:
             - name: UDM_API_USERNAME
               valueFrom:
                 secretKeyRef:
+                  {{- if and .Values.config.udm.existingSecret .Values.config.udm.existingSecret.name }}
+                  name: {{ tpl .Values.config.udm.existingSecret.name . }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.config.udm.existingSecret "key" "username") }}
+                  {{- else }}
                   name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
-                  key: udm_username
+                  key: "username"
+                  {{- end }}
             - name: UDM_API_PASSWORD
               valueFrom:
                 secretKeyRef:
+                  {{- if and .Values.config.udm.existingSecret .Values.config.udm.existingSecret.name }}
+                  name: {{ tpl .Values.config.udm.existingSecret.name . }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.config.udm.existingSecret "key" "password") }}
+                  {{- else }}
                   name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
-                  key: udm_password
+                  key: "password"
+                  {{- end }}
           {{- with .Values.provisioning.extraEnvVars }}
             {{- . | toYaml | nindent 10 }}
           {{- end }}
@@ -126,11 +136,6 @@ spec:
             - configMapRef:
                 name: {{ printf "%s-provisioning-env" (include "common.names.fullname" .) }}
           env:
-            - name: KEYCLOAK_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.provisioning.keycloak.auth.existingSecret "defaultNameSuffix" "provisioning-secret" "context" .) | quote }}
-                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.provisioning.keycloak.auth.existingSecret "key" "password") }}
             - name: SCIM_API_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -171,13 +176,23 @@ spec:
             - name: UDM_USERNAME
               valueFrom:
                 secretKeyRef:
+                  {{- if and .Values.config.udm.existingSecret .Values.config.udm.existingSecret.name }}
+                  name: {{ tpl .Values.config.udm.existingSecret.name . }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.config.udm.existingSecret "key" "username") }}
+                  {{- else }}
                   name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
-                  key: udm_username
+                  key: "username"
+                  {{- end }}
             - name: UDM_PASSWORD
               valueFrom:
                 secretKeyRef:
+                  {{- if and .Values.config.udm.existingSecret .Values.config.udm.existingSecret.name }}
+                  name: {{ tpl .Values.config.udm.existingSecret.name . }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.config.udm.existingSecret "key" "password") }}
+                  {{- else }}
                   name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
-                  key: udm_password
+                  key: "password"
+                  {{- end }}
             - name: CREATE_USER_NAME
               valueFrom:
                 secretKeyRef:

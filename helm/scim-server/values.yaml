@@ -48,8 +48,16 @@ config:
     realm: ""
   udm:
     url: ""
-    username: ""
+    username: null
     password: null
+    existingSecret:
+      # -- The reference to the secret containing `oauthAdapterM2mSecret` secret.
+      name: null
+      # -- The key to retrieve the secret from. Setting this value allows
+      # to use a key with a different name than the default "clientSecret".
+      keyMapping:
+        username: null
+        password: null
 
 resources:
   limits:

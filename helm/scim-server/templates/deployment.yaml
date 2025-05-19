@@ -67,13 +67,23 @@ spec:
             - name: UDM_API_USERNAME
               valueFrom:
                 secretKeyRef:
+                  {{- if and .Values.config.udm.existingSecret .Values.config.udm.existingSecret.name }}
+                  name: {{ tpl .Values.config.udm.existingSecret.name . }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.config.udm.existingSecret "key" "username") }}
+                  {{- else }}
                   name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
-                  key: udm_username
+                  key: "username"
+                  {{- end }}
             - name: UDM_API_PASSWORD
               valueFrom:
                 secretKeyRef:
+                  {{- if and .Values.config.udm.existingSecret .Values.config.udm.existingSecret.name }}
+                  name: {{ tpl .Values.config.udm.existingSecret.name . }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.config.udm.existingSecret "key" "password") }}
+                  {{- else }}
                   name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
-                  key: udm_password
+                  key: "password"
+                  {{- end }}
           command: ["/bin/sh", "-c"]
           args:
           - >
@@ -96,13 +106,23 @@ spec:
             - name: UDM_USERNAME
               valueFrom:
                 secretKeyRef:
+                  {{- if and .Values.config.udm.existingSecret .Values.config.udm.existingSecret.name }}
+                  name: {{ tpl .Values.config.udm.existingSecret.name . }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.config.udm.existingSecret "key" "username") }}
+                  {{- else }}
                   name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
-                  key: udm_username
+                  key: "username"
+                  {{- end }}
             - name: UDM_PASSWORD
               valueFrom:
                 secretKeyRef:
+                  {{- if and .Values.config.udm.existingSecret .Values.config.udm.existingSecret.name }}
+                  name: {{ tpl .Values.config.udm.existingSecret.name . }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.config.udm.existingSecret "key" "password") }}
+                  {{- else }}
                   name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
-                  key: udm_password
+                  key: "password"
+                  {{- end }}
             - name: AUTHENTICATOR_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
