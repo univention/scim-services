@@ -29,9 +29,8 @@ class CrudUdm(Generic[T], CrudScim[T]):
         scim2udm_mapper: Any,
         udm2scim_mapper: Any,
         resource_class: type[T],
-        udm_url: str,
-        udm_username: str,
-        udm_password: str,
+        udm_client: UDM,
+        base_url: str,
     ):
         """
         Initialize the UDM CRUD implementation.
@@ -40,9 +39,8 @@ class CrudUdm(Generic[T], CrudScim[T]):
             scim2udm_mapper: Mapper to convert SCIM objects to UDM
             udm2scim_mapper: Mapper to convert UDM to SCIM objects
             resource_class: The class of resource being managed (e.g., User, Group)
-            udm_url: URL of the UDM REST API
-            udm_username: Username for UDM authentication
-            udm_password: Password for UDM authentication
+            udm_client: UDM REST API client
+            base_url: Base URL used for SCIM resource location
         """
         self.resource_type = resource_type
         self.resource_class = resource_class
@@ -50,18 +48,14 @@ class CrudUdm(Generic[T], CrudScim[T]):
         self.udm2scim_mapper = udm2scim_mapper
         self.udm_module_name = "users/user" if resource_class == User else "groups/group"
 
-        # UDM REST API configuration
-        self.udm_url = udm_url.rstrip("/")
-        self.udm_username = udm_username
-        self.udm_password = udm_password
+        self.base_url = base_url.rstrip("/")
 
-        # Initialize UDM client
-        self.udm_client = UDM.http(f"{self.udm_url}/", self.udm_username, self.udm_password)
+        self.udm_client = udm_client
 
         self.logger = logger.bind(resource_type=resource_type)
         self.logger.info("Initialized UDM CRUD with UDM REST API client")
 
-    async def get(self, resource_id: str) -> T:
+    async def get(self, resource_id: str, base_url: str) -> T:
         """
         Get a resource by ID.
         Args:
@@ -94,9 +88,9 @@ class CrudUdm(Generic[T], CrudScim[T]):
 
             # Convert UDM object to SCIM resource
             if self.resource_class == User:
-                scim_resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.udm_url)
+                scim_resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.base_url)
             elif self.resource_class == Group:
-                scim_resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.udm_url)
+                scim_resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.base_url)
             else:
                 raise ValueError(f"Unsupported resource class: {self.resource_class}")
 
@@ -146,9 +140,9 @@ class CrudUdm(Generic[T], CrudScim[T]):
             for result in islice(results, offset, end_pos):
                 udm_obj = result.open()
                 if self.resource_class == User:
-                    resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.udm_url)
+                    resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.base_url)
                 elif self.resource_class == Group:
-                    resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.udm_url)
+                    resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.base_url)
                 else:
                     continue
 
@@ -229,9 +223,9 @@ class CrudUdm(Generic[T], CrudScim[T]):
 
             # Convert the saved UDM object back to SCIM resource
             if self.resource_class == User:
-                created_resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.udm_url)
+                created_resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.base_url)
             elif self.resource_class == Group:
-                created_resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.udm_url)
+                created_resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.base_url)
             else:
                 raise ValueError(f"Unsupported resource class: {self.resource_class}")
 
@@ -295,9 +289,9 @@ class CrudUdm(Generic[T], CrudScim[T]):
 
             # Convert the saved UDM object back to SCIM resource
             if self.resource_class == User:
-                updated_resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.udm_url)
+                updated_resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.base_url)
             elif self.resource_class == Group:
-                updated_resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.udm_url)
+                updated_resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.base_url)
             else:
                 raise ValueError(f"Unsupported resource class: {self.resource_class}")
 

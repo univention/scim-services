@@ -6,6 +6,8 @@ import pytest
 from fastapi.testclient import TestClient
 from scim2_models import Email, Group, Name, User
 
+from univention.scim.server.config import ApplicationSettings
+
 
 # Test data
 test_user = User(
@@ -499,7 +501,7 @@ class TestResourceTypesEndpoint:
     """Tests for the ResourceTypes endpoint."""
 
     @pytest.mark.usefixtures("setup_mocks")
-    def test_get_resource_types(self, client: TestClient) -> None:
+    def test_get_resource_types(self, client: TestClient, application_settings: ApplicationSettings) -> None:
         """Test retrieving the SCIM ResourceTypes in ListResponse format."""
         response = client.get("/scim/v2/ResourceTypes")
 
@@ -550,7 +552,10 @@ class TestResourceTypesEndpoint:
         assert user_type.get("schema") == "urn:ietf:params:scim:schemas:core:2.0:User"
         assert isinstance(user_type.get("meta"), dict)
         assert user_type["meta"].get("resourceType") == "ResourceType"
-        assert user_type["meta"].get("location", "").endswith("/ResourceTypes/User")
+        assert (
+            user_type["meta"].get("location", "")
+            == f"{application_settings.host}{application_settings.api_prefix}/ResourceTypes/User"
+        )
 
         # Check schemaExtensions for User
         assert "schemaExtensions" in user_type
@@ -570,7 +575,10 @@ class TestResourceTypesEndpoint:
         assert group_type.get("schema") == "urn:ietf:params:scim:schemas:core:2.0:Group"
         assert isinstance(group_type.get("meta"), dict)
         assert group_type["meta"].get("resourceType") == "ResourceType"
-        assert group_type["meta"].get("location", "").endswith("/ResourceTypes/Group")
+        assert (
+            group_type["meta"].get("location", "")
+            == f"{application_settings.host}{application_settings.api_prefix}/ResourceTypes/Group"
+        )
 
         # Check schemaExtensions for Group (should be present and empty)
         assert "schemaExtensions" in group_type

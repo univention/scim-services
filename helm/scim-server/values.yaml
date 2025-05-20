@@ -33,6 +33,7 @@ image:
 replicaCount: 1
 
 config:
+  host: "https://scim.example.test"
   apiPrefix: "/scim/v2"
   logLevel: "INFO"
   listenAddress: "0.0.0.0"

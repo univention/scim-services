@@ -128,7 +128,7 @@ def run() -> None:
     """Entry point for running the application."""
     uvicorn.run(
         "univention.scim.server.main:app",
-        host=settings.host,
+        host=settings.listen,
         port=settings.port,
     )
 

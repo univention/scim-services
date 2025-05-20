@@ -44,11 +44,12 @@ class ApplicationSettings(BaseSettings):
     )
 
     # API settings
+    host: str = "http://scim.example.test"
     api_prefix: str = "/scim/v2"
     # Logging
     log_level: LogLevel = LogLevel.INFO
     # Server
-    host: str = "0.0.0.0"
+    listen: str = "0.0.0.0"
     port: int = 8000
 
     # CORS

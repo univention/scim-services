@@ -5,10 +5,12 @@ from typing import TypeVar
 
 from dependency_injector import containers, providers
 from scim2_models import Group, Resource, User
+from univention.admin.rest.client import UDM
 
 from univention.scim.server.domain.crud_scim import CrudScim
 from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.repo.udm.crud_udm import CrudUdm
+from univention.scim.server.domain.repo.udm.udm_id_cache import UdmIdCache
 from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 
 
@@ -20,10 +22,13 @@ class RepositoryContainer(containers.DeclarativeContainer):
 
     config = providers.Configuration()
 
-    # Mappers
-    scim2udm_mapper: ScimToUdmMapper = providers.Singleton(ScimToUdmMapper)
+    udm_client: UDM = providers.Singleton(UDM.http, config.url, config.username, config.password)
+    cache: UdmIdCache = providers.Singleton(UdmIdCache, udm_client, 120)
 
-    udm2scim_mapper: UdmToScimMapper = providers.Singleton(UdmToScimMapper)
+    # Mappers
+    scim2udm_mapper: ScimToUdmMapper = providers.Singleton(ScimToUdmMapper, cache=cache)
+
+    udm2scim_mapper: UdmToScimMapper = providers.Singleton(UdmToScimMapper, cache=cache)
 
     # Repository factories
     user_repository: CrudScim[User] = providers.Factory(
@@ -32,9 +37,8 @@ class RepositoryContainer(containers.DeclarativeContainer):
         scim2udm_mapper=scim2udm_mapper,
         udm2scim_mapper=udm2scim_mapper,
         resource_class=User,
-        udm_url=config.url,
-        udm_username=config.username,
-        udm_password=config.password,
+        udm_client=udm_client,
+        base_url=config.base_url,
     )
 
     group_repository: CrudScim[Group] = providers.Factory(
@@ -43,9 +47,8 @@ class RepositoryContainer(containers.DeclarativeContainer):
         scim2udm_mapper=scim2udm_mapper,
         udm2scim_mapper=udm2scim_mapper,
         resource_class=Group,
-        udm_url=config.url,
-        udm_username=config.username,
-        udm_password=config.password,
+        udm_client=udm_client,
+        base_url=config.base_url,
     )
 
     # CRUD Manager factories

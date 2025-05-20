@@ -6,6 +6,8 @@ from typing import Any
 from loguru import logger
 from scim2_models import Group, User
 
+from univention.scim.transformation.id_cache import IdCache
+
 
 class ScimToUdmMapper:
     """
@@ -13,6 +15,14 @@ class ScimToUdmMapper:
 
     Converts SCIM objects to the property format expected by UDM.
     """
+
+    def __init__(self, cache: IdCache):
+        """
+        Initialize the ScimToUdmMapper.
+        Args:
+            cache: Cache to map SCIM IDs to DNs
+        """
+        self.cache = cache
 
     def map_user(self, user: User) -> dict[str, Any]:
         """
@@ -36,6 +46,8 @@ class ScimToUdmMapper:
                 properties["firstname"] = user.name.given_name
             if user.name.family_name:
                 properties["lastname"] = user.name.family_name
+            if user.name.formatted:
+                properties["displayName"] = user.name.formatted
         # Map email addresses
         if user.emails:
             primary_email = next((email.value for email in user.emails if email.primary), None)
@@ -53,6 +65,16 @@ class ScimToUdmMapper:
             mobile_phone = next((phone.value for phone in user.phone_numbers if phone.type == "mobile"), None)
             if mobile_phone:
                 properties["mobile"] = mobile_phone
+
+        # Map members
+        if user.groups and self.cache:
+            # UDM expects DNs for members, but SCIM only has IDs
+            for member in user.groups:
+                group = self.cache.get_group(member.value)
+                if not group:
+                    continue
+
+                properties["groups"] = group.dn
 
         # Store any attributes that should be set on the UDM object directly
 
@@ -79,10 +101,14 @@ class ScimToUdmMapper:
         if group.id:
             properties["univentionObjectIdentifier"] = group.id
         # Map members
-        if group.members:
+        if group.members and self.cache:
             # UDM expects DNs for members, but SCIM only has IDs
-            # This would require a lookup in real implementation
-            properties["users"] = [member.value for member in group.members]
+            for member in group.members:
+                user = self.cache.get_user(member.value)
+                if not user:
+                    continue
+
+                properties["users"] = user.dn
 
         # Map version if available
         if group.meta and group.meta.version:

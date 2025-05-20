@@ -6,6 +6,8 @@ from typing import Any
 from loguru import logger
 from scim2_models import Address, Email, Group, Name, PhoneNumber, User, X509Certificate
 
+from univention.scim.transformation.id_cache import IdCache
+
 
 class UdmToScimMapper:
     """
@@ -13,6 +15,14 @@ class UdmToScimMapper:
 
     Converts UDM properties to SCIM-compatible objects.
     """
+
+    def __init__(self, cache: IdCache):
+        """
+        Initialize the UdmToScimMapper.
+        Args:
+            cache: Cache to map DNs to SCIM IDs
+        """
+        self.cache = cache
 
     def map_user(self, udm_user: Any, base_url: str = "") -> User:
         """
@@ -193,6 +203,27 @@ class UdmToScimMapper:
         if certificates:
             user.x509_certificates = certificates
 
+        # Map members if available
+        if "groups" in props and props["groups"] and self.cache:
+            group_dns = props["groups"]
+            if isinstance(group_dns, str):
+                group_dns = [group_dns]
+
+            from scim2_models import GroupMember
+
+            for dn in group_dns:
+                group = self.cache.get_group(dn)
+                if not group:
+                    continue
+
+                user.groups.append(
+                    GroupMember(
+                        value=group,
+                        display=group,
+                        type="Group",
+                    )
+                )
+
         return user
 
     def map_group(self, udm_group: Any, base_url: str = "") -> Group:
@@ -234,22 +265,24 @@ class UdmToScimMapper:
         )
 
         # Map members if available
-        if "users" in props and props["users"]:
+        if "users" in props and props["users"] and self.cache:
             user_dns = props["users"]
             if isinstance(user_dns, str):
                 user_dns = [user_dns]
 
-            # In a real implementation, would need to convert DNs to SCIM IDs
-            # This is a placeholder implementation
             from scim2_models import GroupMember
 
-            group.members = [
-                GroupMember(
-                    value=dn.split(",")[0].split("=")[1],  # Extract username from DN
-                    display=dn.split(",")[0].split("=")[1],  # Use username as display name
-                    type="User",
+            for dn in user_dns:
+                user = self.cache.get_user(dn)
+                if not user:
+                    continue
+
+                group.members.append(
+                    GroupMember(
+                        value=user.uuid,
+                        display=user.display_name,
+                        type="User",
+                    )
                 )
-                for dn in user_dns
-            ]
 
         return group

@@ -40,6 +40,7 @@ def application_settings(monkeypatch: pytest.MonkeyPatch) -> Generator[Applicati
         "UDM_URL": os.environ.get("UDM_URL", "http://localhost:9979/univention/udm"),
         "UDM_USERNAME": os.environ.get("UDM_USERNAME", "admin"),
         "UDM_PASSWORD": os.environ.get("UDM_PASSWORD", "secret"),
+        "HOST": os.environ.get("HOST", "https://scim.unit.test"),
     }
     for k, v in env.items():
         monkeypatch.setenv(k, v)
@@ -50,8 +51,8 @@ def application_settings(monkeypatch: pytest.MonkeyPatch) -> Generator[Applicati
 @pytest.fixture
 def setup_mocks(application_settings: ApplicationSettings) -> Generator[None, None, None]:
     # Create test UDM repositories
-    ScimToUdmMapper()
-    UdmToScimMapper()
+    ScimToUdmMapper(None)
+    UdmToScimMapper(None)
 
     user_repo = MockCrudUdm[User](
         resource_type="User",
@@ -112,8 +113,8 @@ def caplog(caplog: LogCaptureFixture) -> Generator[LogCaptureFixture, None, None
 def create_crud_manager(
     resource_type: str, resource_class: type[User | Group], udm_url: str, udm_username: str, udm_password: str
 ) -> CrudManager:
-    scim2udm_mapper = ScimToUdmMapper()
-    udm2scim_mapper = UdmToScimMapper()
+    scim2udm_mapper = ScimToUdmMapper(None)
+    udm2scim_mapper = UdmToScimMapper(None)
 
     repository = CrudUdm(
         resource_type=resource_type,
@@ -308,7 +309,11 @@ def random_user_factory() -> Callable[[], User]:
             id=fake.uuid4(),
             schemas=["urn:ietf:params:scim:schemas:core:2.0:User"],
             user_name=data["username"],
-            name=Name(given_name=data["given_name"], family_name=data["family_name"]),
+            name=Name(
+                given_name=data["given_name"],
+                family_name=data["family_name"],
+                formatted=f"{data['given_name']} {data['family_name']}",
+            ),
             password="securepassword",
             display_name=f"{data['given_name']} {data['family_name']}",
             title="Senior Engineer",
@@ -351,8 +356,8 @@ async def create_random_user(random_user_factory: Callable[[], User]) -> AsyncGe
     udm_username = os.environ.get("UDM_USERNAME", "admin")
     udm_password = os.environ.get("UDM_PASSWORD", "univention")
 
-    scim2udm_mapper = ScimToUdmMapper()
-    udm2scim_mapper = UdmToScimMapper()
+    scim2udm_mapper = ScimToUdmMapper(None)
+    udm2scim_mapper = UdmToScimMapper(None)
 
     udm_client = UDM.http(udm_url, udm_username, udm_password)
 
@@ -420,8 +425,8 @@ async def create_random_group(random_group_factory: Callable[[], Group]) -> Asyn
     udm_username = os.environ.get("UDM_USERNAME", "admin")
     udm_password = os.environ.get("UDM_PASSWORD", "univention")
 
-    scim2udm_mapper = ScimToUdmMapper()
-    udm2scim_mapper = UdmToScimMapper()
+    scim2udm_mapper = ScimToUdmMapper(None)
+    udm2scim_mapper = UdmToScimMapper(None)
 
     udm_client = UDM.http(udm_url, udm_username, udm_password)
 

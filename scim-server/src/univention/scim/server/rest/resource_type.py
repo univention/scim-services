@@ -3,7 +3,7 @@
 from typing import Annotated
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, Path, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from loguru import logger
 
 # Import models from scim2-models
@@ -16,9 +16,9 @@ from univention.scim.server.container import ApplicationContainer
 router = APIRouter()
 
 
-def _get_resource_type(request: Request, settings: ApplicationSettings, resource_id: str) -> ResourceType:
+def _get_resource_type(settings: ApplicationSettings, resource_id: str) -> ResourceType:
     """Helper function to get a specific resource type by ID."""
-    base_url = str(request.base_url).rstrip("/") + settings.api_prefix.rstrip("/")
+    base_url = f"{settings.host}{settings.api_prefix}"
 
     if resource_id == "User":
         return ResourceType(
@@ -65,7 +65,6 @@ def _get_resource_type(request: Request, settings: ApplicationSettings, resource
 @router.get("", response_model=ListResponse[ResourceType], response_model_exclude_none=True)
 @inject
 async def get_resource_types(
-    request: Request,
     settings: Annotated[ApplicationSettings, Depends(Provide[ApplicationContainer.settings])],
 ) -> ListResponse[ResourceType]:
     """
@@ -73,8 +72,8 @@ async def get_resource_types(
 
     Returns a ListResponse containing User and Group resource types based on scim2-models.
     """
-    user_resource_type = _get_resource_type(request, settings, "User")
-    group_resource_type = _get_resource_type(request, settings, "Group")
+    user_resource_type = _get_resource_type(settings, "User")
+    group_resource_type = _get_resource_type(settings, "Group")
 
     # Create the list of resources
     resources = [user_resource_type, group_resource_type]
@@ -92,7 +91,6 @@ async def get_resource_types(
 @router.get("/{resource_id}", response_model=ResourceType, response_model_exclude_none=True)
 @inject
 async def get_resource_type_by_id(
-    request: Request,
     settings: Annotated[ApplicationSettings, Depends(Provide[ApplicationContainer.settings])],
     resource_id: str = Path(..., description="Resource type ID"),
 ) -> ResourceType:
@@ -102,7 +100,7 @@ async def get_resource_type_by_id(
     Returns detailed information about the specified resource type.
     """
     try:
-        return _get_resource_type(request, settings, resource_id)
+        return _get_resource_type(settings, resource_id)
     except HTTPException:
         # Re-raise HTTPExceptions (these are already properly formatted)
         raise

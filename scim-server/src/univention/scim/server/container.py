@@ -22,8 +22,12 @@ class ApplicationContainer(DeclarativeContainer):
     settings: ApplicationSettings = Singleton(application_settings)
 
     # Initialize repository container for CRUD operations
+    repo_config = settings().udm.model_dump()
+    repo_config["base_url"] = f"{settings().host}{settings().api_prefix}"
+    repo_config["url"] = repo_config["url"].rstrip("/") + "/"
+
     repositories: RepositoryContainer = Singleton(RepositoryContainer)
-    repositories().config.from_pydantic(settings().udm)
+    repositories().config.from_dict(repo_config)
 
     # Use repositories from the repository container if specified in DI settings
     # Otherwise use the default implementations
