@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, status, Body
 from loguru import logger
 from scim2_models import Group, ListResponse
 
@@ -121,17 +121,42 @@ async def update_group(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
 
-@router.patch("/{group_id}")
+@router.patch("/{group_id}", response_model=Group)
 @inject
-async def patch_group(group_id: str) -> None:
+async def patch_group(
+    group_service: Annotated[GroupService, Depends(Provide[ApplicationContainer.group_service])],
+    group_id: Annotated[str, Path(..., description="User ID")],
+    patch_request: Annotated[dict[str, Any], Body(..., description="Raw SCIM-compliant patch request body")],
+) -> Group:
     """
-    Patch a group - not implemented yet.
-
-    Updates specified attributes of the group and returns the updated group.
+    Patch a user using a raw SCIM JSON patch body.
+    The request must contain an 'Operations' list, and may optionally contain a 'schemas' field.
     """
     logger.debug("REST: Patch group with ID", id=group_id)
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="PATCH method not implemented")
 
+    try:
+        operations = patch_request.get("Operations") or patch_request.get("operations")
+        if not operations or not isinstance(operations, list):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or missing 'Operations' field in patch body",
+            )
+
+        updated_group = await group_service.apply_patch_operations(group_id, operations)
+        return updated_group
+
+    except HTTPException as e:
+        # Already a well-formed client or not-found error, just raise it
+        raise e
+
+    except ValueError as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+
+    except Exception as e:
+        logger.exception("Unexpected error patching group", user_id=group_id)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected error") from e
 
 @router.delete("/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
 @inject

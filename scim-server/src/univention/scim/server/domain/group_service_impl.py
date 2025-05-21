@@ -1,18 +1,19 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
-
+from typing import Any, cast
 from uuid import uuid4
 
 from loguru import logger
 from scim2_models import Group, ListResponse
 
+from server.domain.patch_mixin import PatchMixin
 from univention.scim.server.domain.group_service import GroupService
 from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.rules.loader import RuleLoader
 
 
-class GroupServiceImpl(GroupService):
+class GroupServiceImpl(GroupService, PatchMixin):
     """
     Implementation of the GroupService interface.
     Provides domain logic for group management operations.
@@ -90,6 +91,27 @@ class GroupServiceImpl(GroupService):
         updated_group = await self.group_repository.update(group_id, group)
         logger.info("Updated group.", id=group_id)
         return updated_group
+
+    async def apply_patch_operations(self, group_id: str, operations: list[dict[str, Any]]) -> Group:
+        """Apply SCIM patch operations to the group with the given ID."""
+        logger.debug(f"Applying patch operations to group ID: {group_id}")
+
+        # Fetch the existing group
+        existing_group = await self.group_repository.get(group_id)
+        if not existing_group:
+            raise ValueError(f"Group with ID {group_id} not found")
+
+        updated_group: Group = cast(Group, await self.patch_resource(existing_group, group_id, operations))
+
+        # Validate and apply business rules
+        self._validate_group(updated_group)
+        updated_resource = await self.rule_evaluator.evaluate(updated_group)
+
+        # Persist the updated group
+        saved_group = await self.group_repository.update(group_id, updated_resource)
+        logger.info(f"Patched resource with ID: {group_id}")
+        return saved_group
+
 
     async def delete_group(self, group_id: str) -> bool:
         """Delete a group."""

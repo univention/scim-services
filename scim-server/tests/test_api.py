@@ -371,6 +371,43 @@ class TestGroupAPI:
         assert data["displayName"] == test_group.display_name
 
 
+    @pytest.mark.usefixtures("setup_mocks")
+    def test_apply_patch_operation(self, client: TestClient) -> None:
+        """Test creating a group."""
+
+        group_id= self._create_test_group(client)
+        group_url = f"/scim/v2/Groups/{group_id}"
+
+
+        # Step 2: Fetch the user before patching
+        pre_patch_response = client.get(group_url)
+        assert pre_patch_response.status_code == 200, f"Failed to fetch user: {pre_patch_response.text}"
+        original_group = pre_patch_response.json()
+        # Verify response data
+        assert original_group["displayName"] == test_group.display_name
+
+        # Step 3: Prepare SCIM-compliant patch payload
+        patch_operations = {
+            "Operations": [
+                {"op": "replace", "path": "displayName", "value": "It's not a cult"},
+            ]
+        }
+
+        # Step 4: Send PATCH request
+        patch_response = client.patch(
+            group_url,
+            json=patch_operations,
+            headers={"Content-Type": "application/json"},
+        )
+
+        assert patch_response.status_code == 200, f"PATCH failed: {patch_response.text}"
+        data = patch_response.json()
+
+        # Step 5: Verify updated values
+        assert data["displayName"] == "It's not a cult"
+        assert "id" in data
+
+
 class TestServiceProviderConfig:
     """Tests for the ServiceProviderConfig endpoint."""
 

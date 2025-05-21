@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 from scim2_models import Group, ListResponse
 
@@ -78,4 +79,8 @@ class GroupService(ABC):
         Raises:
             ValueError: If the group is not found
         """
+        pass
+
+    @abstractmethod
+    async def apply_patch_operations(self, user_id: str, operations: list[dict[str, Any]]) -> Group:
         pass
