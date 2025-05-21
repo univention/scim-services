@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.16.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.15.0...v0.16.0) (2025-05-21)
+
+
+### Features
+
+* Add request logging middleware ([159cd5b](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/159cd5b190bf226cf876aecb215572ff146aa839))
+* add timing middleware ([9a95a3c](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/9a95a3c06fc8f0cab724d97d4dc60a8c72b68158))
+* increase max body length for request logging ([8b2873a](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/8b2873ad6e0bbf0b060bfdad807ceb99441455b7))
+
 ## [0.15.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.14.0...v0.15.0) (2025-05-19)
 
 
