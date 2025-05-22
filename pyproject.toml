@@ -16,11 +16,16 @@ license = "AGPL-3.0-only"
 scim-server = { workspace = true }
 scim-udm-transformer-lib = { workspace = true }
 udm-to-scim-sync = { workspace = true }
-lancelog = { index = "gitlab" }
 scim-consumer = { workspace = true }
+lancelog = { index = "gitlab" }
 
 [tool.uv.workspace]
-members = ["scim-server", "scim-udm-transformer-lib", "udm-to-scim-sync", "scim-consumer"]
+members = [
+    "scim-server",
+    "scim-udm-transformer-lib",
+    "udm-to-scim-sync",
+    "scim-consumer",
+]
 
 [[tool.uv.index]]
 name = "gitlab"

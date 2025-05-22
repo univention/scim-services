@@ -10,7 +10,6 @@ import uuid
 import pytest
 import pytest_asyncio
 from aiohttp import ClientResponseError
-from icecream import ic
 from loguru import logger
 from univention.admin.rest.client import UDM
 from univention.provisioning.consumer.api import (
@@ -19,14 +18,17 @@ from univention.provisioning.consumer.api import (
     RealmTopic,
 )
 
+from univention.scim.consumer.helper import cust_pformat
 from univention.scim.consumer.main import run as scim_client_run
 
 
 @pytest_asyncio.fixture(scope="session")
 async def provisioning_subscription():
     admin_settings = ProvisioningConsumerClientSettings(
+        provisioning_api_base_url=os.environ["PROVISIONING_API_BASE_URL"],
         provisioning_api_username=os.environ["PROVISIONING_API_ADMIN_USERNAME"],
         provisioning_api_password=os.environ["PROVISIONING_API_ADMIN_PASSWORD"],
+        log_level="DEBUG",
     )
     async with ProvisioningConsumerClient(admin_settings) as admin_client:
         try:
@@ -37,7 +39,7 @@ async def provisioning_subscription():
                     RealmTopic(realm="udm", topic="users/user"),
                     RealmTopic(realm="udm", topic="groups/group"),
                 ],
-                request_prefill=False,
+                request_prefill=True,
             )
             logger.info("Subscription {} created.", os.environ["PROVISIONING_API_USERNAME"])
 
@@ -78,7 +80,7 @@ def udm_client():
 @pytest.fixture
 def create_udm_user(udm_client, udm_user):
     logger.info("Fixture create_udm_user started.")
-    logger.debug("udm_user:\n{}", ic.format(udm_user))
+    logger.debug("udm_user:\n{}", cust_pformat(udm_user))
 
     module = udm_client.get("users/user")
     obj = module.new()
@@ -92,7 +94,7 @@ def create_udm_user(udm_client, udm_user):
 @pytest.fixture
 def update_udm_user(udm_client, udm_user_updated):
     logger.info("Fixture update_udm_user started.")
-    logger.debug("udm_user_updated:\n{}", ic.format(udm_user_updated))
+    logger.debug("udm_user_updated:\n{}", cust_pformat(udm_user_updated))
 
     module = udm_client.get("users/user")
     for result in module.search(f"univentionObjectIdentifier={udm_user_updated['univentionObjectIdentifier']}"):
@@ -110,7 +112,7 @@ def update_udm_user(udm_client, udm_user_updated):
 @pytest.fixture(scope="function")
 def delete_udm_user(udm_client, udm_user):
     logger.info("Fixture delete_udm_user started.")
-    logger.debug("udm_user:\n{}", ic.format(udm_user))
+    logger.debug("udm_user:\n{}", cust_pformat(udm_user))
 
     module = udm_client.get("users/user")
     for result in module.search(f"univentionObjectIdentifier={udm_user['univentionObjectIdentifier']}"):

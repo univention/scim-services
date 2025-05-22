@@ -3,9 +3,19 @@
 
 from copy import deepcopy
 
+from icecream import ic
 
-def vars_recursive(obj):
-    # WTF!!?? Python sucks!!!
+
+def cust_pformat(obj) -> str:
+    """
+    Custom pformat.
+
+    Can handle objects and is formatted with the Icecream package.
+
+    Returns
+    -------
+    str
+    """
     obj_cp = deepcopy(obj)
     dict_obj = None
     if hasattr(obj_cp, "__dict__"):
@@ -13,4 +23,14 @@ def vars_recursive(obj):
         for key, value in dict_obj.items():
             if hasattr(value, "__dict__"):
                 dict_obj[key] = vars(value)
-    return dict_obj or vars(obj_cp) if hasattr(obj_cp, "dict") else obj_cp
+    final_obj = dict_obj or vars(obj_cp) if hasattr(obj_cp, "dict") else obj_cp
+    return ic.format(final_obj)
+
+
+def cust_pprint(obj):
+    """
+    Custom pprint.
+
+    Can handle objects and is formatted with the Icecream package.
+    """
+    print(cust_pformat(obj))

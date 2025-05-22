@@ -2,14 +2,21 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 from httpx import Client
-from icecream import ic
 from loguru import logger
 from pydantic_settings import BaseSettings
 from scim2_client.engines.httpx import SyncSCIMClient
 from scim2_models import Group, Resource, ResourceType, SearchRequest, User
 from scim2_tester import check_server
 
-from univention.scim.consumer.helper import vars_recursive
+from univention.scim.consumer.helper import cust_pformat
+
+
+class ScimClientNoDataFoundException(Exception):
+    pass
+
+
+class ScimClientTooManyResultsException(Exception):
+    pass
 
 
 class ScimClientSettings(BaseSettings):
@@ -28,6 +35,15 @@ class ScimClientWrapper:
         self.settings = settings or ScimClientSettings()
 
     def _create_client(self) -> SyncSCIMClient:
+        """
+        Returns a connected SyncSCIMClient instance.
+
+        Returns
+        -------
+        SyncSCIMClient
+        """
+        logger.info("Connect to SCIM server.")
+
         client = Client(base_url=self.settings.scim_server_base_url)
 
         scim = SyncSCIMClient(
@@ -65,39 +81,96 @@ class ScimClientWrapper:
         return scim
 
     def get_client(self) -> SyncSCIMClient:
+        """
+        Returns a connected SCIM client instance.
+
+        If the connection did not exists it would be created.
+        If the connection exists already, it is checked for health and
+        reconnected if necessary.
+
+        Returns
+        -------
+        SyncSCIMClient
+        """
         if not self._scim_client or (self.settings.health_check_enabled and not self.health_check(self._scim_client)):
             self._scim_client = self._create_client()
 
         return self._scim_client
 
     def health_check(self, client: SyncSCIMClient) -> bool:
-        results = check_server(client)
-        for result in results:
-            logger.debug("SCIM server state: {}: {}", result.status.name, result.title)
-        return True
+        """
+        Checks the state of the SCIM server.
+
+        Parameters
+        ----------
+        client : SyncSCIMClient
+
+        Returns
+        -------
+        bool
+            True if the state is OK, False when an error occurs.
+        """
+        dirty = False
+        try:
+            # results = check_server(client)
+            check_server(client)
+        except Exception as e:
+            logger.error(e)
+            dirty = True
+        # else:
+        #     for result in results:
+        #         # logger.debug("SCIM server state: {}: {}", result.status.name, result.title)
+        #         # TODO Refactor! Very unclean solution!
+        #         if result.status.name != "SUCCESS":
+        #             logger.debug("SCIM server state: {}: {}", result.status.name, result.title)
+        #             dirty = True
+
+        return not dirty
 
     def create_resource(self, resource: Resource):
-        logger.info("Create resource")
-        logger.debug("Resource:\n{}", ic.format(resource.model_dump()))
+        """
+        Creates a SCIM resource.
+
+        Parameters
+        ----------
+        resource : Resource
+            A filled scim2_models.Resource instance.
+        """
+        logger.info("Create SCIM resource {}", resource.external_id)
+        logger.debug("Resource data:\n{}", cust_pformat(resource.model_dump()))
 
         response = self.get_client().create(resource)
 
-        logger.debug("Response:\n{}", ic.format(vars_recursive(response)))
+        logger.debug("Response:\n{}", cust_pformat(response))
 
     def update_resource(self, resource: Resource):
-        logger.info("Update resource")
+        """
+        Updates one SCIm resource.
+
+        Fetches the current data from the SCIM server via the external_id (univentionObjectIdentifier),
+        merges the data and write it back to the SCIM server.
+
+        Parameters
+        ----------
+        resource : Resource
+            A filled scim2_models.Resource instance.
+
+        Raises
+        ------
+        ScimClientNoDataFoundException
+            If no record with the given external_id is found.
+        ScimClientTooManyResultsException
+            If more then one record with the given external_id is found.
+        """
+        logger.info("Update SCIM resource {}", resource.external_id)
         logger.debug("Resource type: {}", type(resource))
-        logger.debug("Resource:\n{}", ic.format(vars_recursive(resource)))
+        logger.debug("Resource data:\n{}", cust_pformat(resource))
 
         # Get the existing user from SCIM server
-        try:
-            scim_resource = self.get_resource_by_external_id(resource.external_id)
-        except Exception as e:
-            logger.error(e)
-            return
+        scim_resource = self.get_resource_by_external_id(resource.external_id)
 
-        logger.debug("SCIM resource type: {}", type(scim_resource))
-        logger.debug("SCIM resource:\n{}", ic.format(vars_recursive(scim_resource)))
+        logger.debug("SCIM response resource type: {}", type(scim_resource))
+        logger.debug("SCIM response resource data:\n{}", cust_pformat(scim_resource))
 
         # Add the ID and the meta data from the SCIM server.
         #   The ID must be set, because we only have the external ID at this point
@@ -105,37 +178,57 @@ class ScimClientWrapper:
         resource.id = scim_resource.id
         resource.meta = scim_resource.meta
 
-        logger.debug("Resource merged:\n{}", ic.format(vars_recursive(resource)))
+        logger.debug("Merged data for update:\n{}", cust_pformat(resource))
 
         response = self.get_client().replace(resource)
 
-        logger.debug("Response:\n{}", ic.format(vars_recursive(response)))
+        logger.debug("Response:\n{}", cust_pformat(response))
 
     def delete_resource(self, resource: Resource):
-        logger.info("Delete resource")
+        """
+        Deletes a SCIM resource.
+
+        Fetches the current data from the SCIM server via the external_id (univentionObjectIdentifier)
+        and then delete it via SCIM id and resource type.
+
+        Raises
+        ------
+        ScimClientNoDataFoundException
+            If no record with the given external_id is found.
+        ScimClientTooManyResultsException
+            If more then one record with the given external_id is found.
+        """
+        logger.info("Delete resource {}", resource.external_id)
         logger.debug("Resource type: {}", type(resource))
-        logger.debug("Resource:\n{}", ic.format(vars_recursive(resource)))
+        logger.debug("Resource data:\n{}", cust_pformat(resource))
 
         # Get the existing user from SCIM server
-        try:
-            scim_resource = self.get_resource_by_external_id(resource.external_id)
-        except Exception as e:
-            logger.error(e)
-            return
+        scim_resource = self.get_resource_by_external_id(resource.external_id)
 
         logger.debug("SCIM resource type: {}", type(scim_resource))
-        logger.debug("SCIM resource:\n{}", ic.format(vars_recursive(scim_resource)))
+        logger.debug("SCIM resource:\n{}", cust_pformat(scim_resource))
 
-        if scim_resource.meta.resource_type == "User":
-            response = self.get_client().delete(resource_model=User, id=scim_resource.id)
-        elif scim_resource.meta.resource_type == "Group":
-            response = self.get_client().delete(resource_model=Group, id=scim_resource.id)
-        else:
-            raise Exception(f"Resource type {scim_resource.meta.resource_type} is not implemented yet!")
+        response = self.get_client().delete(resource_model=type(scim_resource), id=scim_resource.id)
 
-        logger.debug("Response:\n{}", ic.format(vars_recursive(response)))
+        logger.debug("Response:\n{}", cust_pformat(response))
 
     def get_resource_by_external_id(self, external_id: str) -> Resource:
+        """
+        Returns a SCIM resource with the given external ID.
+
+
+        Parameters
+        ----------
+        external_id :str
+            The univentionObjectIdentifier (UUID)
+
+        Raises
+        ------
+        ScimClientNoDataFoundException
+            If no record with the given external_id is found.
+        ScimClientTooManyResultsException
+            If more then one record with the given external_id is found.
+        """
         search_request = SearchRequest(filter=f'externalId eq "{external_id}"')
         response = self.get_client().query(search_request=search_request)
 
@@ -143,8 +236,9 @@ class ScimClientWrapper:
             return response.resources[0]
 
         elif response.total_results == 0:
-            raise Exception("No data found!")
+            raise ScimClientNoDataFoundException(f"No data found for record with external_id = {external_id}!")
 
         else:
-            logger.error("SCIM query resources result:\n{}", ic.format(response.resources))
-            raise Exception("To many results!")
+            raise ScimClientTooManyResultsException(
+                f"Too many results for record with external_id = {external_id}! Epected 1 got {response.total_results}."
+            )

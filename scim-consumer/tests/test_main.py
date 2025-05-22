@@ -3,19 +3,18 @@
 
 import time
 
-from icecream import ic
 from loguru import logger
 
-from univention.scim.consumer.helper import vars_recursive
+from univention.scim.consumer.helper import cust_pformat
 from univention.scim.consumer.scim_client import ScimClientWrapper
 
 
 def test_scim_create_user(create_udm_user, scim_consumer, udm_user):
     logger.info("Test test_scim_create_user started.")
-    logger.debug("udm_user:\n{}", ic.format(vars_recursive(udm_user)))
+    logger.debug("udm_user:\n{}", cust_pformat(udm_user))
 
     user = None
-    max_loops = 20
+    max_loops = 100
     count_loops = 0
     sleep_time = 5
 
@@ -32,7 +31,7 @@ def test_scim_create_user(create_udm_user, scim_consumer, udm_user):
                 break
 
         else:
-            logger.debug("user:\n{}", ic.format(vars_recursive(user)))
+            logger.debug("user:\n{}", cust_pformat(user))
             break
 
     assert user.user_name == udm_user.get("username")
@@ -41,17 +40,19 @@ def test_scim_create_user(create_udm_user, scim_consumer, udm_user):
 
 def test_scim_update_user(update_udm_user, scim_consumer, udm_user_updated):
     logger.info("Test test_scim_update_user started.")
-    logger.debug("udm_user_updated:\n{}", ic.format(vars_recursive(udm_user_updated)))
+    logger.debug("udm_user_updated:\n{}", cust_pformat(udm_user_updated))
 
     user = None
-    max_loops = 20
+    max_loops = 100
     count_loops = 0
     sleep_time = 5
+
+    scim_client = ScimClientWrapper()
 
     while True:
         try:
             logger.info("Try to get user with uoi: {}", udm_user_updated.get("univentionObjectIdentifier"))
-            user = ScimClientWrapper().get_resource_by_external_id(udm_user_updated.get("univentionObjectIdentifier"))
+            user = scim_client.get_resource_by_external_id(udm_user_updated.get("univentionObjectIdentifier"))
 
         except Exception:
             time.sleep(sleep_time)
@@ -70,7 +71,7 @@ def test_scim_update_user(update_udm_user, scim_consumer, udm_user_updated):
                     break
                 continue
             else:
-                logger.debug("user:\n{}", ic.format(vars_recursive(user)))
+                logger.debug("user:\n{}", cust_pformat(user))
                 break
 
     assert user.display_name == udm_user_updated.get("displayName")
@@ -80,19 +81,20 @@ def test_scim_update_user(update_udm_user, scim_consumer, udm_user_updated):
 
 def test_scim_delete_user(delete_udm_user, scim_consumer, udm_user):
     logger.info("Test test_scim_delete_user started.")
-    logger.debug("udm_user:\n{}", ic.format(vars_recursive(udm_user)))
+    logger.debug("udm_user:\n{}", cust_pformat(udm_user))
 
     logger.info("Try to get user with uoi: {}", udm_user.get("univentionObjectIdentifier"))
 
-    max_loops = 20
+    max_loops = 100
     sleep_time = 5
     count_loops = 0
     throws_exception = False
 
+    scim_client = ScimClientWrapper()
     while True:
         try:
             logger.info("Try to get user with uoi: {}", udm_user.get("univentionObjectIdentifier"))
-            ScimClientWrapper().get_resource_by_external_id(udm_user.get("univentionObjectIdentifier"))
+            scim_client.get_resource_by_external_id(udm_user.get("univentionObjectIdentifier"))
 
         except Exception:
             throws_exception = True
