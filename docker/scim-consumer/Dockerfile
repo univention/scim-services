@@ -4,7 +4,7 @@
 # Inspired by: https://hynek.me/articles/docker-uv/
 
 ARG UCS_BASE_IMAGE=gitregistry.knut.univention.de/univention/dev/projects/ucs-base-image/ucs-base-python-521
-ARG UCS_BASE_IMAGE_TAG=0.17.3-build-2025-05-11
+ARG UCS_BASE_IMAGE_TAG=0.18.1-build-2025-05-15
 
 ###############################################
 # Stage 0: get build tools
@@ -33,6 +33,9 @@ ENV UV_LINK_MODE=copy \
 COPY ./pyproject.toml ./uv.lock /app/
 COPY ./scim-udm-transformer-lib /app/scim-udm-transformer-lib
 COPY ./scim-consumer/pyproject.toml /app/scim-consumer/
+COPY ./scim-udm-transformer-lib/pyproject.toml /app/scim-udm-transformer-lib/
+COPY ./scim-server/pyproject.toml /app/scim-server/
+COPY ./udm-to-scim-sync/pyproject.toml /app/udm-to-scim-sync/
 
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.cache \
