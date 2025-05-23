@@ -31,6 +31,7 @@ def udm_client(random_user_factory: Callable[[], User], random_group_factory: Ca
 
     user_module = MagicMock(spec=Module)
     user_module.search.return_value = users
+    user_module.get.return_value = user
 
     group_data = random_group_factory()
     group_properties = scim2udm_mapper.map_group(group_data)
@@ -46,6 +47,7 @@ def udm_client(random_user_factory: Callable[[], User], random_group_factory: Ca
 
     group_module = MagicMock(spec=Module)
     group_module.search.return_value = groups
+    group_module.get.return_value = group
 
     udm_mock = MagicMock(spec=UDM)
     udm_mock.get.side_effect = {"users/user": user_module, "groups/group": group_module}.get

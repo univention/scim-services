@@ -2,18 +2,16 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 import os
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
-from scim2_models import Group, User
+from scim2_models import Group, GroupMember, User
 
 from univention.scim.server.config import ApplicationSettings
 from univention.scim.server.container import ApplicationContainer
 
-from .conftest import (
-    skip_if_no_udm,
-)
+from .conftest import CreateGroupFactory, CreateUserFactory, skip_if_no_udm
 
 
 @pytest.fixture
@@ -54,7 +52,10 @@ def e2e_auth_bypass(application_settings: ApplicationSettings) -> Generator[None
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 @pytest.mark.usefixtures("maildomain")
 async def test_list_user_endpoint(
-    create_random_user: Callable[[], User], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+    create_random_user: CreateUserFactory,
+    client: TestClient,
+    api_prefix: str,
+    auth_headers: dict[str, str],
 ) -> None:
     """Test retrieving a list of users through the REST API endpoint."""
     print("\n=== E2E Testing GET Users Endpoint ===")
@@ -89,7 +90,10 @@ async def test_list_user_endpoint(
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 @pytest.mark.usefixtures("maildomain")
 async def test_get_user_endpoint(
-    create_random_user: Callable[[], User], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+    create_random_user: CreateUserFactory,
+    client: TestClient,
+    api_prefix: str,
+    auth_headers: dict[str, str],
 ) -> None:
     """Test retrieving a user through the REST API endpoint."""
     print("\n=== E2E Testing GET User Endpoint ===")
@@ -166,7 +170,10 @@ async def test_post_user_endpoint(
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 @pytest.mark.usefixtures("maildomain")
 async def test_list_group_endpoint(
-    create_random_group: Callable[[], Group], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+    create_random_group: CreateGroupFactory,
+    client: TestClient,
+    api_prefix: str,
+    auth_headers: dict[str, str],
 ) -> None:
     """Test retrieving a list of groups through the REST API endpoint."""
     print("\n=== E2E Testing GET Groups Endpoint ===")
@@ -201,13 +208,26 @@ async def test_list_group_endpoint(
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
+@pytest.mark.usefixtures("maildomain")
 async def test_get_group_endpoint(
-    create_random_group: Callable[[], Group], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+    create_random_group: CreateGroupFactory,
+    create_random_user: CreateUserFactory,
+    client: TestClient,
+    api_prefix: str,
+    auth_headers: dict[str, str],
 ) -> None:
     """Test retrieving a group through the REST API endpoint."""
     print("\n=== E2E Testing GET Group Endpoint ===")
 
-    test_group = await create_random_group()
+    # Add some users to the group
+    users = []
+    group_members: list[GroupMember] = []
+    for _i in range(10):
+        user = await create_random_user()
+        users.append(user)
+        group_members.append(GroupMember(value=user.id, display=user.display_name, type="User"))
+
+    test_group = await create_random_group(group_members)
     group_id = test_group.id
     group_url = f"{api_prefix}/Groups/{group_id}"
 
@@ -219,6 +239,9 @@ async def test_get_group_endpoint(
     # Verify essential group properties
     assert group_data["id"] == group_id
     assert group_data["displayName"] == test_group.display_name
+    assert len(group_data["members"]) == len(users)
+    for user in users:
+        assert {"value": user.id, "display": user.display_name, "type": "User"} in group_data["members"]
 
 
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
@@ -328,7 +351,10 @@ async def test_get_resource_types_endpoint(client: TestClient, api_prefix: str, 
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 @pytest.mark.usefixtures("maildomain")
 async def test_put_user_endpoint(
-    create_random_user: Callable[[], User], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+    create_random_user: CreateUserFactory,
+    client: TestClient,
+    api_prefix: str,
+    auth_headers: dict[str, str],
 ) -> None:
     """Test updating a user through the REST API PUT endpoint."""
     print("\n=== E2E Testing PUT User Endpoint ===")
@@ -407,7 +433,10 @@ async def test_put_user_endpoint(
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 @pytest.mark.usefixtures("maildomain")
 async def test_patch_user_endpoint(
-    create_random_user: Callable[[], User], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+    create_random_user: CreateUserFactory,
+    client: TestClient,
+    api_prefix: str,
+    auth_headers: dict[str, str],
 ) -> None:
     """Test partially updating a user through the REST API PATCH endpoint."""
     print("\n=== E2E Testing PATCH User Endpoint ===")
@@ -465,7 +494,10 @@ async def test_patch_user_endpoint(
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 async def test_put_group_endpoint(
-    create_random_group: Callable[[], Group], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+    create_random_group: CreateGroupFactory,
+    client: TestClient,
+    api_prefix: str,
+    auth_headers: dict[str, str],
 ) -> None:
     """Test updating a group through the REST API PUT endpoint."""
     print("\n=== E2E Testing PUT Group Endpoint ===")
@@ -521,8 +553,8 @@ async def test_put_group_endpoint(
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 @pytest.mark.usefixtures("maildomain")
 async def test_put_user_with_members_endpoint(
-    create_random_user: Callable[[], User],
-    create_random_group: Callable[[], Group],
+    create_random_user: CreateUserFactory,
+    create_random_group: CreateGroupFactory,
     client: TestClient,
     api_prefix: str,
     auth_headers: dict[str, str],
@@ -605,8 +637,8 @@ async def test_put_user_with_members_endpoint(
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 async def test_put_group_with_members_endpoint(
-    create_random_user: Callable[[], User],
-    create_random_group: Callable[[], Group],
+    create_random_user: CreateUserFactory,
+    create_random_group: CreateGroupFactory,
     client: TestClient,
     api_prefix: str,
     auth_headers: dict[str, str],
@@ -733,7 +765,10 @@ async def test_put_group_with_members_endpoint(
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 @pytest.mark.usefixtures("maildomain")
 async def test_delete_user_endpoint(
-    create_random_user: Callable[[], User], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+    create_random_user: CreateUserFactory,
+    client: TestClient,
+    api_prefix: str,
+    auth_headers: dict[str, str],
 ) -> None:
     """Test deleting a user through the REST API endpoint."""
     print("\n=== E2E Testing DELETE User Endpoint ===")
@@ -764,7 +799,10 @@ async def test_delete_user_endpoint(
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 async def test_delete_group_endpoint(
-    create_random_group: Callable[[], Group], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+    create_random_group: CreateGroupFactory,
+    client: TestClient,
+    api_prefix: str,
+    auth_headers: dict[str, str],
 ) -> None:
     """Test deleting a group through the REST API endpoint."""
     print("\n=== E2E Testing DELETE Group Endpoint ===")
@@ -847,8 +885,8 @@ async def test_delete_nonexistent_group(client: TestClient, api_prefix: str, aut
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 @pytest.mark.usefixtures("maildomain")
 async def test_delete_user_with_memberships(
-    create_random_user: Callable[[], User],
-    create_random_group: Callable[[], Group],
+    create_random_user: CreateUserFactory,
+    create_random_group: CreateGroupFactory,
     client: TestClient,
     api_prefix: str,
     auth_headers: dict[str, str],
@@ -936,8 +974,8 @@ async def test_delete_user_with_memberships(
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 async def test_delete_group_with_members(
-    create_random_user: Callable[[], User],
-    create_random_group: Callable[[], Group],
+    create_random_user: CreateUserFactory,
+    create_random_group: CreateGroupFactory,
     client: TestClient,
     api_prefix: str,
     auth_headers: dict[str, str],

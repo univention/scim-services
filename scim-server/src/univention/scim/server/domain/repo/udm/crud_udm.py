@@ -55,7 +55,7 @@ class CrudUdm(Generic[T], CrudScim[T]):
         self.logger = logger.bind(resource_type=resource_type)
         self.logger.info("Initialized UDM CRUD with UDM REST API client")
 
-    async def get(self, resource_id: str, base_url: str) -> T:
+    async def get(self, resource_id: str) -> T:
         """
         Get a resource by ID.
         Args:

@@ -14,7 +14,7 @@ from _pytest.logging import LogCaptureFixture
 from faker import Faker
 from fastapi.testclient import TestClient
 from loguru import logger
-from scim2_models import Address, Email, Group, Name, Resource, User
+from scim2_models import Address, Email, Group, GroupMember, Name, Resource, User
 from univention.admin.rest.client import UDM
 
 from helpers.allow_all_authn import AllowAllAuthorization, AllowAllBearerAuthentication, OpenIDConnectConfigurationMock
@@ -25,12 +25,90 @@ from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.domain.group_service_impl import GroupServiceImpl
 from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.repo.udm.crud_udm import CrudUdm
+from univention.scim.server.domain.repo.udm.udm_id_cache import UdmIdCache
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
 from univention.scim.server.main import app
 from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 
 
 T = TypeVar("T", bound=Resource)
+
+
+# helper classes to simplify type hinting
+class CreateUserFactory:
+    def __init__(
+        self,
+        udm_client: UDM,
+        scim2udm_mapper: ScimToUdmMapper,
+        udm2scim_mapper: UdmToScimMapper,
+        random_user_factory: Callable[[list[GroupMember]], User],
+    ) -> None:
+        self.udm_client = udm_client
+        self.scim2udm_mapper = scim2udm_mapper
+        self.udm2scim_mapper = udm2scim_mapper
+        self.random_user_factory = random_user_factory
+        self.users: list[User] = []
+
+    async def __call__(self, groups: list[GroupMember] | None = None, /) -> User:
+        if groups is None:
+            groups = []
+        user = self.random_user_factory(groups)
+
+        # First, make sure there's no existing user with the same username
+        await ensure_user_deleted(self.udm_client, username=user.user_name)
+
+        # Create new user
+        module = self.udm_client.get("users/user")
+        udm_obj = module.new()
+
+        user_properties = self.scim2udm_mapper.map_user(user)
+        for key, value in user_properties.items():
+            udm_obj.properties[key] = value
+
+        udm_obj.save()
+
+        scim_user = self.udm2scim_mapper.map_user(udm_obj, base_url="http://testserver/scim/v2")
+        self.users.append(scim_user)
+        return scim_user
+
+        return self.udm2scim_mapper.map_user(udm_obj, base_url="http://testserver/scim/v2")
+
+
+class CreateGroupFactory:
+    def __init__(
+        self,
+        udm_client: UDM,
+        scim2udm_mapper: ScimToUdmMapper,
+        udm2scim_mapper: UdmToScimMapper,
+        random_group_factory: Callable[[list[GroupMember]], Group],
+    ) -> None:
+        self.udm_client = udm_client
+        self.scim2udm_mapper = scim2udm_mapper
+        self.udm2scim_mapper = udm2scim_mapper
+        self.random_group_factory = random_group_factory
+        self.groups: list[Group] = []
+
+    async def __call__(self, members: list[GroupMember] | None = None, /) -> Group:
+        if members is None:
+            members = []
+        group = self.random_group_factory(members)
+
+        # First, make sure there's no existing group with the same name
+        await ensure_group_deleted(self.udm_client, group_name=group.display_name)
+
+        # Create new group
+        module = self.udm_client.get("groups/group")
+        udm_obj = module.new()
+
+        group_properties = self.scim2udm_mapper.map_group(group)
+        for key, value in group_properties.items():
+            udm_obj.properties[key] = value
+
+        udm_obj.save()
+
+        scim_group = self.udm2scim_mapper.map_group(udm_obj, base_url="http://testserver/scim/v2")
+        self.groups.append(scim_group)
+        return scim_group
 
 
 @pytest.fixture(autouse=True)
@@ -111,19 +189,24 @@ def caplog(caplog: LogCaptureFixture) -> Generator[LogCaptureFixture, None, None
 
 
 def create_crud_manager(
-    resource_type: str, resource_class: type[User | Group], udm_url: str, udm_username: str, udm_password: str
+    resource_type: str,
+    resource_class: type[User | Group],
+    udm_client: UDM,
+    scim2udm_mapper: ScimToUdmMapper = None,
+    udm2scim_mapper: UdmToScimMapper = None,
 ) -> CrudManager:
-    scim2udm_mapper = ScimToUdmMapper(None)
-    udm2scim_mapper = UdmToScimMapper(None)
+    if not scim2udm_mapper:
+        scim2udm_mapper = ScimToUdmMapper(None)
+    if not udm2scim_mapper:
+        udm2scim_mapper = UdmToScimMapper(None)
 
     repository = CrudUdm(
         resource_type=resource_type,
         scim2udm_mapper=scim2udm_mapper,
         udm2scim_mapper=udm2scim_mapper,
         resource_class=resource_class,
-        udm_url=udm_url,
-        udm_username=udm_username,
-        udm_password=udm_password,
+        udm_client=udm_client,
+        base_url="http://testserver/scim/v2",
     )
 
     return CrudManager(repository, resource_type)
@@ -299,10 +382,12 @@ async def ensure_group_deleted(udm_client: UDM, group_name: str | None = None, g
 
 
 @pytest.fixture
-def random_user_factory() -> Callable[[], User]:
+def random_user_factory() -> Callable[[list[GroupMember]], User]:
     """Create a factory function that returns a random user each time it's called"""
 
-    def factory() -> User:
+    def factory(groups: list[GroupMember] | None = None) -> User:
+        if groups is None:
+            groups = []
         data = random_user_data()
 
         user = User(
@@ -335,6 +420,7 @@ def random_user_factory() -> Callable[[], User]:
             active=True,
             preferred_language="en-US",
             user_type="employee",
+            groups=groups,
             meta={},
         )
 
@@ -344,51 +430,30 @@ def random_user_factory() -> Callable[[], User]:
 
 
 @pytest.fixture
-def random_user(random_user_factory: Callable[[], User]) -> User:
+def random_user(random_user_factory: Callable[[list[GroupMember]], User]) -> User:
     """Create a single random user (for backwards compatibility)"""
-    return random_user_factory()
+    return random_user_factory([])
 
 
 @pytest.fixture
-async def create_random_user(random_user_factory: Callable[[], User]) -> AsyncGenerator[Callable[[], User], None]:
+async def create_random_user(
+    random_user_factory: Callable[[list[GroupMember]], User],
+) -> AsyncGenerator[CreateUserFactory, None]:
     """Create a user factory fixture with proper cleanup"""
     udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
     udm_username = os.environ.get("UDM_USERNAME", "admin")
     udm_password = os.environ.get("UDM_PASSWORD", "univention")
 
-    scim2udm_mapper = ScimToUdmMapper(None)
-    udm2scim_mapper = UdmToScimMapper(None)
-
     udm_client = UDM.http(udm_url, udm_username, udm_password)
+    cache = UdmIdCache(udm_client, 120)
+    scim2udm_mapper = ScimToUdmMapper(cache)
+    udm2scim_mapper = UdmToScimMapper(cache)
 
-    created_users = []
-
-    async def create_user() -> User:
-        # Use the factory to generate a new random user each time
-        user = random_user_factory()
-
-        # First, make sure there's no existing user with the same username
-        await ensure_user_deleted(udm_client, username=user.user_name)
-
-        # Create new user
-        module = udm_client.get("users/user")
-        udm_obj = module.new()
-
-        user_properties = scim2udm_mapper.map_user(user)
-        for key, value in user_properties.items():
-            udm_obj.properties[key] = value
-
-        udm_obj.save()
-
-        created_user = udm2scim_mapper.map_user(udm_obj, base_url=udm_url)
-        created_users.append(created_user)
-
-        return created_user
-
-    yield create_user
+    factory = CreateUserFactory(udm_client, scim2udm_mapper, udm2scim_mapper, random_user_factory)
+    yield factory
 
     # Cleanup - delete the user
-    for created_user in created_users:
+    for created_user in factory.users:
         try:
             await ensure_user_deleted(udm_client, user_id=created_user.id)
         except Exception as e:
@@ -396,16 +461,19 @@ async def create_random_user(random_user_factory: Callable[[], User]) -> AsyncGe
 
 
 @pytest.fixture
-def random_group_factory() -> Callable[[], Group]:
+def random_group_factory() -> Callable[[list[GroupMember]], Group]:
     """Create a factory function that returns a random group each time it's called"""
 
-    def factory() -> Group:
+    def factory(members: list[GroupMember] | None = None) -> Group:
+        if members is None:
+            members = []
         data = random_group_data()
 
         return Group(
             id=fake.uuid4(),
             schemas=["urn:ietf:params:scim:schemas:core:2.0:Group"],
             display_name=data["display_name"],
+            members=members,
             meta={},
         )
 
@@ -413,51 +481,31 @@ def random_group_factory() -> Callable[[], Group]:
 
 
 @pytest.fixture
-def random_group(random_group_factory: Callable[[], Group]) -> Group:
+def random_group(random_group_factory: Callable[[list[GroupMember]], Group]) -> Group:
     """Create a single random group (for backwards compatibility)"""
-    return random_group_factory()
+    return random_group_factory([])
 
 
 @pytest.fixture
-async def create_random_group(random_group_factory: Callable[[], Group]) -> AsyncGenerator[Callable[[], Group], None]:
+async def create_random_group(
+    random_group_factory: Callable[[list[GroupMember]], Group],
+) -> AsyncGenerator[CreateGroupFactory, None]:
     """Create a group factory fixture with proper cleanup"""
     udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
     udm_username = os.environ.get("UDM_USERNAME", "admin")
     udm_password = os.environ.get("UDM_PASSWORD", "univention")
 
-    scim2udm_mapper = ScimToUdmMapper(None)
-    udm2scim_mapper = UdmToScimMapper(None)
-
     udm_client = UDM.http(udm_url, udm_username, udm_password)
 
-    created_groups = []
+    cache = UdmIdCache(udm_client, 120)
+    scim2udm_mapper = ScimToUdmMapper(cache)
+    udm2scim_mapper = UdmToScimMapper(cache)
 
-    async def create_group() -> Group:
-        # Use the factory to generate a new random group each time
-        group = random_group_factory()
-
-        # First, make sure there's no existing group with the same name
-        await ensure_group_deleted(udm_client, group_name=group.display_name)
-
-        # Create new group
-        module = udm_client.get("groups/group")
-        udm_obj = module.new()
-
-        group_properties = scim2udm_mapper.map_group(group)
-        for key, value in group_properties.items():
-            udm_obj.properties[key] = value
-
-        udm_obj.save()
-
-        created_group = udm2scim_mapper.map_group(udm_obj, base_url=udm_url)
-        created_groups.append(created_group)
-
-        return created_group
-
-    yield create_group
+    factory = CreateGroupFactory(udm_client, scim2udm_mapper, udm2scim_mapper, random_group_factory)
+    yield factory
 
     # Cleanup - delete the group
-    for created_group in created_groups:
+    for created_group in factory.groups:
         try:
             await ensure_group_deleted(udm_client, group_id=created_group.id)
         except Exception as e:

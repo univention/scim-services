@@ -6,8 +6,8 @@ version: "3"
 services:
   test:
     build:
-      context: ../../
-      dockerfile: docker/scim-server/Dockerfile
+      context: ../../docker/scim-server/
+      dockerfile: Dockerfile
       target: test
     #image: gitregistry.knut.univention.de/dev/projects/scim/scim-services/scim-server/testrunner:${IMAGE_TAG:-latest}
     depends_on:
@@ -15,11 +15,6 @@ services:
         condition: service_started
     cap_drop:
       - ALL
-    command: >
-      bash -c " \
-        cd scim-server && \
-        uv sync && \
-        uv run pytest -lv"
     volumes:
       - ../../pyproject.toml:/app/pyproject.toml:ro
       - ../../scim-server:/app/scim-server:ro
@@ -31,6 +26,7 @@ services:
       UDM_URL: http://udm-rest-api:9979/udm/
       UDM_USERNAME: cn=admin
       UDM_PASSWORD: univention
+      LOG_LEVEL: DEBUG
 
   udm-rest-api:
     image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-udm-rest/udm-rest-api:latest

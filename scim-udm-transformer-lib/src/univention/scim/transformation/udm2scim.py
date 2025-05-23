@@ -77,12 +77,11 @@ class UdmToScimMapper:
         )
 
         # Map name
-        if any(key in props for key in ["firstname", "lastname", "displayName"]):
+        if any(key in props for key in ["firstname", "lastname"]):
             user.name = Name(
                 given_name=props.get("firstname", ""),
                 family_name=props.get("lastname", ""),
-                formatted=props.get("displayName")
-                or f"{props.get('firstname', '')} {props.get('lastname', '')}".strip(),
+                formatted=f"{props.get('firstname', '')} {props.get('lastname', '')}".strip(),
             )
 
         # Map emails
@@ -203,26 +202,30 @@ class UdmToScimMapper:
         if certificates:
             user.x509_certificates = certificates
 
-        # Map members if available
-        if "groups" in props and props["groups"] and self.cache:
-            group_dns = props["groups"]
-            if isinstance(group_dns, str):
-                group_dns = [group_dns]
+        # TODO: Do not map groups for now, it will reduce performance because many LDAP queries are required
+        # # Map groups if available
+        # if "groups" in props and props["groups"] and self.cache:
+        #    user.groups = []
+        #    group_dns = props["groups"]
+        #    if isinstance(group_dns, str):
+        #        group_dns = [group_dns]
 
-            from scim2_models import GroupMember
+        #    from scim2_models import GroupMember
 
-            for dn in group_dns:
-                group = self.cache.get_group(dn)
-                if not group:
-                    continue
+        #    for dn in group_dns:
+        #        group = self.cache.get_group(dn)
+        #        # When mapping from UDM to SCIM it is a read request from the scim-server
+        #        # so just ignore entities which are not found
+        #        if not group:
+        #            continue
 
-                user.groups.append(
-                    GroupMember(
-                        value=group,
-                        display=group,
-                        type="Group",
-                    )
-                )
+        #        user.groups.append(
+        #            GroupMember(
+        #                value=group,
+        #                display=group,
+        #                type="Group",
+        #            )
+        #        )
 
         return user
 
@@ -266,6 +269,7 @@ class UdmToScimMapper:
 
         # Map members if available
         if "users" in props and props["users"] and self.cache:
+            group.members = []
             user_dns = props["users"]
             if isinstance(user_dns, str):
                 user_dns = [user_dns]
@@ -274,6 +278,8 @@ class UdmToScimMapper:
 
             for dn in user_dns:
                 user = self.cache.get_user(dn)
+                # When mapping from UDM to SCIM it is a read request from the scim-server
+                # so just ignore entities which are not found
                 if not user:
                     continue
 

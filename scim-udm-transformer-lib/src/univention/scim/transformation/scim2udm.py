@@ -66,15 +66,19 @@ class ScimToUdmMapper:
             if mobile_phone:
                 properties["mobile"] = mobile_phone
 
-        # Map members
-        if user.groups and self.cache:
-            # UDM expects DNs for members, but SCIM only has IDs
-            for member in user.groups:
-                group = self.cache.get_group(member.value)
-                if not group:
-                    continue
+        # TODO: Do not map groups for now, it will reduce performance because many LDAP queries are required
+        # Map groups
+        # if user.groups and self.cache:
+        #    properties["groups"] = []
+        #    # UDM expects DNs for members, but SCIM only has IDs
+        #    for member in user.groups:
+        #        group = self.cache.get_group(member.value)
+        #        # When mapping from SCIM to UDM it is a write request to the scim-server
+        #        # so we raise an exception if a mapping can not be done
+        #        if not group:
+        #            raise ValueError(f"Failed to find user {member.value}")
 
-                properties["groups"] = group.dn
+        #        properties["groups"].append(group.dn)
 
         # Store any attributes that should be set on the UDM object directly
 
@@ -102,13 +106,16 @@ class ScimToUdmMapper:
             properties["univentionObjectIdentifier"] = group.id
         # Map members
         if group.members and self.cache:
+            properties["users"] = []
             # UDM expects DNs for members, but SCIM only has IDs
             for member in group.members:
                 user = self.cache.get_user(member.value)
+                # When mapping from SCIM to UDM it is a write request to the scim-server
+                # so we raise an exception if a mapping can not be done
                 if not user:
-                    continue
+                    raise ValueError(f"Failed to find user {member.value}")
 
-                properties["users"] = user.dn
+                properties["users"].append(user.dn)
 
         # Map version if available
         if group.meta and group.meta.version:
