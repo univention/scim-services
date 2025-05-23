@@ -6,8 +6,8 @@ from uuid import uuid4
 from loguru import logger
 from scim2_models import Group, ListResponse
 
-from server.domain.patch_mixin import PatchMixin
 from univention.scim.server.domain.group_service import GroupService
+from univention.scim.server.domain.patch_mixin import PatchMixin
 from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.rules.loader import RuleLoader
@@ -111,7 +111,6 @@ class GroupServiceImpl(GroupService, PatchMixin):
         saved_group = await self.group_repository.update(group_id, updated_resource)
         logger.info(f"Patched resource with ID: {group_id}")
         return saved_group
-
 
     async def delete_group(self, group_id: str) -> bool:
         """Delete a group."""

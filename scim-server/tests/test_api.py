@@ -370,14 +370,12 @@ class TestGroupAPI:
         assert data["id"] == group_id
         assert data["displayName"] == test_group.display_name
 
-
     @pytest.mark.usefixtures("setup_mocks")
     def test_apply_patch_operation(self, client: TestClient) -> None:
         """Test creating a group."""
 
-        group_id= self._create_test_group(client)
+        group_id = self._create_test_group(client)
         group_url = f"/scim/v2/Groups/{group_id}"
-
 
         # Step 2: Fetch the user before patching
         pre_patch_response = client.get(group_url)
@@ -406,6 +404,100 @@ class TestGroupAPI:
         # Step 5: Verify updated values
         assert data["displayName"] == "It's not a cult"
         assert "id" in data
+
+    @pytest.mark.usefixtures("setup_mocks")
+    def test_patch_nonexistent_group(self, client: TestClient) -> None:
+        """PATCHing a non-existent user should return 404 or a handled error."""
+        non_existent_id = "non-existent-id-123"
+        patch_url = f"/scim/v2/Groups/{non_existent_id}"
+
+        patch_operations = {
+            "Operations": [
+                {"op": "replace", "path": "displayName", "value": "GhostGroup"},
+            ]
+        }
+
+        response = client.patch(
+            patch_url,
+            json=patch_operations,
+            headers={"Content-Type": "application/json"},
+        )
+
+        assert response.status_code in (404, 400), f"Expected failure but got: {response.status_code}"
+        assert "not found" in response.text.lower()
+
+    @pytest.mark.usefixtures("setup_mocks")
+    def test_patch_with_invalid_payload(self, client: TestClient) -> None:
+        """PATCH with malformed data should be rejected with 400."""
+        group_id = self._create_test_group(client)
+        group_url = f"/scim/v2/Groups/{group_id}"
+
+        pre_patch_response = client.get(group_url)
+        assert pre_patch_response.status_code == 200, f"Failed to fetch user: {pre_patch_response.text}"
+        data = pre_patch_response.json()
+
+        assert data["displayName"] == test_group.display_name
+
+        patch_operations = {
+            "Operations": [
+                {"op": "replace", "path": "bad_field", "value": "oops"},
+            ]
+        }
+        patch_response = client.patch(
+            group_url,
+            json=patch_operations,
+            headers={"Content-Type": "application/json"},
+        )
+
+        assert patch_response.status_code == 400
+        assert " validation error " in patch_response.text
+
+    @pytest.mark.usefixtures("setup_mocks")
+    def test_patch_with_invalid_payload_broken(self, client: TestClient) -> None:
+        """PATCH with malformed data should be rejected with 400."""
+        group_id = self._create_test_group(client)
+        group_url = f"/scim/v2/Groups/{group_id}"
+
+        pre_patch_response = client.get(group_url)
+        assert pre_patch_response.status_code == 200, f"Failed to fetch group: {pre_patch_response.text}"
+        original_group = pre_patch_response.json()
+        assert original_group["displayName"] != "Cult group"
+
+        invalid_patch = {"bad_field": "oops"}
+
+        patch_response = client.patch(
+            group_url,
+            json=invalid_patch,
+            headers={"Content-Type": "application/json"},
+        )
+
+        assert patch_response.status_code == 400
+        assert "Operations" in patch_response.text or "Invalid" in patch_response.text
+
+    @pytest.mark.usefixtures("setup_mocks")
+    def test_patch_remove_attribute(self, client: TestClient) -> None:
+        """PATCH to remove a user attribute should succeed and result in deletion."""
+        group_id = self._create_test_group(client)
+        group_url = f"/scim/v2/Groups/{group_id}"
+
+        # Confirm field exists before deletion
+        group_before = client.get(group_url).json()
+        assert "displayName" in group_before
+
+        # Remove the 'displayName' field
+        patch_operations = {
+            "Operations": [
+                {"op": "remove", "path": "displayName"},
+            ]
+        }
+
+        patch_response = client.patch(
+            group_url,
+            json=patch_operations,
+            headers={"Content-Type": "application/json"},
+        )
+
+        assert patch_response.status_code == 400  # should retry to remove it but since its not allowed it should fail
 
 
 class TestServiceProviderConfig:

@@ -4,7 +4,7 @@
 from typing import Annotated, Any
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, status, Body
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response, status
 from loguru import logger
 from scim2_models import Group, ListResponse
 
@@ -157,6 +157,7 @@ async def patch_group(
     except Exception as e:
         logger.exception("Unexpected error patching group", user_id=group_id)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected error") from e
+
 
 @router.delete("/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
 @inject

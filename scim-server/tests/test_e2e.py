@@ -450,6 +450,47 @@ async def test_patch_user_endpoint(
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
+@pytest.mark.usefixtures("maildomain")
+async def test_patch_group_endpoint(
+    create_random_group: Callable[[], Group], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+) -> None:
+    """Test partially updating a user through the REST API PATCH endpoint."""
+    print("\n=== E2E Testing PATCH Group Endpoint ===")
+
+    # Step 1: Create a test user
+    test_group = await create_random_group()
+    group_id = test_group.id
+    group_url = f"{api_prefix}/Groups/{group_id}"
+
+    # Step 3: Prepare patch operations
+    new_display_name = "PatchedGroup"
+
+    patch_body = {
+        "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+        "Operations": [
+            {"op": "replace", "path": "displayName", "value": new_display_name},
+        ],
+    }
+
+    # Step 4: Send PATCH request
+    patch_response = client.patch(group_url, json=patch_body, headers=auth_headers)
+    assert patch_response.status_code == 200, f"PATCH failed: {patch_response.text}"
+    patched_group = patch_response.json()
+
+    # Step 5: Assert updated fields
+    assert patched_group["id"] == group_id
+    assert patched_group["displayName"] == new_display_name
+
+    # Step 7: Re-GET to confirm persistence
+    get_final = client.get(group_url, headers=auth_headers)
+    assert get_final.status_code == 200
+    final_group = get_final.json()
+
+    assert final_group["displayName"] == new_display_name
+
+
+@pytest.mark.asyncio
+@pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 async def test_put_group_endpoint(
     create_random_group: CreateGroupFactory,
     client: TestClient,
