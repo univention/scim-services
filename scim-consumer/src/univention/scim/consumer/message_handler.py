@@ -19,6 +19,11 @@ async def handle_udm_message(message: ProvisioningMessage):
         #
         scim_resource = prepare_data(todo=todo, message=message)
 
+        # TODO What is the correct behavior?!
+        if not scim_resource.external_id:
+            logger.error("Resource has no externalId!\n{}", cust_pformat(scim_resource))
+            return
+
         #
         # Message handling
         #
@@ -61,11 +66,15 @@ def prepare_data(todo: str, message: ProvisioningMessage) -> Resource:
     else:
         raise Exception(f"Unsupported todo {todo}")
 
+    mapper = UdmToScimMapper()
     if message.topic == "users/user":
-        scim_resource = UdmToScimMapper().map_user(udm_user=udm_resource)
+        scim_resource = mapper.map_user(udm_user=udm_resource)
 
     elif message.topic == "groups/group":
-        scim_resource = UdmToScimMapper().map_group(udm_group=udm_resource)
+        scim_resource = mapper.map_group(udm_group=udm_resource)
+
+    else:
+        raise Exception(f"Unsupported message topic {message.topic}")
 
     logger.debug("Mapped resource:\n{}", cust_pformat(scim_resource))
 

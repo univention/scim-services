@@ -2,29 +2,27 @@
 # SPDX-FileCopyrightText: 2024 Univention GmbH
 
 services:
-  # test:
-  #   build:
-  #     context: ../../
-  #     dockerfile: docker/scim-consumer/Dockerfile
-  #     target: test
-  #   cap_drop:
-  #     - ALL
-  #   volumes:
-  #     - ./:/app/tests:ro
 
   scim-dev-server:
+    profiles: ["main"]
     platform: linux/amd64
     build:
       context: ../../
       dockerfile: docker/scim-dev-server/Dockerfile
+    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-dev-server:${IMAGE_TAG:-latest}
+    environment:
+      SCIM_SERVER_HOSTNAME: scim-dev-server
     ports:
       - 8888:8080
     volumes:
       - ./conf/scim-server-resource-types.json:/opt/univention/scim-dev-server/resource-types.json
       - ./conf/scim-server-schemas.json:/opt/univention/scim-dev-server/schemas.json
+    networks:
+      - scim
 
   events-and-consumer-api:
-    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-events-and-consumer-api:${IMAGE_TAG:-latest}
+    profiles: ["main"]
+    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-events-and-consumer-api:latest
     container_name: "events-and-consumer-api-dev"
     restart: "on-failure"
     environment:
@@ -51,8 +49,11 @@ services:
       - "nats"
     ports:
       - "7777:7777"
+    networks:
+      - scim
 
   nats:
+    profiles: ["main"]
     image: "nats:latest"
     container_name: nats
     environment:
@@ -64,10 +65,13 @@ services:
       - ./conf/nats.dev.conf:/etc/nats-config/nats.conf
       - type: tmpfs
         target: /var/run
+    networks:
+      - scim
     command: --name nats --cluster_name JetStreamCluster --jetstream -m 8222 -p 4222 -config /etc/nats-config/nats.conf
 
   dispatcher:
-    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-dispatcher:${IMAGE_TAG:-latest}
+    profiles: ["main"]
+    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-dispatcher:latest
     container_name: "provisioning-dispatcher"
     restart: "on-failure"
     environment:
@@ -82,9 +86,12 @@ services:
     depends_on:
       - "nats"
       - "events-and-consumer-api"
+    networks:
+      - scim
 
   udm-transformer:
-    image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-udm-transformer:${IMAGE_TAG:-latest}"
+    profiles: ["main"]
+    image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-udm-transformer:latest"
     container_name: "provisioning-udm-transformer"
     restart: "on-failure"
     environment:
@@ -110,9 +117,12 @@ services:
     depends_on:
       - "nats"
       - "events-and-consumer-api"
+    networks:
+      - scim
 
   prefill:
-    image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-prefill:${IMAGE_TAG:-latest}"
+    profiles: ["main"]
+    image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-prefill:latest"
     container_name: "provisioning-prefill"
     restart: "on-failure"
     environment:
@@ -134,9 +144,12 @@ services:
     depends_on:
       - "nats"
       - "events-and-consumer-api"
+    networks:
+      - scim
 
   udm-listener:
-    image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-udm-listener:${IMAGE_TAG:-latest}"
+    profiles: ["main"]
+    image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-udm-listener:latest"
     container_name: "udm-listener"
     environment:
       NATS_HOST: "nats"
@@ -159,11 +172,13 @@ services:
       - "ldap-notifier"
     volumes:
       - /etc/ldap/
+    networks:
+      - scim
 
   ldap-notifier:
+    profiles: ["main"]
     platform: linux/amd64
-    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-ldap/ldap-notifier:${IMAGE_TAG:-latest}
-    # image: artifacts.software-univention.de/nubus-dev/images/ldap-notifier:0.16.1-pre-jlohmer-bump-to-508
+    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-ldap/ldap-notifier:latest
     container_name: "ldap-notifier"
     depends_on:
       ldap-server:
@@ -173,10 +188,13 @@ services:
     volumes:
       - ldap-shared-data:/var/lib/univention-ldap/:rw
       - ldap-shared-run:/var/run/slapd/:ro
+    networks:
+      - scim
 
   ldap-server:
+    profiles: ["main"]
     platform: linux/amd64
-    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-ldap/ldap-server:${IMAGE_TAG:-latest}
+    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-ldap/ldap-server:latest
     container_name: "ldap-server"
     environment:
       LDAP_CN_ADMIN_PW: univention
@@ -190,9 +208,12 @@ services:
       - ldap-shared-data:/var/lib/univention-ldap/:rw
       - ldap-shared-run:/var/run/slapd/:rw
       - ./conf/base-defaults.conf:/etc/univention/base-defaults.conf:ro
+    networks:
+      - scim
 
   udm-rest-api:
-    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-udm-rest/udm-rest-api:${IMAGE_TAG:-latest}
+    profiles: ["main"]
+    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-udm-rest/udm-rest-api:latest
     container_name: "udm-rest-api"
     platform: "linux/amd64"
     ports:
@@ -209,8 +230,37 @@ services:
       TLS_MODE: "off"
       MACHINE_SECRET: univention
       LDAP_CN_ADMIN_PW: univention
+    networks:
+      - scim
+
+  test:
+    profiles: ["test"]
+    build:
+      context: ../../
+      dockerfile: docker/scim-consumer/Dockerfile
+      target: test
+    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-cunsumer-testrunner:${IMAGE_TAG:-latest}
+    environment:
+      SCIM_SERVER_BASE_URL: http://scim-dev-server:8080/
+      PROVISIONING_API_BASE_URL: http://events-and-consumer-api:7777/
+      PROVISIONING_API_USERNAME: scim-consumer
+      PROVISIONING_API_PASSWORD: univention
+      PROVISIONING_API_ADMIN_USERNAME: admin
+      PROVISIONING_API_ADMIN_PASSWORD: provisioning
+      LOG_LEVEL: INFO
+      MAX_ACKNOWLEDGEMENT_RETRIES: 10
+      UDM_BASE_URL: http://udm-rest-api:9979/udm/
+      UDM_USERNAME: cn=admin
+      UDM_PASSWORD: univention
+    networks:
+      - scim
+    command: bash -c "uv run pytest -v -s scim-consumer/tests/test_main.py"
 
 volumes:
   ldap-shared-data:
   ldap-shared-run:
   pre-commit-cache:
+
+networks:
+  scim:
+    driver: bridge

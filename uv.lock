@@ -891,13 +891,13 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "icecream" },
+    { name = "icecream", specifier = ">=2.1.4" },
     { name = "nubus-provisioning-consumer", specifier = ">=0.53.0", index = "https://git.knut.univention.de/api/v4/projects/882/packages/pypi/simple" },
     { name = "pydantic", specifier = ">=2.10.6" },
     { name = "scim-udm-transformer-lib", editable = "scim-udm-transformer-lib" },
     { name = "scim2-client", extras = ["httpx"], specifier = ">=0.5.1" },
     { name = "scim2-tester", specifier = ">=0.1.14" },
-    { name = "udm-rest-api-client" },
+    { name = "udm-rest-api-client", specifier = ">=0.0.2" },
     { name = "udm-rest-api-client", extras = ["async"], specifier = ">=0.0.2" },
 ]
 

@@ -16,3 +16,4 @@ __pycache__/
 **/*.tgz
 **/.kyverno/manifest.yaml
 **/*.egg-info/
+.venv/

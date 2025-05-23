@@ -32,12 +32,23 @@ lint-pre-commit:
     KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
     DOCKERFILE_PATH: "docker/scim-server/Dockerfile"
     KANIKO_ARGS: "--target=test"
+  - IMAGE_NAME: "scim-consumer-testrunner"
+    KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
+    DOCKERFILE_PATH: "docker/scim-consumer/Dockerfile"
+    KANIKO_ARGS: "--target=test"
+  - IMAGE_NAME: "scim-consumer"
+    KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
+    DOCKERFILE_PATH: "docker/scim-consumer/Dockerfile"
+  - IMAGE_NAME: "scim-dev-server"
+    KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
+    DOCKERFILE_PATH: "docker/scim-dev-server/Dockerfile"
 
 # Separate publish matrix to accomodate testrunner images
 # that should not be mirrored to artifacts.software-univention.de
 .publish-matrix: &publish-matrix
   - IMAGE_NAME:
       - "scim-server"
+      - "scim-consumer"
 
 container-build:
   parallel:
@@ -127,3 +138,41 @@ test-helm-charts:
   script:
     - helm dep build helm/scim-server
     - pytest tests/helm
+
+test-scim-consumer-integration:
+  stage: test
+  extends: .dind
+  image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: "never"
+    - when: "on_success"
+  before_script:
+    - cd scim-consumer/tests
+    # Allow that the Docker API version is negotiated between client and server
+    - unset DOCKER_API_VERSION
+    - export IMAGE_TAG=${RELEASE_VERSION}
+    - echo -e "\e[0Ksection_start:`date +%s`:docker_debug[collapsed=true]\r\e[0KDocker version details"
+    - echo $IMAGE_TAG
+    - docker version
+    - echo -e "\e[0Ksection_end:`date +%s`:docker_debug\r\e[0K"
+    - echo -e "\e[0Ksection_start:`date +%s`:docker_compose_config[collapsed=true]\r\e[0KDocker Compose configuration"
+    - docker compose config test
+    - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
+    - docker compose --profile main up -d --no-build --quiet-pull --wait --wait-timeout 60
+  script:
+    - docker compose run test | tee scim-consumer-test.log 2>&1
+  after_script:
+    - docker compose logs ldap-server >& ldap-server.log
+    - docker compose logs udm-rest-api >& udm-rest-api.log
+    - docker compose logs scim-dev-server >& scim-dev-server.log
+    - docker compose --profile main down --volumes
+  artifacts:
+    paths:
+      - ldap-server.log
+      - udm-rest-api.log
+      - scim-dev-server.log
+      - scim-consumer-test.log
+    expire_in: "1 day"
+    when: "always"
+    expose_as: "docker compose server logs"

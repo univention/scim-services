@@ -4,7 +4,7 @@
 # Inspired by: https://hynek.me/articles/docker-uv/
 
 ARG UCS_BASE_IMAGE=gitregistry.knut.univention.de/univention/dev/projects/ucs-base-image/ucs-base-python-521
-ARG UCS_BASE_IMAGE_TAG=0.18.1-build-2025-05-15
+ARG UCS_BASE_IMAGE_TAG=0.17.3-build-2025-05-11
 
 ###############################################
 # Stage 0: get build tools
@@ -33,9 +33,6 @@ ENV UV_LINK_MODE=copy \
 COPY ./pyproject.toml ./uv.lock /app/
 COPY ./scim-udm-transformer-lib /app/scim-udm-transformer-lib
 COPY ./scim-consumer/pyproject.toml /app/scim-consumer/
-COPY ./scim-udm-transformer-lib/pyproject.toml /app/scim-udm-transformer-lib/
-COPY ./scim-server/pyproject.toml /app/scim-server/
-COPY ./udm-to-scim-sync/pyproject.toml /app/udm-to-scim-sync/
 
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.cache \
@@ -52,7 +49,19 @@ COPY ./scim-consumer/src /app/scim-consumer/src
 RUN uv sync --package=scim-consumer --no-dev --no-editable # --locked
 
 ###############################################
-# Stage 2: final image
+# Stage 2: test
+FROM build AS test
+SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
+
+ENV PYTHONUNBUFFERED=1 \
+    PATH=/app/scim-consumer/.venv/bin:$PATH
+
+COPY ./scim-consumer/tests /app/scim-consumer/tests
+
+RUN uv sync --package=scim-consumer --dev
+
+###############################################
+# Stage 3: final image
 FROM ${UCS_BASE_IMAGE}:${UCS_BASE_IMAGE_TAG} AS final
 SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
 

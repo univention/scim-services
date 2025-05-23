@@ -42,7 +42,7 @@ class ScimClientWrapper:
         -------
         SyncSCIMClient
         """
-        logger.info("Connect to SCIM server.")
+        logger.info("Connect to SCIM server ({}).", self.settings.scim_server_base_url)
 
         client = Client(base_url=self.settings.scim_server_base_url)
 
@@ -77,6 +77,9 @@ class ScimClientWrapper:
         # Discover resources
         # scim = SyncSCIMClient(client=client, resource_models=[User, Group])
         # scim.discover(schemas=True, resource_types=True, service_provider_config=True)
+        #
+        # Result: At the moment, the Univention SCIM Server doesen't support the
+        # discover function. This topic has to be clearified ...
 
         return scim
 

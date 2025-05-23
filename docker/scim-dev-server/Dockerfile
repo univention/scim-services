@@ -20,7 +20,7 @@ RUN apt-get -qq update \
     && rm -fr /var/lib/apt/lists/* /var/cache/apt/archives/* \
     && pip3 install --no-cache-dir --break-system-packages -r /opt/univention/scim-dev-server/requirements.txt
 
-CMD nohup scim2-server --hostname 0.0.0.0 \
+CMD nohup scim2-server --hostname ${SCIM_SERVER_HOSTNAME} \
                        --port 8080 \
                        --resource-type /opt/univention/scim-dev-server/resource-types.json \
                        --schema /opt/univention/scim-dev-server/schemas.json \
