@@ -63,5 +63,4 @@ known-first-party = ["helpers", "univention.scim"]
 [dependency-groups]
 dev = [
     "pytest>=8.3.5",
-    "pre-commit",
 ]

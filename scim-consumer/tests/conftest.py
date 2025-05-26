@@ -18,7 +18,6 @@ from univention.provisioning.consumer.api import (
     RealmTopic,
 )
 
-from univention.scim.consumer.helper import cust_pformat
 from univention.scim.consumer.main import run as scim_client_run
 
 
@@ -64,64 +63,22 @@ def udm_user():
 
 @pytest.fixture
 def udm_user_updated(udm_user):
-    udm_user["displayName"] = "This is a testuser"
-    udm_user["password"] = "univention2"
-    return udm_user
+    return {
+        "username": udm_user["username"],
+        "firstname": udm_user["firstname"],
+        "lastname": udm_user["lastname"],
+        "univentionObjectIdentifier": udm_user["univentionObjectIdentifier"],
+        "password": "univention2",
+        "displayName": "This is a testuser",
+    }
 
 
 @pytest.fixture
-def udm_client():
-    logger.info("Fixture udm_client started.")
+def udm_client_fixture():
+    logger.info("Create udm_client.")
     udm = UDM.http(os.environ["UDM_BASE_URL"], os.environ["UDM_USERNAME"], os.environ["UDM_PASSWORD"])
-    logger.info("Fixture udm_client stopped.")
+
     return udm
-
-
-@pytest.fixture
-def create_udm_user(udm_client, udm_user):
-    logger.info("Fixture create_udm_user started.")
-    logger.debug("udm_user:\n{}", cust_pformat(udm_user))
-
-    module = udm_client.get("users/user")
-    obj = module.new()
-    for key, value in udm_user.items():
-        obj.properties[key] = value
-    obj.save()
-    logger.info("Fixture create_udm_user stopped.")
-    return True
-
-
-@pytest.fixture
-def update_udm_user(udm_client, udm_user_updated):
-    logger.info("Fixture update_udm_user started.")
-    logger.debug("udm_user_updated:\n{}", cust_pformat(udm_user_updated))
-
-    module = udm_client.get("users/user")
-    for result in module.search(f"univentionObjectIdentifier={udm_user_updated['univentionObjectIdentifier']}"):
-        logger.info("Found user with uoi: {}", udm_user_updated["univentionObjectIdentifier"])
-        obj = result.open()
-        for key, value in udm_user_updated.items():
-            obj.properties[key] = value
-
-        obj.save()
-        break
-    logger.info("Fixture update_udm_user stopped.")
-    return True
-
-
-@pytest.fixture(scope="function")
-def delete_udm_user(udm_client, udm_user):
-    logger.info("Fixture delete_udm_user started.")
-    logger.debug("udm_user:\n{}", cust_pformat(udm_user))
-
-    module = udm_client.get("users/user")
-    for result in module.search(f"univentionObjectIdentifier={udm_user['univentionObjectIdentifier']}"):
-        logger.info("Found user with uoi: {}", udm_user["univentionObjectIdentifier"])
-        obj = result.open()
-        obj.delete()
-        break
-    logger.info("Fixture delete_udm_user stopped.")
-    return True
 
 
 @pytest.fixture

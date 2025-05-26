@@ -13,58 +13,46 @@ async def handle_udm_message(message: ProvisioningMessage):
     """ """
     logger.debug("ProvisioningMessage:\n{}", cust_pformat(message))
 
-    if message.realm == "udm":
-        #
-        todo = get_todo(message=message)
-        #
-        scim_resource = prepare_data(todo=todo, message=message)
+    if message.realm != "udm":
+        raise ValueError(f"Unsupported message realm {message.realm}")
 
-        # TODO What is the correct behavior?!
-        if not scim_resource.external_id:
-            logger.error("Resource has no externalId!\n{}", cust_pformat(scim_resource))
-            return
+    #
+    scim_resource = prepare_data(message=message)
 
-        #
-        # Message handling
-        #
-        scim_client = ScimClientWrapper()
-        if todo == "create":
-            scim_client.create_resource(scim_resource)
+    # TODO What is the correct behavior?!
+    if not scim_resource.external_id:
+        logger.error("Resource has no externalId!\n{}", cust_pformat(scim_resource))
+        return
 
-        elif todo == "update":
-            scim_client.update_resource(scim_resource)
+    #
+    # Message handling
+    #
+    scim_client = ScimClientWrapper()
+    if not message.body.old and message.body.new:
+        scim_client.create_resource(scim_resource)
 
-        else:
-            scim_client.delete_resource(scim_resource)
+    elif message.body.old and message.body.new:
+        scim_client.update_resource(scim_resource)
 
+    elif not message.body.new and message.body.old:
+        scim_client.delete_resource(scim_resource)
     else:
-        raise Exception(f"Unsupported message realm {message.realm}")
+        raise ValueError("Invalid message state.")
 
 
-def get_todo(message: ProvisioningMessage) -> str:
+def prepare_data(message: ProvisioningMessage) -> Resource:
     """ """
-    if message.body.old and message.body.new:
-        todo = "update"
-    elif not message.body.old:
-        todo = "create"
-    elif not message.body.new:
-        todo = "delete"
-
-    return todo
-
-
-def prepare_data(todo: str, message: ProvisioningMessage) -> Resource:
-    """ """
-    if todo in ["create", "update"]:
+    # Transform data from dict to obj, because the udm mapper needs an object!
+    if (message.body.old and message.body.new) or (not message.body.old and message.body.new):
         # Create object from message body new dict
         udm_resource = type("Obj", (object,), {k: v for k, v in message.body.new.items()})()
 
-    elif todo == "delete":
+    elif not message.body.new and message.body.old:
         # Create object from message body old dict
         udm_resource = type("Obj", (object,), {k: v for k, v in message.body.old.items()})()
 
     else:
-        raise Exception(f"Unsupported todo {todo}")
+        raise ValueError("Invalid message state.")
 
     mapper = UdmToScimMapper()
     if message.topic == "users/user":
@@ -74,7 +62,7 @@ def prepare_data(todo: str, message: ProvisioningMessage) -> Resource:
         scim_resource = mapper.map_group(udm_group=udm_resource)
 
     else:
-        raise Exception(f"Unsupported message topic {message.topic}")
+        raise ValueError(f"Unsupported message topic {message.topic}")
 
     logger.debug("Mapped resource:\n{}", cust_pformat(scim_resource))
 

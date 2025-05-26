@@ -6,109 +6,92 @@ import time
 from loguru import logger
 
 from univention.scim.consumer.helper import cust_pformat
-from univention.scim.consumer.scim_client import ScimClientWrapper
+from univention.scim.consumer.scim_client import ScimClientNoDataFoundException, ScimClientWrapper
 
 
-def test_scim_create_user(create_udm_user, scim_consumer, udm_user):
-    logger.info("Test test_scim_create_user started.")
-    logger.debug("udm_user:\n{}", cust_pformat(udm_user))
+def create_udm_user(udm_client, udm_user):
+    logger.info("Create_udm user")
+    logger.debug("udm user data:\n{}", cust_pformat(udm_user))
 
-    user = None
-    max_loops = 100
-    count_loops = 0
-    sleep_time = 5
+    module = udm_client.get("users/user")
+    obj = module.new()
+    for key, value in udm_user.items():
+        obj.properties[key] = value
+    obj.save()
 
-    while True:
+    return True
+
+
+def update_udm_user(udm_client, udm_user):
+    logger.info("Update udm user")
+    logger.debug("udm user data:\n{}", cust_pformat(udm_user))
+
+    module = udm_client.get("users/user")
+    for result in module.search(f"univentionObjectIdentifier={udm_user['univentionObjectIdentifier']}"):
+        logger.debug("Found user with uoi: {}", udm_user["univentionObjectIdentifier"])
+        obj = result.open()
+        for key, value in udm_user.items():
+            obj.properties[key] = value
+
+        obj.save()
+        break
+
+    return True
+
+
+def delete_udm_user(udm_client, udm_user):
+    logger.info("Delete udm user")
+    logger.debug("udm user data:\n{}", cust_pformat(udm_user))
+
+    module = udm_client.get("users/user")
+    for result in module.search(f"univentionObjectIdentifier={udm_user['univentionObjectIdentifier']}"):
+        logger.debug("Found user with uoi: {}", udm_user["univentionObjectIdentifier"])
+        obj = result.open()
+        obj.delete()
+        break
+
+    return True
+
+
+def test_scim_crud(udm_client_fixture, scim_consumer, udm_user, udm_user_updated):
+    scim_client = ScimClientWrapper()
+
+    # Test create
+    create_udm_user(udm_client=udm_client_fixture, udm_user=udm_user)
+    for i in range(1, 100):
         try:
-            logger.info("Try to get user with uoi: {}", udm_user.get("univentionObjectIdentifier"))
-            user = ScimClientWrapper().get_resource_by_external_id(udm_user.get("univentionObjectIdentifier"))
-
+            logger.info("Try to get user with uoi: {}. Attemp {}", udm_user.get("univentionObjectIdentifier"), i)
+            user = scim_client.get_resource_by_external_id(udm_user.get("univentionObjectIdentifier"))
         except Exception:
-            time.sleep(sleep_time)
-            count_loops += 1
-            if count_loops >= max_loops:
-                logger.error("Max loop count reached!")
-                break
-
+            time.sleep(5)
+            continue
         else:
-            logger.debug("user:\n{}", cust_pformat(user))
+            logger.debug("fetched scim user data:\n{}", cust_pformat(user))
             break
 
     assert user.user_name == udm_user.get("username")
-    logger.info("Test test_scim_create_user stopped.")
 
-
-def test_scim_update_user(update_udm_user, scim_consumer, udm_user_updated):
-    logger.info("Test test_scim_update_user started.")
-    logger.debug("udm_user_updated:\n{}", cust_pformat(udm_user_updated))
-
-    user = None
-    max_loops = 100
-    count_loops = 0
-    sleep_time = 5
-
-    scim_client = ScimClientWrapper()
-
-    while True:
-        try:
-            logger.info("Try to get user with uoi: {}", udm_user_updated.get("univentionObjectIdentifier"))
-            user = scim_client.get_resource_by_external_id(udm_user_updated.get("univentionObjectIdentifier"))
-
-        except Exception:
-            time.sleep(sleep_time)
-            count_loops += 1
-            if count_loops >= max_loops:
-                logger.error("Max loop count reached!")
-                break
-
+    # Test update
+    update_udm_user(udm_client=udm_client_fixture, udm_user=udm_user_updated)
+    for i in range(1, 100):
+        logger.info("Try to get user with uoi: {}. Attemp {}", udm_user.get("univentionObjectIdentifier"), i)
+        user = scim_client.get_resource_by_external_id(udm_user.get("univentionObjectIdentifier"))
+        if user.display_name == udm_user_updated.get("displayName"):
+            break
         else:
-            # Maybe not updated until now and old data is still in SCIM ...
-            if user.display_name != udm_user_updated.get("displayName"):
-                time.sleep(sleep_time)
-                count_loops += 1
-                if count_loops >= max_loops:
-                    logger.error("Max loop count reached!")
-                    break
-                continue
-            else:
-                logger.debug("user:\n{}", cust_pformat(user))
-                break
+            time.sleep(5)
 
     assert user.display_name == udm_user_updated.get("displayName")
 
-    logger.info("Test test_scim_update_user stopped.")
-
-
-def test_scim_delete_user(delete_udm_user, scim_consumer, udm_user):
-    logger.info("Test test_scim_delete_user started.")
-    logger.debug("udm_user:\n{}", cust_pformat(udm_user))
-
-    logger.info("Try to get user with uoi: {}", udm_user.get("univentionObjectIdentifier"))
-
-    max_loops = 100
-    sleep_time = 5
-    count_loops = 0
+    # Test delete
+    delete_udm_user(udm_client=udm_client_fixture, udm_user=udm_user)
     throws_exception = False
+    try:
+        for i in range(1, 100):
+            logger.info("Try to get user with uoi: {}. Attemp {}", udm_user.get("univentionObjectIdentifier"), i)
+            user = scim_client.get_resource_by_external_id(udm_user.get("univentionObjectIdentifier"))
+            time.sleep(5)
 
-    scim_client = ScimClientWrapper()
-    while True:
-        try:
-            logger.info("Try to get user with uoi: {}", udm_user.get("univentionObjectIdentifier"))
-            scim_client.get_resource_by_external_id(udm_user.get("univentionObjectIdentifier"))
-
-        except Exception:
-            throws_exception = True
-            break
-
-        else:
-            # Maybe not deleted until now ...
-            time.sleep(sleep_time)
-            count_loops += 1
-            if count_loops >= max_loops:
-                logger.error("Max loop count reached!")
-                break
-            continue
-
+    except ScimClientNoDataFoundException:
+        throws_exception = True
     assert throws_exception
-
-    logger.info("Test test_scim_delete_user stopped.")

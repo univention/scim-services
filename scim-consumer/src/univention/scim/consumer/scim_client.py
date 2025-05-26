@@ -11,12 +11,10 @@ from scim2_tester import check_server
 from univention.scim.consumer.helper import cust_pformat
 
 
-class ScimClientNoDataFoundException(Exception):
-    pass
+class ScimClientNoDataFoundException(Exception): ...
 
 
-class ScimClientTooManyResultsException(Exception):
-    pass
+class ScimClientTooManyResultsException(Exception): ...
 
 
 class ScimClientSettings(BaseSettings):
@@ -95,40 +93,26 @@ class ScimClientWrapper:
         -------
         SyncSCIMClient
         """
-        if not self._scim_client or (self.settings.health_check_enabled and not self.health_check(self._scim_client)):
+        if not self._scim_client or (self.settings.health_check_enabled and not self.health_check()):
             self._scim_client = self._create_client()
 
         return self._scim_client
 
-    def health_check(self, client: SyncSCIMClient) -> bool:
+    def health_check(self) -> bool:
         """
         Checks the state of the SCIM server.
-
-        Parameters
-        ----------
-        client : SyncSCIMClient
 
         Returns
         -------
         bool
             True if the state is OK, False when an error occurs.
         """
-        dirty = False
         try:
-            # results = check_server(client)
-            check_server(client)
-        except Exception as e:
-            logger.error(e)
-            dirty = True
-        # else:
-        #     for result in results:
-        #         # logger.debug("SCIM server state: {}: {}", result.status.name, result.title)
-        #         # TODO Refactor! Very unclean solution!
-        #         if result.status.name != "SUCCESS":
-        #             logger.debug("SCIM server state: {}: {}", result.status.name, result.title)
-        #             dirty = True
-
-        return not dirty
+            check_server(self._scim_client)
+        except Exception:
+            return False
+        else:
+            return True
 
     def create_resource(self, resource: Resource):
         """
