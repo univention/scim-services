@@ -6,7 +6,7 @@ import time
 from loguru import logger
 
 from univention.scim.consumer.helper import cust_pformat
-from univention.scim.consumer.scim_client import ScimClientNoDataFoundException, ScimClientWrapper
+from univention.scim.consumer.scim_client import ScimClientNoDataFoundException
 
 
 def create_udm_user(udm_client, udm_user):
@@ -56,9 +56,7 @@ def delete_udm_user(udm_client, udm_user):
     return True
 
 
-def test_scim_crud(udm_client_fixture, scim_consumer, udm_user, udm_user_updated):
-    scim_client = ScimClientWrapper()
-
+def test_scim_crud(udm_client_fixture, scim_consumer, scim_client, udm_user, udm_user_updated):
     # Test create
     create_udm_user(udm_client=udm_client_fixture, udm_user=udm_user)
     for i in range(1, 100):

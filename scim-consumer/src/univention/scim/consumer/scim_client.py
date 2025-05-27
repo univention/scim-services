@@ -22,9 +22,25 @@ class ScimClientSettings(BaseSettings):
     health_check_enabled: bool = True
     # TODO Add auth settings
 
+    def __new__(cls, *args, **kwargs):
+        """
+        Singleton pattern
+        """
+        if not hasattr(cls, "instance"):
+            cls.instance = super().__new__(cls)
+        return cls.instance
+
 
 class ScimClientWrapper:
     _scim_client: SyncSCIMClient = None
+
+    def __new__(cls, *args, **kwargs):
+        """
+        Singleton pattern
+        """
+        if not hasattr(cls, "instance"):
+            cls.instance = super().__new__(cls)
+        return cls.instance
 
     def __init__(
         self,
@@ -36,9 +52,6 @@ class ScimClientWrapper:
         """
         Returns a connected SyncSCIMClient instance.
 
-        Returns
-        -------
-        SyncSCIMClient
         """
         logger.info("Connect to SCIM server ({}).", self.settings.scim_server_base_url)
 
@@ -89,9 +102,6 @@ class ScimClientWrapper:
         If the connection exists already, it is checked for health and
         reconnected if necessary.
 
-        Returns
-        -------
-        SyncSCIMClient
         """
         if not self._scim_client or (self.settings.health_check_enabled and not self.health_check()):
             self._scim_client = self._create_client()
@@ -102,10 +112,6 @@ class ScimClientWrapper:
         """
         Checks the state of the SCIM server.
 
-        Returns
-        -------
-        bool
-            True if the state is OK, False when an error occurs.
         """
         try:
             check_server(self._scim_client)
@@ -118,10 +124,6 @@ class ScimClientWrapper:
         """
         Creates a SCIM resource.
 
-        Parameters
-        ----------
-        resource : Resource
-            A filled scim2_models.Resource instance.
         """
         logger.info("Create SCIM resource {}", resource.external_id)
         logger.debug("Resource data:\n{}", cust_pformat(resource.model_dump()))
@@ -136,11 +138,6 @@ class ScimClientWrapper:
 
         Fetches the current data from the SCIM server via the external_id (univentionObjectIdentifier),
         merges the data and write it back to the SCIM server.
-
-        Parameters
-        ----------
-        resource : Resource
-            A filled scim2_models.Resource instance.
 
         Raises
         ------
@@ -202,12 +199,6 @@ class ScimClientWrapper:
     def get_resource_by_external_id(self, external_id: str) -> Resource:
         """
         Returns a SCIM resource with the given external ID.
-
-
-        Parameters
-        ----------
-        external_id :str
-            The univentionObjectIdentifier (UUID)
 
         Raises
         ------

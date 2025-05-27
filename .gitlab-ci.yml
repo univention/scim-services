@@ -139,7 +139,7 @@ test-helm-charts:
     - helm dep build helm/scim-consumer
     - pytest tests/helm_unit
 
-test-scim-consumer-integration:
+test-scim-consumer:
   stage: test
   extends: .dind
   image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7"
@@ -160,7 +160,7 @@ test-scim-consumer-integration:
     - docker compose config test
     - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
   script:
-    - docker compose run test | tee scim-consumer-test.log 2>&1
+    - docker compose run --rm --quiet-pull --remove-orphans test | tee scim-consumer-test.log 2>&1
   after_script:
     - docker compose logs ldap-server >& ldap-server.log
     - docker compose logs udm-rest-api >& udm-rest-api.log
