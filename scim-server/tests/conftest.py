@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+import contextlib
 import os
 import random
 import socket
@@ -18,7 +19,7 @@ from scim2_models import Address, Email, Group, GroupMember, Name, Resource, Use
 from univention.admin.rest.client import UDM
 
 from helpers.allow_all_authn import AllowAllAuthorization, AllowAllBearerAuthentication, OpenIDConnectConfigurationMock
-from helpers.mock_udm import MockCrudUdm
+from helpers.udm_client import MockUdm
 from univention.scim.server.authn.authn import Authentication
 from univention.scim.server.config import ApplicationSettings
 from univention.scim.server.container import ApplicationContainer
@@ -127,18 +128,27 @@ def application_settings(monkeypatch: pytest.MonkeyPatch) -> Generator[Applicati
 
 
 @pytest.fixture
-def setup_mocks(application_settings: ApplicationSettings) -> Generator[None, None, None]:
-    # Create test UDM repositories
-    ScimToUdmMapper(None)
-    UdmToScimMapper(None)
+def setup_mocks(application_settings: ApplicationSettings, udm_client: MockUdm) -> Generator[None, None, None]:
+    cache = UdmIdCache(udm_client, 120)
+    scim2udm_mapper = ScimToUdmMapper(cache)
+    udm2scim_mapper = UdmToScimMapper(cache)
 
-    user_repo = MockCrudUdm[User](
+    user_repo = CrudUdm[User](
         resource_type="User",
-        udm_url="http://test.local",
+        scim2udm_mapper=scim2udm_mapper,
+        udm2scim_mapper=udm2scim_mapper,
+        resource_class=User,
+        udm_client=udm_client,
+        base_url="http://testserver/scim/v2",
     )
 
-    group_repo = MockCrudUdm[Group](
+    group_repo = CrudUdm[Group](
         resource_type="Group",
+        scim2udm_mapper=scim2udm_mapper,
+        udm2scim_mapper=udm2scim_mapper,
+        resource_class=Group,
+        udm_client=udm_client,
+        base_url="http://testserver/scim/v2",
     )
 
     user_crud_manager = CrudManager[User](user_repo, "User")
@@ -227,7 +237,7 @@ def directory_importer_config() -> Any:
     return ConnectorConfig()
 
 
-@pytest.fixture(scope="session")
+@contextlib.contextmanager
 def maildomain(directory_importer_config: Any) -> Any:
     base_url = f"{directory_importer_config.udm.uri.rstrip('/')}/mail/domain/"
     auth = (directory_importer_config.udm.user, directory_importer_config.udm.password)
@@ -304,6 +314,56 @@ def authenticator_mock() -> Authentication:
 def disable_auththentication(application_settings: ApplicationSettings) -> ApplicationSettings:
     application_settings.auth_enabled = False
     return application_settings
+
+
+@pytest.fixture
+def udm_client(
+    random_user_factory: Callable[[list[GroupMember]], User], random_group_factory: Callable[[list[GroupMember]], Group]
+) -> Generator[MockUdm, None, None]:
+    if skip_if_no_udm():
+        yield MockUdm(random_user_factory, random_group_factory)
+    else:
+        udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
+        udm_username = os.environ.get("UDM_USERNAME", "admin")
+        udm_password = os.environ.get("UDM_PASSWORD", "univention")
+
+        class ConnectorConfig:
+            class UdmConfig:
+                def __init__(self) -> None:
+                    self.uri = udm_url
+                    self.user = udm_username
+                    self.password = udm_password
+
+            def __init__(self) -> None:
+                self.udm = self.UdmConfig()
+
+        with maildomain(ConnectorConfig()):
+            client = UDM.http(udm_url, udm_username, udm_password)
+            yield client
+
+        # if using a real UDM make sure to delete all users and groups after a test
+        try:
+            module = client.get("users/user")
+            results = list(module.search())
+            if results:
+                for result in results:
+                    udm_obj = result.open()
+                    print(f"Deleting existing user: {udm_obj.properties['username']}")
+                    udm_obj.delete()
+
+            module = client.get("groups/group")
+            results = list(module.search())
+            if results:
+                for result in results:
+                    udm_obj = result.open()
+                    # Do not delete default groups
+                    if udm_obj.properties["gidNumber"] <= 5007:
+                        continue
+
+                    print(f"Deleting existing group: {udm_obj.properties['name']}")
+                    udm_obj.delete()
+        except Exception as e:
+            print(f"Error checking/deleting user: {e}")
 
 
 fake = Faker()
@@ -437,14 +497,9 @@ def random_user(random_user_factory: Callable[[list[GroupMember]], User]) -> Use
 
 @pytest.fixture
 async def create_random_user(
-    random_user_factory: Callable[[list[GroupMember]], User],
+    random_user_factory: Callable[[list[GroupMember]], User], udm_client: UDM
 ) -> AsyncGenerator[CreateUserFactory, None]:
     """Create a user factory fixture with proper cleanup"""
-    udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
-    udm_username = os.environ.get("UDM_USERNAME", "admin")
-    udm_password = os.environ.get("UDM_PASSWORD", "univention")
-
-    udm_client = UDM.http(udm_url, udm_username, udm_password)
     cache = UdmIdCache(udm_client, 120)
     scim2udm_mapper = ScimToUdmMapper(cache)
     udm2scim_mapper = UdmToScimMapper(cache)
@@ -488,14 +543,9 @@ def random_group(random_group_factory: Callable[[list[GroupMember]], Group]) -> 
 
 @pytest.fixture
 async def create_random_group(
-    random_group_factory: Callable[[list[GroupMember]], Group],
+    random_group_factory: Callable[[list[GroupMember]], Group], udm_client: UDM
 ) -> AsyncGenerator[CreateGroupFactory, None]:
     """Create a group factory fixture with proper cleanup"""
-    udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
-    udm_username = os.environ.get("UDM_USERNAME", "admin")
-    udm_password = os.environ.get("UDM_PASSWORD", "univention")
-
-    udm_client = UDM.http(udm_url, udm_username, udm_password)
 
     cache = UdmIdCache(udm_client, 120)
     scim2udm_mapper = ScimToUdmMapper(cache)

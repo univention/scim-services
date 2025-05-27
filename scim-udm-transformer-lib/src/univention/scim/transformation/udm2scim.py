@@ -71,9 +71,9 @@ class UdmToScimMapper:
             meta=meta_data,
             external_id=props.get("univentionObjectIdentifier"),
             display_name=props.get("displayName", ""),
-            title=props.get("title"),
-            user_type=props.get("employeeType"),
-            preferred_language=props.get("preferredLanguage"),
+            title=props.get("title", ""),
+            user_type=props.get("employeeType", ""),
+            preferred_language=props.get("preferredLanguage", ""),
         )
 
         # Map name

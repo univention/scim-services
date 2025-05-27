@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-import os
 
 import pytest
 from scim2_models import Group, Name, User
@@ -19,15 +18,8 @@ from .conftest import CreateGroupFactory, CreateUserFactory, create_crud_manager
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain")
-async def test_user_service(create_random_user: CreateUserFactory) -> None:
+async def test_user_service(create_random_user: CreateUserFactory, udm_client: UDM) -> None:
     print("\n=== Testing User Service ===")
-
-    udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
-    udm_username = os.environ.get("UDM_USERNAME", "admin")
-    udm_password = os.environ.get("UDM_PASSWORD", "univention")
-
-    udm_client = UDM.http(udm_url, udm_username, udm_password)
 
     cache = UdmIdCache(udm_client, 120)
     udm2scim_mapper = UdmToScimMapper(cache)
@@ -54,15 +46,8 @@ async def test_user_service(create_random_user: CreateUserFactory) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain")
-async def test_group_service(create_random_group: CreateGroupFactory) -> None:
+async def test_group_service(create_random_group: CreateGroupFactory, udm_client: UDM) -> None:
     print("\n=== Testing Group Service ===")
-
-    udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
-    udm_username = os.environ.get("UDM_USERNAME", "admin")
-    udm_password = os.environ.get("UDM_PASSWORD", "univention")
-
-    udm_client = UDM.http(udm_url, udm_username, udm_password)
 
     cache = UdmIdCache(udm_client, 120)
     udm2scim_mapper = UdmToScimMapper(cache)

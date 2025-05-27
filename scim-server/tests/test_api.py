@@ -17,10 +17,11 @@ test_user = User(
         family_name="Doe",
         formatted="John Doe",
     ),
+    password="securepassword",
     active=True,
     emails=[
         Email(
-            value="john.doe@example.com",
+            value="john.doe@example.org",
             type="work",
             primary=True,
         )
@@ -95,6 +96,9 @@ class TestUserAPI:
         # Update the user
         updated_user = test_user.model_copy()
         updated_user.name.given_name = "Jane"
+
+        # Do not update the password UDM does not allow setting the same password
+        updated_user.password = None
 
         response = client.put(
             f"/scim/v2/Users/{user_id}", json=updated_user.model_dump(by_alias=True, exclude_none=True)

@@ -6,6 +6,7 @@ from typing import Any
 from loguru import logger
 from scim2_models import Group, User
 
+from univention.scim.transformation.exceptions import MappingError
 from univention.scim.transformation.id_cache import IdCache
 
 
@@ -37,34 +38,39 @@ class ScimToUdmMapper:
             "username": user.user_name,
             "password": user.password,
             "disabled": not user.active if user.active is not None else False,
+            "univentionObjectIdentifier": user.id,
         }
-        if user.id:
-            properties["univentionObjectIdentifier"] = user.id
+
         # Map name components
         if user.name:
-            if user.name.given_name:
-                properties["firstname"] = user.name.given_name
-            if user.name.family_name:
-                properties["lastname"] = user.name.family_name
-            if user.name.formatted:
-                properties["displayName"] = user.name.formatted
+            properties["firstname"] = user.name.given_name
+            properties["lastname"] = user.name.family_name
+        else:
+            properties["firstname"] = None
+            properties["lastname"] = None
+
+        properties["displayName"] = user.display_name
+
         # Map email addresses
         if user.emails:
             primary_email = next((email.value for email in user.emails if email.primary), None)
-            if primary_email:
-                properties["mailPrimaryAddress"] = primary_email
+            properties["mailPrimaryAddress"] = primary_email
             # Additional emails as alternative addresses
             alt_emails = [email.value for email in user.emails if not email.primary]
-            if alt_emails:
-                properties["mailAlternativeAddress"] = alt_emails
+            properties["mailAlternativeAddress"] = alt_emails
+        else:
+            properties["mailPrimaryAddress"] = None
+            properties["mailAlternativeAddress"] = None
+
         # Map phone numbers
         if user.phone_numbers:
             work_phone = next((phone.value for phone in user.phone_numbers if phone.type == "work"), None)
-            if work_phone:
-                properties["phone"] = work_phone
+            properties["phone"] = work_phone
             mobile_phone = next((phone.value for phone in user.phone_numbers if phone.type == "mobile"), None)
-            if mobile_phone:
-                properties["mobile"] = mobile_phone
+            properties["mobileTelephoneNumber"] = mobile_phone
+        else:
+            properties["phone"] = None
+            properties["mobileTelephoneNumber"] = None
 
         # TODO: Do not map groups for now, it will reduce performance because many LDAP queries are required
         # Map groups
@@ -76,15 +82,11 @@ class ScimToUdmMapper:
         #        # When mapping from SCIM to UDM it is a write request to the scim-server
         #        # so we raise an exception if a mapping can not be done
         #        if not group:
-        #            raise ValueError(f"Failed to find user {member.value}")
+        #            raise MappingError(f"Failed to find group {group.dn}", user.id, group.dn)
 
         #        properties["groups"].append(group.dn)
 
         # Store any attributes that should be set on the UDM object directly
-
-        # Map version if available
-        if user.meta and user.meta.version:
-            properties["etag"] = user.meta.version
 
         # Return both properties and object attributes that should be set on the UDM object directly
         return properties
@@ -101,9 +103,9 @@ class ScimToUdmMapper:
         properties = {
             "name": group.display_name,
             "description": group.display_name,  # Use display name as description if no description is provided
+            "univentionObjectIdentifier": group.id,
         }
-        if group.id:
-            properties["univentionObjectIdentifier"] = group.id
+
         # Map members
         if group.members and self.cache:
             properties["users"] = []
@@ -113,13 +115,9 @@ class ScimToUdmMapper:
                 # When mapping from SCIM to UDM it is a write request to the scim-server
                 # so we raise an exception if a mapping can not be done
                 if not user:
-                    raise ValueError(f"Failed to find user {member.value}")
+                    raise MappingError(f"Failed to find user {member.value}", group.id, member.value)
 
                 properties["users"].append(user.dn)
-
-        # Map version if available
-        if group.meta and group.meta.version:
-            properties["etag"] = group.meta.version
 
         # Return both properties and object attributes that should be set on the UDM object directly
         return properties

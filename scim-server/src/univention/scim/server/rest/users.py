@@ -9,6 +9,7 @@ from scim2_models import EnterpriseUser, ListResponse, User
 
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.domain.user_service import UserService
+from univention.scim.transformation.exceptions import MappingError
 
 
 router = APIRouter()
@@ -97,6 +98,9 @@ async def create_user(
         created_user = await user_service.create_user(user)
         response.headers["Location"] = f"/Users/{created_user.id}"
         return created_user
+    except MappingError as e:
+        logger.error("Error group not found", user_id=e.element, group_id=e.value)
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
@@ -132,6 +136,9 @@ async def update_user(
 
     try:
         return await user_service.update_user(user_id, user)
+    except MappingError as e:
+        logger.error("Error group not found", user_id=e.element, group_id=e.value)
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
     except ValueError as e:
         if "not found" in str(e):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
@@ -164,16 +171,16 @@ async def patch_user(
 
         updated_user = await user_service.apply_patch_operations(user_id, operations)
         return updated_user
-
     except HTTPException as e:
         # Already a well-formed client or not-found error, just raise it
         raise e
-
+    except MappingError as e:
+        logger.error("Error group not found", user_id=e.element, group_id=e.value)
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
     except ValueError as e:
         if "not found" in str(e).lower():
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
-
     except Exception as e:
         logger.exception("Unexpected error patching user", user_id=user_id)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected error") from e

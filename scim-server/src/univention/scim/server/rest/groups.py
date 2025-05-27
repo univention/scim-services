@@ -10,6 +10,7 @@ from scim2_models import Group, ListResponse
 
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.domain.group_service import GroupService
+from univention.scim.transformation.exceptions import MappingError
 
 
 router = APIRouter()
@@ -82,6 +83,9 @@ async def create_group(
         created_group = await group_service.create_group(group)
         response.headers["Location"] = f"/Groups/{created_group.id}"
         return created_group
+    except MappingError as e:
+        logger.error("Error user not found", group_id=e.element, user_id=e.value)
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
@@ -105,6 +109,9 @@ async def update_group(
 
     try:
         return await group_service.update_group(group_id, group)
+    except MappingError as e:
+        logger.error("Error user not found", group_id=e.element, user_id=e.value)
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
     except ValueError as e:
         if "not found" in str(e):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e

@@ -50,7 +50,6 @@ def e2e_auth_bypass(application_settings: ApplicationSettings) -> Generator[None
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain")
 async def test_list_user_endpoint(
     create_random_user: CreateUserFactory,
     client: TestClient,
@@ -88,7 +87,6 @@ async def test_list_user_endpoint(
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain")
 async def test_get_user_endpoint(
     create_random_user: CreateUserFactory,
     client: TestClient,
@@ -123,7 +121,8 @@ async def test_get_user_endpoint(
 
 
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain", "disable_auththentication")
+# if create_random_user or create_random_group is not used udm_client must be included manually
+@pytest.mark.usefixtures("udm_client")
 async def test_post_user_endpoint(
     random_user: User, client: TestClient, api_prefix: str, auth_headers: dict[str, str]
 ) -> None:
@@ -160,15 +159,9 @@ async def test_post_user_endpoint(
     assert primary_email is not None, "No primary email found"
     assert primary_email["value"] in [email.value for email in test_user.emails]
 
-    # Clean up - delete the created user
-    created_user_id = created_user["id"]
-    delete_response = client.delete(f"{api_prefix}/Users/{created_user_id}", headers=auth_headers)
-    assert delete_response.status_code == 204, f"Failed to delete created user: {delete_response.text}"
-
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain")
 async def test_list_group_endpoint(
     create_random_group: CreateGroupFactory,
     client: TestClient,
@@ -208,7 +201,8 @@ async def test_list_group_endpoint(
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain")
+# if create_random_user or create_random_group is not used udm_client must be included manually
+@pytest.mark.usefixtures("udm_client")
 async def test_get_group_endpoint(
     create_random_group: CreateGroupFactory,
     create_random_user: CreateUserFactory,
@@ -245,7 +239,6 @@ async def test_get_group_endpoint(
 
 
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain", "disable_auththentication")
 async def test_post_group_endpoint(
     random_group: Group, client: TestClient, api_prefix: str, auth_headers: dict[str, str]
 ) -> None:
@@ -282,11 +275,6 @@ async def test_post_group_endpoint(
     # Verify schemas
     assert "schemas" in created_group, "Created group does not have schemas"
     assert "urn:ietf:params:scim:schemas:core:2.0:Group" in created_group["schemas"]
-
-    # Clean up - delete the created group
-    created_group_id = created_group["id"]
-    delete_response = client.delete(f"{api_prefix}/Groups/{created_group_id}", headers=auth_headers)
-    assert delete_response.status_code == 204, f"Failed to delete created group: {delete_response.text}"
 
 
 @pytest.mark.asyncio
@@ -349,7 +337,6 @@ async def test_get_resource_types_endpoint(client: TestClient, api_prefix: str, 
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain")
 async def test_put_user_endpoint(
     create_random_user: CreateUserFactory,
     client: TestClient,
@@ -431,7 +418,6 @@ async def test_put_user_endpoint(
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain")
 async def test_patch_user_endpoint(
     create_random_user: CreateUserFactory,
     client: TestClient,
@@ -551,7 +537,6 @@ async def test_put_group_endpoint(
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain")
 async def test_put_user_with_members_endpoint(
     create_random_user: CreateUserFactory,
     create_random_group: CreateGroupFactory,
@@ -620,6 +605,7 @@ async def test_put_user_with_members_endpoint(
     assert get_user_response.status_code == 200
     updated_user = get_user_response.json()
 
+    print(updated_user)
     # Verify that the groups field exists and contains our group
     assert "groups" in updated_user, "Groups field missing in user after adding to group"
 
@@ -763,7 +749,6 @@ async def test_put_group_with_members_endpoint(
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain")
 async def test_delete_user_endpoint(
     create_random_user: CreateUserFactory,
     client: TestClient,
@@ -832,7 +817,6 @@ async def test_delete_group_endpoint(
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain")
 async def test_delete_nonexistent_user(client: TestClient, api_prefix: str, auth_headers: dict[str, str]) -> None:
     """Test deleting a non-existent user through the REST API endpoint."""
     print("\n=== E2E Testing DELETE Non-existent User Endpoint ===")
@@ -883,7 +867,6 @@ async def test_delete_nonexistent_group(client: TestClient, api_prefix: str, aut
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain")
 async def test_delete_user_with_memberships(
     create_random_user: CreateUserFactory,
     create_random_group: CreateGroupFactory,

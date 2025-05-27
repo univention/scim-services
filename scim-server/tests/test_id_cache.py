@@ -3,60 +3,27 @@
 
 import time
 from collections.abc import Callable
-from unittest.mock import MagicMock
 
 import pytest
-from scim2_models import Group, User
-from univention.admin.rest.client import UDM, Module, ShallowObject
+from scim2_models import Group, GroupMember, User
 
+from helpers.udm_client import MockUdm
 from univention.scim.server.domain.repo.udm.udm_id_cache import CacheItem, UdmIdCache
-from univention.scim.transformation import ScimToUdmMapper
 
 
 @pytest.fixture
-def udm_client(random_user_factory: Callable[[], User], random_group_factory: Callable[[], Group]) -> UDM:
-    scim2udm_mapper = ScimToUdmMapper(None)
+def udm_client(
+    random_user_factory: Callable[[list[GroupMember]], User], random_group_factory: Callable[[list[GroupMember]], Group]
+) -> MockUdm:
+    mock = MockUdm(random_user_factory, random_group_factory)
+    mock.add_user()
+    mock.add_group()
 
-    user_data = random_user_factory()
-    user_properties = scim2udm_mapper.map_user(user_data)
-
-    user = MagicMock()
-    user.dn = "cn=user:dn=example:dn=test"
-    user.properties = user_properties
-
-    user_shallow = MagicMock(spec=ShallowObject)
-    user_shallow.open.return_value = user
-
-    users = [user_shallow]
-
-    user_module = MagicMock(spec=Module)
-    user_module.search.return_value = users
-    user_module.get.return_value = user
-
-    group_data = random_group_factory()
-    group_properties = scim2udm_mapper.map_group(group_data)
-
-    group = MagicMock()
-    group.dn = "cn=group:dn=example:dn=test"
-    group.properties = group_properties
-
-    group_shallow = MagicMock(spec=ShallowObject)
-    group_shallow.open.return_value = group
-
-    groups = [group_shallow]
-
-    group_module = MagicMock(spec=Module)
-    group_module.search.return_value = groups
-    group_module.get.return_value = group
-
-    udm_mock = MagicMock(spec=UDM)
-    udm_mock.get.side_effect = {"users/user": user_module, "groups/group": group_module}.get
-
-    return udm_mock
+    return mock
 
 
 class UdmIdCacheSpy(UdmIdCache):
-    def __init__(self, udm_client: UDM, ttl: int):
+    def __init__(self, udm_client: MockUdm, ttl: int):
         super().__init__(udm_client, ttl)
         self.call_count = {
             "_get_entry": 0,
@@ -92,14 +59,12 @@ class UdmIdCacheSpy(UdmIdCache):
         return super().get_group(key)
 
 
-def test_cache_hit_user_dn(udm_client: UDM) -> None:
+def test_cache_hit_user_dn(udm_client: MockUdm) -> None:
     module = udm_client.get("users/user")
     users = module.search()
 
     test_user = users[0].open()
     cache = UdmIdCacheSpy(udm_client, 120)
-
-    print(test_user.properties)
 
     start = int(time.time())
     cache_item = cache.get_user(test_user.dn)
@@ -129,7 +94,7 @@ def test_cache_hit_user_dn(udm_client: UDM) -> None:
     assert cache.call_count["_query_udm"] == 1
 
 
-def test_cache_hit_user_uuid(udm_client: UDM) -> None:
+def test_cache_hit_user_uuid(udm_client: MockUdm) -> None:
     module = udm_client.get("users/user")
     users = module.search()
 
@@ -164,7 +129,7 @@ def test_cache_hit_user_uuid(udm_client: UDM) -> None:
     assert cache.call_count["_query_udm"] == 1
 
 
-def test_cache_hit_group_dn(udm_client: UDM) -> None:
+def test_cache_hit_group_dn(udm_client: MockUdm) -> None:
     module = udm_client.get("groups/group")
     groups = module.search()
 
@@ -199,7 +164,7 @@ def test_cache_hit_group_dn(udm_client: UDM) -> None:
     assert cache.call_count["_query_udm"] == 1
 
 
-def test_cache_hit_group_uuid(udm_client: UDM) -> None:
+def test_cache_hit_group_uuid(udm_client: MockUdm) -> None:
     module = udm_client.get("groups/group")
     groups = module.search()
 
@@ -234,7 +199,7 @@ def test_cache_hit_group_uuid(udm_client: UDM) -> None:
     assert cache.call_count["_query_udm"] == 1
 
 
-def test_cache_query_after_ttl(udm_client: UDM) -> None:
+def test_cache_query_after_ttl(udm_client: MockUdm) -> None:
     module = udm_client.get("users/user")
     users = module.search()
 

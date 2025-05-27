@@ -29,8 +29,8 @@ lint-pre-commit:
     KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
     DOCKERFILE_PATH: "docker/scim-server/Dockerfile"
   - IMAGE_NAME: "testrunner"
-    KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
-    DOCKERFILE_PATH: "docker/scim-server/Dockerfile"
+    KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR/docker/scim-server
+    DOCKERFILE_PATH: "Dockerfile"
     KANIKO_ARGS: "--target=test"
   - IMAGE_NAME: "scim-consumer-testrunner"
     KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
