@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.17.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.16.0...v0.17.0) (2025-05-27)
+
+
+### Features
+
+* **scim-consumer:** Added build and test to CI/CD pipeline. ([83366ae](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/83366ae1fe7a27406eb7ddff1eed810da93d23dc)), closes [univention/dev/internal/team-nubus#1171](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1171)
+* **scim-consumer:** Added MR review changes. ([6eea8a6](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/6eea8a60e455abd44b205447e442e10cab5e3752)), closes [univention/dev/internal/team-nubus#1171](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1171)
+* **scim-consumer:** Bump UCS image and added dependend project.toml files. ([81b0496](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/81b0496e80e7ef79cd027b6d30a32090986217c1)), closes [univention/dev/internal/team-nubus#1171](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1171)
+* **scim-consumer:** First draft ([137a681](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/137a6811ea8c52dc24ecac24028aa29fa0dadfec)), closes [univention/dev/internal/team-nubus#1171](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1171)
+* **scim-consumer:** Optimized dockerfile ([a32ce53](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/a32ce53d887437095db7b91bfa33eecf7a052d02)), closes [univention/dev/internal/team-nubus#1171](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1171)
+* **scim-consumer:** Refactoring and inline documentation. ([bcb4d0e](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/bcb4d0ec1f78c821cfa77279115d771f70526863)), closes [univention/dev/internal/team-nubus#1171](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1171)
+* **scim-consumer:** Refactoring and integration tests ([f30b7f5](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/f30b7f5e27b6c8c58864c1e577ed296708f9d42d)), closes [univention/dev/internal/team-nubus#1171](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1171)
+
 ## [0.16.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.15.0...v0.16.0) (2025-05-21)
 
 
