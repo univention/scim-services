@@ -27,14 +27,15 @@ def update_udm_user(udm_client, udm_user):
     logger.debug("udm user data:\n{}", cust_pformat(udm_user))
 
     module = udm_client.get("users/user")
-    for result in module.search(f"univentionObjectIdentifier={udm_user['univentionObjectIdentifier']}"):
-        logger.debug("Found user with uoi: {}", udm_user["univentionObjectIdentifier"])
-        obj = result.open()
-        for key, value in udm_user.items():
-            obj.properties[key] = value
+    search = module.search(f"univentionObjectIdentifier={udm_user['univentionObjectIdentifier']}")
+    result = next(search)
+    obj = result.open()
 
-        obj.save()
-        break
+    logger.debug("Found user with uoi: {}", udm_user["univentionObjectIdentifier"])
+
+    for key, value in udm_user.items():
+        obj.properties[key] = value
+    obj.save()
 
     return True
 
@@ -44,11 +45,13 @@ def delete_udm_user(udm_client, udm_user):
     logger.debug("udm user data:\n{}", cust_pformat(udm_user))
 
     module = udm_client.get("users/user")
-    for result in module.search(f"univentionObjectIdentifier={udm_user['univentionObjectIdentifier']}"):
-        logger.debug("Found user with uoi: {}", udm_user["univentionObjectIdentifier"])
-        obj = result.open()
-        obj.delete()
-        break
+    search = module.search(f"univentionObjectIdentifier={udm_user['univentionObjectIdentifier']}")
+    result = next(search)
+    obj = result.open()
+
+    logger.debug("Found user with uoi: {}", udm_user["univentionObjectIdentifier"])
+
+    obj.delete()
 
     return True
 
