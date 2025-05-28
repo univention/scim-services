@@ -14,7 +14,6 @@ def force_mock() -> bool:
     return True
 
 
-@pytest.mark.usefixtures("setup_mocks")
 def test_get_group_with_invalid_member(force_mock: bool, udm_client: MockUdm, client: TestClient) -> None:
     group = udm_client.add_group(
         ["cn=invalid_user_1,ou=user,dc=example,dc=test", "cn=invalid_user_2,ou=user,dc=example,dc=test"]

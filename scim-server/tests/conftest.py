@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
-import contextlib
 import os
 import random
 import socket
 import urllib.parse
 from collections.abc import AsyncGenerator, Callable, Generator
+from contextlib import _GeneratorContextManager, contextmanager
 from typing import Any, TypeVar
 from unittest.mock import MagicMock
 
@@ -127,8 +127,8 @@ def application_settings(monkeypatch: pytest.MonkeyPatch) -> Generator[Applicati
     yield ApplicationSettings()
 
 
-@pytest.fixture
-def setup_mocks(application_settings: ApplicationSettings, udm_client: MockUdm) -> Generator[None, None, None]:
+@contextmanager
+def setup_mocks(application_settings: ApplicationSettings, udm_client: UDM | MockUdm) -> Generator[None, None, None]:
     cache = UdmIdCache(udm_client, 120)
     scim2udm_mapper = ScimToUdmMapper(cache)
     udm2scim_mapper = UdmToScimMapper(cache)
@@ -172,10 +172,48 @@ def setup_mocks(application_settings: ApplicationSettings, udm_client: MockUdm) 
         yield
 
 
+# This fxture can be overwritten in a test to setup stuff after default mocks where setup
 @pytest.fixture
-def client() -> Generator[TestClient, None, None]:
-    with TestClient(app, headers={"Authorization": "Bearer let-me-in"}) as client:
-        yield client
+def after_setup() -> Callable[[], _GeneratorContextManager[Any, None, None]]:
+    @contextmanager
+    def stub() -> Generator[None, None, None]:
+        yield
+
+    return stub
+
+
+# This fxture can be overwritten in a test if it wants to force the use of the MockUDM
+@pytest.fixture
+def force_mock() -> bool:
+    return False
+
+
+@pytest.fixture
+def client(
+    application_settings: ApplicationSettings,
+    udm_client: UDM | MockUdm,
+    after_setup: Callable[[], _GeneratorContextManager[Any, None, None]],
+    force_mock: bool,
+) -> Generator[TestClient, None, None]:
+    if force_mock or skip_if_no_udm():
+        with (
+            setup_mocks(application_settings, udm_client),
+            after_setup(),
+            TestClient(app, headers={"Authorization": "Bearer let-me-in"}) as client,
+        ):
+            yield client
+    else:
+        with (
+            # Mock auth for now also when using real UDM
+            ApplicationContainer.authenticator.override(AllowAllBearerAuthentication()),
+            ApplicationContainer.oidc_configuration.override(OpenIDConnectConfigurationMock()),
+            ApplicationContainer.authorization.override(AllowAllAuthorization()),
+            # Use settings from unit tests
+            ApplicationContainer.settings.override(application_settings),
+            after_setup(),
+            TestClient(app, headers={"Authorization": "Bearer let-me-in"}) as client,
+        ):
+            yield client
 
     # remove routes to make sure they are re-added when reusing
     # global app object with updated parameters like disabled authentication
@@ -198,8 +236,8 @@ def caplog(caplog: LogCaptureFixture) -> Generator[LogCaptureFixture, None, None
     logger.remove(handler_id)
 
 
-@contextlib.contextmanager
-def maildomain(directory_importer_config: Any) -> Any:
+@contextmanager
+def maildomain(directory_importer_config: Any) -> Generator[str, None, None]:
     base_url = f"{directory_importer_config.udm.uri.rstrip('/')}/mail/domain/"
     auth = (directory_importer_config.udm.user, directory_importer_config.udm.password)
     headers = {
@@ -277,18 +315,12 @@ def disable_auththentication(application_settings: ApplicationSettings) -> Appli
     return application_settings
 
 
-# This fxture can be overwritten in a test if it wants to force the use of the MockUDM
-@pytest.fixture
-def force_mock() -> bool:
-    return False
-
-
 @pytest.fixture
 def udm_client(
     random_user_factory: Callable[[list[GroupMember]], User],
     random_group_factory: Callable[[list[GroupMember]], Group],
     force_mock: bool,
-) -> Generator[MockUdm, None, None]:
+) -> Generator[UDM | MockUdm, None, None]:
     if force_mock or skip_if_no_udm():
         print("Using mocked UDM")
         yield MockUdm(random_user_factory, random_group_factory)

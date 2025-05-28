@@ -2,7 +2,6 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 
-import pytest
 from fastapi.testclient import TestClient
 from scim2_models import Email, Group, Name, User
 
@@ -43,7 +42,6 @@ class TestUserAPI:
         data = response.json()
         return str(data["id"])
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_create_user(self, client: TestClient) -> None:
         """Test creating a user."""
         response = client.post("/scim/v2/Users", json=test_user.model_dump(by_alias=True, exclude_none=True))
@@ -56,7 +54,6 @@ class TestUserAPI:
         assert data["name"]["familyName"] == test_user.name.family_name
         assert "id" in data
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_get_user(self, client: TestClient) -> None:
         """Test retrieving a user."""
         # First create a user
@@ -73,7 +70,6 @@ class TestUserAPI:
         assert data["name"]["givenName"] == test_user.name.given_name
         assert data["name"]["familyName"] == test_user.name.family_name
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_list_users(self, client: TestClient) -> None:
         """Test listing users."""
         response = client.get("/scim/v2/Users")
@@ -87,7 +83,6 @@ class TestUserAPI:
         assert "Resources" in data
         assert isinstance(data["Resources"], list)
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_update_user(self, client: TestClient) -> None:
         """Test updating a user."""
         # First create a user
@@ -112,10 +107,8 @@ class TestUserAPI:
         assert data["name"]["givenName"] == updated_user.name.given_name
         assert data["name"]["familyName"] == updated_user.name.family_name
 
-    import pytest
     from fastapi.testclient import TestClient
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_apply_patch_operations(self, client: TestClient) -> None:
         """Test partially updating a user using PATCH."""
         # Step 1: Create a user
@@ -156,7 +149,6 @@ class TestUserAPI:
         # Step 6: Optionally verify unchanged fields
         assert "familyName" in data["name"]
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_patch_nonexistent_user(self, client: TestClient) -> None:
         """PATCHing a non-existent user should return 404 or a handled error."""
         non_existent_id = "non-existent-id-123"
@@ -177,7 +169,6 @@ class TestUserAPI:
         assert response.status_code in (404, 400), f"Expected failure but got: {response.status_code}"
         assert "not found" in response.text.lower()
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_patch_with_invalid_payload(self, client: TestClient) -> None:
         """PATCH with malformed data should be rejected with 400."""
         user_id = self._create_test_user(client)
@@ -203,7 +194,6 @@ class TestUserAPI:
         assert patch_response.status_code == 400
         assert " validation error " in patch_response.text
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_patch_with_invalid_payload_broken(self, client: TestClient) -> None:
         """PATCH with malformed data should be rejected with 400."""
         user_id = self._create_test_user(client)
@@ -226,7 +216,6 @@ class TestUserAPI:
         assert patch_response.status_code == 400
         assert "Operations" in patch_response.text or "Invalid" in patch_response.text
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_patch_remove_attribute(self, client: TestClient) -> None:
         """PATCH to remove a user attribute should succeed and result in deletion."""
         user_id = self._create_test_user(client)
@@ -256,7 +245,6 @@ class TestUserAPI:
         assert "name" in user_after
         assert "givenName" not in user_after["name"] or user_after["name"]["givenName"] in ("", None)
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_patch_add_with_nested_extension_path(self, client: TestClient) -> None:
         """
         PATCH 'add' operation should create missing intermediate
@@ -289,7 +277,6 @@ class TestUserAPI:
 
         assert patch_response.status_code == 400
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_delete_user(self, client: TestClient) -> None:
         """Test deleting a user."""
         # First create a user
@@ -303,25 +290,21 @@ class TestUserAPI:
         response = client.get(f"/scim/v2/Users/{user_id}")
         assert response.status_code == 404
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_get_nonexistent_user(self, client: TestClient) -> None:
         """Test getting a nonexistent user."""
         response = client.get("/scim/v2/Users/nonexistent")
         assert response.status_code == 404
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_update_nonexistent_user(self, client: TestClient) -> None:
         """Test updating a nonexistent user."""
         response = client.put("/scim/v2/Users/nonexistent", json=test_user.model_dump(by_alias=True, exclude_none=True))
         assert response.status_code == 404
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_delete_nonexistent_user(self, client: TestClient) -> None:
         """Test deleting a nonexistent user."""
         response = client.delete("/scim/v2/Users/nonexistent")
         assert response.status_code == 404
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_filter_users(self, client: TestClient) -> None:
         """Test filtering users."""
         # First create a user
@@ -347,7 +330,6 @@ class TestGroupAPI:
         data = response.json()
         return str(data["id"])
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_create_group(self, client: TestClient) -> None:
         """Test creating a group."""
         response = client.post("/scim/v2/Groups", json=test_group.model_dump(by_alias=True, exclude_none=True))
@@ -359,7 +341,6 @@ class TestGroupAPI:
         assert data["displayName"] == test_group.display_name
         assert "id" in data
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_list_groups(self, client: TestClient) -> None:
         """Test listing groups."""
         response = client.get("/scim/v2/Groups")
@@ -374,7 +355,6 @@ class TestGroupAPI:
         assert "Resources" in data
         assert isinstance(data["Resources"], list)
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_get_group(self, client: TestClient) -> None:
         """Test retrieving a group."""
         # First create a group
@@ -394,7 +374,6 @@ class TestGroupAPI:
 class TestServiceProviderConfig:
     """Tests for the ServiceProviderConfig endpoint."""
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_get_service_provider_config(self, client: TestClient) -> None:
         """Test retrieving the service provider configuration."""
         response = client.get("/scim/v2/ServiceProviderConfig")
@@ -429,7 +408,6 @@ class TestServiceProviderConfig:
 class TestSchemasEndpoint:
     """Tests for the Schemas endpoint."""
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_get_schemas(self, client: TestClient) -> None:
         """Test retrieving the SCIM supported schemas using ListResponse."""
         response = client.get("/scim/v2/Schemas")
@@ -488,7 +466,6 @@ class TestSchemasEndpoint:
 class TestResourceTypesEndpoint:
     """Tests for the ResourceTypes endpoint."""
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_get_resource_types(self, client: TestClient, application_settings: ApplicationSettings) -> None:
         """Test retrieving the SCIM ResourceTypes in ListResponse format."""
         response = client.get("/scim/v2/ResourceTypes")

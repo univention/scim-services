@@ -1,6 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+from collections.abc import Callable, Generator
+from contextlib import _GeneratorContextManager, contextmanager
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -20,14 +23,29 @@ def authenticator_mock() -> Authentication:
         yield mock
 
 
+# Override after_setup tets fixture to inject our override
+@pytest.fixture
+def after_setup(authenticator_mock: Authentication) -> Callable[[], _GeneratorContextManager[Any, None, None]]:
+    @contextmanager
+    def override_authenticator() -> Generator[None, None, None]:
+        with ApplicationContainer.authenticator.override(authenticator_mock):
+            yield
+
+    return override_authenticator
+
+
 @pytest.fixture
 def disable_authentication(application_settings: ApplicationSettings) -> ApplicationSettings:
     application_settings.auth_enabled = False
     return application_settings
 
 
-@pytest.mark.usefixtures("setup_mocks", "disable_authentication")
-def test_auth_disabled(authenticator_mock: Authentication, client: TestClient) -> None:
+@pytest.mark.usefixtures("disable_authentication")
+def test_auth_disabled(
+    after_setup: Callable[[], _GeneratorContextManager[Any, None, None]],
+    authenticator_mock: Authentication,
+    client: TestClient,
+) -> None:
     authenticator_mock.authenticate.side_effect = HTTPException(status_code=403, detail="Auth error in test.")
 
     response = client.get("/scim/v2/Users")
@@ -35,8 +53,11 @@ def test_auth_disabled(authenticator_mock: Authentication, client: TestClient) -
     assert authenticator_mock.authenticate.call_count == 0
 
 
-@pytest.mark.usefixtures("setup_mocks")
-def test_auth_fail(authenticator_mock: Authentication, client: TestClient) -> None:
+def test_auth_fail(
+    after_setup: Callable[[], _GeneratorContextManager[Any, None, None]],
+    authenticator_mock: Authentication,
+    client: TestClient,
+) -> None:
     authenticator_mock.authenticate.side_effect = HTTPException(status_code=403, detail="Auth error in test.")
 
     response = client.get("/scim/v2/Users")
@@ -44,8 +65,11 @@ def test_auth_fail(authenticator_mock: Authentication, client: TestClient) -> No
     assert authenticator_mock.authenticate.call_count == 1
 
 
-@pytest.mark.usefixtures("setup_mocks")
-def test_auth_success(authenticator_mock: Authentication, client: TestClient) -> None:
+def test_auth_success(
+    after_setup: Callable[[], _GeneratorContextManager[Any, None, None]],
+    authenticator_mock: Authentication,
+    client: TestClient,
+) -> None:
     authenticator_mock.authenticate.returns = {"username": "admin", "roles": ["admin"]}
 
     response = client.get("/scim/v2/Users")

@@ -1,18 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-import pytest
 from fastapi.testclient import TestClient
 
 
-@pytest.mark.usefixtures("setup_mocks")
 def test_main_read_openapi_html(client: TestClient) -> None:
     response = client.get("/docs")
     assert response.status_code == 200
     assert "Univention SCIM Server - Swagger UI" in response.text, repr(response.__dict__)
 
 
-@pytest.mark.usefixtures("setup_mocks")
 def test_main_read_openapi_json(client: TestClient) -> None:
     response = client.get("/openapi.json")
     assert response.status_code == 200

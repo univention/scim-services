@@ -2,15 +2,11 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 import os
-from collections.abc import Generator
 
 import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
 from scim2_models import Group, GroupMember, User
-
-from univention.scim.server.config import ApplicationSettings
-from univention.scim.server.container import ApplicationContainer
 
 from .conftest import CreateGroupFactory, CreateUserFactory, skip_if_no_udm
 
@@ -24,29 +20,7 @@ def api_prefix() -> str:
 @pytest.fixture
 def auth_headers() -> dict[str, str]:
     """Get authentication headers for API requests."""
-    # In a real E2E test, we would use actual authentication
-    # For now, return empty dict if auth is disabled or mock headers if enabled
-    auth_enabled = os.environ.get("AUTH_ENABLED", "false").lower() == "true"
-    if auth_enabled:
-        return {"Authorization": "Bearer test-token"}
-    return {}
-
-
-@pytest.fixture(autouse=True)
-def e2e_auth_bypass(application_settings: ApplicationSettings) -> Generator[None, None, None]:
-    """Bypass authentication for E2E tests without replacing repositories"""
-    from helpers.allow_all_authn import (
-        AllowAllAuthorization,
-        AllowAllBearerAuthentication,
-        OpenIDConnectConfigurationMock,
-    )
-
-    with (
-        ApplicationContainer.authenticator.override(AllowAllBearerAuthentication()),
-        ApplicationContainer.authorization.override(AllowAllAuthorization()),
-        ApplicationContainer.oidc_configuration.override(OpenIDConnectConfigurationMock()),
-    ):
-        yield
+    return {"Authorization": "Bearer test-token"}
 
 
 @pytest.mark.asyncio
@@ -122,8 +96,6 @@ async def test_get_user_endpoint(
 
 
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-# if create_random_user or create_random_group is not used udm_client must be included manually
-@pytest.mark.usefixtures("udm_client")
 async def test_post_user_endpoint(
     random_user: User, client: TestClient, api_prefix: str, auth_headers: dict[str, str]
 ) -> None:
@@ -202,8 +174,6 @@ async def test_list_group_endpoint(
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-# if create_random_user or create_random_group is not used udm_client must be included manually
-@pytest.mark.usefixtures("udm_client")
 async def test_get_group_endpoint(
     create_random_group: CreateGroupFactory,
     create_random_user: CreateUserFactory,
