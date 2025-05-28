@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import builtins
+import traceback
 from itertools import islice
 from typing import Any, Generic, TypeVar, cast
 
@@ -152,6 +153,7 @@ class CrudUdm(Generic[T], CrudScim[T]):
             return resources
 
         except Exception as e:
+            traceback.print_exc()
             self.logger.error(f"Error listing {self.resource_type}s: {e}")
             raise ValueError(f"Error listing {self.resource_type}s: {str(e)}") from e
 

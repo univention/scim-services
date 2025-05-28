@@ -25,12 +25,16 @@ class MockUdm:
 
         user_module = MagicMock(spec=Module)
         user_module.search.side_effect = lambda *args, **kw: self._search(self.users, *args, **kw)
-        user_module.get.side_effect = lambda user_id, properties: self.users[user_id].open()
+        user_module.get.side_effect = (
+            lambda user_id, properties: self.users[user_id].open() if user_id in self.users else None
+        )
         user_module.new.side_effect = lambda: self._create_object(self.users, self._get_user_dn)
 
         group_module = MagicMock(spec=Module)
         group_module.search.side_effect = lambda *args, **kw: self._search(self.groups, *args, **kw)
-        group_module.get.side_effect = lambda group_id, properties: self.groups[group_id].open()
+        group_module.get.side_effect = (
+            lambda group_id, properties: self.groups[group_id].open() if group_id in self.groups else None
+        )
         group_module.new.side_effect = lambda: self._create_object(self.groups, self._get_group_dn)
 
         self.modules = {"users/user": user_module, "groups/group": group_module}
@@ -47,7 +51,6 @@ class MockUdm:
 
         obj.dn = get_dn(obj)
         obj.etag = "1.0"
-        print(obj.properties)
         store[obj.dn] = obj_shallow
 
     def _create_object(self, store: dict[str, MagicMock], get_dn: Callable[[MagicMock], str]) -> MagicMock:

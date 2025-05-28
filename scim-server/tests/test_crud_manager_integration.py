@@ -7,17 +7,42 @@ from scim2_models import Group, Name, User
 from univention.admin.rest.client import UDM
 
 from univention.scim.server.domain.group_service_impl import GroupServiceImpl
+from univention.scim.server.domain.repo.crud_manager import CrudManager
+from univention.scim.server.domain.repo.udm.crud_udm import CrudUdm
 from univention.scim.server.domain.repo.udm.udm_id_cache import UdmIdCache
 from univention.scim.server.domain.rules.display_name import UserDisplayNameRule
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
-from univention.scim.transformation import UdmToScimMapper
+from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 
-from .conftest import CreateGroupFactory, CreateUserFactory, create_crud_manager, skip_if_no_udm
+from .conftest import CreateGroupFactory, CreateUserFactory
+
+
+def create_crud_manager(
+    resource_type: str,
+    resource_class: type[User | Group],
+    udm_client: UDM,
+    scim2udm_mapper: ScimToUdmMapper = None,
+    udm2scim_mapper: UdmToScimMapper = None,
+) -> CrudManager:
+    if not scim2udm_mapper:
+        scim2udm_mapper = ScimToUdmMapper(None)
+    if not udm2scim_mapper:
+        udm2scim_mapper = UdmToScimMapper(None)
+
+    repository = CrudUdm(
+        resource_type=resource_type,
+        scim2udm_mapper=scim2udm_mapper,
+        udm2scim_mapper=udm2scim_mapper,
+        resource_class=resource_class,
+        udm_client=udm_client,
+        base_url="http://testserver/scim/v2",
+    )
+
+    return CrudManager(repository, resource_type)
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 async def test_user_service(create_random_user: CreateUserFactory, udm_client: UDM) -> None:
     print("\n=== Testing User Service ===")
 
@@ -45,7 +70,6 @@ async def test_user_service(create_random_user: CreateUserFactory, udm_client: U
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 async def test_group_service(create_random_group: CreateGroupFactory, udm_client: UDM) -> None:
     print("\n=== Testing Group Service ===")
 

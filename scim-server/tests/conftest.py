@@ -198,45 +198,6 @@ def caplog(caplog: LogCaptureFixture) -> Generator[LogCaptureFixture, None, None
     logger.remove(handler_id)
 
 
-def create_crud_manager(
-    resource_type: str,
-    resource_class: type[User | Group],
-    udm_client: UDM,
-    scim2udm_mapper: ScimToUdmMapper = None,
-    udm2scim_mapper: UdmToScimMapper = None,
-) -> CrudManager:
-    if not scim2udm_mapper:
-        scim2udm_mapper = ScimToUdmMapper(None)
-    if not udm2scim_mapper:
-        udm2scim_mapper = UdmToScimMapper(None)
-
-    repository = CrudUdm(
-        resource_type=resource_type,
-        scim2udm_mapper=scim2udm_mapper,
-        udm2scim_mapper=udm2scim_mapper,
-        resource_class=resource_class,
-        udm_client=udm_client,
-        base_url="http://testserver/scim/v2",
-    )
-
-    return CrudManager(repository, resource_type)
-
-
-@pytest.fixture(scope="session")
-def directory_importer_config() -> Any:
-    class ConnectorConfig:
-        class UdmConfig:
-            def __init__(self) -> None:
-                self.uri = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm/")
-                self.user = os.environ.get("UDM_USERNAME", "admin")
-                self.password = os.environ.get("UDM_PASSWORD", "univention")
-
-        def __init__(self) -> None:
-            self.udm = self.UdmConfig()
-
-    return ConnectorConfig()
-
-
 @contextlib.contextmanager
 def maildomain(directory_importer_config: Any) -> Any:
     base_url = f"{directory_importer_config.udm.uri.rstrip('/')}/mail/domain/"
@@ -316,13 +277,23 @@ def disable_auththentication(application_settings: ApplicationSettings) -> Appli
     return application_settings
 
 
+# This fxture can be overwritten in a test if it wants to force the use of the MockUDM
+@pytest.fixture
+def force_mock() -> bool:
+    return False
+
+
 @pytest.fixture
 def udm_client(
-    random_user_factory: Callable[[list[GroupMember]], User], random_group_factory: Callable[[list[GroupMember]], Group]
+    random_user_factory: Callable[[list[GroupMember]], User],
+    random_group_factory: Callable[[list[GroupMember]], Group],
+    force_mock: bool,
 ) -> Generator[MockUdm, None, None]:
-    if skip_if_no_udm():
+    if force_mock or skip_if_no_udm():
+        print("Using mocked UDM")
         yield MockUdm(random_user_factory, random_group_factory)
     else:
+        print("Using real UDM")
         udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
         udm_username = os.environ.get("UDM_USERNAME", "admin")
         udm_password = os.environ.get("UDM_PASSWORD", "univention")

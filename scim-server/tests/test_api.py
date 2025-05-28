@@ -343,8 +343,6 @@ class TestGroupAPI:
     def _create_test_group(self, client: TestClient) -> str:
         """Helper method to create a test group and return the ID."""
         response = client.post("/scim/v2/Groups", json=test_group.model_dump(by_alias=True, exclude_none=True))
-        if response.status_code == 501:
-            pytest.skip("Group creation not implemented yet")
         assert response.status_code == 201
         data = response.json()
         return str(data["id"])
@@ -353,10 +351,6 @@ class TestGroupAPI:
     def test_create_group(self, client: TestClient) -> None:
         """Test creating a group."""
         response = client.post("/scim/v2/Groups", json=test_group.model_dump(by_alias=True, exclude_none=True))
-
-        # For now, this might return 501 Not Implemented
-        if response.status_code == 501:
-            pytest.skip("Group creation not implemented yet")
 
         assert response.status_code == 201
         data = response.json()
@@ -369,9 +363,6 @@ class TestGroupAPI:
     def test_list_groups(self, client: TestClient) -> None:
         """Test listing groups."""
         response = client.get("/scim/v2/Groups")
-        # For now, this might return 501 Not Implemented
-        if response.status_code == 501:
-            pytest.skip("Group listing not implemented yet")
 
         assert response.status_code == 200
         data = response.json()
@@ -386,18 +377,11 @@ class TestGroupAPI:
     @pytest.mark.usefixtures("setup_mocks")
     def test_get_group(self, client: TestClient) -> None:
         """Test retrieving a group."""
-        try:
-            # First create a group
-            group_id = self._create_test_group(client)
-        except pytest.skip.Exception:
-            pytest.skip("Group creation not implemented yet")
+        # First create a group
+        group_id = self._create_test_group(client)
 
         # Get the group
         response = client.get(f"/scim/v2/Groups/{group_id}")
-
-        # For now, this might return 501 Not Implemented
-        if response.status_code == 501:
-            pytest.skip("Group retrieval not implemented yet")
 
         assert response.status_code == 200
         data = response.json()
