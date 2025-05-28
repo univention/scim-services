@@ -17,7 +17,7 @@ class ScimToUdmMapper:
     Converts SCIM objects to the property format expected by UDM.
     """
 
-    def __init__(self, cache: IdCache):
+    def __init__(self, cache: IdCache | None = None):
         """
         Initialize the ScimToUdmMapper.
         Args:

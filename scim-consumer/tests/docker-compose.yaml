@@ -4,7 +4,6 @@
 services:
 
   scim-dev-server:
-    profiles: ["main"]
     platform: linux/amd64
     build:
       context: ../../
@@ -21,7 +20,6 @@ services:
       - scim
 
   events-and-consumer-api:
-    profiles: ["main"]
     image: gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-events-and-consumer-api:latest
     container_name: "events-and-consumer-api-dev"
     restart: "on-failure"
@@ -53,7 +51,6 @@ services:
       - scim
 
   nats:
-    profiles: ["main"]
     image: "nats:latest"
     container_name: nats
     environment:
@@ -70,7 +67,6 @@ services:
     command: --name nats --cluster_name JetStreamCluster --jetstream -m 8222 -p 4222 -config /etc/nats-config/nats.conf
 
   dispatcher:
-    profiles: ["main"]
     image: gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-dispatcher:latest
     container_name: "provisioning-dispatcher"
     restart: "on-failure"
@@ -90,7 +86,6 @@ services:
       - scim
 
   udm-transformer:
-    profiles: ["main"]
     image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-udm-transformer:latest"
     container_name: "provisioning-udm-transformer"
     restart: "on-failure"
@@ -121,7 +116,6 @@ services:
       - scim
 
   prefill:
-    profiles: ["main"]
     image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-prefill:latest"
     container_name: "provisioning-prefill"
     restart: "on-failure"
@@ -148,7 +142,6 @@ services:
       - scim
 
   udm-listener:
-    profiles: ["main"]
     image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-udm-listener:latest"
     container_name: "udm-listener"
     environment:
@@ -176,7 +169,6 @@ services:
       - scim
 
   ldap-notifier:
-    profiles: ["main"]
     platform: linux/amd64
     image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-ldap/ldap-notifier:latest
     container_name: "ldap-notifier"
@@ -192,7 +184,6 @@ services:
       - scim
 
   ldap-server:
-    profiles: ["main"]
     platform: linux/amd64
     image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-ldap/ldap-server:latest
     container_name: "ldap-server"
@@ -212,10 +203,12 @@ services:
       - scim
 
   udm-rest-api:
-    profiles: ["main"]
     image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-udm-rest/udm-rest-api:latest
     container_name: "udm-rest-api"
     platform: "linux/amd64"
+    depends_on:
+      ldap-server:
+        condition: service_started
     ports:
       - 9979:9979
     volumes:
@@ -234,12 +227,24 @@ services:
       - scim
 
   test:
-    profiles: ["test"]
     build:
       context: ../../
       dockerfile: docker/scim-consumer/Dockerfile
       target: test
     image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-cunsumer-testrunner:${IMAGE_TAG:-latest}
+    depends_on:
+      udm-rest-api:
+        condition: service_started
+      udm-listener:
+        condition: service_started
+      prefill:
+        condition: service_started
+      udm-transformer:
+        condition: service_started
+      dispatcher:
+        condition: service_started
+      scim-dev-server:
+        condition: service_started
     environment:
       SCIM_SERVER_BASE_URL: http://scim-dev-server:8080/
       PROVISIONING_API_BASE_URL: http://events-and-consumer-api:7777/

@@ -16,7 +16,7 @@ class UdmToScimMapper:
     Converts UDM properties to SCIM-compatible objects.
     """
 
-    def __init__(self, cache: IdCache):
+    def __init__(self, cache: IdCache | None = None):
         """
         Initialize the UdmToScimMapper.
         Args:
