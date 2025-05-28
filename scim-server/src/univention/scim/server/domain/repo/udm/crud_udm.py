@@ -12,6 +12,7 @@ from scim2_models import Group, Resource, User
 from univention.admin.rest.client import UDM
 
 from univention.scim.server.domain.crud_scim import CrudScim
+from univention.scim.transformation.exceptions import MappingError
 
 
 T = TypeVar("T", bound=Resource)
@@ -231,6 +232,9 @@ class CrudUdm(Generic[T], CrudScim[T]):
 
             return cast(T, created_resource)
 
+        except MappingError as e:
+            self.logger.error(f"Error creating {self.resource_type}: {e}")
+            raise e
         except Exception as e:
             self.logger.error(f"Error creating {self.resource_type}: {e}")
             raise ValueError(f"Error creating {self.resource_type}: {str(e)}") from e
@@ -297,6 +301,9 @@ class CrudUdm(Generic[T], CrudScim[T]):
 
             return cast(T, updated_resource)
 
+        except MappingError as e:
+            self.logger.error(f"Error updating {self.resource_type}: {e}")
+            raise e
         except Exception as e:
             self.logger.error(f"Error updating {self.resource_type}: {e}")
             raise ValueError(f"Error updating {self.resource_type}: {str(e)}") from e

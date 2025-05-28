@@ -5,6 +5,7 @@ import os
 from collections.abc import Generator
 
 import pytest
+from faker import Faker
 from fastapi.testclient import TestClient
 from scim2_models import Group, GroupMember, User
 
@@ -565,18 +566,7 @@ async def test_put_user_with_members_endpoint(
     # Get the user to see current state
     get_user_response = client.get(user_url, headers=auth_headers)
     assert get_user_response.status_code == 200
-    user_data = get_user_response.json()
-
-    # Extract the user's DN from the user_data if available
-    # This is the key fix - we need to use proper LDAP DNs
-    user_dn = None
-    if "urn:univention:scim:schemas:extensions:ldap:2.0:User" in user_data.get("schemas", []):
-        ext_data = user_data.get("urn:univention:scim:schemas:extensions:ldap:2.0:User", {})
-        user_dn = ext_data.get("dn")
-
-    # If we couldn't get the DN, skip this test
-    if not user_dn:
-        pytest.skip("Could not retrieve user DN from user data")
+    get_user_response.json()
 
     # Prepare group update
     if "meta" in group_data:
@@ -591,8 +581,6 @@ async def test_put_user_with_members_endpoint(
             "value": user_id,
             "display": test_user.display_name,
             "$ref": f"{api_prefix}/Users/{user_id}",
-            # Add LDAP DN attribute which the backend expects
-            "dn": user_dn,
         }
     )
 
@@ -606,18 +594,21 @@ async def test_put_user_with_members_endpoint(
     updated_user = get_user_response.json()
 
     print(updated_user)
-    # Verify that the groups field exists and contains our group
-    assert "groups" in updated_user, "Groups field missing in user after adding to group"
+    # Because of performance concerns we do not map user groups
+    assert "groups" not in updated_user, "Groups field available also it should not be mapped"
 
-    # Check that the group we added is in the user's groups
-    found_group = False
-    for group in updated_user["groups"]:
-        if group["value"] == group_id:
-            found_group = True
-            assert group["display"] == test_group.display_name
+    # Groups users is mapped so make sure that the user is in the group
+    get_group_response = client.get(group_url, headers=auth_headers)
+    assert get_group_response.status_code == 200
+    group_data = get_group_response.json()
+
+    for member in group_data["members"]:
+        if member["value"] == user_id:
+            found_user = True
+            assert member["display"] == updated_user["displayName"]
             break
 
-    assert found_group, f"Added group {group_id} not found in user's groups"
+    assert found_user, f"Added user {user_id} not found in groups's members"
 
 
 @pytest.mark.asyncio
@@ -651,30 +642,13 @@ async def test_put_group_with_members_endpoint(
     user1_url = f"{api_prefix}/Users/{user1_id}"
     get_user1_response = client.get(user1_url, headers=auth_headers)
     assert get_user1_response.status_code == 200
-    user1_data = get_user1_response.json()
+    get_user1_response.json()
 
     # Get user2 details
     user2_url = f"{api_prefix}/Users/{user2_id}"
     get_user2_response = client.get(user2_url, headers=auth_headers)
     assert get_user2_response.status_code == 200
-    user2_data = get_user2_response.json()
-
-    # Extract user DNs - key fix for the LDAP backend
-    user1_dn = None
-    user2_dn = None
-
-    # Get the DNs from the extension schema if available
-    if "urn:univention:scim:schemas:extensions:ldap:2.0:User" in user1_data.get("schemas", []):
-        ext_data = user1_data.get("urn:univention:scim:schemas:extensions:ldap:2.0:User", {})
-        user1_dn = ext_data.get("dn")
-
-    if "urn:univention:scim:schemas:extensions:ldap:2.0:User" in user2_data.get("schemas", []):
-        ext_data = user2_data.get("urn:univention:scim:schemas:extensions:ldap:2.0:User", {})
-        user2_dn = ext_data.get("dn")
-
-    # If we couldn't get the DNs, skip this test
-    if not user1_dn or not user2_dn:
-        pytest.skip("Could not retrieve user DNs from user data")
+    get_user2_response.json()
 
     # Prepare updates with members - remove meta section
     updated_group_data = original_group.copy()
@@ -692,13 +666,11 @@ async def test_put_group_with_members_endpoint(
                 "value": user1_id,
                 "display": test_user1.display_name,
                 "$ref": f"{api_prefix}/Users/{user1_id}",
-                "dn": user1_dn,  # Add proper LDAP DN
             },
             {
                 "value": user2_id,
                 "display": test_user2.display_name,
                 "$ref": f"{api_prefix}/Users/{user2_id}",
-                "dn": user2_dn,  # Add proper LDAP DN
             },
         ]
     )
@@ -731,17 +703,51 @@ async def test_put_group_with_members_endpoint(
         assert get_user_response.status_code == 200
         updated_user = get_user_response.json()
 
-        # Check if the group is in the user's groups
-        assert "groups" in updated_user, f"Groups field missing in user {user_id} after adding to group"
+        # Because of performance concerns we do not map user groups
+        assert "groups" not in updated_user, "Groups field available also it should not be mapped"
 
-        # Check if the correct group is in the user's groups
-        found_group = False
-        for group in updated_user["groups"]:
-            if group["value"] == group_id:
-                found_group = True
-                break
 
-        assert found_group, f"Group {group_id} not found in user {user_id}'s groups"
+@pytest.mark.asyncio
+@pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
+async def test_put_group_with_invalid_member(
+    create_random_user: CreateUserFactory,
+    create_random_group: CreateGroupFactory,
+    client: TestClient,
+    api_prefix: str,
+    auth_headers: dict[str, str],
+) -> None:
+    fake = Faker()
+    test_group = await create_random_group()
+
+    group_url = f"{api_prefix}/Groups/{test_group.id}"
+
+    # Get the group to see current state
+    get_response = client.get(group_url, headers=auth_headers)
+    assert get_response.status_code == 200
+    original_group = get_response.json()
+
+    # Prepare updates with members - remove meta section
+    updated_group_data = original_group.copy()
+    if "meta" in updated_group_data:
+        del updated_group_data["meta"]
+
+    # Initialize members list if it doesn't exist
+    if "members" not in updated_group_data:
+        updated_group_data["members"] = []
+
+    # Add users to the group's members
+    updated_group_data["members"].extend(
+        [
+            {"value": fake.uuid4(), "display": "Invalid group1"},
+            {"value": fake.uuid4(), "display": "Invalid group2"},
+        ]
+    )
+
+    # Send PUT request
+    put_response = client.put(group_url, json=updated_group_data, headers=auth_headers)
+
+    # Update the assertion to match the actual implementation behavior
+    assert put_response.status_code in [422], "Update of group should fail with 422 because members are invalid"
 
 
 ## DELETE
@@ -891,21 +897,6 @@ async def test_delete_user_with_memberships(
     assert get_group_response.status_code == 200
     group_data = get_group_response.json()
 
-    # Get the user to extract DN
-    get_user_response = client.get(user_url, headers=auth_headers)
-    assert get_user_response.status_code == 200
-    user_data = get_user_response.json()
-
-    # Extract the user's DN from the user_data if available
-    user_dn = None
-    if "urn:univention:scim:schemas:extensions:ldap:2.0:User" in user_data.get("schemas", []):
-        ext_data = user_data.get("urn:univention:scim:schemas:extensions:ldap:2.0:User", {})
-        user_dn = ext_data.get("dn")
-
-    # If we couldn't get the DN, skip this test
-    if not user_dn:
-        pytest.skip("Could not retrieve user DN from user data")
-
     # Prepare group update
     if "meta" in group_data:
         del group_data["meta"]
@@ -913,13 +904,12 @@ async def test_delete_user_with_memberships(
     if "members" not in group_data:
         group_data["members"] = []
 
-    # Add the user to the group's members with proper DN
+    # Add the user to the group's members
     group_data["members"].append(
         {
             "value": user_id,
             "display": test_user.display_name,
             "$ref": f"{api_prefix}/Users/{user_id}",
-            "dn": user_dn,
         }
     )
 
@@ -975,34 +965,7 @@ async def test_delete_group_with_members(
     user2_id = test_user2.id
     group_id = test_group.id
 
-    user1_url = f"{api_prefix}/Users/{user1_id}"
-    user2_url = f"{api_prefix}/Users/{user2_id}"
     group_url = f"{api_prefix}/Groups/{group_id}"
-
-    # Get user details to extract DNs
-    get_user1_response = client.get(user1_url, headers=auth_headers)
-    assert get_user1_response.status_code == 200
-    user1_data = get_user1_response.json()
-
-    get_user2_response = client.get(user2_url, headers=auth_headers)
-    assert get_user2_response.status_code == 200
-    user2_data = get_user2_response.json()
-
-    # Extract user DNs
-    user1_dn = None
-    user2_dn = None
-
-    if "urn:univention:scim:schemas:extensions:ldap:2.0:User" in user1_data.get("schemas", []):
-        ext_data = user1_data.get("urn:univention:scim:schemas:extensions:ldap:2.0:User", {})
-        user1_dn = ext_data.get("dn")
-
-    if "urn:univention:scim:schemas:extensions:ldap:2.0:User" in user2_data.get("schemas", []):
-        ext_data = user2_data.get("urn:univention:scim:schemas:extensions:ldap:2.0:User", {})
-        user2_dn = ext_data.get("dn")
-
-    # If we couldn't get the DNs, skip this test
-    if not user1_dn or not user2_dn:
-        pytest.skip("Could not retrieve user DNs from user data")
 
     # Add users to the group
     get_group_response = client.get(group_url, headers=auth_headers)
@@ -1023,13 +986,11 @@ async def test_delete_group_with_members(
                 "value": user1_id,
                 "display": test_user1.display_name,
                 "$ref": f"{api_prefix}/Users/{user1_id}",
-                "dn": user1_dn,
             },
             {
                 "value": user2_id,
                 "display": test_user2.display_name,
                 "$ref": f"{api_prefix}/Users/{user2_id}",
-                "dn": user2_dn,
             },
         ]
     )
@@ -1054,9 +1015,8 @@ async def test_delete_group_with_members(
         assert get_user_response.status_code == 200
         updated_user = get_user_response.json()
 
-        assert "groups" in updated_user, f"Groups field missing in user {user_id}"
-        group_ids = [group["value"] for group in updated_user["groups"]]
-        assert group_id in group_ids, f"Group {group_id} not found in user {user_id}'s groups"
+        # Because of performance concerns we do not map user groups
+        assert "groups" not in updated_user, "Groups field available also it should not be mapped"
 
     # Now delete the group
     delete_response = client.delete(group_url, headers=auth_headers)
@@ -1073,7 +1033,5 @@ async def test_delete_group_with_members(
         assert get_user_response.status_code == 200
         updated_user = get_user_response.json()
 
-        # If user still has groups, the deleted group should not be among them
-        if "groups" in updated_user and updated_user["groups"]:
-            group_ids = [group["value"] for group in updated_user["groups"]]
-            assert group_id not in group_ids, f"Deleted group still found in user {user_id}'s groups"
+        # Because of performance concerns we do not map user groups
+        assert "groups" not in updated_user, "Groups field available also it should not be mapped"

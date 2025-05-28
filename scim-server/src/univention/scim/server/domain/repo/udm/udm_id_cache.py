@@ -119,7 +119,10 @@ class UdmIdCache(IdCache):
     def get_user(self, key: str) -> CacheItem | None:
         entry = self._get_entry(self.users, key)
         if not entry:
-            entry = self._query_user(key)
+            try:
+                entry = self._query_user(key)
+            except ValueError:
+                return None
 
         if not entry.uuid:
             logger.error("Ignore user, group member mapping requires a valid 'univentionObjectIdentifier'", user_id=key)
@@ -130,7 +133,10 @@ class UdmIdCache(IdCache):
     def get_group(self, key: str) -> CacheItem | None:
         entry = self._get_entry(self.groups, key)
         if not entry:
-            entry = self._query_group(key)
+            try:
+                entry = self._query_group(key)
+            except ValueError:
+                return None
 
         if not entry.uuid:
             logger.error(
