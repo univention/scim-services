@@ -452,7 +452,7 @@ async def test_patch_user_endpoint(
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 @pytest.mark.usefixtures("maildomain")
 async def test_patch_group_endpoint(
-    create_random_group: Callable[[], Group], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+    create_random_group: CreateGroupFactory, client: TestClient, api_prefix: str, auth_headers: dict[str, str]
 ) -> None:
     """Test partially updating a group through the REST API PATCH endpoint."""
     print("\n=== E2E Testing PATCH Group Endpoint ===")

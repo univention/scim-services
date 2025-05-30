@@ -370,7 +370,6 @@ class TestGroupAPI:
         assert data["id"] == group_id
         assert data["displayName"] == test_group.display_name
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_apply_patch_operation(self, client: TestClient) -> None:
         """Test creating a group."""
 
@@ -405,7 +404,6 @@ class TestGroupAPI:
         assert data["displayName"] == "It's not a cult"
         assert "id" in data
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_patch_nonexistent_group(self, client: TestClient) -> None:
         """PATCHing a non-existent group should return 404 or a handled error."""
         non_existent_id = "non-existent-id-123"
@@ -426,7 +424,6 @@ class TestGroupAPI:
         assert response.status_code in (404, 400), f"Expected failure but got: {response.status_code}"
         assert "not found" in response.text.lower()
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_patch_with_invalid_payload(self, client: TestClient) -> None:
         """PATCH with malformed data should be rejected with 400."""
         group_id = self._create_test_group(client)
@@ -452,7 +449,6 @@ class TestGroupAPI:
         assert patch_response.status_code == 400
         assert " validation error " in patch_response.text
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_patch_with_invalid_payload_broken(self, client: TestClient) -> None:
         """PATCH with malformed data should be rejected with 400."""
         group_id = self._create_test_group(client)
@@ -474,7 +470,6 @@ class TestGroupAPI:
         assert patch_response.status_code == 400
         assert "Operations" in patch_response.text or "Invalid" in patch_response.text
 
-    @pytest.mark.usefixtures("setup_mocks")
     def test_patch_remove_attribute(self, client: TestClient) -> None:
         """PATCH to remove a group attribute should succeed and result in deletion."""
         group_id = self._create_test_group(client)
