@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.18.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.17.0...v0.18.0) (2025-05-30)
+
+
+### Features
+
+* **authz:** Check if user is in a given group, only members of the given group are allowed to access the SCIM API ([4111a8e](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/4111a8e21a7a7266f735ab25652f68bbfdaa6282)), closes [univention/dev/internal/team-nubus#1151](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1151)
+* **authz:** Implement proper oauth2 support ([c0c472a](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/c0c472a6e860124b82accc881d2d80edf2b8422e)), closes [univention/dev/internal/team-nubus#1151](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1151)
+
+
+### Bug Fixes
+
+* **authn:** Check correct claims for nubus keycloak ([36112cb](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/36112cb649dd3cbe0c47242b1b6a8bb7761f49c1)), closes [univention/dev/internal/team-nubus#1151](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1151)
+* **helm:** Correctly hand existingSecret for udm-secret ([d06b27c](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/d06b27c544484ebddd5cbca0e97b06bf729bfb31)), closes [univention/dev/internal/team-nubus#1151](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1151)
+* **uv:** Do not require explicit python version ([19608c9](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/19608c9e606c0b342481ae87d03f73d3ba64dcaa)), closes [univention/dev/internal/team-nubus#1151](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1151)
+
 ## [0.17.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.16.0...v0.17.0) (2025-05-27)
 
 
