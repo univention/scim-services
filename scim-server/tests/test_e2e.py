@@ -450,7 +450,6 @@ async def test_patch_user_endpoint(
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
-@pytest.mark.usefixtures("maildomain")
 async def test_patch_group_endpoint(
     create_random_group: CreateGroupFactory, client: TestClient, api_prefix: str, auth_headers: dict[str, str]
 ) -> None:
