@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.19.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.18.0...v0.19.0) (2025-05-30)
+
+
+### Features
+
+* **scim-server:** Add id cache and map group members and user groups ([5137fe8](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/5137fe8b7a3dc5fff43a0887516270466504853f)), closes [univention/dev/internal/team-nubus#1175](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1175)
+
+
+### Bug Fixes
+
+* **scim-server:** Add e2e tests for group member mappings ([4e69417](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/4e69417f3a2d849bfa98a68c787c5946e5edabfa)), closes [univention/dev/internal/team-nubus#1175](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1175)
+* **scim-server:** Add test for invalid members of group when mapping from UMD to SCIM ([db88d51](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/db88d51c4232330ad9fa258324a28aa45622b81e)), closes [univention/dev/internal/team-nubus#1175](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1175)
+* **scim-server:** Create mock for UDM REST API client and use it, fix detected bugs ([9c4c9dc](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/9c4c9dcb931bc31848deb6262b8caa1363f43733)), closes [univention/dev/internal/team-nubus#1175](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1175)
+* **scim-server:** Improve tests by reducing manual specified test fixtures ([cbc78c1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/cbc78c1c991fae9f36f610345ab74395ebdd9413)), closes [univention/dev/internal/team-nubus#1175](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1175)
+* **scim-server:** Make cache optional for udm<->scim mappers ([5336815](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/5336815d6d3deebaf08839483b63eea93d04fa4a)), closes [univention/dev/internal/team-nubus#1175](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1175)
+* **scim-server:** Update e2e test to properly test current group members and user groups mapping ([859c2d2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/859c2d2d90f9b9055f6486d65fff8269fdd935ad)), closes [univention/dev/internal/team-nubus#1175](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1175)
+
 ## [0.18.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.17.0...v0.18.0) (2025-05-30)
 
 
