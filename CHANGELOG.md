@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.20.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.19.1...v0.20.0) (2025-05-30)
+
+
+### Features
+
+* **scim-server:** Group patch and first test ([fa52f96](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/fa52f967b7031e38787bf56c46b5dafaad40f955))
+* **scim-server:** More tests for group patch ([03170c7](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/03170c7c4f84fa93e7172677911795065c56d62b))
+
 ## [0.19.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.19.0...v0.19.1) (2025-05-30)
 
 
