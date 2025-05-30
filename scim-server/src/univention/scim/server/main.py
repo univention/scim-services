@@ -38,14 +38,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Use settings from container to allow overriding values in unit tests
     settings = ApplicationContainer().settings()
 
-    # The FastAPI OAuth2AuthorizationCodeBearer requires some information from the IDP
-    # which is fetched via network so initialize it here at runtime because
-    # we don't want network access at initialization time
-    auth = FastAPIAuthAdapter(
-        container.oidc_configuration().get_configuration(), container.authenticator(), container.authorization()
-    )
+    dependencies = []
+    if settings.auth_enabled:
+        # The FastAPI OAuth2AuthorizationCodeBearer requires some information from the IDP
+        # which is fetched via network so initialize it here at runtime because
+        # we don't want network access at initialization time
+        auth = FastAPIAuthAdapter(
+            container.oidc_configuration().get_configuration(), container.authenticator(), container.authorization()
+        )
+        dependencies.append(Security(auth))
 
-    dependencies = [Security(auth)] if settings.auth_enabled else None
     app.include_router(users_router, prefix=f"{settings.api_prefix}/Users", tags=["Users"], dependencies=dependencies)
     app.include_router(
         groups_router, prefix=f"{settings.api_prefix}/Groups", tags=["Groups"], dependencies=dependencies
