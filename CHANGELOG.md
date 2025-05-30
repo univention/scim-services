@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.19.0...v0.19.1) (2025-05-30)
+
+
+### Bug Fixes
+
+* **scim-server:** Fix startup without auth for example via env AUTH_ENABLED=[secure] ([9271605](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/927160539274283a3308b5f8529d7ec3345eb31c)), closes [univention/dev/internal/team-nubus#1151](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1151)
+
 ## [0.19.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.18.0...v0.19.0) (2025-05-30)
 
 
