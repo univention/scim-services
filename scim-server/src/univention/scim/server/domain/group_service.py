@@ -82,5 +82,5 @@ class GroupService(ABC):
         pass
 
     @abstractmethod
-    async def apply_patch_operations(self, user_id: str, operations: list[dict[str, Any]]) -> Group:
+    async def apply_patch_operations(self, group_id: str, operations: list[dict[str, Any]]) -> Group:
         pass

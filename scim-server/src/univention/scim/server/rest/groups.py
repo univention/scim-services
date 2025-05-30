@@ -125,11 +125,11 @@ async def update_group(
 @inject
 async def patch_group(
     group_service: Annotated[GroupService, Depends(Provide[ApplicationContainer.group_service])],
-    group_id: Annotated[str, Path(..., description="User ID")],
+    group_id: Annotated[str, Path(..., description="Group ID")],
     patch_request: Annotated[dict[str, Any], Body(..., description="Raw SCIM-compliant patch request body")],
 ) -> Group:
     """
-    Patch a user using a raw SCIM JSON patch body.
+    Patch a group using a raw SCIM JSON patch body.
     The request must contain an 'Operations' list, and may optionally contain a 'schemas' field.
     """
     logger.debug("REST: Patch group with ID", id=group_id)
@@ -155,7 +155,7 @@ async def patch_group(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
     except Exception as e:
-        logger.exception("Unexpected error patching group", user_id=group_id)
+        logger.exception("Unexpected error patching group", group_id=group_id)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected error") from e
 
 

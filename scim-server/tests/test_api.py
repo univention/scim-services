@@ -377,9 +377,9 @@ class TestGroupAPI:
         group_id = self._create_test_group(client)
         group_url = f"/scim/v2/Groups/{group_id}"
 
-        # Step 2: Fetch the user before patching
+        # Step 2: Fetch the group before patching
         pre_patch_response = client.get(group_url)
-        assert pre_patch_response.status_code == 200, f"Failed to fetch user: {pre_patch_response.text}"
+        assert pre_patch_response.status_code == 200, f"Failed to fetch group: {pre_patch_response.text}"
         original_group = pre_patch_response.json()
         # Verify response data
         assert original_group["displayName"] == test_group.display_name
@@ -407,7 +407,7 @@ class TestGroupAPI:
 
     @pytest.mark.usefixtures("setup_mocks")
     def test_patch_nonexistent_group(self, client: TestClient) -> None:
-        """PATCHing a non-existent user should return 404 or a handled error."""
+        """PATCHing a non-existent group should return 404 or a handled error."""
         non_existent_id = "non-existent-id-123"
         patch_url = f"/scim/v2/Groups/{non_existent_id}"
 
@@ -433,7 +433,7 @@ class TestGroupAPI:
         group_url = f"/scim/v2/Groups/{group_id}"
 
         pre_patch_response = client.get(group_url)
-        assert pre_patch_response.status_code == 200, f"Failed to fetch user: {pre_patch_response.text}"
+        assert pre_patch_response.status_code == 200, f"Failed to fetch group: {pre_patch_response.text}"
         data = pre_patch_response.json()
 
         assert data["displayName"] == test_group.display_name
@@ -476,7 +476,7 @@ class TestGroupAPI:
 
     @pytest.mark.usefixtures("setup_mocks")
     def test_patch_remove_attribute(self, client: TestClient) -> None:
-        """PATCH to remove a user attribute should succeed and result in deletion."""
+        """PATCH to remove a group attribute should succeed and result in deletion."""
         group_id = self._create_test_group(client)
         group_url = f"/scim/v2/Groups/{group_id}"
 

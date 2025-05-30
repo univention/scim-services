@@ -454,10 +454,10 @@ async def test_patch_user_endpoint(
 async def test_patch_group_endpoint(
     create_random_group: Callable[[], Group], client: TestClient, api_prefix: str, auth_headers: dict[str, str]
 ) -> None:
-    """Test partially updating a user through the REST API PATCH endpoint."""
+    """Test partially updating a group through the REST API PATCH endpoint."""
     print("\n=== E2E Testing PATCH Group Endpoint ===")
 
-    # Step 1: Create a test user
+    # Step 1: Create a test group
     test_group = await create_random_group()
     group_id = test_group.id
     group_url = f"{api_prefix}/Groups/{group_id}"
