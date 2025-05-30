@@ -1,13 +1,17 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
-
-
-from faker import Faker
+import pytest
 from fastapi.testclient import TestClient
 from scim2_models import Email, Group, Name, User
 
+from tests.helpers.udm_client import MockUdm
 from univention.scim.server.config import ApplicationSettings
 
+# We can only test this with the mocked UDM because a real UDM
+# does not allow creating a group with invalid members
+@pytest.fixture
+def force_mock() -> bool:
+    return True
 
 # Test data
 test_user = User(
@@ -255,7 +259,10 @@ class TestUserAPI:
         assert "name" in user_after
         assert "givenName" not in user_after["name"] or user_after["name"]["givenName"] in ("", None)
 
-    def test_patch_add_with_nested_extension_path(self, client: TestClient) -> None:
+
+
+
+    def test_patch_add_with_nested_extension_path(self, force_mock: bool, client: TestClient) -> None:
         """
         PATCH 'add' operation should create missing intermediate
         objects if nested fields are missing and not fail with an exception,
