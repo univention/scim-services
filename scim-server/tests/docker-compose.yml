@@ -80,10 +80,10 @@ services:
       dockerfile: docker/scim-server/Dockerfile
       target: final
     environment:
-      UDM_URL: http://udm-rest-api:9979/univention/udm
-      UDM_USERNAME: admin
-      UDM_PASSWORD: secret
-      AUTH_ENABLED: "false"
+      UDM_URL: http://udm-rest-api:9979/udm/
+      UDM_USERNAME: cn=admin
+      UDM_PASSWORD: univention
+      AUTH_ENABLED: false
       API_PREFIX: /scim/v2
       LOG_LEVEL: DEBUG
     ports:
