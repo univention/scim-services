@@ -10,6 +10,7 @@ from univention.scim.server.domain.group_service_impl import GroupServiceImpl
 from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.repo.udm.crud_udm import CrudUdm
 from univention.scim.server.domain.repo.udm.udm_id_cache import UdmIdCache
+from univention.scim.server.domain.rules.action import Action
 from univention.scim.server.domain.rules.display_name import UserDisplayNameRule
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
@@ -106,6 +107,6 @@ async def test_rule_application() -> None:
     rule_evaluator = RuleEvaluator[User]()
     rule_evaluator.add_rule(UserDisplayNameRule())
 
-    updated_user = await rule_evaluator.evaluate(user)
+    updated_user = await rule_evaluator.evaluate(user, Action.Update)
     print(f"After rules: {updated_user.display_name=}")
     assert updated_user.display_name == "John Smith", "Display name rule failed"

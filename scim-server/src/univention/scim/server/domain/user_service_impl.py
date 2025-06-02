@@ -8,6 +8,7 @@ from scim2_models import ListResponse, User
 
 from univention.scim.server.domain.patch_mixin import PatchMixin
 from univention.scim.server.domain.repo.crud_manager import CrudManager
+from univention.scim.server.domain.rules.action import Action
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.rules.loader import RuleLoader
 from univention.scim.server.domain.user_service import UserService
@@ -63,7 +64,7 @@ class UserServiceImpl(UserService, PatchMixin):
             user.id = str(uuid4())
 
         # Apply business rules
-        user = await self.rule_evaluator.evaluate(user)
+        user = await self.rule_evaluator.evaluate(user, Action.Create)
 
         # Create user in repository
         created_user = await self.user_repository.create(user)
@@ -85,7 +86,7 @@ class UserServiceImpl(UserService, PatchMixin):
         user.id = user_id
 
         # Apply business rules
-        user = await self.rule_evaluator.evaluate(user)
+        user = await self.rule_evaluator.evaluate(user, Action.Update)
 
         # Update user in repository
         updated_user = await self.user_repository.update(user_id, user)
@@ -105,7 +106,7 @@ class UserServiceImpl(UserService, PatchMixin):
 
         # Validate and apply business rules
         self._validate_user(updated_user)
-        updated_resource = await self.rule_evaluator.evaluate(updated_user)
+        updated_resource = await self.rule_evaluator.evaluate(updated_user, Action.Patch)
 
         # Persist the updated user
         saved_user = await self.user_repository.update(user_id, updated_resource)

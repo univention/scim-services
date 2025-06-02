@@ -4,6 +4,7 @@
 from loguru import logger
 
 from univention.scim.server.domain.rules.display_name import UserDisplayNameRule
+from univention.scim.server.domain.rules.empty_password import UserEmptyPasswordRule
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 
 
@@ -28,6 +29,7 @@ class RuleLoader:
         evaluator = RuleEvaluator()
 
         # Add user-specific rules
+        evaluator.add_rule(UserEmptyPasswordRule())
         evaluator.add_rule(UserDisplayNameRule())
 
         return evaluator

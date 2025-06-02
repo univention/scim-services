@@ -79,6 +79,8 @@ class TestUserAPI:
         assert data["userName"] == test_user.user_name
         assert data["name"]["givenName"] == test_user.name.given_name
         assert data["name"]["familyName"] == test_user.name.family_name
+        # password should not be returned
+        assert "password" not in data
 
     def test_list_users(self, client: TestClient) -> None:
         """Test listing users."""
@@ -340,6 +342,66 @@ class TestUserAPI:
         # Verify filtered results
         assert data["totalResults"] >= 1
         assert any(u["userName"] == test_user.user_name for u in data["Resources"])
+
+    def test_create_user_without_password(self, client: TestClient) -> None:
+        """Test creating a user without password."""
+        test_user_copy = test_user.model_copy()
+        test_user_copy.password = None
+        response = client.post("/scim/v2/Users", json=test_user_copy.model_dump(by_alias=True, exclude_none=True))
+        assert response.status_code == 201
+        data = response.json()
+
+        # Verify response data
+        assert data["userName"] == test_user_copy.user_name
+        assert data["name"]["givenName"] == test_user_copy.name.given_name
+        assert data["name"]["familyName"] == test_user_copy.name.family_name
+        # password should not be returned
+        assert "password" not in data
+        assert "id" in data
+
+    def test_create_user_empty_password(self, client: TestClient) -> None:
+        """Test creating a user with an empty password."""
+        test_user_copy = test_user.model_copy()
+        test_user_copy.password = ""
+        response = client.post("/scim/v2/Users", json=test_user_copy.model_dump(by_alias=True, exclude_none=True))
+        assert response.status_code == 400
+
+    def test_update_user_with_new_password(self, client: TestClient) -> None:
+        """Test updating a user with a new password."""
+        # First create a user
+        user_id = _create_test_user(client)
+
+        # Update the user
+        updated_user = test_user.model_copy()
+        updated_user.password = "verysecretpassword"
+
+        response = client.put(
+            f"/scim/v2/Users/{user_id}", json=updated_user.model_dump(by_alias=True, exclude_none=True)
+        )
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify response data
+        assert data["id"] == user_id
+        assert data["userName"] == updated_user.user_name
+        assert data["name"]["givenName"] == updated_user.name.given_name
+        assert data["name"]["familyName"] == updated_user.name.family_name
+        # password should not be returned
+        assert "password" not in data
+
+    def test_update_user_empty_password(self, client: TestClient) -> None:
+        """Test updating a user with empty password."""
+        # First create a user
+        user_id = _create_test_user(client)
+
+        # Update the user
+        updated_user = test_user.model_copy()
+        updated_user.password = ""
+
+        response = client.put(
+            f"/scim/v2/Users/{user_id}", json=updated_user.model_dump(by_alias=True, exclude_none=True)
+        )
+        assert response.status_code == 400
 
 
 class TestGroupAPI:

@@ -6,6 +6,8 @@ from typing import Generic, TypeVar
 
 from scim2_models import Resource
 
+from univention.scim.server.domain.rules.action import Action
+
 
 T = TypeVar("T", bound=Resource)
 
@@ -18,12 +20,13 @@ class Rule(Generic[T], ABC):
     """
 
     @abstractmethod
-    async def apply(self, resource: T) -> T:
+    async def apply(self, resource: T, action: Action) -> T:
         """
         Apply the rule to a resource.
 
         Args:
             resource: The resource to apply the rule to
+            action: The action which triggered the rule
 
         Returns:
             The transformed resource

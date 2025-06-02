@@ -6,6 +6,7 @@ from typing import Generic, TypeVar
 from loguru import logger
 from scim2_models import Resource
 
+from univention.scim.server.domain.rules.action import Action
 from univention.scim.server.domain.rules.rule import Rule
 
 
@@ -35,7 +36,7 @@ class RuleEvaluator(Generic[T]):
         """
         self.rules.append(rule)
 
-    async def evaluate(self, resource: T) -> T:
+    async def evaluate(self, resource: T, action: Action) -> T:
         """
         Evaluate all rules against a resource.
         Args:
@@ -49,7 +50,7 @@ class RuleEvaluator(Generic[T]):
         result = resource
         for rule in self.rules:
             try:
-                result = await rule.apply(result)
+                result = await rule.apply(result, action)
             except ValueError as e:
                 logger.error(f"Rule {rule.get_name()} failed for resource {resource.id}: {e}")
                 raise

@@ -4,6 +4,7 @@
 from loguru import logger
 from scim2_models import User
 
+from univention.scim.server.domain.rules.action import Action
 from univention.scim.server.domain.rules.rule import Rule
 
 
@@ -19,7 +20,7 @@ class UserDisplayNameRule(Rule[User]):
         """Get the rule name."""
         return "UserDisplayNameRule"
 
-    async def apply(self, user: User) -> User:
+    async def apply(self, user: User, action: Action) -> User:
         """
         Apply the display name rule to a user.
 
@@ -28,6 +29,7 @@ class UserDisplayNameRule(Rule[User]):
 
         Args:
             user: The user to apply the rule to
+            action: The action which triggered the rule
 
         Returns:
             The user with a display name set

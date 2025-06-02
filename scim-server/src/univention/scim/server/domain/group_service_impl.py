@@ -9,6 +9,7 @@ from scim2_models import Group, ListResponse
 from univention.scim.server.domain.group_service import GroupService
 from univention.scim.server.domain.patch_mixin import PatchMixin
 from univention.scim.server.domain.repo.crud_manager import CrudManager
+from univention.scim.server.domain.rules.action import Action
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.rules.loader import RuleLoader
 
@@ -63,7 +64,7 @@ class GroupServiceImpl(GroupService, PatchMixin):
             group.id = str(uuid4())
 
         # Apply business rules
-        group = await self.rule_evaluator.evaluate(group)
+        group = await self.rule_evaluator.evaluate(group, Action.Create)
 
         # Create group in repository
         created_group = await self.group_repository.create(group)
@@ -85,7 +86,7 @@ class GroupServiceImpl(GroupService, PatchMixin):
         group.id = group_id
 
         # Apply business rules
-        group = await self.rule_evaluator.evaluate(group)
+        group = await self.rule_evaluator.evaluate(group, Action.Update)
 
         # Update group in repository
         updated_group = await self.group_repository.update(group_id, group)
@@ -105,7 +106,7 @@ class GroupServiceImpl(GroupService, PatchMixin):
 
         # Validate and apply business rules
         self._validate_group(updated_group)
-        updated_resource = await self.rule_evaluator.evaluate(updated_group)
+        updated_resource = await self.rule_evaluator.evaluate(updated_group, Action.Patch)
 
         # Persist the updated group
         saved_group = await self.group_repository.update(group_id, updated_resource)
