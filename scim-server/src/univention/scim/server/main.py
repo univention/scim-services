@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Security
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
@@ -15,8 +16,13 @@ from univention.scim.server.fast_api_auth_adapter import FastAPIAuthAdapter
 from univention.scim.server.middlewares.request_logging import setup_request_logging_middleware
 from univention.scim.server.middlewares.timing import add_timing_middleware
 from univention.scim.server.model_service.load_schemas import LoadSchemas
-from univention.scim.server.rest.error_handler import generic_exception_handler, scim_exception_handler
+from univention.scim.server.rest.error_handler import (
+    fastapi_request_exception_handler,
+    generic_exception_handler,
+    scim_exception_handler,
+)
 from univention.scim.server.rest.groups import router as groups_router
+from univention.scim.server.rest.id import router as id_router
 from univention.scim.server.rest.resource_type import router as resources_types_router
 from univention.scim.server.rest.schema import router as schema_router
 from univention.scim.server.rest.service_provider import router as service_provider_router
@@ -64,10 +70,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         tags=["Schemas"],
         dependencies=dependencies,
     )
-
     app.include_router(
         resources_types_router,
         prefix=f"{settings.api_prefix}/ResourceTypes",
+        tags=["SCIM"],
+        dependencies=dependencies,
+    )
+    app.include_router(
+        id_router,
+        prefix=f"{settings.api_prefix}",
         tags=["SCIM"],
         dependencies=dependencies,
     )
@@ -123,6 +134,7 @@ app.add_middleware(
 
 # Register exception handlers
 app.add_exception_handler(HTTPException, scim_exception_handler)
+app.add_exception_handler(RequestValidationError, fastapi_request_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
 

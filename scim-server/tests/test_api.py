@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 
+from faker import Faker
 from fastapi.testclient import TestClient
 from scim2_models import Email, Group, Name, User
 
@@ -32,15 +33,24 @@ test_group = Group(
 )
 
 
+def _create_test_user(client: TestClient) -> str:
+    """Helper method to create a test user and return the ID."""
+    response = client.post("/scim/v2/Users", json=test_user.model_dump(by_alias=True, exclude_none=True))
+    assert response.status_code == 201
+    data = response.json()
+    return str(data["id"])
+
+
+def _create_test_group(client: TestClient) -> str:
+    """Helper method to create a test group and return the ID."""
+    response = client.post("/scim/v2/Groups", json=test_group.model_dump(by_alias=True, exclude_none=True))
+    assert response.status_code == 201
+    data = response.json()
+    return str(data["id"])
+
+
 class TestUserAPI:
     """Tests for the User endpoints of the SCIM API."""
-
-    def _create_test_user(self, client: TestClient) -> str:
-        """Helper method to create a test user and return the ID."""
-        response = client.post("/scim/v2/Users", json=test_user.model_dump(by_alias=True, exclude_none=True))
-        assert response.status_code == 201
-        data = response.json()
-        return str(data["id"])
 
     def test_create_user(self, client: TestClient) -> None:
         """Test creating a user."""
@@ -57,7 +67,7 @@ class TestUserAPI:
     def test_get_user(self, client: TestClient) -> None:
         """Test retrieving a user."""
         # First create a user
-        user_id = self._create_test_user(client)
+        user_id = _create_test_user(client)
 
         # Get the user
         response = client.get(f"/scim/v2/Users/{user_id}")
@@ -86,7 +96,7 @@ class TestUserAPI:
     def test_update_user(self, client: TestClient) -> None:
         """Test updating a user."""
         # First create a user
-        user_id = self._create_test_user(client)
+        user_id = _create_test_user(client)
 
         # Update the user
         updated_user = test_user.model_copy()
@@ -107,12 +117,10 @@ class TestUserAPI:
         assert data["name"]["givenName"] == updated_user.name.given_name
         assert data["name"]["familyName"] == updated_user.name.family_name
 
-    from fastapi.testclient import TestClient
-
     def test_apply_patch_operations(self, client: TestClient) -> None:
         """Test partially updating a user using PATCH."""
         # Step 1: Create a user
-        user_id = self._create_test_user(client)
+        user_id = _create_test_user(client)
         user_url = f"/scim/v2/Users/{user_id}"
 
         # Step 2: Fetch the user before patching
@@ -171,7 +179,7 @@ class TestUserAPI:
 
     def test_patch_with_invalid_payload(self, client: TestClient) -> None:
         """PATCH with malformed data should be rejected with 400."""
-        user_id = self._create_test_user(client)
+        user_id = _create_test_user(client)
         user_url = f"/scim/v2/Users/{user_id}"
 
         pre_patch_response = client.get(user_url)
@@ -196,7 +204,7 @@ class TestUserAPI:
 
     def test_patch_with_invalid_payload_broken(self, client: TestClient) -> None:
         """PATCH with malformed data should be rejected with 400."""
-        user_id = self._create_test_user(client)
+        user_id = _create_test_user(client)
         user_url = f"/scim/v2/Users/{user_id}"
 
         pre_patch_response = client.get(user_url)
@@ -218,7 +226,7 @@ class TestUserAPI:
 
     def test_patch_remove_attribute(self, client: TestClient) -> None:
         """PATCH to remove a user attribute should succeed and result in deletion."""
-        user_id = self._create_test_user(client)
+        user_id = _create_test_user(client)
         user_url = f"/scim/v2/Users/{user_id}"
 
         # Confirm field exists before deletion
@@ -251,7 +259,7 @@ class TestUserAPI:
         objects if nested fields are missing and not fail with an exception,
         however, adding some random field should give a 400
         """
-        user_id = self._create_test_user(client)
+        user_id = _create_test_user(client)
         user_url = f"/scim/v2/Users/{user_id}"
 
         # Confirm extension is not present initially
@@ -280,7 +288,7 @@ class TestUserAPI:
     def test_delete_user(self, client: TestClient) -> None:
         """Test deleting a user."""
         # First create a user
-        user_id = self._create_test_user(client)
+        user_id = _create_test_user(client)
 
         # Delete the user
         response = client.delete(f"/scim/v2/Users/{user_id}")
@@ -292,23 +300,37 @@ class TestUserAPI:
 
     def test_get_nonexistent_user(self, client: TestClient) -> None:
         """Test getting a nonexistent user."""
-        response = client.get("/scim/v2/Users/nonexistent")
+        # First create a user, so a valid user is available
+        _create_test_user(client)
+
+        fake = Faker()
+        response = client.get(f"/scim/v2/Users/{fake.uuid4()}")
         assert response.status_code == 404
 
     def test_update_nonexistent_user(self, client: TestClient) -> None:
         """Test updating a nonexistent user."""
-        response = client.put("/scim/v2/Users/nonexistent", json=test_user.model_dump(by_alias=True, exclude_none=True))
+        # First create a user, so a valid user is available
+        _create_test_user(client)
+
+        Faker()
+        response = client.put(
+            "/scim/v2/Users/{fake.uuid4()}", json=test_user.model_dump(by_alias=True, exclude_none=True)
+        )
         assert response.status_code == 404
 
     def test_delete_nonexistent_user(self, client: TestClient) -> None:
         """Test deleting a nonexistent user."""
-        response = client.delete("/scim/v2/Users/nonexistent")
+        # First create a user, so a valid user is available
+        _create_test_user(client)
+
+        Faker()
+        response = client.delete("/scim/v2/Users/{fake.uuid4()}")
         assert response.status_code == 404
 
     def test_filter_users(self, client: TestClient) -> None:
         """Test filtering users."""
         # First create a user
-        self.test_create_user(client)
+        _create_test_user(client)
 
         # Filter users by userName
         response = client.get(f"/scim/v2/Users?filter=userName eq {test_user.user_name}")
@@ -322,13 +344,6 @@ class TestUserAPI:
 
 class TestGroupAPI:
     """Tests for the Group endpoints of the SCIM API."""
-
-    def _create_test_group(self, client: TestClient) -> str:
-        """Helper method to create a test group and return the ID."""
-        response = client.post("/scim/v2/Groups", json=test_group.model_dump(by_alias=True, exclude_none=True))
-        assert response.status_code == 201
-        data = response.json()
-        return str(data["id"])
 
     def test_create_group(self, client: TestClient) -> None:
         """Test creating a group."""
@@ -358,7 +373,7 @@ class TestGroupAPI:
     def test_get_group(self, client: TestClient) -> None:
         """Test retrieving a group."""
         # First create a group
-        group_id = self._create_test_group(client)
+        group_id = _create_test_group(client)
 
         # Get the group
         response = client.get(f"/scim/v2/Groups/{group_id}")
@@ -373,7 +388,7 @@ class TestGroupAPI:
     def test_apply_patch_operation(self, client: TestClient) -> None:
         """Test creating a group."""
 
-        group_id = self._create_test_group(client)
+        group_id = _create_test_group(client)
         group_url = f"/scim/v2/Groups/{group_id}"
 
         # Step 2: Fetch the group before patching
@@ -404,10 +419,22 @@ class TestGroupAPI:
         assert data["displayName"] == "It's not a cult"
         assert "id" in data
 
+    def test_get_nonexistent_group(self, client: TestClient) -> None:
+        """Test getting a nonexistent group."""
+        # First create a group, so a valid group is available
+        _create_test_group(client)
+
+        fake = Faker()
+        response = client.get(f"/scim/v2/Groups/{fake.uuid4()}")
+        assert response.status_code == 404
+
     def test_patch_nonexistent_group(self, client: TestClient) -> None:
         """PATCHing a non-existent group should return 404 or a handled error."""
-        non_existent_id = "non-existent-id-123"
-        patch_url = f"/scim/v2/Groups/{non_existent_id}"
+        # First create a grouo, so a valid group is available
+        _create_test_group(client)
+
+        fake = Faker()
+        patch_url = f"/scim/v2/Groups/{fake.uuid4()}"
 
         patch_operations = {
             "Operations": [
@@ -426,7 +453,7 @@ class TestGroupAPI:
 
     def test_patch_with_invalid_payload(self, client: TestClient) -> None:
         """PATCH with malformed data should be rejected with 400."""
-        group_id = self._create_test_group(client)
+        group_id = _create_test_group(client)
         group_url = f"/scim/v2/Groups/{group_id}"
 
         pre_patch_response = client.get(group_url)
@@ -451,7 +478,7 @@ class TestGroupAPI:
 
     def test_patch_with_invalid_payload_broken(self, client: TestClient) -> None:
         """PATCH with malformed data should be rejected with 400."""
-        group_id = self._create_test_group(client)
+        group_id = _create_test_group(client)
         group_url = f"/scim/v2/Groups/{group_id}"
 
         pre_patch_response = client.get(group_url)
@@ -472,7 +499,7 @@ class TestGroupAPI:
 
     def test_patch_remove_attribute(self, client: TestClient) -> None:
         """PATCH to remove a group attribute should succeed and result in deletion."""
-        group_id = self._create_test_group(client)
+        group_id = _create_test_group(client)
         group_url = f"/scim/v2/Groups/{group_id}"
 
         # Confirm field exists before deletion
@@ -673,3 +700,50 @@ class TestResourceTypesEndpoint:
         assert "schemaExtensions" in group_type
         assert isinstance(group_type["schemaExtensions"], list)
         assert len(group_type["schemaExtensions"]) == 0, "Expected empty schemaExtensions list for Group"
+
+
+class TestIdAPI:
+    """Tests for the global UUID endpoints of the SCIM API."""
+
+    def test_get_user_by_id(self, client: TestClient) -> None:
+        # First create a user and group
+        user_id = _create_test_user(client)
+        _create_test_group(client)
+
+        # Get the user
+        response = client.get(f"/scim/v2/{user_id}")
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify response data
+        assert data["id"] == user_id
+        assert data["userName"] == test_user.user_name
+        assert data["name"]["givenName"] == test_user.name.given_name
+        assert data["name"]["familyName"] == test_user.name.family_name
+
+    def test_get_group_by_id(self, client: TestClient) -> None:
+        # First create a user and group
+        _create_test_user(client)
+        group_id = _create_test_group(client)
+
+        # Get the group
+        response = client.get(f"/scim/v2/{group_id}")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify response data
+        assert data["id"] == group_id
+        assert data["displayName"] == test_group.display_name
+
+    def test_object_not_found(self, client: TestClient) -> None:
+        # First create a user and group
+        _create_test_user(client)
+        _create_test_group(client)
+
+        # Get the user
+        fake = Faker()
+        response = client.get(f"/scim/v2/{fake.uuid4()}")
+        assert response.status_code == 404
+        data = response.json()
+        assert data["schemas"] == ["urn:ietf:params:scim:api:messages:2.0:Error"]

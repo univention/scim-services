@@ -61,8 +61,7 @@ class MockUdm:
 
         return obj
 
-    def _search(self, store: dict[str, MagicMock], *args: Any, **kw: Any) -> list[MagicMock]:
-        filter = kw.get("filter")
+    def _search(self, store: dict[str, MagicMock], filter: str | None = None, *args: Any, **kw: Any) -> list[MagicMock]:
         if not filter:
             return list(store.values())
 

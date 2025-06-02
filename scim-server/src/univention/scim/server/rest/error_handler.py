@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 from fastapi import HTTPException, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from loguru import logger
 from scim2_models import Error
@@ -13,6 +14,8 @@ async def scim_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 
     This ensures all error responses follow the SCIM error format with the correct schemas.
     """
+    logger.debug("HTTP exception", code=exc.status_code, details=exc.detail)
+
     # Check if the exception already has a SCIM-formatted error detail
     if isinstance(exc.detail, dict) and "schemas" in exc.detail:
         # Already formatted as SCIM error
@@ -44,10 +47,25 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
 
     Converts any exception to a proper SCIM error response.
     """
-    logger.exception(f"Unhandled exception: {exc}")
+    logger.exception("Unhandled exception", exception=exc)
     error = Error(
         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail=str(exc),
         schemas=["urn:ietf:params:scim:api:messages:2.0:Error"],
     )
-    return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=error.model_dump(exclude_none=True))
+    return JSONResponse(status_code=error.status, content=error.model_dump(exclude_none=True))
+
+
+async def fastapi_request_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    """
+    Custom exception handler for request validation errors.
+
+    This ensures the error responses follow the SCIM error format and is logged with DEBUG logging.
+    """
+    logger.debug("Request validation error", details=exc.errors())
+    error = Error(
+        status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        detail=str(exc),
+        schemas=["urn:ietf:params:scim:api:messages:2.0:Error"],
+    )
+    return JSONResponse(status_code=error.status, content=error.model_dump(exclude_none=True))

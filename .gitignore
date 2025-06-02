@@ -17,3 +17,4 @@ __pycache__/
 **/.kyverno/manifest.yaml
 **/*.egg-info/
 .venv/
+/scim-server.logs
