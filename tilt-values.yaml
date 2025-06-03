@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2025 Univention GmbH
+
+global:
+  secrets:
+    masterPassword: nubus
+
+nubusProvisioning:
+  connection:
+    url: "http://provisioning-api"
+
+scimServer:
+  auth:
+    username: "stub-scim-api-username"

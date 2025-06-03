@@ -14,3 +14,7 @@ metadata:
   {{- end }}
 data:
   LOG_LEVEL: {{ .Values.scimConsumer.config.logLevel | required ".Values.config.LogLevel is required" | quote }}
+  PROVISIONING_API_USERNAME: {{ default (include "common.names.fullname" .) .Values.nubusProvisioning.auth.username }}
+  PROVISIONING_API_BASE_URL: {{ required ".Values.nubusProvisioning.connection.url is required." .Values.nubusProvisioning.connection.url | quote }}
+  MAX_ACKNOWLEDGEMENT_RETRIES: {{ required ".Values.nubusProvisioning.connection.maxAcknowledgementRetries is required." .Values.nubusProvisioning.connection.maxAcknowledgementRetries | quote }}
+  SCIM_API_USERNAME: {{ required ".Values.scimServer.auth.username is required" .Values.scimServer.auth.username }}

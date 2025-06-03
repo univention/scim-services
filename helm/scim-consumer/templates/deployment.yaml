@@ -64,12 +64,12 @@ spec:
             - configMapRef:
                 name: {{ $name }}
           env:
-            - name: SCIM_PASSWORD
+            - name: SCIM_API_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.scimServer.auth.existingSecret "defaultNameSuffix" "scim-server" "context" .) | quote }}
                   key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.scimServer.auth.existingSecret "key" "password") | quote }}
-            - name: PROVISIONING_PASSWORD
+            - name: PROVISIONING_API_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.nubusProvisioning.auth.existingSecret "defaultNameSuffix" "provisioning-credentials" "context" .) | quote }}

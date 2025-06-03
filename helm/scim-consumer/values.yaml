@@ -23,7 +23,15 @@ global:
 
 # -- Upstream Nubus Provisioning connection configuration
 nubusProvisioning:
+  connection:
+    # -- The base URL the provisioning API is reachable at. (e.g. "http://provisioning-api")
+    url: null
+    # -- The maximum number of retries for acknowledging a message
+    maxAcknowledgementRetries: 3
   auth:
+    # -- Username of the nubus provisioning subscription / this consumer
+    # For a given nubus deployment, all provisioning subscription names must be unique.
+    username: null
     # -- The password used to authenticate with the source LDAP directory.
     # Either this value or an existing Secret has to be specified.
     password: null
@@ -41,6 +49,7 @@ nubusProvisioning:
 # -- Downstream SCIM Service connection configuration
 scimServer:
   auth:
+    username: null
     # -- The password used to authenticate with the source LDAP directory.
     # Either this value or an existing Secret has to be specified.
     password: null

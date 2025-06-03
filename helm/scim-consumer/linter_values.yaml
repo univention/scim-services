@@ -5,3 +5,11 @@
 global:
   secrets:
     masterPassword: stub-secret
+
+nubusProvisioning:
+  connection:
+    url: "http://nubus-provisioning-api"
+
+scimServer:
+  auth:
+    username: "stub-scim-api-username"
