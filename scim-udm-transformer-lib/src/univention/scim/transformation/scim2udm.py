@@ -72,6 +72,10 @@ class ScimToUdmMapper:
             properties["phone"] = None
             properties["mobileTelephoneNumber"] = None
 
+        # Map title
+        if user.title:
+            properties["title"] = user.title
+
         # TODO: Do not map groups for now, it will reduce performance because many LDAP queries are required
         # Map groups
         # if user.groups and self.cache:

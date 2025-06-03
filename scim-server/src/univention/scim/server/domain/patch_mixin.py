@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 import re
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from loguru import logger
 from scim2_models import Group, Resource, User
@@ -23,17 +23,15 @@ class PathParser:
 
     # Regex patterns for parsing SCIM paths
     PATH_PATTERN = re.compile(
-        r'^(?P<attribute>[a-zA-Z_]\w*)'
-        r'(?:\[(?P<filter>.+?)\])?'
-        r'(?:\.(?P<subattr>.+))?$'
+        r"^(?P<attribute>[a-zA-Z_]\w*)"
+        r"(?:\[(?P<filter>.+?)\])?"
+        r"(?:\.(?P<subattr>.+))?$"
     )
 
-    FILTER_PATTERN = re.compile(
-        r'^(?P<attr>\w+)\s+(?P<op>eq|ne|co|sw|ew|gt|ge|lt|le|pr)\s+"?(?P<value>[^"]+)"?$'
-    )
+    FILTER_PATTERN = re.compile(r'^(?P<attr>\w+)\s+(?P<op>eq|ne|co|sw|ew|gt|ge|lt|le|pr)\s+"?(?P<value>[^"]+)"?$')
 
     @classmethod
-    def parse(cls, path: str) -> Dict[str, Any]:
+    def parse(cls, path: str) -> dict[str, Any]:
         """Parse a SCIM path into components"""
         if not path:
             return {"attribute": None, "filter": None, "subattr": None}
@@ -76,7 +74,7 @@ class PatchMixin:
     READONLY_ATTRS = {"id", "meta", "schemas"}
 
     async def patch_resource(
-            self, resource: Resource, resource_id: str, operations: list[dict[str, Any]]
+        self, resource: Resource, resource_id: str, operations: list[dict[str, Any]]
     ) -> None | User | Group:
         """Apply SCIM patch operations to the resource with the given ID."""
 
@@ -96,7 +94,7 @@ class PatchMixin:
 
         try:
             # Apply each SCIM operation
-            for i, op in enumerate(operations):
+            for _i, op in enumerate(operations):
                 op_type = op.get("op", "").lower()
                 path = op.get("path", "")
                 value = op.get("value")
@@ -135,6 +133,7 @@ class PatchMixin:
 
         # Update lastModified
         from datetime import datetime
+
         resource_data["meta"]["lastModified"] = datetime.utcnow().isoformat() + "Z"
 
         # Rebuild updated Resource model
@@ -142,7 +141,7 @@ class PatchMixin:
         updated_resource.id = resource_id
         return updated_resource
 
-    def _apply_add(self, data: Dict, path: str, value: Any) -> None:
+    def _apply_add(self, data: Any, path: str, value: Any) -> None:
         """Apply add operation"""
         if not path:
             # No path means add attributes to the resource itself
@@ -163,7 +162,7 @@ class PatchMixin:
         parsed = PathParser.parse(path)
         self._navigate_and_apply(data, parsed, "add", value)
 
-    def _apply_replace(self, data: Dict, path: str, value: Any) -> None:
+    def _apply_replace(self, data: Any, path: str, value: Any) -> None:
         """Apply replace operation"""
         if not path:
             # No path means replace attributes on the resource itself
@@ -179,12 +178,12 @@ class PatchMixin:
         parsed = PathParser.parse(path)
         self._navigate_and_apply(data, parsed, "replace", value)
 
-    def _apply_remove(self, data: Dict, path: str) -> None:
+    def _apply_remove(self, data: Any, path: str) -> None:
         """Apply remove operation"""
         parsed = PathParser.parse(path)
         self._navigate_and_apply(data, parsed, "remove", None)
 
-    def _navigate_and_apply(self, data: Dict, parsed: Dict, operation: str, value: Any) -> None:
+    def _navigate_and_apply(self, data: Any, parsed: Any, operation: str, value: Any) -> None:
         """Navigate to the target location and apply the operation"""
         attribute = parsed["attribute"]
         filter_expr = parsed["filter"]
@@ -231,10 +230,9 @@ class PatchMixin:
                     # Replace the entire matched item
                     idx = current.index(matching_items[0])
                     current[idx] = value
-                elif operation == "add":
+                elif operation == "add" and not matching_items:
                     # For add with filter, add as new item if no match
-                    if not matching_items:
-                        current.append(value)
+                    current.append(value)
 
         elif filter_expr and not isinstance(current, list):
             # Filter on non-array should fail
@@ -264,7 +262,7 @@ class PatchMixin:
             elif operation == "remove":
                 data.pop(attribute, None)
 
-    def _apply_filter(self, items: List[Dict], filter_expr: Dict) -> List[Dict]:
+    def _apply_filter(self, items: list[Any], filter_expr: Any) -> list[Any]:
         """Apply filter expression to multi-valued attribute"""
         if filter_expr.get("type") == "index":
             idx = filter_expr["value"]
@@ -314,7 +312,7 @@ class PatchMixin:
                 return False
         return False
 
-    def _apply_simple_operation(self, target: Dict, attr: str, operation: str, value: Any) -> None:
+    def _apply_simple_operation(self, target: Any, attr: str, operation: str, value: Any) -> None:
         """Apply operation to a simple attribute"""
         if operation == "add" or operation == "replace":
             target[attr] = value

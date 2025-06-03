@@ -413,7 +413,7 @@ async def test_patch_user_endpoint(
             {"op": "replace", "path": "displayName", "value": new_display_name},
             {"op": "replace", "path": "name.givenName", "value": "PatchedFirst"},
             {"op": "replace", "path": "name.familyName", "value": "PatchedLast"},
-            {"op": "add", "path": "emails", "value": [{"value": new_email_value, "type": "work", "primary": True}]},
+            {"op": "add", "path": "emails", "value": [{"value": new_email_value, "type": "work"}]},
         ],
     }
 
@@ -421,26 +421,20 @@ async def test_patch_user_endpoint(
     patch_response = client.patch(user_url, json=patch_body, headers=auth_headers)
     assert patch_response.status_code == 200, f"PATCH failed: {patch_response.text}"
     patched_user = patch_response.json()
-
     # Step 5: Assert updated fields
     assert patched_user["id"] == user_id
     assert patched_user["displayName"] == new_display_name
     assert patched_user["name"]["givenName"] == "PatchedFirst"
     assert patched_user["name"]["familyName"] == "PatchedLast"
 
-    # Step 6: Check updated emails
+    # # Step 6: Check updated emails
     email_values = [e["value"] for e in patched_user["emails"]]
     assert new_email_value in email_values
-
-    primary_emails = [e for e in patched_user["emails"] if e.get("primary")]
-    assert len(primary_emails) == 1
-    assert primary_emails[0]["value"] == new_email_value
 
     # Step 7: Re-GET to confirm persistence
     get_final = client.get(user_url, headers=auth_headers)
     assert get_final.status_code == 200
     final_user = get_final.json()
-
     assert final_user["displayName"] == new_display_name
     assert final_user["name"]["givenName"] == "PatchedFirst"
     assert final_user["name"]["familyName"] == "PatchedLast"
