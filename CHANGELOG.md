@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.21.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.20.0...v0.21.0) (2025-06-03)
+
+
+### Features
+
+* **scim-server:** Fix random_url scim-tester test by adding route for /{id} ([aa850a6](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/aa850a68bf67175243438fd940156d8d82339278)), closes [univention/dev/internal/team-nubus#1194](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1194)
+
 ## [0.20.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.19.1...v0.20.0) (2025-05-30)
 
 
