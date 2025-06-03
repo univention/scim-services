@@ -2,3 +2,6 @@
 # SPDX-FileCopyrightText: 2024 Univention GmbH
 
 ---
+global:
+  secrets:
+    masterPassword: stub-secret

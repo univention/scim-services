@@ -67,12 +67,12 @@ spec:
             - name: SCIM_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.scimServer.auth.existingSecret "defaultNameSuffix" "source-directory" "context" .) | quote }}
+                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.scimServer.auth.existingSecret "defaultNameSuffix" "scim-server" "context" .) | quote }}
                   key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.scimServer.auth.existingSecret "key" "password") | quote }}
             - name: PROVISIONING_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.nubusProvisioning.auth.existingSecret "defaultNameSuffix" "udm" "context" .) | quote }}
+                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.nubusProvisioning.auth.existingSecret "defaultNameSuffix" "provisioning-credentials" "context" .) | quote }}
                   key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.nubusProvisioning.auth.existingSecret "key" "password") | quote }}
           {{- with .Values.extraEnvVars }}
             {{- . | toYaml | nindent 12 }}

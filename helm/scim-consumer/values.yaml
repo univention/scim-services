@@ -18,13 +18,15 @@ global:
   # Ref.: https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
   #
   imagePullPolicy: "IfNotPresent"
+  secrets:
+    masterPassword: null
 
 # -- Upstream Nubus Provisioning connection configuration
 nubusProvisioning:
   auth:
     # -- The password used to authenticate with the source LDAP directory.
     # Either this value or an existing Secret has to be specified.
-    password:
+    password: null
     existingSecret:
       # -- The name of an existing Secret to use for retrieving the password
       # to authenticate with the source LDAP directory.
@@ -41,7 +43,7 @@ scimServer:
   auth:
     # -- The password used to authenticate with the source LDAP directory.
     # Either this value or an existing Secret has to be specified.
-    password:
+    password: null
     existingSecret:
       # -- The name of an existing Secret to use for retrieving the password
       # to authenticate with the source LDAP directory.
@@ -52,7 +54,6 @@ scimServer:
         # -- The key to retrieve the password from. Setting this value allows to use
         # a key with a different name.
         password: null
-
 
 # -- Container image configuration
 scimConsumer:
@@ -65,6 +66,11 @@ scimConsumer:
     sha256: null
   config:
     logLevel: "INFO"
+    # -- Toggle prefill for the provisioning subscription
+    # If activated, the consumer will recieve a synthetic "create" event
+    # for all existing objets in the Domain before recieving live events.
+    prefill: true
+    groupSync: true
 
 
 init:
