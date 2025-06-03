@@ -4,25 +4,20 @@
 from pathlib import Path
 
 import pytest
-from univention.testing.helm.deployment import Deployment
 
 
 def get_absolute_path(path: Path):
-    base_path = Path(__file__).parent.parent.parent
+    base_path = Path(__file__).parent.parent.parent.parent
     return str(base_path / path)
 
 
 @pytest.fixture()
 def helm_values():
     """Use "helm/directory-consumer/linter_values.yaml" as default values."""
-    return [get_absolute_path("helm/scim-server/linter_values.yaml")]
+    return [get_absolute_path(Path("helm/scim-consumer/linter_values.yaml"))]
 
 
 @pytest.fixture()
 def chart_path():
     """Path to the Helm chart which shall be tested."""
-    return get_absolute_path("helm/scim-server")
-
-
-class TestDeployment(Deployment):
-    template_file = "templates/deployment.yaml"
+    return get_absolute_path(Path("helm/scim-consumer"))
