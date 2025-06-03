@@ -66,7 +66,7 @@ FROM ${UCS_BASE_IMAGE}:${UCS_BASE_IMAGE_TAG} AS final
 SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
 
 ENV PYTHONUNBUFFERED=1 \
-    PATH=/app/scim-consumer/.venv/bin:$PATH
+    PATH=/app/.venv/bin:$PATH
 
 ARG USER=scim-consumer
 RUN rm -fv /usr/lib/python*/EXTERNALLY-MANAGED && \
@@ -74,7 +74,7 @@ RUN rm -fv /usr/lib/python*/EXTERNALLY-MANAGED && \
     groupadd -r ${USER} -g 1000 && \
     useradd -r -d /app -g ${USER} -N ${USER} -u 1000
 
-COPY --from=build --chown=${USER}:${USER} /app/.venv /app/scim-consumer/.venv
+COPY --from=build --chown=${USER}:${USER} /app/.venv /app/.venv
 COPY --from=build --chown=${USER}:${USER} /app/requirements.txt /app/requirements.txt
 
 USER ${USER}
