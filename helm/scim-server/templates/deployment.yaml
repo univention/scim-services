@@ -1,10 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2024 Univention GmbH
-
-
 ---
 {{- $name := include "common.names.fullname" . }}
-
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
@@ -45,7 +42,7 @@ spec:
       securityContext:
         {{- omit .Values.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}
-      {{- $imagePullSecrets := coalesce .Values.imagePullSecrets .Values.global.imagePullSecrets }}
+      {{- $imagePullSecrets := coalesce .Values.global.imagePullSecrets }}
       {{- if $imagePullSecrets }}
       imagePullSecrets:
         {{- range $imagePullSecrets }}
@@ -53,41 +50,43 @@ spec:
         {{- end }}
       {{- end }}
       initContainers:
-        - name: "wait-for-dependency-containers"
+        - name: "wait-for-keycloak"
           {{- if .Values.containerSecurityContext.enabled }}
           securityContext:
             {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
-          image: "{{ coalesce .Values.init.image.registry .Values.global.imageRegistry }}/{{ .Values.init.image.repository }}{{ if .Values.init.image.sha256 }}@sha256:{{ .Values.init.image.sha256 }}{{ else }}:{{ .Values.init.image.tag }}{{ end }}"
-          imagePullPolicy: {{ coalesce .Values.init.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
+          image: "{{ coalesce .Values.scimServer.waitForDependency.image.registry .Values.global.imageRegistry }}/{{ .Values.scimServer.waitForDependency.image.repository }}{{ if .Values.scimServer.waitForDependency.image.sha256 }}@sha256:{{ .Values.scimServer.waitForDependency.image.sha256 }}{{ else }}:{{ .Values.scimServer.waitForDependency.image.tag }}{{ end }}"
+          imagePullPolicy: {{ coalesce .Values.scimServer.waitForDependency.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
+          envFrom:
+            - configMapRef:
+                name: {{ printf "%s-init" (include "common.names.fullname" .) }}
+          command: ["/bin/sh", "-c"]
+          args:
+          - >
+            wait-for-keycloak.py
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        - name: "wait-for-udm"
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext:
+            {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          image: "{{ coalesce .Values.scimServer.waitForDependency.image.registry .Values.global.imageRegistry }}/{{ .Values.scimServer.waitForDependency.image.repository }}{{ if .Values.scimServer.waitForDependency.image.sha256 }}@sha256:{{ .Values.scimServer.waitForDependency.image.sha256 }}{{ else }}:{{ .Values.scimServer.waitForDependency.image.tag }}{{ end }}"
+          imagePullPolicy: {{ coalesce .Values.scimServer.waitForDependency.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
           envFrom:
             - configMapRef:
                 name: {{ printf "%s-init" (include "common.names.fullname" .) }}
           env:
             - name: UDM_API_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  {{- if and .Values.config.udm.existingSecret .Values.config.udm.existingSecret.name }}
-                  name: {{ tpl .Values.config.udm.existingSecret.name . }}
-                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.config.udm.existingSecret "key" "username") }}
-                  {{- else }}
-                  name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
-                  key: "username"
-                  {{- end }}
+              value: {{ required "is required" .Values.udm.auth.username | quote }}
             - name: UDM_API_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  {{- if and .Values.config.udm.existingSecret .Values.config.udm.existingSecret.name }}
-                  name: {{ tpl .Values.config.udm.existingSecret.name . }}
-                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.config.udm.existingSecret "key" "password") }}
-                  {{- else }}
-                  name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
-                  key: "password"
-                  {{- end }}
+                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.udm.auth.existingSecret "defaultNameSuffix" "udm-secret" "context" .) | quote }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.udm.auth.existingSecret "key" "password") | quote }}
           command: ["/bin/sh", "-c"]
           args:
           - >
-            wait-for-keycloak.py &&
             wait-for-udm.sh
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
@@ -97,37 +96,24 @@ spec:
           securityContext:
             {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
-          image: "{{ coalesce .Values.image.registry .Values.global.imageRegistry }}/{{ .Values.image.repository }}{{ if .Values.image.sha256 }}@sha256:{{ .Values.image.sha256 }}{{ else }}:{{ .Values.image.tag }}{{ end }}"
-          imagePullPolicy: {{ coalesce .Values.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
+          image: "{{ coalesce .Values.scimServer.image.registry .Values.global.imageRegistry }}/{{ .Values.scimServer.image.repository }}{{ if .Values.scimServer.image.sha256 }}@sha256:{{ .Values.scimServer.image.sha256 }}{{ else }}:{{ .Values.scimServer.image.tag }}{{ end }}"
+          imagePullPolicy: {{ coalesce .Values.scimServer.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
           envFrom:
             - configMapRef:
                 name: {{ printf "%s-env" (include "common.names.fullname" .) }}
           env:
             - name: UDM_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  {{- if and .Values.config.udm.existingSecret .Values.config.udm.existingSecret.name }}
-                  name: {{ tpl .Values.config.udm.existingSecret.name . }}
-                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.config.udm.existingSecret "key" "username") }}
-                  {{- else }}
-                  name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
-                  key: "username"
-                  {{- end }}
+              value: {{ required "is required" .Values.udm.auth.username | quote }}
             - name: UDM_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  {{- if and .Values.config.udm.existingSecret .Values.config.udm.existingSecret.name }}
-                  name: {{ tpl .Values.config.udm.existingSecret.name . }}
-                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.config.udm.existingSecret "key" "password") }}
-                  {{- else }}
-                  name: {{ printf "%s-udm-secret" (include "common.names.fullname" .) }}
-                  key: "password"
-                  {{- end }}
+                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.udm.auth.existingSecret "defaultNameSuffix" "udm-secret" "context" .) | quote }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.udm.auth.existingSecret "key" "password") | quote }}
             - name: AUTHENTICATOR_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.oauth.auth.existingSecret "defaultNameSuffix" "keycloak-client-secret" "context" .) | quote }}
-                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.oauth.auth.existingSecret "key" "clientSecret") }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.oauth.auth.existingSecret "key" "clientSecret") | quote }}
             {{- with .Values.extraEnvVars }}
               {{- . | toYaml | nindent 14 }}
             {{- end }}
@@ -137,11 +123,9 @@ spec:
           readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.probes.readiness "context" .) | nindent 12 }}
           startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.probes.startup "context" .) | nindent 12 }}
           ports:
-            {{- range $key, $value := .Values.service.ports }}
-            - name: {{ $key }}
-              containerPort: {{ $value.containerPort }}
-              protocol: {{ $value.protocol }}
-            {{- end }}
+            - name: http
+              containerPort: 80
+              protocol: TCP
           volumeMounts:
             {{- if .Values.extraVolumeMounts }}
             {{- include "common.tplvalues.render" (dict "value" .Values.extraVolumeMounts "context" .) | nindent 12 }}
@@ -150,4 +134,3 @@ spec:
         {{- if .Values.extraVolumes }}
           {{- include "common.tplvalues.render" (dict "value" .Values.extraVolumes  "context" .) | nindent 8 }}
         {{- end }}
-...

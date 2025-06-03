@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2024 Univention GmbH
-
 {{- if .Values.ingress.enabled }}
 ---
 apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
@@ -23,17 +22,19 @@ spec:
   tls:
     - hosts:
         - {{ tpl .Values.ingress.host . | quote }}
-      secretName: {{ include "scim-server.ingress.tls.secretName" . | quote }}
+      secretName: {{ coalesce .Values.ingress.tls.secretName (printf "%s-tls" (include "common.names.fullname" .)) | quote }}
   {{- end }}
   rules:
     - host: {{ required "The hostname has to be set in \"ingress.host\"." (tpl .Values.ingress.host .) | quote }}
       http:
         paths:
-          {{- range .Values.ingress.paths }}
-          - pathType: {{ .pathType }}
-            path: {{ tpl .path $ }}
+          - path: /scim/v2/
+            pathType: ImplementationSpecific
             backend: {{- include "common.ingress.backend" (dict "serviceName" (include "common.names.fullname" $) "servicePort" "http" "context" $) | nindent 14 }}
-          {{- end }}
-
-...
+          - path: /docs
+            pathType: ImplementationSpecific
+            backend: {{- include "common.ingress.backend" (dict "serviceName" (include "common.names.fullname" $) "servicePort" "http" "context" $) | nindent 14 }}
+          - path: /openapi.json
+            pathType: ImplementationSpecific
+            backend: {{- include "common.ingress.backend" (dict "serviceName" (include "common.names.fullname" $) "servicePort" "http" "context" $) | nindent 14 }}
 {{- end }}

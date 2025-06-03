@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2024 Univention GmbH
+---
+apiVersion: "v1"
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-env" (include "common.names.fullname" .) }}
+  namespace: {{ include "common.names.namespace" . | quote }}
+  labels:
+    {{- include "common.labels.standard" ( dict "customLabels" .Values.additionalLabels "context" $ ) | nindent 4 }}
+  {{- if .Values.additionalAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.additionalAnnotations "context" . ) | nindent 4 }}
+  {{- end }}
+data:
+  API_PREFIX: {{ .Values.config.apiPrefix | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  AUTHENTICATOR_IDP_OPENID_CONFIGURATION_URL: {{ printf "%s/realms/%s/.well-known/openid-configuration" (required ".Values.keycloak.connection.url is required" (tpl .Values.keycloak.connection.url .)) (required ".Values.keycloak.connection.realm is required" (tpl .Values.keycloak.connection.realm .)) }}
+  AUTHENTICATOR_CLIENT_ID: {{ .Values.oauth.clientId | quote }}
+  LISTEN: {{ .Values.config.listenAddress | quote }}
+  PORT: {{ .Values.config.port | quote }}
+  CORS_ORIGINS: {{ .Values.config.corsOrigins | quote }}
+  AUTH_ENABLED: {{ .Values.config.auth.enabled | quote }}
+  UDM_URL: {{ required ".Values.udm.connection.url is required" (tpl .Values.udm.connection.url .) | quote }}
+  AUTHENTICATOR_ALLOW_GROUP_DN: {{ tpl .Values.config.auth.allowGroupDn . | quote }}
+  HOST: {{ tpl .Values.config.host . | quote }}

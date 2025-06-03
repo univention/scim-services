@@ -1,34 +1,28 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2024 Univention GmbH
-
 ---
 global:
-  # -- Container registry address.
   imageRegistry: "artifacts.software-univention.de"
-
-  # -- Credentials to fetch images from private registry.
-  # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-  #
-  # imagePullSecrets:
-  #   - "docker-registry"
   imagePullSecrets: []
-
-  # -- Define an ImagePullPolicy.
-  #
-  # Ref.: https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
-  #
   imagePullPolicy: "IfNotPresent"
-
   ingressClass: ""
+  domain: ""
+  certManagerIssuer: ""
+  nubusDeployment: false
 
-# -- Container image configuration
-image:
-  registry: ""
-  repository: "nubus-dev/images/scim-server"
-  imagePullPolicy: ""
-  tag: "latest"
-  # -- Define image sha256 as an alternative to `tag`
-  sha256: null
+scimServer:
+  image:
+    registry: ""
+    repository: "nubus-dev/images/scim-server"
+    imagePullPolicy: ""
+    tag: "latest"
+    sha256: null
+  waitForDependency:
+    image:
+      registry: ""
+      repository: "nubus/images/wait-for-dependency"
+      tag: "0.31.0"
+      sha256: null
 
 replicaCount: 1
 
@@ -37,28 +31,38 @@ config:
   apiPrefix: "/scim/v2"
   logLevel: "INFO"
   listenAddress: "0.0.0.0"
-  port: &port 80
+  port: 80
   corsOrigins: '["*"]'
   auth:
     enabled: true
-    # -- Full DN of the group which allows access to the SCIM API
     allowGroupDn: ""
-  keycloak:
-    # -- Base URL to the keycloak server
+
+keycloak:
+  connection:
     url: ""
     realm: ""
-  udm:
+
+udm:
+  connection:
     url: ""
-    username: null
+  auth:
+    username: "Administrator"
     password: null
     existingSecret:
-      # -- The reference to the secret containing `oauthAdapterM2mSecret` secret.
       name: null
-      # -- The key to retrieve the secret from. Setting this value allows
-      # to use a key with a different name than the default "clientSecret".
       keyMapping:
-        username: null
         password: null
+
+# The clientId is required for authentication because only tokens from that client are considered valid
+# There exists also another parameter to create a keycloak client if it is set, the clientId from here is used for the new client
+# The secret is only needed for convenience to allow logging in in the swagger UI
+oauth:
+  clientId: "scim-api"
+  auth:
+    existingSecret:
+      name: null
+      keyMapping:
+        clientSecret: null
 
 resources:
   limits:
@@ -66,300 +70,116 @@ resources:
     cpu: "4"
 
 podSecurityContext:
-  # -- Enable security context.
   enabled: true
-  # -- If specified, all processes of the container are also part of the supplementary group.
   fsGroup: 1000
-  # -- Change ownership and permission of the volume before being exposed inside a Pod.
   fsGroupChangePolicy: "Always"
-  # -- Allow binding to ports below 1024 without root access.
   sysctls:
     - name: "net.ipv4.ip_unprivileged_port_start"
       value: "1"
 
 containerSecurityContext:
+  enabled: true
   privileged: false
-  # -- Enable container privileged escalation.
   allowPrivilegeEscalation: false
-  # -- Security capabilities for container.
   capabilities:
     drop:
       - "ALL"
-  # -- Enable security context.
-  enabled: true
-  # Set Seccomp profile.
   seccompProfile:
-    # -- Disallow custom Seccomp profile by setting it to RuntimeDefault.
     type: "RuntimeDefault"
-  # -- Process user id.
   runAsUser: 1000
-  # -- Process group id.
   runAsGroup: 1000
-  # -- Mounts the container's root filesystem as read-only.
   readOnlyRootFilesystem: true
-  # -- Run container as a user.
   runAsNonRoot: true
 
-#  Configure extra options for containers probes.
 probes:
   readiness:
-    # -- Number of failed executions until container is terminated.
     failureThreshold: 10
-    # -- Delay after container start until LivenessProbe is executed.
     initialDelaySeconds: 15
-    # -- Time between probe executions.
     periodSeconds: 20
-    # -- Number of successful executions after failed ones until container is marked healthy.
     successThreshold: 1
-    # -- Timeout for command return.
     timeoutSeconds: 5
     tcpSocket:
-      port: *port
+      port: 80
   startup:
-    # -- Delay after container start until StartupProbe is executed.
     initialDelaySeconds: 15
-    # -- Number of failed executions until container is terminated.
     failureThreshold: 10
-    # -- Time between probe executions.
     periodSeconds: 20
-    # -- Number of successful executions after failed ones until container is marked healthy.
     successThreshold: 1
-    # -- Timeout for command return.
     timeoutSeconds: 5
     tcpSocket:
-      # -- The port to connect to the container.
-      port: *port
+      port: 80
   liveness:
-    # -- Number of failed executions until container is terminated.
     failureThreshold: 10
-    # -- Delay after container start until LivenessProbe is executed.
     initialDelaySeconds: 15
-    # -- Time between probe executions.
     periodSeconds: 20
-    # -- Number of successful executions after failed ones until container is marked healthy.
     successThreshold: 1
-    # -- Timeout for command return.
     timeoutSeconds: 5
     tcpSocket:
-      # -- The port to connect to the container.
-      port: *port
+      port: 80
 
 tolerations: []
-
-# -- Optionally specify a secret to create (primarily intended to be used in development environments to provide custom certificates)
-extraSecrets: []
-
-# -- Array with extra environment variables to add to containers.
-#
-# extraEnvVars:
-#   - name: FOO
-#     value: "bar"
 extraEnvVars: []
-
-# -- Optionally specify an extra list of additional volumes.
 extraVolumes: []
-
-# -- Optionally specify an extra list of additional volumeMounts.
 extraVolumeMounts: []
 
-init:
-  image:
-    imagePullSecrets: []
-
-    registry: ""
-    repository: "nubus/images/wait-for-dependency"
-    tag: "0.31.0"
-    # -- Define image sha256 as an alternative to `tag`
-    # sha256: null
-
-# Define and create Kubernetes Ingress.
-#
-# Ref.: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
-  # -- Enable creation of Ingress.
   enabled: true
-
-  # -- Define the Fully Qualified Domain Name (FQDN) where application should be reachable.
   host: ""
-
-  # Request certificates via cert-manager.io annotation
   certManager:
-    # -- Enable cert-manager.io annotation.
     enabled: true
-
-    # Issuer reference.
     issuerRef:
-      # -- Name of cert-manager.io Issuer resource.
       name: ""
-      # -- Type of Issuer, f.e. "Issuer" or "ClusterIssuer".
       kind: "ClusterIssuer"
-
-  # -- Define the Ingress paths.
-  paths:
-  - path: /scim/v2/
-    pathType: ImplementationSpecific
-  - path: /docs
-    pathType: ImplementationSpecific
-  - path: /openapi.json
-    pathType: ImplementationSpecific
-
-  # -- The Ingress controller class name.
   ingressClassName: ""
-
-  # -- Define custom ingress annotations.
-  # annotations:
-  #   nginx.ingress.kubernetes.io/rewrite-target: /
-
-  # -- Secure an Ingress by specifying a Secret that contains a TLS private key and certificate.
-  #
-  # Ref.: https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
+  annotations: {}
   tls:
-    # -- Enable TLS/SSL/HTTPS for Ingress.
     enabled: true
-
-    # -- The name of the kubernetes secret which contains a TLS private key and certificate.
-    # Hint: This secret is not created by this chart and must be provided.
     secretName: ""
 
-# Define and create Kubernetes Service.
-#
-# Ref.: https://kubernetes.io/docs/concepts/services-networking/service
 service:
-  # -- Additional custom annotations.
   annotations: {}
-  # "ClusterIP" => Exposes the Service on a cluster-internal IP. Choosing this value makes the Service only reachable
-  #                from within the cluster. This is the default that is used if you don't explicitly specify a type for
-  #                a Service.
-  # "NodePort" => Exposes the Service on each Node's IP at a static port (the NodePort). To make the node port
-  #               available, Kubernetes sets up a cluster IP address, the same as if you had requested a Service of
-  #               type: ClusterIP.
-  # "LoadBalancer" => Exposes the Service externally using a cloud provider's load balancer.
-  #
-  # Ref.: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-  # -- Choose the kind of Service, one of "ClusterIP", "NodePort" or "LoadBalancer".
-  type: "ClusterIP"
 
-  # Define the ports of Service.
-  # You can set the port value to an arbitrary value, it will map the container port by name.
-  #
-  ports:
-    http:
-      # -- Accessible port.
-      port: *port
-      # -- Internal port.
-      containerPort: *port
-      # -- service protocol.
-      protocol: "TCP"
-
-# Service account to use.
-# Ref.: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
 serviceAccount:
-  # Specifies whether a service account should be created
   create: true
-  # Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
   name: ""
-  ## @param serviceAccount.automountServiceAccountToken Allows auto mount of ServiceAccountToken on the serviceAccount created
-  ## Can be set to false if pods using this serviceAccount do not need to use K8s API
-  ##
   automountServiceAccountToken: false
-  # -- Additional custom labels for the ServiceAccount.
   labels: {}
 
-oauth:
-  clientId: "scim-api"
-  auth:
-    # -- Machine-to-machine secret. Either this value or an existing Secret has to be specified.
-    # The specification of the secret value directly is not supported currently
-    #clientSecret: null
-    existingSecret:
-      # -- The reference to the secret containing `oauthAdapterM2mSecret` secret.
-      name: null
-      # -- The key to retrieve the secret from. Setting this value allows
-      # to use a key with a different name than the default "clientSecret".
-      keyMapping:
-        clientSecret: null
-
-################
-# provisioning #
-################
-
-# -- The SCIM server provisioning job
-provisioning:
-  # -- Whether to run the provisioning job to create the SCIM server client in Keycloak or not.
+setup:
   enabled: true
   restartPolicy: "OnFailure"
   backoffLimit: 900
-  # -- Time in seconds until the job gets deleted
   ttlSecondsAfterFinished: 300
-
-  keycloakImage:
-    imagePullSecrets: []
-
+  image:
     registry: ""
     repository: "nubus/images/keycloak-bootstrap"
     tag: "0.8.0"
-    imagePullPolicy: "IfNotPresent"
-
-  udmImage:
-    imagePullSecrets: []
-
-    registry: ""
-    repository: "nubus/images/udm-rest-api-python-client"
-    tag: "0.30.0"
-    imagePullPolicy: "IfNotPresent"
-
-  image:
-    imagePullSecrets: []
-
-    registry: ""
-    repository: "nubus/images/wait-for-dependency"
-    tag: "0.31.0"
-    # -- Define image sha256 as an alternative to `tag`
-    # sha256: null
-
-  # -- Keycloak specific settings.
+    sha256: null
+    imagePullPolicy: ""
   keycloak:
+    connection:
+      host: ""
+      port: ""
+      baseUrl: ""
     auth:
-      # -- Keycloak user.
       username: ""
-      # -- Keycloak password.
-      password: ""
-      # -- Keycloak password secret reference.
       existingSecret:
         name: null
         keyMapping:
           password: null
-    # -- Connection parameters.
-    connection:
-      # -- Keycloak host.
-      host: ""
-      # -- Keycloak port.
-      port: ""
-
   config:
-    # -- Base URL for setting in Keycloak application URL without backslash.
-    # Example: "https://scim.uv-example.gaia.open-desk.cloud/docs"
     nubusBaseUrl: ""
-    # Debugging related settings
     debug:
-      # -- Enable debug output of included Ansible scripts
       enabled: false
-      # -- Seconds for the job to pause before starting the actual bootstrapping.
       pauseBeforeScriptStart: 0
-
   user:
+    create: false
+    username: "scim-api"
+    password: null
     group:
-      # -- Create a new LDAP group, all users of this group will have access to the scim-api
-      # -- If user is created it will be a member of the group
       create: false
       name: "scim-api-access"
 
-    # -- Create a new LDAP user which has access to the scim-api
-    create: false
-    username: ""
-    password: ""
-
-  tolerations: []
+additionalLabels: {}
+additionalAnnotations: {}

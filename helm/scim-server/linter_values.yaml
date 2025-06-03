@@ -1,34 +1,34 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2024 Univention GmbH
-
 ---
 global:
   ingressClass: "nginx"
+  domain: "univention.test"
 
-udm:
-  auth:
-    password: "stub-password"
-
-config:
-  keycloak:
+keycloak:
+  connection:
     url: "https://keycloak.univention.test"
     realm: "nubus"
-  udm:
+
+udm:
+  connection:
     url: "https://udm.univention.test"
+
+config:
+  corsOrigins: '["https://scim.univention.test"]'
 
 ingress:
   host: "scim.example.test"
   tls:
     secretName: "scim-server-tls"
 
-provisioning:
+setup:
+  enabled: true
   config:
     nubusBaseUrl: "https://scim.univention.test"
   keycloak:
     auth:
       username: "stub_username"
-      existingSecret:
-        name: "scim-server-provisioning-keycloak-secret"
     connection:
       baseUrl: "keycloak"
       host: "keycloak"
@@ -36,17 +36,3 @@ provisioning:
   user:
     create: true
     username: "scim-api"
-    password: "scim-api"
-
-oauth:
-  auth:
-    existingSecret:
-      name: "scim-server-client-secret"
-
-extraSecrets:
-  - name: "scim-server-provisioning-keycloak-secret"
-    stringData:
-      password: "stub_client_secret"
-  - name: "scim-server-client-secret"
-    stringData:
-      clientSecret: "stub_client_secret"
