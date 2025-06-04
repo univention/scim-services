@@ -139,7 +139,7 @@ def setup_mocks(application_settings: ApplicationSettings, udm_client: UDM | Moc
         udm2scim_mapper=udm2scim_mapper,
         resource_class=User,
         udm_client=udm_client,
-        base_url="http://testserver/scim/v2",
+        base_url=f"{application_settings.host}{application_settings.api_prefix}",
     )
 
     group_repo = CrudUdm[Group](
@@ -148,7 +148,7 @@ def setup_mocks(application_settings: ApplicationSettings, udm_client: UDM | Moc
         udm2scim_mapper=udm2scim_mapper,
         resource_class=Group,
         udm_client=udm_client,
-        base_url="http://testserver/scim/v2",
+        base_url=f"{application_settings.host}{application_settings.api_prefix}",
     )
 
     user_crud_manager = CrudManager[User](user_repo, "User")

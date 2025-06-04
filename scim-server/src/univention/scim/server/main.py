@@ -16,7 +16,6 @@ from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.fast_api_auth_adapter import FastAPIAuthAdapter
 from univention.scim.server.middlewares.request_logging import setup_request_logging_middleware
 from univention.scim.server.middlewares.timing import add_timing_middleware
-from univention.scim.server.model_service.load_schemas import LoadSchemas
 from univention.scim.server.rest.error_handler import (
     fastapi_request_exception_handler,
     generic_exception_handler,
@@ -84,18 +83,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         dependencies=dependencies,
     )
 
-    schema_loader: LoadSchemas = container.schema_loader()
-
-    # Load schemas and perform startup tasks
-    try:
-        await schema_loader.get_user_schema()
-        await schema_loader.get_group_schema()
-        await schema_loader.get_service_provider_config_schema()
-        resource_types = await schema_loader.get_resource_types()
-        logger.info(f"Loaded schemas successfully: {[rt.name for rt in resource_types]}")
-    except Exception as e:
-        logger.error(f"Failed to load schemas: {e}")
-        raise
     yield
     # Cleanup tasks when the application is shutting down
     logger.info("Shutting down SCIM server")

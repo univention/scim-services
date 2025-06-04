@@ -1,42 +1,25 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-from typing import Any
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Path, status
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from loguru import logger
-from scim2_models import EnterpriseUser, Error, Group, ListResponse, Schema, User
+from scim2_models import Error, ListResponse, Schema
+
+from univention.scim.server.container import ApplicationContainer
+from univention.scim.server.model_service.load_schemas import LoadSchemas
 
 
 router = APIRouter()
 
 
-def _get_schemas() -> list[Schema]:
-    """Helper function to get all schemas."""
-    schemas = []
-
-    # User schema
-    user_schema = User.to_schema()
-    # UDM requires a last name so adept our schema accordingly
-    name_attribute = next(x for x in user_schema.attributes if x.name == "name")
-    name_attribute.required = True
-    family_name_sub_attribute = next(x for x in name_attribute.sub_attributes if x.name == "familyName")
-    family_name_sub_attribute.required = True
-    schemas.append(user_schema.model_dump())
-
-    # Group schema
-    schemas.append(Group.to_schema().model_dump())
-
-    # Add enterprise user schema
-    schemas.append(EnterpriseUser.to_schema().model_dump())
-    return schemas
-
-
-def _get_schema_by_id(schema_id: str) -> Schema:
+def _get_schema_by_id(schema_loader: LoadSchemas, schema_id: str) -> Schema:
     """Helper function to get a specific schema by ID."""
-    schemas = _get_schemas()
+    schemas = schema_loader.get_supported_schemas()
     for schema in schemas:
-        if schema["id"] == schema_id:
+        if schema.id == schema_id:
             return schema
 
     # Create a SCIM-compliant error
@@ -49,7 +32,10 @@ def _get_schema_by_id(schema_id: str) -> Schema:
 
 
 @router.get("", response_model=ListResponse[Schema], response_model_exclude_none=True)
-async def get_schemas() -> Any:
+@inject
+async def get_schemas(
+    schema_loader: Annotated[LoadSchemas, Depends(Provide[ApplicationContainer.schema_loader])],
+) -> ListResponse[Schema]:
     """
     Get the list of schemas supported by the SCIM service.
 
@@ -58,18 +44,20 @@ async def get_schemas() -> Any:
     """
     logger.debug("REST: Get Schemas")
 
-    schemas = _get_schemas()
+    schemas = schema_loader.get_supported_schemas()
 
     return ListResponse[Schema](
         total_results=len(schemas),
         items_per_page=len(schemas),
         start_index=1,
-        resources=schemas,
+        resources=[x.model_dump() for x in schemas],
     )
 
 
 @router.get("/{schema_id}", response_model=Schema, response_model_exclude_none=True)
+@inject
 async def get_schema_by_id(
+    schema_loader: Annotated[LoadSchemas, Depends(Provide[ApplicationContainer.schema_loader])],
     schema_id: str = Path(..., description="Schema ID"),
 ) -> Schema:
     """
@@ -80,7 +68,7 @@ async def get_schema_by_id(
     logger.debug("REST: Get Schema by ID", id=schema_id)
 
     try:
-        return _get_schema_by_id(schema_id)
+        return _get_schema_by_id(schema_loader, schema_id).model_dump()
     except HTTPException:
         # Re-raise HTTPExceptions (these are already properly formatted)
         raise

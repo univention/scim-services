@@ -7,91 +7,57 @@ from fastapi import APIRouter, Depends, HTTPException, Path, status
 from loguru import logger
 
 # Import models from scim2-models
-from scim2_models import ListResponse, Meta, ResourceType, SchemaExtension
+from scim2_models import Error, ListResponse, ResourceType
 
-from univention.scim.server.config import ApplicationSettings
 from univention.scim.server.container import ApplicationContainer
+from univention.scim.server.model_service.load_schemas import LoadSchemas
 
 
 router = APIRouter()
 
 
-def _get_resource_type(settings: ApplicationSettings, resource_id: str) -> ResourceType:
-    """Helper function to get a specific resource type by ID."""
-    base_url = f"{settings.host}{settings.api_prefix}"
+def _get_resource_type_by_id(schema_loader: LoadSchemas, resource_id: str) -> ResourceType:
+    """Helper function to get a specific schema by ID."""
+    resource_types = schema_loader.get_resource_types()
+    for resource_type in resource_types:
+        if resource_type.id == resource_id:
+            return resource_type
 
-    if resource_id == "User":
-        return ResourceType(
-            id="User",
-            name="User",
-            description="User Account",
-            endpoint="/Users",  # Relative endpoint
-            schema_="urn:ietf:params:scim:schemas:core:2.0:User",
-            schema_extensions=[
-                SchemaExtension(
-                    schema_="urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
-                    required=False,
-                )
-            ],
-            meta=Meta(
-                location=f"{base_url}/ResourceTypes/User",
-                resourceType="ResourceType",
-            ),
-        )
-    elif resource_id == "Group":
-        return ResourceType(
-            id="Group",
-            name="Group",
-            description="Group",
-            endpoint="/Groups",  # Relative endpoint
-            schema_="urn:ietf:params:scim:schemas:core:2.0:Group",
-            schema_extensions=[],
-            meta=Meta(
-                location=f"{base_url}/ResourceTypes/Group",
-                resourceType="ResourceType",
-            ),
-        )
-    else:
-        # Create an exception with proper SCIM error format
-        error_detail = {
-            "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
-            "status": str(status.HTTP_404_NOT_FOUND),
-            "detail": f"Resource type '{resource_id}' not found",
-            "scimType": "invalidValue",
-        }
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_detail)
+    # Create a SCIM-compliant error
+    error = Error(
+        status=status.HTTP_404_NOT_FOUND,
+        detail="Schema '{resource_id}' not found",
+        scim_type="invalidValue",
+    )
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error.model_dump())
 
 
 @router.get("", response_model=ListResponse[ResourceType], response_model_exclude_none=True)
 @inject
 async def get_resource_types(
-    settings: Annotated[ApplicationSettings, Depends(Provide[ApplicationContainer.settings])],
+    schema_loader: Annotated[LoadSchemas, Depends(Provide[ApplicationContainer.schema_loader])],
 ) -> ListResponse[ResourceType]:
     """
     Get the list of resource types supported by the SCIM service.
 
     Returns a ListResponse containing User and Group resource types based on scim2-models.
     """
-    user_resource_type = _get_resource_type(settings, "User")
-    group_resource_type = _get_resource_type(settings, "Group")
-
     # Create the list of resources
-    resources = [user_resource_type, group_resource_type]
-    total_results = len(resources)
+    resource_types = schema_loader.get_resource_types()
 
     # Construct and return the ListResponse object
     return ListResponse[ResourceType](
-        total_results=total_results,
-        items_per_page=total_results,  # Assuming no pagination for this endpoint
+        total_results=len(resource_types),
+        items_per_page=len(resource_types),
         start_index=1,
-        resources=resources,
+        resources=[x.model_dump() for x in resource_types],
     )
 
 
 @router.get("/{resource_id}", response_model=ResourceType, response_model_exclude_none=True)
 @inject
 async def get_resource_type_by_id(
-    settings: Annotated[ApplicationSettings, Depends(Provide[ApplicationContainer.settings])],
+    schema_loader: Annotated[LoadSchemas, Depends(Provide[ApplicationContainer.schema_loader])],
     resource_id: str = Path(..., description="Resource type ID"),
 ) -> ResourceType:
     """
@@ -100,16 +66,11 @@ async def get_resource_type_by_id(
     Returns detailed information about the specified resource type.
     """
     try:
-        return _get_resource_type(settings, resource_id)
+        return _get_resource_type_by_id(schema_loader, resource_id)
     except HTTPException:
         # Re-raise HTTPExceptions (these are already properly formatted)
         raise
     except Exception as e:
         logger.error("Error getting resource type", id=resource_id, error=e)
-        # Return a proper SCIM error response for server errors
-        error_detail = {
-            "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
-            "status": str(status.HTTP_500_INTERNAL_SERVER_ERROR),
-            "detail": "An internal server error occurred",
-        }
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_detail) from e
+        error = Error(status=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An internal server error occurred")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error.model_dump()) from e

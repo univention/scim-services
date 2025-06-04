@@ -56,7 +56,7 @@ class TestResourceTypesEndpoint:
         assert "urn:ietf:params:scim:schemas:core:2.0:ResourceType" in user_type.get("schemas", [])
         assert user_type.get("name") == "User"
         assert user_type.get("endpoint") == "/Users"
-        assert user_type.get("description") == "User Account"
+        assert user_type.get("description") == "User"
         assert user_type.get("schema") == "urn:ietf:params:scim:schemas:core:2.0:User"
         assert isinstance(user_type.get("meta"), dict)
         assert user_type["meta"].get("resourceType") == "ResourceType"

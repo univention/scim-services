@@ -23,7 +23,6 @@ async def get_service_provider_config() -> Any:
     logger.debug("REST: Get ServiceProviderConfig")
     settings = application_settings()
     return ServiceProviderConfig(
-        schemas=["urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig"],
         documentation_uri="https://docs.univention.de/scim-api/",
         patch={"supported": settings.patch_enabled},
         bulk={"supported": False},

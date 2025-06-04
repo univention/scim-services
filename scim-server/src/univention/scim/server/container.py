@@ -44,7 +44,7 @@ class ApplicationContainer(DeclarativeContainer):
         group_repo = Singleton(di.di_group_repo)
 
     group_service: GroupService = Singleton(di.di_group_service, group_repository=group_repo)
-    schema_loader: LoadSchemas = Singleton(di.di_schema_loader)
+    schema_loader: LoadSchemas = Singleton(di.di_schema_loader, settings=settings)
 
     if settings().auth_enabled:
         oidc_configuration: OpenIDConnectConfiguration = Singleton(

@@ -5,11 +5,12 @@ from typing import Annotated, Any
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response, status
 from loguru import logger
-from scim2_models import EnterpriseUser, ListResponse, User
+from scim2_models import ListResponse, User
 
 from univention.scim.server.config import application_settings
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.domain.user_service import UserService
+from univention.scim.server.model_service.load_schemas_impl import UserWithExtensions
 from univention.scim.transformation.exceptions import MappingError
 
 
@@ -69,7 +70,7 @@ async def get_user(
 @inject
 async def create_user(
     user_service: Annotated[UserService, Depends(Provide[ApplicationContainer.user_service])],
-    user: User[EnterpriseUser],
+    user: UserWithExtensions,
     response: Response,
 ) -> User:
     """
@@ -78,22 +79,6 @@ async def create_user(
     Creates a user with the provided attributes and returns the created user.
     """
     logger.debug("REST: Create user")
-
-    # Ensure schemas are correctly set
-    if not user.schemas:
-        user.schemas = ["urn:ietf:params:scim:schemas:core:2.0:User"]
-
-    # Check if Enterprise extension is being used and update schemas if needed
-    if (
-        hasattr(user, "enterprise_user")
-        and user.enterprise_user
-        and "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User" not in user.schemas
-    ):
-        user.schemas.append("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User")
-
-    # Make sure required fields are present
-    if not user.user_name:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="userName is a required attribute")
 
     try:
         created_user = await user_service.create_user(user)
@@ -114,7 +99,7 @@ async def create_user(
 async def update_user(
     user_service: Annotated[UserService, Depends(Provide[ApplicationContainer.user_service])],
     user_id: str = Path(..., description="User ID"),
-    user: User[EnterpriseUser] = ...,  # Explicitly use User with EnterpriseUser extension
+    user: UserWithExtensions = ...,
 ) -> User:
     """
     Replace a user.
@@ -122,18 +107,6 @@ async def update_user(
     Replaces all attributes of the specified user and returns the updated user.
     """
     logger.debug("REST: Update user with ID", id=user_id)
-
-    # Ensure schemas are correctly set
-    if not user.schemas:
-        user.schemas = ["urn:ietf:params:scim:schemas:core:2.0:User"]
-
-    # Check if Enterprise extension is being used and update schemas if needed
-    if (
-        hasattr(user, "enterprise_user")
-        and user.enterprise_user
-        and "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User" not in user.schemas
-    ):
-        user.schemas.append("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User")
 
     try:
         return await user_service.update_user(user_id, user)

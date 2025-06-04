@@ -62,7 +62,7 @@ async def fastapi_request_exception_handler(request: Request, exc: RequestValida
 
     This ensures the error responses follow the SCIM error format and is logged with DEBUG logging.
     """
-    logger.debug("Request validation error", details=exc.errors())
+    logger.error("Request validation error", details=exc.errors())
     error = Error(
         status=status.HTTP_422_UNPROCESSABLE_ENTITY,
         detail=str(exc),

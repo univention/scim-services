@@ -14,37 +14,17 @@ class LoadSchemas(ABC):
     """
 
     @abstractmethod
-    async def get_user_schema(self) -> Schema:
+    def get_supported_schemas(self) -> list[Schema]:
         """
-        Get the User schema.
+        Get all supported schema.
 
         Returns:
-            The SCIM User schema
+            List of supported SCIM schemas
         """
         pass
 
     @abstractmethod
-    async def get_group_schema(self) -> Schema:
-        """
-        Get the Group schema.
-
-        Returns:
-            The SCIM Group schema
-        """
-        pass
-
-    @abstractmethod
-    async def get_service_provider_config_schema(self) -> Schema:
-        """
-        Get the ServiceProviderConfig schema.
-
-        Returns:
-            The SCIM ServiceProviderConfig schema
-        """
-        pass
-
-    @abstractmethod
-    async def get_resource_types(self) -> list[ResourceType]:
+    def get_resource_types(self) -> list[ResourceType]:
         """
         Get the available resource types.
 
