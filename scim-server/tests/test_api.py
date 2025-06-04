@@ -3,7 +3,6 @@
 from typing import Any
 
 import pytest
-
 from faker import Faker
 from fastapi.testclient import TestClient
 from scim2_models import Email, Group, Name, User
@@ -838,6 +837,7 @@ class TestIdAPI:
         data = response.json()
         assert data["schemas"] == ["urn:ietf:params:scim:api:messages:2.0:Error"]
 
+
 class TestSCIMPatchGradual:
     """Gradual test suite for SCIM patch - start with easy ones then test filters too"""
 
@@ -1064,4 +1064,3 @@ class TestSCIMPatchGradual:
         assert response.status_code == 200
         data = response.json()
         assert data.get("title") == "Software Engineer"
-
