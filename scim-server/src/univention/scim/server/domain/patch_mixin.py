@@ -298,7 +298,6 @@ class PatchMixin:
         elif op == "pr":
             return item_value is not None
         elif op in ["gt", "ge", "lt", "le"]:
-            # Comparison operators - implement as needed
             try:
                 if op == "gt":
                     return float(item_value) > float(value)
