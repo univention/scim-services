@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.22.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.21.0...v0.22.0) (2025-06-05)
+
+
+### Features
+
+* **scim-consumer:** Initial helm chart ([d12e525](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/d12e525fed36eb1cc8fb9dc0e52ff657c30ffb9e)), closes [univention/dev/internal/team-nubus#1173](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1173)
+
+
+### Bug Fixes
+
+* **scim-consumer:** Allign helm chart with best-practices using the helm-test-harness from common-helm ([bd1650f](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/bd1650f09caf73b61cde1c2ee8abfd9650c932b5)), closes [univention/dev/internal/team-nubus#1173](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1173)
+* **scim-consumer:** Fix the entrypoint of the scim-consumer container image ([0b5a779](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/0b5a779f86bc77cf43740c10630cacddc6850955)), closes [univention/dev/internal/team-nubus#1173](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1173)
+* **scim-consumer:** Helm chart successfully deploys the scim-consumer ([d142c84](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/d142c84200c13c5ba34d38405723f9d6a3b7ea29)), closes [univention/dev/internal/team-nubus#1173](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1173)
+
 ## [0.21.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.20.0...v0.21.0) (2025-06-03)
 
 
