@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.24.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.23.0...v0.24.0) (2025-06-05)
+
+
+### Features
+
+* **scim-consumer:** Added support for filtering actions by attribute ([25991cc](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/25991ccb08555d4db8bf31749afee418dbfd132a)), closes [univention/dev/internal/team-nubus#1203](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1203)
+* **scim-consumer:** Changed iterator handling ([3925cef](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/3925cef0080249ecffb85e0338b89eb53db3fa8b)), closes [univention/dev/internal/team-nubus#1172](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1172)
+* **scim-consumer:** Merged pytest.ini into pyproject.toml ([7c12bbe](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/7c12bbef1b6f236d46c436d8ebc9e74890f732de)), closes [univention/dev/internal/team-nubus#1172](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1172)
+* **scim-consumer:** Refactoring, add new class ScimConsumer ([973f4b5](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/973f4b5771585dcd26525bc006e2c15fad994883)), closes [univention/dev/internal/team-nubus#1203](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1203)
+* **scim-consumer:** Updated test call ([71f880c](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/71f880ceb59dc85262606c44fa8bee107c26a1d4)), closes [univention/dev/internal/team-nubus#1172](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1172)
+
 ## [0.23.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.22.0...v0.23.0) (2025-06-05)
 
 
