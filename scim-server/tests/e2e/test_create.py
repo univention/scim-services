@@ -1,12 +1,11 @@
-import os
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2025 Univention GmbH
 
 import pytest
-from scim2_models import User, Group
-
-from tests.conftest import skip_if_no_udm, api_prefix, auth_headers
 from fastapi.testclient import TestClient
+from scim2_models import Group, User
 
-
+from tests.conftest import skip_if_no_udm
 
 
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
@@ -45,7 +44,6 @@ async def test_post_user_endpoint(
     primary_email = next((email for email in created_user["emails"] if email.get("primary", False)), None)
     assert primary_email is not None, "No primary email found"
     assert primary_email["value"] in [email.value for email in test_user.emails]
-
 
 
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")

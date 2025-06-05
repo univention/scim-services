@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
-from typing import Any
 
-import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
-from scim2_models import Email, Name, User, Group
+from scim2_models import Group
+
 
 test_group = Group(
     display_name="Test Group",
 )
+
 
 def _create_test_group(client: TestClient) -> str:
     """Helper method to create a test group and return the ID."""
@@ -17,7 +17,6 @@ def _create_test_group(client: TestClient) -> str:
     assert response.status_code == 201
     data = response.json()
     return str(data["id"])
-
 
 
 class TestGroupAPI:

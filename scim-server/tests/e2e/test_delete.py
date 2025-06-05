@@ -1,9 +1,10 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2025 Univention GmbH
+
 import pytest
 from fastapi.testclient import TestClient
 
-from tests.conftest import skip_if_no_udm, api_prefix, auth_headers, CreateGroupFactory, CreateUserFactory
-
-
+from tests.conftest import CreateGroupFactory, CreateUserFactory, skip_if_no_udm
 
 
 @pytest.mark.asyncio

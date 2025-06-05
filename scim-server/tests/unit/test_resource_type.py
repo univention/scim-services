@@ -6,10 +6,6 @@ from fastapi.testclient import TestClient
 from univention.scim.server.config import ApplicationSettings
 
 
-
-
-
-
 class TestResourceTypesEndpoint:
     """Tests for the ResourceTypes endpoint."""
 
@@ -96,4 +92,3 @@ class TestResourceTypesEndpoint:
         assert "schemaExtensions" in group_type
         assert isinstance(group_type["schemaExtensions"], list)
         assert len(group_type["schemaExtensions"]) == 0, "Expected empty schemaExtensions list for Group"
-

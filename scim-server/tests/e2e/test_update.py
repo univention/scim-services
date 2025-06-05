@@ -1,8 +1,11 @@
-import pytest
-from fastapi.testclient import TestClient
-from faker import Faker
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2025 Univention GmbH
 
-from tests.conftest import skip_if_no_udm, api_prefix, auth_headers, CreateGroupFactory, CreateUserFactory
+import pytest
+from faker import Faker
+from fastapi.testclient import TestClient
+
+from tests.conftest import CreateGroupFactory, CreateUserFactory, skip_if_no_udm
 
 
 @pytest.mark.asyncio
@@ -84,7 +87,6 @@ async def test_put_user_endpoint(
     # Verify the new email exists in the GET response
     get_updated_emails = [email["value"] for email in get_updated_user["emails"]]
     assert new_email["value"] in get_updated_emails
-
 
 
 @pytest.mark.asyncio
@@ -357,4 +359,3 @@ async def test_put_user_with_members_endpoint(
             break
 
     assert found_user, f"Added user {user_id} not found in groups's members"
-

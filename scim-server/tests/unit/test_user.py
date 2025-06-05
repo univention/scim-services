@@ -8,14 +8,11 @@ from fastapi.testclient import TestClient
 from scim2_models import Email, Name, User
 
 
-
 # We can only test this with the mocked UDM because a real UDM
 # does not allow creating a group with invalid members
 @pytest.fixture
 def force_mock() -> bool:
     return True
-
-
 
 
 # Test data
@@ -36,6 +33,7 @@ test_user = User(
         )
     ],
 )
+
 
 def _create_test_user(client: TestClient) -> str:
     """Helper method to create a test user and return the ID."""

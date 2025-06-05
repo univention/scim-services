@@ -1,8 +1,12 @@
-import pytest
-from scim2_models import  GroupMember
-from fastapi.testclient import TestClient
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2025 Univention GmbH
 
-from tests.conftest import skip_if_no_udm, api_prefix, auth_headers, CreateGroupFactory, CreateUserFactory
+import pytest
+from fastapi.testclient import TestClient
+from scim2_models import GroupMember
+
+from tests.conftest import CreateGroupFactory, CreateUserFactory, skip_if_no_udm
+
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
@@ -74,7 +78,6 @@ async def test_get_user_endpoint(
     primary_email = next((email for email in user_data["emails"] if email.get("primary", False)), None)
     assert primary_email is not None, "No primary email found"
     assert primary_email["value"] in [email.value for email in test_user.emails]
-
 
 
 @pytest.mark.asyncio
@@ -151,7 +154,6 @@ async def test_get_group_endpoint(
     assert len(group_data["members"]) == len(users)
     for user in users:
         assert {"value": user.id, "display": user.display_name, "type": "User"} in group_data["members"]
-
 
 
 @pytest.mark.asyncio

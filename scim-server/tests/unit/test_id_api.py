@@ -28,6 +28,7 @@ test_group = Group(
     display_name="Test Group",
 )
 
+
 def _create_test_user(client: TestClient) -> str:
     """Helper method to create a test user and return the ID."""
     response = client.post("/scim/v2/Users", json=test_user.model_dump(by_alias=True, exclude_none=True))
@@ -42,7 +43,6 @@ def _create_test_group(client: TestClient) -> str:
     assert response.status_code == 201
     data = response.json()
     return str(data["id"])
-
 
 
 class TestIdAPI:
@@ -90,5 +90,3 @@ class TestIdAPI:
         assert response.status_code == 404
         data = response.json()
         assert data["schemas"] == ["urn:ietf:params:scim:api:messages:2.0:Error"]
-
-

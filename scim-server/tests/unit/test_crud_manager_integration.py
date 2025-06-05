@@ -6,6 +6,7 @@ import pytest
 from scim2_models import Group, Name, User
 from univention.admin.rest.client import UDM
 
+from tests.conftest import CreateGroupFactory, CreateUserFactory
 from univention.scim.server.domain.group_service_impl import GroupServiceImpl
 from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.repo.udm.crud_udm import CrudUdm
@@ -15,8 +16,6 @@ from univention.scim.server.domain.rules.display_name import UserDisplayNameRule
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
 from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
-
-from tests.conftest import CreateGroupFactory, CreateUserFactory
 
 
 def create_crud_manager(

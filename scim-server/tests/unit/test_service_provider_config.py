@@ -1,4 +1,8 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2025 Univention GmbH
+
 from fastapi.testclient import TestClient
+
 
 class TestServiceProviderConfig:
     """Tests for the ServiceProviderConfig endpoint."""
@@ -32,5 +36,3 @@ class TestServiceProviderConfig:
         assert scheme["specUri"] == "http://www.rfc-editor.org/info/rfc6750"
         assert scheme["documentationUri"] == "https://docs.univention.de/scim-api/auth/oauth.html"
         assert scheme["primary"] is True
-
-
