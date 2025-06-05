@@ -563,3 +563,13 @@ async def create_random_group(
             await ensure_group_deleted(udm_client, group_id=created_group.id)
         except Exception as e:
             print(f"Error cleaning up test group: {e}")
+
+@pytest.fixture
+def api_prefix() -> str:
+    """Get the API prefix for the SCIM server."""
+    return os.environ.get("API_PREFIX", "/scim/v2")
+
+@pytest.fixture
+def auth_headers() -> dict[str, str]:
+    """Get authentication headers for API requests."""
+    return {"Authorization": "Bearer test-token"}
