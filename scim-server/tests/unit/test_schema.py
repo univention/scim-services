@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2025 Univention GmbH
+from fastapi.testclient import TestClient
+
+
+class TestSchemasEndpoint:
+    """Tests for the Schemas endpoint."""
+
+    def test_get_schemas(self, client: TestClient) -> None:
+        """Test retrieving the SCIM supported schemas using ListResponse."""
+        response = client.get("/scim/v2/Schemas")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert isinstance(data, dict), "Response should be a dictionary (ListResponse)"
+
+        # Validate ListResponse structure
+        assert "schemas" in data
+        assert "urn:ietf:params:scim:api:messages:2.0:ListResponse" in data["schemas"]
+        assert "totalResults" in data
+        assert data["totalResults"] >= 3  # User, Group, Common
+        assert "Resources" in data
+        assert isinstance(data["Resources"], list)
+
+        resources = data["Resources"]
+
+        # Find each expected schema in Resources
+        user_schema = next((s for s in resources if s["id"] == "urn:ietf:params:scim:schemas:core:2.0:User"), None)
+        group_schema = next((s for s in resources if s["id"] == "urn:ietf:params:scim:schemas:core:2.0:Group"), None)
+        common_schema = next((s for s in resources if s["id"] == "urn:ietf:params:scim:schemas:core:2.0:Common"), None)
+
+        # Verify all schemas exist
+        assert user_schema is not None, "User schema is missing"
+        assert group_schema is not None, "Group schema is missing"
+        assert common_schema is not None, "Common schema is missing"
+
+        # Test User schema structure
+        assert user_schema["name"] == "User"
+        assert user_schema["description"] == "User Account"
+        assert isinstance(user_schema["attributes"], list)
+
+        # Check for important User attributes
+        user_attributes = {attr["name"] for attr in user_schema["attributes"]}
+        assert "username" in user_attributes, "username attribute missing from User schema"
+        assert "displayname" in user_attributes, "displayname attribute missing from User schema"
+
+        # Verify attribute properties
+        username_attr = next(attr for attr in user_schema["attributes"] if attr["name"] == "username")
+        assert username_attr["uniqueness"] == "server"
+
+        # Test Group schema
+        assert group_schema["name"] == "Group"
+        group_attributes = {attr["name"] for attr in group_schema["attributes"]}
+        assert "displayname" in group_attributes
+        assert "members" in group_attributes
+
+        # Test Common schema
+        common_attributes = {attr["name"] for attr in common_schema["attributes"]}
+        expected_common_attrs = {"id", "externalId", "meta", "schemas"}
+        for attr in expected_common_attrs:
+            assert attr in common_attributes, f"Common schema missing attribute: {attr}"
