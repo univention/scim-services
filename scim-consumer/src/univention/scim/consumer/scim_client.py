@@ -3,12 +3,12 @@
 
 from httpx import Client
 from loguru import logger
-from pydantic_settings import BaseSettings
 from scim2_client.engines.httpx import SyncSCIMClient
 from scim2_models import Group, Resource, ResourceType, SearchRequest, User
 from scim2_tester import check_server
 
 from univention.scim.consumer.helper import cust_pformat
+from univention.scim.consumer.scim_consumer_settings import ScimConsumerSettings
 
 
 class ScimClientNoDataFoundException(Exception): ...
@@ -17,21 +17,7 @@ class ScimClientNoDataFoundException(Exception): ...
 class ScimClientTooManyResultsException(Exception): ...
 
 
-class ScimClientSettings(BaseSettings):
-    scim_server_base_url: str
-    health_check_enabled: bool = True
-    # TODO Add auth settings
-
-    def __new__(cls, *args, **kwargs):
-        """
-        Singleton pattern
-        """
-        if not hasattr(cls, "instance"):
-            cls.instance = super().__new__(cls)
-        return cls.instance
-
-
-class ScimClientWrapper:
+class ScimClient:
     _scim_client: SyncSCIMClient = None
 
     def __new__(cls, *args, **kwargs):
@@ -44,9 +30,9 @@ class ScimClientWrapper:
 
     def __init__(
         self,
-        settings: ScimClientSettings | None = None,
+        settings: ScimConsumerSettings | None = None,
     ):
-        self.settings = settings or ScimClientSettings()
+        self.settings = settings or ScimConsumerSettings()
 
     def _create_client(self) -> SyncSCIMClient:
         """
@@ -138,31 +124,9 @@ class ScimClientWrapper:
 
         Fetches the current data from the SCIM server via the external_id (univentionObjectIdentifier),
         merges the data and write it back to the SCIM server.
-
-        Raises
-        ------
-        ScimClientNoDataFoundException
-            If no record with the given external_id is found.
-        ScimClientTooManyResultsException
-            If more then one record with the given external_id is found.
         """
         logger.info("Update SCIM resource {}", resource.external_id)
-        logger.debug("Resource type: {}", type(resource))
-        logger.debug("Resource data:\n{}", cust_pformat(resource))
-
-        # Get the existing user from SCIM server
-        scim_resource = self.get_resource_by_external_id(resource.external_id)
-
-        logger.debug("SCIM response resource type: {}", type(scim_resource))
-        logger.debug("SCIM response resource data:\n{}", cust_pformat(scim_resource))
-
-        # Add the ID and the meta data from the SCIM server.
-        #   The ID must be set, because we only have the external ID at this point
-        #   and the update URL will be generated, the meta.location URL is not used!
-        resource.id = scim_resource.id
-        resource.meta = scim_resource.meta
-
-        logger.debug("Merged data for update:\n{}", cust_pformat(resource))
+        logger.debug("Resource data:\n{}", cust_pformat(resource.model_dump()))
 
         response = self.get_client().replace(resource)
 
@@ -174,25 +138,11 @@ class ScimClientWrapper:
 
         Fetches the current data from the SCIM server via the external_id (univentionObjectIdentifier)
         and then delete it via SCIM id and resource type.
-
-        Raises
-        ------
-        ScimClientNoDataFoundException
-            If no record with the given external_id is found.
-        ScimClientTooManyResultsException
-            If more then one record with the given external_id is found.
         """
         logger.info("Delete resource {}", resource.external_id)
-        logger.debug("Resource type: {}", type(resource))
-        logger.debug("Resource data:\n{}", cust_pformat(resource))
+        logger.debug("Resource data:\n{}", cust_pformat(resource.model_dump()))
 
-        # Get the existing user from SCIM server
-        scim_resource = self.get_resource_by_external_id(resource.external_id)
-
-        logger.debug("SCIM resource type: {}", type(scim_resource))
-        logger.debug("SCIM resource:\n{}", cust_pformat(scim_resource))
-
-        response = self.get_client().delete(resource_model=type(scim_resource), id=scim_resource.id)
+        response = self.get_client().delete(resource_model=type(resource), id=resource.id)
 
         logger.debug("Response:\n{}", cust_pformat(response))
 

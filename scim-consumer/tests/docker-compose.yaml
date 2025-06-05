@@ -9,6 +9,7 @@ services:
       context: ../../
       dockerfile: docker/scim-dev-server/Dockerfile
     image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-dev-server:${IMAGE_TAG:-latest}
+    container_name: "scim-dev-server"
     environment:
       SCIM_SERVER_HOSTNAME: scim-dev-server
     ports:
@@ -243,6 +244,8 @@ services:
       - scim
 
   test:
+    profiles:
+      - test
     build:
       context: ../../
       dockerfile: docker/scim-consumer/Dockerfile

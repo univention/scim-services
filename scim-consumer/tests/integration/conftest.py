@@ -19,7 +19,7 @@ from univention.provisioning.consumer.api import (
 )
 
 from univention.scim.consumer.main import run as scim_client_run
-from univention.scim.consumer.scim_client import ScimClientWrapper
+from univention.scim.consumer.scim_client import ScimClient
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -99,7 +99,7 @@ def scim_consumer(provisioning_subscription):
 @pytest.fixture(scope="function")
 def scim_client():
     logger.info("Fixture scim_client start")
-    scim_client = ScimClientWrapper()
+    scim_client = ScimClient()
 
     yield scim_client
 
