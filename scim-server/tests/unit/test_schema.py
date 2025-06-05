@@ -27,35 +27,55 @@ class TestSchemasEndpoint:
         # Find each expected schema in Resources
         user_schema = next((s for s in resources if s["id"] == "urn:ietf:params:scim:schemas:core:2.0:User"), None)
         group_schema = next((s for s in resources if s["id"] == "urn:ietf:params:scim:schemas:core:2.0:Group"), None)
-        common_schema = next((s for s in resources if s["id"] == "urn:ietf:params:scim:schemas:core:2.0:Common"), None)
+        enterprise_user_schema = next(
+            (s for s in resources if s["id"] == "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"), None
+        )
 
         # Verify all schemas exist
         assert user_schema is not None, "User schema is missing"
         assert group_schema is not None, "Group schema is missing"
-        assert common_schema is not None, "Common schema is missing"
+        assert enterprise_user_schema is not None, "Enterprise user schema is missing"
 
         # Test User schema structure
         assert user_schema["name"] == "User"
-        assert user_schema["description"] == "User Account"
+        assert user_schema["description"] == "User"
         assert isinstance(user_schema["attributes"], list)
 
         # Check for important User attributes
         user_attributes = {attr["name"] for attr in user_schema["attributes"]}
-        assert "username" in user_attributes, "username attribute missing from User schema"
-        assert "displayname" in user_attributes, "displayname attribute missing from User schema"
+        assert "userName" in user_attributes, "userName attribute missing from User schema"
+        assert "displayName" in user_attributes, "displayName attribute missing from User schema"
 
         # Verify attribute properties
-        username_attr = next(attr for attr in user_schema["attributes"] if attr["name"] == "username")
+        username_attr = next(attr for attr in user_schema["attributes"] if attr["name"] == "userName")
         assert username_attr["uniqueness"] == "server"
 
         # Test Group schema
         assert group_schema["name"] == "Group"
         group_attributes = {attr["name"] for attr in group_schema["attributes"]}
-        assert "displayname" in group_attributes
-        assert "members" in group_attributes
+        assert "displayName" in group_attributes, "displayName attribute missing from Group schema"
+        assert "members" in group_attributes, "members attribute missing from Group schema"
 
-        # Test Common schema
-        common_attributes = {attr["name"] for attr in common_schema["attributes"]}
-        expected_common_attrs = {"id", "externalId", "meta", "schemas"}
-        for attr in expected_common_attrs:
-            assert attr in common_attributes, f"Common schema missing attribute: {attr}"
+        # Test Enterprise user schema
+        assert enterprise_user_schema["name"] == "EnterpriseUser"
+        enterprise_user_attributes = {attr["name"] for attr in enterprise_user_schema["attributes"]}
+        assert "employeeNumber" in enterprise_user_attributes, (
+            "employeeNumber attribute missing from EnterpriseUser schema"
+        )
+
+    def test_get_schema_by_id(self, client: TestClient) -> None:
+        """Test retrieving a SCIM schema by ID."""
+        response = client.get("/scim/v2/Schemas/urn:ietf:params:scim:schemas:core:2.0:User")
+        assert response.status_code == 200
+        user_schema = response.json()
+
+        # Test User schema structure
+        assert user_schema["name"] == "User"
+        assert user_schema["description"] == "User"
+        assert isinstance(user_schema["attributes"], list)
+
+        # Check for important User attributes
+        user_attributes = {attr["name"] for attr in user_schema["attributes"]}
+        assert "userName" in user_attributes, "userName attribute missing from User schema"
+        assert "displayName" in user_attributes, "displayName attribute missing from User schema"
+
