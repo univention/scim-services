@@ -6,11 +6,13 @@ dependencies = [
     "pydantic>=2.10.6",
     "udm-rest-api-client[async]>=0.0.2",
     "scim-udm-transformer-lib>=0.1.0",
+    "scim-server>=0.1.0",
     "nubus-provisioning-consumer>=0.53.0",
     "scim2-client[httpx]>=0.5.1",
     "scim2-tester>=0.1.14",
     "icecream>=2.1.4",
     "udm-rest-api-client>=0.0.2",
+    "python-ldap>=3.4.4",
 ]
 
 [dependency-groups]
@@ -19,12 +21,15 @@ dev = [
     "pytest-asyncio>=1.0.0",
     "pytest-cov>=6.1.1",
     "pytest-env>=1.1.5",
+    "pytest-mock>=3.14.1",
     "requests>=2.32.3",
+    "faker>=37.3.0",
 ]
 
 [tool.uv.sources]
 nubus-provisioning-consumer = { index = "univention" }
 scim-udm-transformer-lib = { workspace = true }
+scim-server = { workspace = true }
 
 [[tool.uv.index]]
 name = "univention"
@@ -49,7 +54,11 @@ env = [
     "D:MAX_ACKNOWLEDGEMENT_RETRIES = 10",
     "D:UDM_BASE_URL = http://localhost:9979/udm/",
     "D:UDM_USERNAME = cn=admin",
-    "D:UDM_PASSWORD = univention"
+    "D:UDM_PASSWORD = univention",
+    "D:LDAP_URL = ldap://localhost/",
+    "D:LDAP_BASE_DN = dc=univention-organization,dc=intranet",
+    "D:LDAP_USERNAME = cn=admin,dc=univention-organization,dc=intranet",
+    "D:LDAP_PASSWORD = univention"
 ]
 addopts = "-lvv --cov --cov-report term-missing --junit-xml=/tmp/pytest-junit.xml"
 

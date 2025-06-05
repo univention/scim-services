@@ -11,7 +11,7 @@ class CacheItem:
     An item in the cache, holding all required information.
     """
 
-    def __init__(self, dn: str, uuid: UUID, display_name: str):
+    def __init__(self, dn: str, uuid: UUID, display_name: str, univention_object_identifier: str | None = None):
         """
         Initialize a CacheItem.
         args:
@@ -23,6 +23,7 @@ class CacheItem:
         self.uuid = uuid
         self.display_name = display_name
         self.created = int(time.time())
+        self.univention_object_identifier = univention_object_identifier
 
 
 class IdCache(ABC):

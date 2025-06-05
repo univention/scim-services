@@ -4,8 +4,10 @@
 from loguru import logger
 from scim2_models import Resource
 
+from univention.scim.consumer.group_membership_resolver import GroupMembershipLdapResolver
 from univention.scim.consumer.helper import cust_pformat
 from univention.scim.consumer.scim_client import ScimClient, ScimClientNoDataFoundException
+from univention.scim.server.models.user import User
 from univention.scim.transformation.udm2scim import UdmToScimMapper
 
 
@@ -79,7 +81,8 @@ class ScimConsumer:
 
         elif topic == "groups/group":
             scim_resource = mapper.map_group(udm_group=udm_object)
-
+            # if scim_resource.members is None:
+            #     scim_resource.members = []
         else:
             raise ValueError(f"Unsupported message topic {topic}")
 

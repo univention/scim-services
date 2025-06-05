@@ -33,20 +33,29 @@ ENV UV_LINK_MODE=copy \
 COPY ./pyproject.toml ./uv.lock /app/
 COPY ./scim-udm-transformer-lib /app/scim-udm-transformer-lib
 COPY ./scim-consumer/pyproject.toml /app/scim-consumer/
+COPY ./scim-server /app/scim-server
 
 WORKDIR /app
-RUN --mount=type=cache,target=/root/.cache \
-  uv sync \
-    --package=scim-consumer \
-    # --locked \
-    --no-dev \
-    --no-install-project \
-  && uv export --package=scim-consumer -o ./requirements.txt
+RUN apt-get update \
+    && apt-get --assume-yes install \
+      build-essential python3-dev \
+      libldap2-dev libsasl2-dev slapd ldap-utils tox \
+      lcov valgrind \
+      # Not working! UV did not recognice the package python-ldap
+      # python3-ldap \
+    && uv sync \
+            --package=scim-consumer \
+            --no-dev \
+            --no-install-project \
+    && uv export --package=scim-consumer -o ./requirements.txt
 
 # copy source code
 COPY ./scim-consumer/src /app/scim-consumer/src
 
-RUN uv sync --package=scim-consumer --no-dev --no-editable # --locked
+RUN uv sync \
+        --package=scim-consumer \
+        --no-dev \
+        --no-editable
 
 ###############################################
 # Stage 2: test
@@ -58,14 +67,20 @@ ENV PYTHONUNBUFFERED=1 \
 
 COPY ./scim-consumer/tests /app/scim-consumer/tests
 
-RUN uv sync --package=scim-consumer --dev
+RUN uv sync \
+        --package=scim-consumer \
+        --dev
 
 COPY ./docker/scim-consumer/test-entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 ###############################################
 # Stage 3: final image
-FROM ${UCS_BASE_IMAGE}:${UCS_BASE_IMAGE_TAG} AS final
+#
+# !!! FIXME Needs refactoring !!!
+#
+# FROM ${UCS_BASE_IMAGE}:${UCS_BASE_IMAGE_TAG} AS final
+FROM build AS final
 SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
 
 ENV PYTHONUNBUFFERED=1 \
@@ -75,16 +90,19 @@ ARG USER=scim-consumer
 RUN rm -fv /usr/lib/python*/EXTERNALLY-MANAGED && \
     rm -fr /var/lib/apt/lists/* /var/cache/apt/archives/* && \
     groupadd -r ${USER} -g 1000 && \
-    useradd -r -d /app -g ${USER} -N ${USER} -u 1000
+    useradd -r -d /app -g ${USER} -N ${USER} -u 1000 && \
+    chown -R ${USER}:${USER} /app
 
-COPY --from=build --chown=${USER}:${USER} /app/.venv /app/.venv
-COPY --from=build --chown=${USER}:${USER} /app/requirements.txt /app/requirements.txt
+# COPY --from=build --chown=${USER}:${USER} /app/.venv /app/.venv
+# COPY --from=build --chown=${USER}:${USER} /app/requirements.txt /app/requirements.txt
 
 USER ${USER}
 
-CMD ["scim-consumer"]
+# CMD ["scim-consumer"]
 
-RUN \
-  python3.11 -V && \
-  python3.11 -m site && \
-  python3.11 -c 'import univention.scim.consumer.main'
+RUN uv run python -c 'import univention.scim.consumer.main'
+
+# RUN \
+#   python3.11 -V && \
+#   python3.11 -m site && \
+#   python3.11 -c 'import univention.scim.consumer.main'

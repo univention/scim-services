@@ -1,98 +1,150 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-import time
+import pytest
 
-from loguru import logger
-
-from univention.scim.consumer.helper import cust_pformat
-from univention.scim.consumer.scim_client import ScimClientNoDataFoundException
-
-
-def create_udm_user(udm_client, udm_user):
-    logger.info("Create_udm user")
-    logger.debug("udm user data:\n{}", cust_pformat(udm_user))
-
-    module = udm_client.get("users/user")
-    obj = module.new()
-    for key, value in udm_user.items():
-        obj.properties[key] = value
-    obj.save()
-
-    return True
+from ..data.scim_helper import wait_for_resource_deleted, wait_for_resource_exists, wait_for_resource_updated
+from ..data.udm_helper import (
+    create_udm_group,
+    create_udm_user,
+    delete_udm_group,
+    delete_udm_user,
+    update_udm_group,
+    update_udm_user,
+)
 
 
-def update_udm_user(udm_client, udm_user):
-    logger.info("Update udm user")
-    logger.debug("udm user data:\n{}", cust_pformat(udm_user))
+def test_user_crud(udm_client, scim_consumer, scim_client, user_data, user_data_updated):
+    assert scim_consumer
 
-    module = udm_client.get("users/user")
-    search = module.search(f"univentionObjectIdentifier={udm_user['univentionObjectIdentifier']}")
-    result = next(search)
-    obj = result.open()
-
-    logger.debug("Found user with uoi: {}", udm_user["univentionObjectIdentifier"])
-
-    for key, value in udm_user.items():
-        obj.properties[key] = value
-    obj.save()
-
-    return True
-
-
-def delete_udm_user(udm_client, udm_user):
-    logger.info("Delete udm user")
-    logger.debug("udm user data:\n{}", cust_pformat(udm_user))
-
-    module = udm_client.get("users/user")
-    search = module.search(f"univentionObjectIdentifier={udm_user['univentionObjectIdentifier']}")
-    result = next(search)
-    obj = result.open()
-
-    logger.debug("Found user with uoi: {}", udm_user["univentionObjectIdentifier"])
-
-    obj.delete()
-
-    return True
-
-
-def test_scim_crud(udm_client_fixture, scim_consumer, scim_client, udm_user, udm_user_updated):
     # Test create
-    create_udm_user(udm_client=udm_client_fixture, udm_user=udm_user)
-    for i in range(1, 100):
-        try:
-            logger.info("Try to get user with uoi: {}. Attemp {}", udm_user.get("univentionObjectIdentifier"), i)
-            user = scim_client.get_resource_by_external_id(udm_user.get("univentionObjectIdentifier"))
-        except Exception:
-            time.sleep(5)
-            continue
-        else:
-            logger.debug("fetched scim user data:\n{}", cust_pformat(user))
-            break
-
-    assert user.user_name == udm_user.get("username")
+    create_udm_user(udm_client=udm_client, user_data=user_data)
+    user = wait_for_resource_exists(scim_client, user_data["univentionObjectIdentifier"])
+    assert user.user_name == user_data.get("username")
 
     # Test update
-    update_udm_user(udm_client=udm_client_fixture, udm_user=udm_user_updated)
-    for i in range(1, 100):
-        logger.info("Try to get user with uoi: {}. Attemp {}", udm_user.get("univentionObjectIdentifier"), i)
-        user = scim_client.get_resource_by_external_id(udm_user.get("univentionObjectIdentifier"))
-        if user.display_name == udm_user_updated.get("displayName"):
-            break
-        else:
-            time.sleep(5)
-
-    assert user.display_name == udm_user_updated.get("displayName")
+    update_udm_user(udm_client=udm_client, user_data=user_data_updated)
+    user = wait_for_resource_updated(
+        scim_client=scim_client,
+        univention_object_identifier=user_data["univentionObjectIdentifier"],
+        condition_attr="display_name",
+        condition_val=user_data_updated.get("displayName"),
+    )
+    assert user.display_name == user_data_updated.get("displayName")
 
     # Test delete
-    delete_udm_user(udm_client=udm_client_fixture, udm_user=udm_user)
-    throws_exception = False
-    try:
-        for i in range(1, 100):
-            logger.info("Try to get user with uoi: {}. Attemp {}", udm_user.get("univentionObjectIdentifier"), i)
-            user = scim_client.get_resource_by_external_id(udm_user.get("univentionObjectIdentifier"))
-            time.sleep(5)
+    delete_udm_user(udm_client=udm_client, user_data=user_data)
+    is_deleted = wait_for_resource_deleted(scim_client, user_data["univentionObjectIdentifier"])
+    assert is_deleted
 
-    except ScimClientNoDataFoundException:
-        throws_exception = True
-    assert throws_exception
+
+def test_add_group_member(udm_client, scim_consumer, group_data, user_data, scim_client):
+    assert scim_consumer
+
+    #
+    # Create group
+    #
+    create_udm_group(udm_client=udm_client, group_data=group_data)
+    group = wait_for_resource_exists(scim_client, group_data["univentionObjectIdentifier"], max_attemps=150)
+
+    assert group.display_name == group_data.get("name")
+
+    #
+    # Create user
+    #
+    udm_user_ret = create_udm_user(udm_client=udm_client, user_data=user_data)
+    user = wait_for_resource_exists(scim_client, user_data["univentionObjectIdentifier"])
+
+    assert user.user_name == user_data.get("username")
+
+    #
+    # Update group member
+    #
+    group_data["users"].append(udm_user_ret.dn)
+    group_data["name"] = f"{group_data.get('name')} - Updated"
+
+    update_udm_group(udm_client=udm_client, group_data=group_data)
+    group = wait_for_resource_updated(
+        scim_client=scim_client,
+        univention_object_identifier=group_data["univentionObjectIdentifier"],
+        condition_attr="display_name",
+        condition_val=group_data.get("name"),
+    )
+
+    assert group.display_name == group_data.get("name")
+    assert group.members[0].value == user.id
+
+    #
+    # Cleanup
+    #
+    delete_udm_user(udm_client=udm_client, user_data=user_data)
+    wait_for_resource_deleted(scim_client, user_data["univentionObjectIdentifier"])
+
+    delete_udm_group(udm_client=udm_client, group_data=group_data)
+    wait_for_resource_deleted(scim_client, group_data["univentionObjectIdentifier"])
+
+
+@pytest.mark.skip("No impact at the moment. Activate again when needed.")
+def test_update_group_member_dn(udm_client, scim_consumer, group_data, user_data, scim_client):
+    assert scim_consumer
+
+    #
+    # Create user
+    #
+    udm_user = create_udm_user(udm_client=udm_client, user_data=user_data)
+    wait_for_resource_exists(scim_client, user_data["univentionObjectIdentifier"])
+
+    #
+    # Create group with user as member
+    #
+    group_data["users"].append(udm_user.dn)
+    create_udm_group(udm_client=udm_client, group_data=group_data)
+    wait_for_resource_exists(scim_client, group_data["univentionObjectIdentifier"])
+
+    #
+    # Update users dn
+    #
+    user_data["username"] = "username.moved.dn"
+    user_data["password"] = None
+
+    udm_user = update_udm_user(udm_client=udm_client, user_data=user_data)
+
+    wait_for_resource_updated(
+        scim_client=scim_client,
+        univention_object_identifier=user_data["univentionObjectIdentifier"],
+        condition_attr="user_name",
+        condition_val=user_data.get("username"),
+    )
+
+    #
+    # Check group membership
+    #
+
+    # !!! No provisioning message !!!
+
+    #
+    # Cleanup
+    #
+    delete_udm_user(udm_client=udm_client, user_data=user_data)
+    wait_for_resource_deleted(scim_client, user_data["univentionObjectIdentifier"])
+
+    delete_udm_group(udm_client=udm_client, group_data=group_data)
+    wait_for_resource_deleted(scim_client, group_data["univentionObjectIdentifier"])
+
+
+def test_prefilled_sync(scim_consumer_prefilled, scim_client):
+    udm_users, udm_group = scim_consumer_prefilled
+
+    user_ids = []
+    for udm_user in udm_users:
+        user = wait_for_resource_exists(scim_client, udm_user.properties.get("univentionObjectIdentifier"))
+        user_ids.append(user.id)
+
+    assert len(udm_users) == len(user_ids)
+
+    group = wait_for_resource_exists(scim_client, udm_group.properties.get("univentionObjectIdentifier"))
+    group_members = []
+    for group_member in group.members:
+        group_members.append(group_member.value)
+
+    assert set(group_members) == set(user_ids)

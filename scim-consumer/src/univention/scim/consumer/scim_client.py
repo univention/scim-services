@@ -4,11 +4,12 @@
 from httpx import Client
 from loguru import logger
 from scim2_client.engines.httpx import SyncSCIMClient
-from scim2_models import Group, Resource, ResourceType, SearchRequest, User
+from scim2_models import Group, Resource, ResourceType, SearchRequest
 from scim2_tester import check_server
 
 from univention.scim.consumer.helper import cust_pformat
 from univention.scim.consumer.scim_consumer_settings import ScimConsumerSettings
+from univention.scim.server.models.user import User as UniventionScimUser
 
 
 class ScimClientNoDataFoundException(Exception): ...
@@ -45,7 +46,7 @@ class ScimClient:
 
         scim = SyncSCIMClient(
             client=client,
-            resource_models=[User, Group],
+            resource_models=[UniventionScimUser, Group],
             resource_types=[
                 ResourceType(
                     id="User",
@@ -120,7 +121,7 @@ class ScimClient:
 
     def update_resource(self, resource: Resource):
         """
-        Updates one SCIm resource.
+        Updates one SCIM resource.
 
         Fetches the current data from the SCIM server via the external_id (univentionObjectIdentifier),
         merges the data and write it back to the SCIM server.

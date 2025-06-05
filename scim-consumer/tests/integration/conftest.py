@@ -3,79 +3,81 @@
 
 import multiprocessing
 import os
-import random
-import string
 import uuid
 
 import pytest
-import pytest_asyncio
-from aiohttp import ClientResponseError
 from loguru import logger
 from univention.admin.rest.client import UDM
-from univention.provisioning.consumer.api import (
-    ProvisioningConsumerClient,
-    ProvisioningConsumerClientSettings,
-    RealmTopic,
-)
 
 from univention.scim.consumer.main import run as scim_client_run
 from univention.scim.consumer.scim_client import ScimClient
 
-
-@pytest_asyncio.fixture(scope="session")
-async def provisioning_subscription():
-    admin_settings = ProvisioningConsumerClientSettings(
-        provisioning_api_base_url=os.environ["PROVISIONING_API_BASE_URL"],
-        provisioning_api_username=os.environ["PROVISIONING_API_ADMIN_USERNAME"],
-        provisioning_api_password=os.environ["PROVISIONING_API_ADMIN_PASSWORD"],
-        log_level="DEBUG",
-    )
-    async with ProvisioningConsumerClient(admin_settings) as admin_client:
-        try:
-            await admin_client.create_subscription(
-                name=os.environ["PROVISIONING_API_USERNAME"],
-                password=os.environ["PROVISIONING_API_PASSWORD"],
-                realms_topics=[
-                    RealmTopic(realm="udm", topic="users/user"),
-                    RealmTopic(realm="udm", topic="groups/group"),
-                ],
-                request_prefill=True,
-            )
-            logger.info("Subscription {} created.", os.environ["PROVISIONING_API_USERNAME"])
-
-        except ClientResponseError as e:
-            logger.warning("{}, Create subscription error.", e)
+from ..data.scim_helper import (
+    create_provisioning_subscription,
+    delete_provisioning_subscription,
+    wait_for_resource_deleted,
+)
+from ..data.udm_helper import create_udm_group, delete_udm_group, delete_udm_user, generate_udm_users
 
 
 @pytest.fixture(scope="session")
-def udm_user():
-    chars = string.ascii_letters
-    size = 6
-    random_string = "".join(random.choice(chars) for x in range(size))
+def maildomain(udm_client):
+    name = "scim-consumer.unittests"
+    domains = udm_client.get("mail/domain")
+    if maildomains := list(domains.search(f"name={name}")):
+        maildomain = domains.get(maildomains[0].dn)
+        logger.info(f"Using existing mail domain {maildomain!r}.")
+    else:
+        maildomain = domains.new()
+        maildomain.properties.update({"name": name})
+        maildomain.save()
+        logger.info(f"Created new mail domain {maildomain!r}.")
 
+    yield name
+
+    maildomain.delete()
+    logger.info(f"Deleted mail domain {maildomain!r}.")
+
+
+@pytest.fixture(scope="function")
+def group_data() -> dict:
     return {
-        "username": f"testuser.{random_string}",
-        "firstname": "testuser",
-        "lastname": random_string,
+        "name": "Test Group",
+        "univentionObjectIdentifier": str(uuid.uuid4()),
+        "users": [],
+    }
+
+
+@pytest.fixture(scope="function")
+def user_data(maildomain) -> dict:
+    return {
+        "username": "testuser",
+        "firstname": "Test",
+        "lastname": "User",
         "univentionObjectIdentifier": str(uuid.uuid4()),
         "password": "univention",
+        "displayName": "Test User",
+        "mailPrimaryAddress": f"testuser@{maildomain}",
+        "mailAlternativeAddress": [f"testuser.2@{maildomain}", f"testuser.3@{maildomain}"],
     }
 
 
 @pytest.fixture
-def udm_user_updated(udm_user):
+def user_data_updated(user_data: dict) -> dict:
     return {
-        "username": udm_user["username"],
-        "firstname": udm_user["firstname"],
-        "lastname": udm_user["lastname"],
-        "univentionObjectIdentifier": udm_user["univentionObjectIdentifier"],
+        "username": user_data["username"],
+        "firstname": user_data["firstname"],
+        "lastname": user_data["lastname"],
+        "univentionObjectIdentifier": user_data["univentionObjectIdentifier"],
         "password": "univention2",
         "displayName": "This is a testuser",
+        "mailPrimaryAddress": user_data["mailPrimaryAddress"],
+        "mailAlternativeAddress": user_data["mailAlternativeAddress"],
     }
 
 
-@pytest.fixture
-def udm_client_fixture():
+@pytest.fixture(scope="session")
+def udm_client() -> UDM:
     logger.info("Create udm_client.")
     udm = UDM.http(os.environ["UDM_BASE_URL"], os.environ["UDM_USERNAME"], os.environ["UDM_PASSWORD"])
 
@@ -83,15 +85,56 @@ def udm_client_fixture():
 
 
 @pytest.fixture(scope="function")
-def scim_consumer(provisioning_subscription):
+def scim_consumer():
     logger.info("Fixture scim_consumer started.")
+
+    create_provisioning_subscription()
 
     proc = multiprocessing.Process(target=scim_client_run)
     proc.start()
 
-    yield
+    yield True
 
     proc.terminate()
+
+    delete_provisioning_subscription()
+
+    logger.info("Fixture scim_consumer exited.")
+
+
+@pytest.fixture(scope="function")
+def scim_consumer_prefilled(udm_client, scim_client, group_data, maildomain):
+    logger.info("Fixture scim_consumer started.")
+
+    # Create UDM records
+    udm_users = generate_udm_users(udm_client=udm_client, maildomain_name=maildomain, amount=10)
+    for udm_user in udm_users:
+        group_data["users"].append(udm_user.dn)
+    udm_group = create_udm_group(udm_client=udm_client, group_data=group_data)
+
+    create_provisioning_subscription()
+
+    proc = multiprocessing.Process(target=scim_client_run)
+    proc.start()
+
+    yield udm_users, udm_group
+
+    # Cleanup
+    for udm_user in udm_users:
+        delete_udm_user(
+            udm_client=udm_client,
+            user_data={"univentionObjectIdentifier": udm_user.properties.get("univentionObjectIdentifier")},
+        )
+    for udm_user in udm_users:
+        wait_for_resource_deleted(scim_client, udm_user.properties.get("univentionObjectIdentifier"))
+    delete_udm_group(udm_client=udm_client, group_data=group_data)
+    wait_for_resource_deleted(
+        scim_client=scim_client, univention_object_identifier=group_data["univentionObjectIdentifier"]
+    )
+
+    proc.terminate()
+
+    delete_provisioning_subscription()
 
     logger.info("Fixture scim_consumer exited.")
 

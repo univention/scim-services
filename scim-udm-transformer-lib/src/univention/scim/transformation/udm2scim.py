@@ -216,7 +216,7 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
         if "mailPrimaryAddress" in props and props["mailPrimaryAddress"]:
             # scim2-models are very strict and only allow specific email types while RFC allows any type
             # so don't use scim2-models email type
-            emails.append({"value": props["mailPrimaryAddress"], "type": "mailbox", "primary": False})
+            emails.append({"value": props["mailPrimaryAddress"], "type": "mailbox", "primary": True})
 
         if "mailAlternativeAddress" in props and props["mailAlternativeAddress"]:
             alt_addresses = props["mailAlternativeAddress"]
@@ -407,10 +407,9 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
         group.external_id = self._get_external_id(udm_group, "Group")
 
         # Map members if available
+        if not group.members:
+            group.members = []
         if "users" in props and props["users"] and self.cache:
-            if not group.members:
-                group.members = []
-
             user_dns = props["users"]
 
             for dn in user_dns:

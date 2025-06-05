@@ -2,8 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 from copy import deepcopy
-
-from icecream import ic
+from pprint import pformat
 
 
 def cust_pformat(obj) -> str:
@@ -24,7 +23,7 @@ def cust_pformat(obj) -> str:
             if hasattr(value, "__dict__"):
                 dict_obj[key] = vars(value)
     final_obj = dict_obj or vars(obj_cp) if hasattr(obj_cp, "dict") else obj_cp
-    return ic.format(final_obj)
+    return pformat(final_obj)
 
 
 def cust_pprint(obj):
