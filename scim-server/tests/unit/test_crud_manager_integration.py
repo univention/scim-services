@@ -16,7 +16,7 @@ from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
 from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 
-from .conftest import CreateGroupFactory, CreateUserFactory
+from tests.conftest import CreateGroupFactory, CreateUserFactory
 
 
 def create_crud_manager(
