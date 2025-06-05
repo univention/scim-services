@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.23.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.22.0...v0.23.0) (2025-06-05)
+
+
+### Features
+
+* **scim-server:** Implement empty password handling ([f6d7351](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/f6d73516b5553882d4cc8cc1c3c5edc45bde8130)), closes [univention/dev/internal/team-nubus#1198](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1198)
+
+
+### Bug Fixes
+
+* **scim-server:** Fix schemas route to respond correct scim schemas ([4fdd487](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/4fdd4871bd98315e64a9c9ecdc5688810c31714b)), closes [univention/dev/internal/team-nubus#1198](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1198)
+
 ## [0.22.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.21.0...v0.22.0) (2025-06-05)
 
 
