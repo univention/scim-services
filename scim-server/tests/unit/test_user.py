@@ -88,7 +88,6 @@ class TestUserAPI:
         assert isinstance(data["Resources"], list)
         assert "password" not in data
 
-
     def test_create_user_without_password(self, client: TestClient) -> None:
         """Test creating a user without password."""
         test_user_copy = test_user.model_copy()
