@@ -78,4 +78,3 @@ class TestSchemasEndpoint:
         user_attributes = {attr["name"] for attr in user_schema["attributes"]}
         assert "userName" in user_attributes, "userName attribute missing from User schema"
         assert "displayName" in user_attributes, "displayName attribute missing from User schema"
-
