@@ -26,7 +26,7 @@
 - `Uni:Core`: Abbreviation for the custom SCIM schema `urn:ietf:params:scim:schemas:extension:Univention:1.0:Core`
 - `Uni:User`: Abbreviation for the custom SCIM schema `urn:ietf:params:scim:schemas:extension:Univention:1.0:User`
 - `Uni:Group`: Abbreviation for the custom SCIM schema `urn:ietf:params:scim:schemas:extension:Univention:1.0:Group`
-- `BaWü:User`: Abbreviation for the custom SCIM schema `urn:ietf:params:scim:schemas:extension:BaWu:1.0:User`
+- `BaWü:User`: Abbreviation for the custom SCIM schema `urn:ietf:params:scim:schemas:extension:DapUser:2.0:User`
 
 | UDM REST API field                | avail    | type                 | SCIM attribute     | avail    | type            | RFC 7643          | Comment   | MS | Impl |
 |-----------------------------------|----------|----------------------|--------------------|----------|-----------------|-------------------|-----------|----|------|
