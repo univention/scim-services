@@ -278,7 +278,6 @@ services:
       UDM_PASSWORD: univention
     networks:
       - scim
-    command: bash -c "uv run pytest scim-consumer/tests"
 
 volumes:
   ldap-shared-data:

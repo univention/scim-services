@@ -23,7 +23,8 @@ dependencies = [
 dev = [
     "faker>=37.1.0",
     "pytest>=8.3.5",
-    "pytest-asyncio>=0.26.0",
+    "pytest-asyncio>=1.0.0",
+    "pytest-cov>=6.1.1",
     "pytest-httpserver>=1.1.2",
     "pytestarch>=3",
     "requests>=2.32.3",
@@ -61,6 +62,13 @@ build-backend = "hatchling.build"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
-addopts = "-v"
+addopts = "-lvv --cov --cov-report term-missing --junit-xml=/tmp/pytest-junit.xml"
 pythonpath = [".", "tests"]
 asyncio_mode = "auto"
+
+[tool.coverage.run]
+data_file = "/tmp/scim-coverage"
+relative_files = true
+
+[tool.coverage.xml]
+output = "/tmp/scim-coverage.xml"

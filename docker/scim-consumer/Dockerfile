@@ -16,7 +16,7 @@ RUN apt-get update \
     && apt-get --assume-yes --verbose-versions --no-install-recommends install \
       wget \
       ca-certificates \
-    && wget -qO- https://github.com/astral-sh/uv/releases/download/0.7.3/uv-x86_64-unknown-linux-gnu.tar.gz | tar -xz --strip-components=1 -C /usr/local/bin/
+    && wget -qO- https://github.com/astral-sh/uv/releases/download/0.7.11/uv-x86_64-unknown-linux-gnu.tar.gz | tar -xz --strip-components=1 -C /usr/local/bin/
 
 ###############################################
 # Stage 1: build dependencies and software
@@ -59,6 +59,9 @@ ENV PYTHONUNBUFFERED=1 \
 COPY ./scim-consumer/tests /app/scim-consumer/tests
 
 RUN uv sync --package=scim-consumer --dev
+
+COPY ./docker/scim-consumer/test-entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 
 ###############################################
 # Stage 3: final image

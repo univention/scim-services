@@ -93,18 +93,26 @@ test-unit-and-integration:
     - docker compose config test
     - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
   script:
-    - docker compose run --quiet-pull test
+    - docker compose run --quiet-pull --name test-unit-and-integration test
   after_script:
     - docker logs ldap-server >& ldap-server.log
     - docker logs udm-rest-api >& udm-rest-api.log
+    - docker cp test-unit-and-integration:/tmp/scim-coverage.xml ./coverage-test-unit-and-integration.xml
+    - docker cp test-unit-and-integration:/tmp/pytest-junit.xml ./pytest-junit-test-unit-and-integration.xml
+    - docker stop -t0 test-unit-and-integration
+    - docker rm test-unit-and-integration
     - docker compose down --volumes
   artifacts:
     paths:
       - ldap-server.log
       - udm-rest-api.log
+      - coverage-test-unit-and-integration.xml
+      - pytest-junit-test-unit-and-integration.xml
     expire_in: "1 day"
     when: "always"
     expose_as: "docker compose server logs"
+    reports:
+      junit: pytest-junit-test-unit-and-integration.xml
 
 test-scim2-compliance:
   stage: test
@@ -160,18 +168,54 @@ test-scim-consumer:
     - docker compose config test
     - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
   script:
-    - docker compose run --rm --quiet-pull --remove-orphans test | tee scim-consumer-test.log 2>&1
+    - docker compose run --quiet-pull --name test-scim-consumer test | tee scim-consumer-test.log 2>&1
   after_script:
-    - docker compose logs ldap-server >& ldap-server.log
-    - docker compose logs udm-rest-api >& udm-rest-api.log
-    - docker compose logs scim-dev-server >& scim-dev-server.log
+    - docker logs ldap-server >& ldap-server.log
+    - docker logs udm-rest-api >& udm-rest-api.log
+    - docker logs scim-dev-server >& scim-dev-server.log
+    - docker logs test-scim-consumer >& test-scim-consumer.log
+    - docker cp test-scim-consumer:/tmp/pytest-junit.xml ./pytest-junit-test-scim-consumer.xml
+    - docker cp test-scim-consumer:/tmp/scim-coverage.xml ./coverage-test-scim-consumer.xml
+    - docker stop -t0 test-scim-consumer
+    - docker rm test-scim-consumer
+    - pwd
+    - ls -la
+    - cd scim-consumer/tests
     - docker compose down --volumes
   artifacts:
     paths:
       - ldap-server.log
       - udm-rest-api.log
       - scim-dev-server.log
-      - scim-consumer-test.log
+      - test-scim-consumer.log
+      - coverage-test-scim-consumer.xml
+      - pytest-junit-test-scim-consumer.xml
     expire_in: "1 day"
     when: "always"
     expose_as: "docker compose server logs"
+    reports:
+      junit: pytest-junit-test-scim-consumer.xml
+
+sonarqube-scan:
+  stage: test
+  needs:
+    - test-unit-and-integration
+    - test-scim-consumer
+  image:
+      name: sonarsource/sonar-scanner-cli:11
+      entrypoint: [""]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+    GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+  cache:
+    policy: pull-push
+    key: "sonar-cache-$CI_COMMIT_REF_SLUG"
+    paths:
+      - "${SONAR_USER_HOME}/cache"
+      - sonar-scanner/
+  script:
+    - sonar-scanner -Dsonar.host.url="${SONAR_HOST_URL}"
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == 'main'
