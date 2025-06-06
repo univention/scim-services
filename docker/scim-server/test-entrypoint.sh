@@ -5,4 +5,6 @@
 
 cd scim-server
 uv sync
-uv run pytest -lv $@
+uv run pytest -lv $@ tests/unit/
+uv run pytest -lv $@ tests/e2e/
+uv run pytest -lv $@ tests/middlewares/
