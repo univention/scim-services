@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.25.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.24.0...v0.25.0) (2025-06-06)
+
+
+### Features
+
+* **scim-server:** Delete old e2e tests file ([4dca2de](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/4dca2deb5bda71bc5685f1e8c05ca8d6cd43729f))
+* **scim-server:** Move other test files ([c4fc3f0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/c4fc3f0a65a0113de0d7fe255140b7eda67544b4))
+* **scim-server:** new patch logic, includes a filter and parser and handling of multi valued attributes ([ebf86fe](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/ebf86fe60b488c90803dc1a719ca34ebe8dfe41b))
+* **scim-server:** new patch logic, includes a filter and parser and handling of multi valued attributes as well as some tests ([28e9777](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/28e977783e2ea1dd25529cfa2ddc7a265f412b26))
+* **scim-server:** Precommit ([cf37efb](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/cf37efb804840de5513ad9aee8b7474c23023da0))
+* **scim-server:** Refactoring tests ([09d35b5](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/09d35b5b7f08566ea1b937ccf0fd8569c0ff32df))
+* **scim-server:** Refactoring tests ([b74eba5](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/b74eba5a0e9b4fcb402090c8a7909f313e5403d0))
+
 ## [0.24.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.23.0...v0.24.0) (2025-06-05)
 
 
