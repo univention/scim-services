@@ -127,6 +127,12 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
             if schema == EnterpriseUser.to_schema().id:
                 logger.debug("Mapping user extension", schema=schema)
                 self._map_user_enterprise_extension(extension_obj, props)
+            elif schema == "urn:ietf:params:scim:schemas:extension:Univention:1.0:User":
+                logger.debug("Mapping user extension", schema=schema)
+                self._map_user_univention_extension(extension_obj, props)
+            elif schema == "urn:ietf:params:scim:schemas:extension:DapUser:2.0:User":
+                logger.debug("Mapping user extension", schema=schema)
+                self._map_user_customer1_extension(extension_obj, props)
             else:
                 logger.info("Ignoring unknown user extension", schema=schema)
 
@@ -296,6 +302,14 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
     def _map_user_enterprise_extension(self, obj: Any, props: dict[str, Any]) -> None:
         obj.employee_number = props["employeeNumber"]
 
+    def _map_user_univention_extension(self, obj: Any, props: dict[str, Any]) -> None:
+        obj.description = props["description"]
+        obj.password_recovery_email = props["PasswordRecoveryEmail"]
+
+    def _map_user_customer1_extension(self, obj: Any, props: dict[str, Any]) -> None:
+        obj.primary_org_unit = props["primaryOrgUnit"]
+        obj.secondary_org_units = props["secondaryOrgUnits"]
+
     def map_group(self, udm_group: Any, base_url: str = "") -> GroupType:
         """
         Map UDM group properties to a SCIM Group.
@@ -322,6 +336,23 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
             meta=self._get_meta(base_url, udm_group),
             external_id=props.get("univentionObjectIdentifier"),
         )
+
+        for schema, extension in group.get_extension_models().items():
+            if not hasattr(group, extension.__name__):
+                continue
+
+            extension_obj = getattr(group, extension.__name__)
+            if extension_obj is None:
+                setattr(group, extension.__name__, extension())
+                extension_obj = getattr(group, extension.__name__)
+
+            if schema == "urn:ietf:params:scim:schemas:extension:Univention:1.0:Group":
+                logger.debug("Mapping group extension", schema=schema)
+                self._map_group_univention_extension(extension_obj, props)
+            else:
+                logger.info("Ignoring unknown group extension", schema=schema)
+
+            group.schemas.append(schema)
 
         # Map members if available
         if "users" in props and props["users"] and self.cache:
@@ -369,3 +400,10 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
                 )
 
         return cast(GroupType, group)
+
+    def _map_group_univention_extension(self, obj: Any, props: dict[str, Any]) -> None:
+        if "guardianMemberRoles" in props and props["guardianMemberRoles"]:
+            obj.member_roles = []
+
+            for member_role in props["guardianMemberRoles"]:
+                obj.member_roles.append({"value": member_role, "type": "guardian"})

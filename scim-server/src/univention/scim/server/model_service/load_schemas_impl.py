@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-from typing import Annotated
+from typing import Annotated, Union
 
 from loguru import logger
 from pydantic import Field
@@ -19,25 +19,10 @@ from scim2_models import (
     User as ScimUser,
 )
 
+from univention.scim.server.models.extensions.customer1_user import Customer1User
+from univention.scim.server.model_service.extensions.univention_group import UniventionGroup
+from univention.scim.server.model_service.extensions.univention_user import UniventionUser
 from univention.scim.server.model_service.load_schemas import LoadSchemas
-
-
-class Email(ScimEmail):
-    type: str | None = Field(None, examples=["work", "home", "other", "mailbox", "alias"])
-
-
-class Name(ScimName):
-    family_name: Annotated[str | None, Required.true] = None
-
-
-class User(ScimUser[AnyExtension]):
-    name: Annotated[Name | ScimName | None, Required.true] = None
-    emails: list[Email | ScimEmail] | None = None
-
-
-# Not sure why by mypy does not like imported TypeVar AnyExtension, just ignore the error for now
-UserWithExtensions = User[EnterpriseUser]  # type: ignore[type-arg]
-GroupWithExtensions = Group
 
 
 class LoadSchemasImpl(LoadSchemas):
@@ -72,12 +57,14 @@ class LoadSchemasImpl(LoadSchemas):
         return Group.to_schema()
 
     def _get_user_extension_schemas(self) -> list[Schema]:
-        user_extensions = [EnterpriseUser.to_schema()]
+        user_extensions = [EnterpriseUser.to_schema(), UniventionUser.to_schema(), Customer1User.to_schema()]
 
         return user_extensions
 
     def _get_group_extension_schemas(self) -> list[Schema]:
-        return []
+        group_extensions = [UniventionGroup.to_schema()]
+
+        return group_extensions
 
     def _get_service_provider_config_schema(self) -> Schema:
         """Get the ServiceProviderConfig schema."""
@@ -108,7 +95,7 @@ class LoadSchemasImpl(LoadSchemas):
 
         group_type = ResourceType.from_resource(Group)
         for extension in self._get_group_extension_schemas():
-            user_type.schema_extensions.append(
+            group_type.schema_extensions.append(
                 SchemaExtension(
                     schema_=extension.id,
                     required=False,

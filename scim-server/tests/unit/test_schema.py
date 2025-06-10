@@ -30,11 +30,23 @@ class TestSchemasEndpoint:
         enterprise_user_schema = next(
             (s for s in resources if s["id"] == "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"), None
         )
+        univention_user_schema = next(
+            (s for s in resources if s["id"] == "urn:ietf:params:scim:schemas:extension:Univention:1.0:User"), None
+        )
+        univention_group_schema = next(
+            (s for s in resources if s["id"] == "urn:ietf:params:scim:schemas:extension:Univention:1.0:Group"), None
+        )
+        customer1_user_schema = next(
+            (s for s in resources if s["id"] == "urn:ietf:params:scim:schemas:extension:DapUser:2.0:User"), None
+        )
 
         # Verify all schemas exist
         assert user_schema is not None, "User schema is missing"
         assert group_schema is not None, "Group schema is missing"
         assert enterprise_user_schema is not None, "Enterprise user schema is missing"
+        assert univention_user_schema is not None, "Univention user schema is missing"
+        assert univention_group_schema is not None, "Univention group schema is missing"
+        assert customer1_user_schema is not None, "Customer1 user schema is missing"
 
         # Test User schema structure
         assert user_schema["name"] == "User"
@@ -60,7 +72,37 @@ class TestSchemasEndpoint:
         assert enterprise_user_schema["name"] == "EnterpriseUser"
         enterprise_user_attributes = {attr["name"] for attr in enterprise_user_schema["attributes"]}
         assert "employeeNumber" in enterprise_user_attributes, (
-            "employeeNumber attribute missing from EnterpriseUser schema"
+            "employeeNumber attribute missing from {enterprise_user_schema['name']} schema"
+        )
+
+        # Test Univention user schema
+        assert univention_user_schema["name"] == "UniventionUser"
+        univention_user_attributes = {attr["name"] for attr in univention_user_schema["attributes"]}
+        assert "description" in univention_user_attributes, (
+            "description attribute missing from {univention_user_schema['name']} schema"
+        )
+        assert "passwordRecoveryEmail" in univention_user_attributes, (
+            "passwordRecoveryEmail attribute missing from {univention_user_schema['name']} schema"
+        )
+
+        # Test univention group schema
+        assert univention_group_schema["name"] == "UniventionGroup"
+        univention_group_attributes = {attr["name"] for attr in univention_group_schema["attributes"]}
+        assert "description" in univention_group_attributes, (
+            f"description attribute missing from {univention_group_schema['name']} schema"
+        )
+        assert "memberRoles" in univention_group_attributes, (
+            f"memberRoles attribute missing from {univention_group_schema['name']} schema"
+        )
+
+        # Test Customer1 user schema
+        assert customer1_user_schema["name"] == "Customer1User"
+        customer1_user_attributes = {attr["name"] for attr in customer1_user_schema["attributes"]}
+        assert "primaryOrgUnit" in customer1_user_attributes, (
+            f"primaryOrgUnit attribute missing from {customer1_user_attributes['name']} schema"
+        )
+        assert "secondaryOrgUnits" in customer1_user_attributes, (
+            f"secondaryOrgUnits attribute missing from {customer1_user_attributes['name']} schema"
         )
 
     def test_get_schema_by_id(self, client: TestClient) -> None:

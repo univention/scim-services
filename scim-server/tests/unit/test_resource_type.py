@@ -62,11 +62,31 @@ class TestResourceTypesEndpoint:
         # Check schemaExtensions for User
         assert "schemaExtensions" in user_type
         assert isinstance(user_type["schemaExtensions"], list)
-        assert len(user_type["schemaExtensions"]) == 1, "Expected 1 schemaExtension for User"
-        enterprise_ext = user_type["schemaExtensions"][0]
+        assert len(user_type["schemaExtensions"]) == 3, "Expected 3 schemaExtension for User"
+        enterprise_ext = next(
+            x
+            for x in user_type["schemaExtensions"]
+            if x["schema"] == "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
+        )
+        assert enterprise_ext
         assert isinstance(enterprise_ext, dict)
-        assert enterprise_ext.get("schema") == "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
         assert enterprise_ext.get("required") is False
+        univention_ext = next(
+            x
+            for x in user_type["schemaExtensions"]
+            if x["schema"] == "urn:ietf:params:scim:schemas:extension:Univention:1.0:User"
+        )
+        assert univention_ext
+        assert isinstance(univention_ext, dict)
+        assert univention_ext.get("required") is False
+        customer1_ext = next(
+            x
+            for x in user_type["schemaExtensions"]
+            if x["schema"] == "urn:ietf:params:scim:schemas:extension:DapUser:2.0:User"
+        )
+        assert customer1_ext
+        assert isinstance(customer1_ext, dict)
+        assert customer1_ext.get("required") is False
 
         # --- Group ResourceType checks ---
         assert group_type is not None, "Group ResourceType missing from 'Resources'"
@@ -76,7 +96,11 @@ class TestResourceTypesEndpoint:
         assert group_type.get("description") == "Group"
         assert group_type.get("schema") == "urn:ietf:params:scim:schemas:core:2.0:Group"
 
-        # Check schemaExtensions for Group (should be present and empty)
+        # Check schemaExtensions for Group
         assert "schemaExtensions" in group_type
         assert isinstance(group_type["schemaExtensions"], list)
-        assert len(group_type["schemaExtensions"]) == 0, "Expected empty schemaExtensions list for Group"
+        assert len(group_type["schemaExtensions"]) == 1, "Expected 1 schemaExtension for Group"
+        univention_ext = group_type["schemaExtensions"][0]
+        assert isinstance(univention_ext, dict)
+        assert univention_ext.get("schema") == "urn:ietf:params:scim:schemas:extension:Univention:1.0:Group"
+        assert univention_ext.get("required") is False

@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-from __future__ import annotations
-
 from typing import Any, Generic, TypeVar, cast
 
 from asgi_correlation_id import correlation_id as asgi_correlation_id  # Added for accessing upstream correlation ID

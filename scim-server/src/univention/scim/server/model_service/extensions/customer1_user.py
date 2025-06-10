@@ -11,8 +11,8 @@ class GuardianMember(ComplexAttribute):
     type: str | None = None
 
 
-class UniventionGroup(Extension):
-    schemas: Annotated[list[str], Required.true] = ["urn:ietf:params:scim:schemas:extension:Univention:1.0:Group"]
+class Customer1User(Extension):
+    schemas: Annotated[list[str], Required.true] = ["urn:ietf:params:scim:schemas:extension:DapUser:2.0:User"]
 
-    description: str | None = None
-    member_roles: list[GuardianMember] | None = None
+    primary_org_unit: str | None = None
+    secondary_org_units: list[str] | None = None

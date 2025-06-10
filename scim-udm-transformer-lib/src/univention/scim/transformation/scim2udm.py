@@ -57,6 +57,12 @@ class ScimToUdmMapper:
             if schema == EnterpriseUser.to_schema().id:
                 logger.debug("Mapping user extension", schema=schema)
                 self._map_user_enterprise_extension(extension_obj, properties)
+            elif schema == "urn:ietf:params:scim:schemas:extension:Univention:1.0:User":
+                logger.debug("Mapping user extension", schema=schema)
+                self._map_user_univention_extension(extension_obj, properties)
+            elif schema == "urn:ietf:params:scim:schemas:extension:DapUser:2.0:User":
+                logger.debug("Mapping user extension", schema=schema)
+                self._map_user_customer1_extension(extension_obj, properties)
             else:
                 logger.info("Ignoring unknown user extension", schema=schema)
 
@@ -130,6 +136,14 @@ class ScimToUdmMapper:
     def _map_user_enterprise_extension(self, obj: Any, props: dict[str, Any]) -> None:
         props["employeeNumber"] = obj.employee_number
 
+    def _map_user_univention_extension(self, obj: Any, props: dict[str, Any]) -> None:
+        props["description"] = obj.description
+        props["PasswordRecoveryEmail"] = obj.password_recovery_email
+
+    def _map_user_customer1_extension(self, obj: Any, props: dict[str, Any]) -> None:
+        props["primaryOrgUnit"] = obj.primary_org_unit
+        props["secondaryOrgUnits"] = obj.secondary_org_units
+
     def map_group(self, group: Group) -> dict[str, Any]:
         """
         Map a SCIM Group to UDM group properties.
@@ -145,18 +159,57 @@ class ScimToUdmMapper:
             "univentionObjectIdentifier": group.id,
         }
 
+        for schema, extension in group.get_extension_models().items():
+            if not hasattr(group, extension.__name__):
+                continue
+
+            extension_obj = getattr(group, extension.__name__)
+            if extension_obj is None:
+                setattr(group, extension.__name__, extension())
+                extension_obj = getattr(group, extension.__name__)
+
+            if schema == "urn:ietf:params:scim:schemas:extension:Univention:1.0:Group":
+                logger.debug("Mapping group extension", schema=schema)
+                self._map_group_univention_extension(extension_obj, properties)
+            else:
+                logger.info("Ignoring unknown group extension", schema=schema)
+
+            group.schemas.append(schema)
+
         # Map members
         if group.members and self.cache:
-            properties["users"] = []
-            # UDM expects DNs for members, but SCIM only has IDs
-            for member in group.members:
-                user = self.cache.get_user(member.value)
-                # When mapping from SCIM to UDM it is a write request to the scim-server
-                # so we raise an exception if a mapping can not be done
-                if not user:
-                    raise MappingError(f"Failed to find user {member.value}", group.id, member.value)
+            members = [x for x in group.members if x.type == "User"]
+            nested_groups = [x for x in group.members if x.type == "Group"]
 
-                properties["users"].append(user.dn)
+            if len(members) > 0:
+                properties["users"] = []
+                # UDM expects DNs for members, but SCIM only has IDs
+                for member in members:
+                    user = self.cache.get_user(member.value)
+                    # When mapping from SCIM to UDM it is a write request to the scim-server
+                    # so we raise an exception if a mapping can not be done
+                    if not user:
+                        raise MappingError(f"Failed to find user {member.value}", group.id, member.value)
+
+                    properties["users"].append(user.dn)
+            if len(nested_groups) > 0:
+                properties["nestedGroup"] = []
+                # UDM expects DNs for members, but SCIM only has IDs
+                for member in nested_groups:
+                    nested_group = self.cache.get_group(member.value)
+                    # When mapping from SCIM to UDM it is a write request to the scim-server
+                    # so we raise an exception if a mapping can not be done
+                    if not nested_group:
+                        raise MappingError(f"Failed to find group {member.value}", group.id, member.value)
+
+                    properties["nestedGroup"].append(nested_group.dn)
 
         # Return both properties and object attributes that should be set on the UDM object directly
         return properties
+
+    def _map_group_univention_extension(self, obj: Any, props: dict[str, Any]) -> None:
+        if obj.member_roles:
+            props["guardianMemberRoles"] = []
+
+            for member_role in obj.member_roles:
+                props["guardianMemberRoles"].append(member_role.value)
