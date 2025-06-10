@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.26.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.25.0...v0.26.0) (2025-06-10)
+
+
+### Features
+
+* Add correlation ID support to logging ([f6b7761](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/f6b7761be934ce514b422df5649b7012f646237c))
+
 ## [0.25.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.24.0...v0.25.0) (2025-06-06)
 
 
