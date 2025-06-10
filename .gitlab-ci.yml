@@ -178,8 +178,6 @@ test-scim-consumer:
     - docker cp test-scim-consumer:/tmp/scim-coverage.xml ./coverage-test-scim-consumer.xml
     - docker stop -t0 test-scim-consumer
     - docker rm test-scim-consumer
-    - pwd
-    - ls -la
     - cd scim-consumer/tests
     - docker compose down --volumes
   artifacts:
