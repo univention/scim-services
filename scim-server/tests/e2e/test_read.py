@@ -75,9 +75,15 @@ async def test_get_user_endpoint(
     assert user_data["name"]["familyName"] == test_user.name.family_name
 
     # Verify email addresses
-    primary_email = next((email for email in user_data["emails"] if email.get("primary", False)), None)
-    assert primary_email is not None, "No primary email found"
-    assert primary_email["value"] in [email.value for email in test_user.emails]
+    # email type can not be mapped so all emails have type "other" when queried from UDM
+    # there are to special cases:
+    #  * type == mailbox: This is the "mailPrimaryAddress" property in UDM
+    #  * type == alias: This is the "mailAlternativeAddress" property in UDM
+    assert len(user_data["emails"]) == len(test_user.emails)
+    for email in user_data["emails"]:
+        assert email["type"] == "other"
+        assert not email["primary"]
+        assert email["value"] in [email.value for email in test_user.emails]
 
 
 @pytest.mark.asyncio
@@ -126,6 +132,7 @@ async def test_get_group_endpoint(
     create_random_user: CreateUserFactory,
     client: TestClient,
     api_prefix: str,
+    host: str,
     auth_headers: dict[str, str],
 ) -> None:
     """Test retrieving a group through the REST API endpoint."""
@@ -153,7 +160,12 @@ async def test_get_group_endpoint(
     assert group_data["displayName"] == test_group.display_name
     assert len(group_data["members"]) == len(users)
     for user in users:
-        assert {"value": user.id, "display": user.display_name, "type": "User"} in group_data["members"]
+        assert {
+            "value": user.id,
+            "$ref": f"{host}{api_prefix}/Users/{user.id}",
+            "display": user.display_name,
+            "type": "User",
+        } in group_data["members"]
 
 
 @pytest.mark.asyncio

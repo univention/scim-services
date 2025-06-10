@@ -5,7 +5,7 @@ from typing import Annotated, Any
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response, status
 from loguru import logger
-from scim2_models import ListResponse, User
+from scim2_models import ListResponse
 
 from univention.scim.server.config import application_settings
 from univention.scim.server.container import ApplicationContainer
@@ -17,7 +17,7 @@ from univention.scim.transformation.exceptions import MappingError
 router = APIRouter()
 
 
-@router.get("", response_model=ListResponse[User])
+@router.get("", response_model=ListResponse[UserWithExtensions])
 @inject
 async def list_users(
     user_service: Annotated[UserService, Depends(Provide[ApplicationContainer.user_service])],
@@ -26,7 +26,7 @@ async def list_users(
     count: int | None = Query(None, ge=0, description="Maximum number of results"),
     attributes: str | None = Query(None, description="Comma-separated list of attributes to include"),
     excluded_attributes: str | None = Query(None, description="Comma-separated list of attributes to exclude"),
-) -> ListResponse[User]:
+) -> ListResponse[UserWithExtensions]:
     """
     List users with optional filtering and pagination.
 
@@ -41,14 +41,14 @@ async def list_users(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
 
-@router.get("/{user_id}", response_model=User)
+@router.get("/{user_id}", response_model=UserWithExtensions)
 @inject
 async def get_user(
     user_service: Annotated[UserService, Depends(Provide[ApplicationContainer.user_service])],
     user_id: str = Path(..., description="User ID"),
     attributes: str | None = Query(None, description="Comma-separated list of attributes to include"),
     excluded_attributes: str | None = Query(None, description="Comma-separated list of attributes to exclude"),
-) -> User:
+) -> UserWithExtensions:
     """
     Get a specific user by ID.
 
@@ -66,13 +66,13 @@ async def get_user(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
 
-@router.post("", response_model=User, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=UserWithExtensions, status_code=status.HTTP_201_CREATED)
 @inject
 async def create_user(
     user_service: Annotated[UserService, Depends(Provide[ApplicationContainer.user_service])],
     user: UserWithExtensions,
     response: Response,
-) -> User:
+) -> UserWithExtensions:
     """
     Create a new user.
 
@@ -94,13 +94,13 @@ async def create_user(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
 
-@router.put("/{user_id}", response_model=User)
+@router.put("/{user_id}", response_model=UserWithExtensions)
 @inject
 async def update_user(
     user_service: Annotated[UserService, Depends(Provide[ApplicationContainer.user_service])],
     user_id: str = Path(..., description="User ID"),
     user: UserWithExtensions = ...,
-) -> User:
+) -> UserWithExtensions:
     """
     Replace a user.
 
@@ -122,13 +122,13 @@ async def update_user(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
 
-@router.patch("/{user_id}", response_model=User)
+@router.patch("/{user_id}", response_model=UserWithExtensions)
 @inject
 async def patch_user(
     user_service: Annotated[UserService, Depends(Provide[ApplicationContainer.user_service])],
     user_id: Annotated[str, Path(..., description="User ID")],
     patch_request: Annotated[dict[str, Any], Body(..., description="Raw SCIM-compliant patch request body")],
-) -> User:
+) -> UserWithExtensions:
     """
     Patch a user using a raw SCIM JSON patch body.
     The request must contain an 'Operations' list, and may optionally contain a 'schemas' field.

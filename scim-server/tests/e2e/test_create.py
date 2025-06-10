@@ -3,14 +3,14 @@
 
 import pytest
 from fastapi.testclient import TestClient
-from scim2_models import Group, User
 
 from tests.conftest import skip_if_no_udm
+from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions, UserWithExtensions
 
 
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 async def test_post_user_endpoint(
-    random_user: User, client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+    random_user: UserWithExtensions, client: TestClient, api_prefix: str, auth_headers: dict[str, str]
 ) -> None:
     """Test creating a user through the REST API endpoint."""
     print("\n=== E2E Testing POST User Endpoint ===")
@@ -41,14 +41,20 @@ async def test_post_user_endpoint(
     assert created_user["name"]["familyName"] == test_user.name.family_name
 
     # Verify email addresses
-    primary_email = next((email for email in created_user["emails"] if email.get("primary", False)), None)
-    assert primary_email is not None, "No primary email found"
-    assert primary_email["value"] in [email.value for email in test_user.emails]
+    # email type can not be mapped so all emails have type "other" when queried from UDM
+    # there are to special cases:
+    #  * type == mailbox: This is the "mailPrimaryAddress" property in UDM
+    #  * type == alias: This is the "mailAlternativeAddress" property in UDM
+    assert len(created_user["emails"]) == len(test_user.emails)
+    for email in created_user["emails"]:
+        assert email["type"] == "other"
+        assert not email["primary"]
+        assert email["value"] in [email.value for email in test_user.emails]
 
 
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
 async def test_post_group_endpoint(
-    random_group: Group, client: TestClient, api_prefix: str, auth_headers: dict[str, str]
+    random_group: GroupWithExtensions, client: TestClient, api_prefix: str, auth_headers: dict[str, str]
 ) -> None:
     """Test creating a group through the REST API endpoint."""
     print("\n=== E2E Testing POST group Endpoint ===")

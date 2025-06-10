@@ -15,6 +15,7 @@ from univention.scim.server.domain.rules.action import Action
 from univention.scim.server.domain.rules.display_name import UserDisplayNameRule
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
+from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions, UserWithExtensions
 from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 
 
@@ -22,14 +23,9 @@ def create_crud_manager(
     resource_type: str,
     resource_class: type[User | Group],
     udm_client: UDM,
-    scim2udm_mapper: ScimToUdmMapper = None,
-    udm2scim_mapper: UdmToScimMapper = None,
+    scim2udm_mapper: ScimToUdmMapper,
+    udm2scim_mapper: UdmToScimMapper,
 ) -> CrudManager:
-    if not scim2udm_mapper:
-        scim2udm_mapper = ScimToUdmMapper(None)
-    if not udm2scim_mapper:
-        udm2scim_mapper = UdmToScimMapper(None)
-
     repository = CrudUdm(
         resource_type=resource_type,
         scim2udm_mapper=scim2udm_mapper,
@@ -47,9 +43,13 @@ async def test_user_service(create_random_user: CreateUserFactory, udm_client: U
     print("\n=== Testing User Service ===")
 
     cache = UdmIdCache(udm_client, 120)
-    udm2scim_mapper = UdmToScimMapper(cache)
+    udm2scim_mapper = UdmToScimMapper[UserWithExtensions, GroupWithExtensions](
+        cache=cache, user_type=UserWithExtensions, group_type=GroupWithExtensions
+    )
 
-    user_crud_manager = create_crud_manager("User", User, udm_client, udm2scim_mapper=udm2scim_mapper)
+    user_crud_manager = create_crud_manager(
+        "User", User, udm_client, scim2udm_mapper=ScimToUdmMapper(cache), udm2scim_mapper=udm2scim_mapper
+    )
     UserServiceImpl(user_crud_manager)
 
     created_user = await create_random_user()
@@ -74,9 +74,13 @@ async def test_group_service(create_random_group: CreateGroupFactory, udm_client
     print("\n=== Testing Group Service ===")
 
     cache = UdmIdCache(udm_client, 120)
-    udm2scim_mapper = UdmToScimMapper(cache)
+    udm2scim_mapper = UdmToScimMapper[UserWithExtensions, GroupWithExtensions](
+        cache=cache, user_type=UserWithExtensions, group_type=GroupWithExtensions
+    )
 
-    group_crud_manager = create_crud_manager("Group", Group, udm_client, udm2scim_mapper=udm2scim_mapper)
+    group_crud_manager = create_crud_manager(
+        "Group", Group, udm_client, scim2udm_mapper=ScimToUdmMapper(cache), udm2scim_mapper=udm2scim_mapper
+    )
     GroupServiceImpl(group_crud_manager)
 
     created_group = await create_random_group()

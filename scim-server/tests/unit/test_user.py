@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
-from typing import Any
 
 import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
-from scim2_models import Email, Name, User
+from scim2_models import Name
+
+from univention.scim.server.model_service.load_schemas_impl import UserWithExtensions
 
 
 # We can only test this with the mocked UDM because a real UDM
@@ -16,21 +17,26 @@ def force_mock() -> bool:
 
 
 # Test data
-test_user = User(
+test_user = UserWithExtensions(
     user_name="jdoe",
     name=Name(
         given_name="John",
         family_name="Doe",
         formatted="John Doe",
-    ),
+    ).model_dump(),
     password="securepassword",
     active=True,
     emails=[
-        Email(
-            value="john.doe@example.org",
-            type="work",
-            primary=True,
-        )
+        {
+            "value": "john.doe@example.org",
+            "type": "alias",
+            "primary": True,
+        },
+        {
+            "value": "other@example.org",
+            "type": "other",
+            "primary": False,
+        },
     ],
 )
 
@@ -396,28 +402,11 @@ class TestUserAPI:
         assert data["totalResults"] >= 1
         assert any(u["userName"] == test_user.user_name for u in data["Resources"])
 
-    def _create_test_user(self, client: TestClient) -> tuple[str, Any]:
-        """Create a basic test user."""
-        user_data = {
-            "userName": "testuser",
-            "name": {"givenName": "Test", "familyName": "User", "formatted": "Test User"},
-            "displayName": "Test User",
-            "emails": [
-                {"value": "test@work.com", "type": "work", "primary": True},
-                {"value": "test@home.com", "type": "other", "primary": False},
-            ],
-        }
-
-        response = client.post("/scim/v2/Users", json=user_data)
-        assert response.status_code == 201
-        data = response.json()
-        return data["id"], data
-
     # Level 1: Basic operations (what you already support)
 
     def test_level1_simple_replace(self, client: TestClient) -> None:
         """Test simple attribute replacement."""
-        user_id, original = self._create_test_user(client)
+        user_id = _create_test_user(client)
 
         patch_ops = {"Operations": [{"op": "replace", "path": "displayName", "value": "Updated Name"}]}
 
@@ -428,7 +417,7 @@ class TestUserAPI:
 
     def test_level1_nested_path(self, client: TestClient) -> None:
         """Test nested path with dot notation."""
-        user_id, original = self._create_test_user(client)
+        user_id = _create_test_user(client)
 
         patch_ops = {"Operations": [{"op": "replace", "path": "name.givenName", "value": "NewFirst"}]}
 
@@ -440,7 +429,7 @@ class TestUserAPI:
     @pytest.mark.xfail
     def test_level1_remove_operation(self, client: TestClient) -> None:
         """Test remove operation."""
-        user_id, original = self._create_test_user(client)
+        user_id = _create_test_user(client)
 
         patch_ops = {"Operations": [{"op": "remove", "path": "name.givenName"}]}
 
@@ -454,7 +443,7 @@ class TestUserAPI:
     @pytest.mark.xfail
     def test_level1_multiple_operations(self, client: TestClient) -> None:
         """Test multiple operations in a single patch request."""
-        user_id, original = self._create_test_user(client)
+        user_id = _create_test_user(client)
 
         # Prepare patch operations similar to your example
         new_display_name = "PatchedFirst PatchedLast"
@@ -469,7 +458,7 @@ class TestUserAPI:
                 {
                     "op": "replace",
                     "path": "emails",
-                    "value": [{"value": new_email_value, "type": "work", "primary": True}],
+                    "value": [{"value": new_email_value, "type": "alias", "primary": True}],
                 },
             ],
         }
@@ -489,19 +478,19 @@ class TestUserAPI:
         # Find the new email
         new_email = next((e for e in data["emails"] if e["value"] == new_email_value), None)
         assert new_email is not None, f"New email {new_email_value} not found"
-        assert new_email["type"] == "work"
+        assert new_email["type"] == "alias"
 
     @pytest.mark.xfail
     def test_level2_replace_entire_array(self, client: TestClient) -> None:
         """Test replacing entire multi-valued attribute."""
-        user_id, original = self._create_test_user(client)
+        user_id = _create_test_user(client)
 
         patch_ops = {
             "Operations": [
                 {
                     "op": "replace",
                     "path": "emails",
-                    "value": [{"value": "new@email.com", "type": "work", "primary": True}],
+                    "value": [{"value": "new@email.com", "type": "alias", "primary": True}],
                 }
             ]
         }
@@ -515,7 +504,7 @@ class TestUserAPI:
     @pytest.mark.xfail
     def test_level2_add_to_array(self, client: TestClient) -> None:
         """Test adding to multi-valued attribute."""
-        user_id, original = self._create_test_user(client)
+        user_id = _create_test_user(client)
 
         patch_ops = {
             "Operations": [
@@ -537,7 +526,7 @@ class TestUserAPI:
     @pytest.mark.xfail
     def test_level3_array_index(self, client: TestClient) -> None:
         """Test array index notation."""
-        user_id, original = self._create_test_user(client)
+        user_id = _create_test_user(client)
 
         patch_ops = {"Operations": [{"op": "replace", "path": "emails[0].value", "value": "indexed@email.com"}]}
 
@@ -557,10 +546,10 @@ class TestUserAPI:
     @pytest.mark.xfail
     def test_level4_filter_expression(self, client: TestClient) -> None:
         """Test filter expression in path."""
-        user_id, original = self._create_test_user(client)
+        user_id = _create_test_user(client)
 
         patch_ops = {
-            "Operations": [{"op": "replace", "path": 'emails[type eq "work"].value', "value": "filtered@work.com"}]
+            "Operations": [{"op": "replace", "path": 'emails[type eq "alias"].value', "value": "filtered@work.com"}]
         }
 
         response = client.patch(f"/scim/v2/Users/{user_id}", json=patch_ops)
@@ -576,20 +565,20 @@ class TestUserAPI:
         # Should still have both emails
         assert len(data["emails"]) == 2
 
-        # Work email should be updated
-        work_email = next((e for e in data["emails"] if e["type"] == "work"), None)
-        assert work_email is not None
-        assert work_email["value"] == "filtered@work.com"
+        # Alias email should be updated
+        alias_email = next((e for e in data["emails"] if e["type"] == "alias"), None)
+        assert alias_email is not None
+        assert alias_email["value"] == "filtered@work.com"
 
         # Home email should be unchanged
         home_email = next((e for e in data["emails"] if e["type"] == "other"), None)
         assert home_email is not None
-        assert home_email["value"] == "test@home.com"
+        assert home_email["value"] == "other@example.org"
 
     @pytest.mark.xfail
     def test_level4_remove_with_filter(self, client: TestClient) -> None:
         """Test removing with filter."""
-        user_id, original = self._create_test_user(client)
+        user_id = _create_test_user(client)
 
         patch_ops = {"Operations": [{"op": "remove", "path": 'emails[type eq "other"]'}]}
 
@@ -603,15 +592,15 @@ class TestUserAPI:
         assert response.status_code == 200
         data = response.json()
 
-        # Should only have work email left
+        # Should only have alias email left
         assert len(data["emails"]) == 1
-        assert data["emails"][0]["type"] == "work"
+        assert data["emails"][0]["type"] == "alias"
 
     # Level 5: Path-less operations
     @pytest.mark.xfail
     def test_level5_pathless_operation(self, client: TestClient) -> None:
         """Test operation without path."""
-        user_id, original = self._create_test_user(client)
+        user_id = _create_test_user(client)
 
         patch_ops = {"Operations": [{"op": "add", "value": {"title": "Software Engineer"}}]}
 

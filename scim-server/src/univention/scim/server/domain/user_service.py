@@ -4,7 +4,9 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from scim2_models import ListResponse, User
+from scim2_models import ListResponse
+
+from univention.scim.server.model_service.load_schemas_impl import UserWithExtensions
 
 
 class UserService(ABC):
@@ -14,7 +16,7 @@ class UserService(ABC):
     """
 
     @abstractmethod
-    async def get_user(self, user_id: str) -> User:
+    async def get_user(self, user_id: str) -> UserWithExtensions:
         """
         Get a user by ID.
         Args:
@@ -29,7 +31,7 @@ class UserService(ABC):
     @abstractmethod
     async def list_users(
         self, filter_str: str | None = None, start_index: int = 1, count: int | None = None
-    ) -> ListResponse[User]:
+    ) -> ListResponse[UserWithExtensions]:
         """
         List users with optional filtering and pagination.
         Args:
@@ -42,7 +44,7 @@ class UserService(ABC):
         pass
 
     @abstractmethod
-    async def create_user(self, user: User) -> User:
+    async def create_user(self, user: UserWithExtensions) -> UserWithExtensions:
         """
         Create a new user.
         Args:
@@ -55,7 +57,7 @@ class UserService(ABC):
         pass
 
     @abstractmethod
-    async def update_user(self, user_id: str, user: User) -> User:
+    async def update_user(self, user_id: str, user: UserWithExtensions) -> UserWithExtensions:
         """
         Update an existing user.
         Args:
@@ -82,5 +84,5 @@ class UserService(ABC):
         pass
 
     @abstractmethod
-    async def apply_patch_operations(self, user_id: str, operations: list[dict[str, Any]]) -> User:
+    async def apply_patch_operations(self, user_id: str, operations: list[dict[str, Any]]) -> UserWithExtensions:
         pass

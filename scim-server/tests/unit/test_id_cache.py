@@ -5,15 +5,17 @@ import time
 from collections.abc import Callable
 
 import pytest
-from scim2_models import Group, GroupMember, User
+from scim2_models import GroupMember
 
 from helpers.udm_client import MockUdm
 from univention.scim.server.domain.repo.udm.udm_id_cache import CacheItem, UdmIdCache
+from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions, UserWithExtensions
 
 
 @pytest.fixture
 def udm_client(
-    random_user_factory: Callable[[list[GroupMember]], User], random_group_factory: Callable[[list[GroupMember]], Group]
+    random_user_factory: Callable[[list[GroupMember]], UserWithExtensions],
+    random_group_factory: Callable[[list[GroupMember]], GroupWithExtensions],
 ) -> MockUdm:
     mock = MockUdm(random_user_factory, random_group_factory)
     mock.add_user()

@@ -5,7 +5,9 @@ from copy import deepcopy
 from typing import Any
 
 from loguru import logger
-from scim2_models import Group, Resource, User
+from scim2_models import Resource
+
+from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions, UserWithExtensions
 
 
 class ScimPatchError(Exception):
@@ -75,15 +77,15 @@ class PatchMixin:
 
     async def patch_resource(
         self, resource: Resource, resource_id: str, operations: list[dict[str, Any]]
-    ) -> None | User | Group:
+    ) -> None | UserWithExtensions | GroupWithExtensions:
         """Apply SCIM patch operations to the resource with the given ID."""
 
-        if isinstance(resource, User):
-            cls = User
-        elif isinstance(resource, Group):
-            cls = Group
+        if isinstance(resource, UserWithExtensions):
+            cls = UserWithExtensions
+        elif isinstance(resource, GroupWithExtensions):
+            cls = GroupWithExtensions
         else:
-            raise ValueError("Unknown resource type")
+            raise ValueError(f"Unknown resource type: {type(resource)}")
 
         bound_logger = logger.bind(resource_type=cls.__name__, resource_id=resource_id)
         bound_logger.debug("Applying patch operation.")

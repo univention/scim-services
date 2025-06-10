@@ -1,30 +1,90 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-from typing import Any
+from typing import Any, Generic, TypeVar, cast
 
 from loguru import logger
-from scim2_models import Address, Email, Group, Name, PhoneNumber, User, X509Certificate
+from scim2_models import (
+    Address,
+    Email,
+    EnterpriseUser,
+    Group,
+    GroupMember,
+    Meta,
+    Name,
+    PhoneNumber,
+    Resource,
+    Role,
+    User,
+    X509Certificate,
+)
 
 from univention.scim.transformation.id_cache import IdCache
 
 
-class UdmToScimMapper:
+UserType = TypeVar("UserType", bound=Resource)
+GroupType = TypeVar("GroupType", bound=Resource)
+
+
+class UdmToScimMapper(Generic[UserType, GroupType]):
     """
     Maps UDM objects to SCIM resources.
 
     Converts UDM properties to SCIM-compatible objects.
     """
 
-    def __init__(self, cache: IdCache | None = None):
+    def __init__(
+        self, cache: IdCache | None = None, user_type: type[UserType] = User, group_type: type[GroupType] = Group
+    ):
         """
         Initialize the UdmToScimMapper.
         Args:
             cache: Cache to map DNs to SCIM IDs
         """
         self.cache = cache
+        self.user_type = user_type
+        self.group_type = group_type
 
-    def map_user(self, udm_user: Any, base_url: str = "") -> User:
+    def _get_ref(self, base_url: str, resource_type: str, id: str) -> str | None:
+        if not base_url:
+            return None
+
+        if resource_type == "Group" or resource_type == "User":
+            return f"{base_url}/{resource_type}s/{id}"
+
+        raise ValueError(f"Unknown resource type: {resource_type}")
+
+    def _get_meta(self, base_url: str, obj: Any) -> Meta:
+        """
+        Map UDM object to SCIM Meta object
+        Args:
+            obj: UDM object
+            base_url: Base URL for resource location
+        Returns:
+            SCIM Meta object
+        """
+
+        if obj.module.name == "users/user":
+            resource_type = "User"
+        elif obj.module.name == "groups/group":
+            resource_type = "Group"
+        else:
+            raise ValueError(f"Unknown UDM module: {obj.module.name}")
+
+        meta_data = Meta(
+            resource_type=resource_type,
+            location=self._get_ref(base_url, resource_type, obj.properties.get("univentionObjectIdentifier")),
+            created=obj.properties.get("createTimestamp", None),
+            last_modified=obj.properties.get("modifyTimestamp", None),
+        )
+
+        # Add version if available from etag
+        if hasattr(obj, "etag") and obj.etag:
+            meta_data.version = obj.etag
+
+        return meta_data
+
+    def map_user(self, udm_user: Any, base_url: str = "") -> UserType:
         """
         Map UDM user properties to a SCIM User.
         Args:
@@ -33,48 +93,44 @@ class UdmToScimMapper:
         Returns:
             SCIM User object
         """
-        logger.debug(f"Mapping UDM user {udm_user.dn} to SCIM User")
+        logger.debug("Mapping UDM user to SCIM User", dn=udm_user.dn)
         # Access properties directly from UDM user object
         props = udm_user.properties
         # Get univentionObjectIdentifier for user ID, fall back to username
-        user_id = props.get("univentionObjectIdentifier", props.get("username", "unknown"))
+        user_id = props.get("univentionObjectIdentifier")
 
-        # Get last_modified timestamp directly from UDM object
-        if hasattr(udm_user, "last_modified"):
-            pass
-
-        # Determine resource location
-        location = f"{base_url}/Users/{user_id}" if base_url else None
-
-        # Prepare meta object
-        meta_data = {
-            "resource_type": "User",
-            "location": location,
-        }
-
-        # Add version if available from etag
-        if hasattr(udm_user, "etag") and udm_user.etag:
-            meta_data["version"] = udm_user.etag
-
-        # Set up schemas with core and enterprise schema
-        schemas = [
-            "urn:ietf:params:scim:schemas:core:2.0:User",
-            # "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
-        ]
+        if not user_id:
+            logger.errorr("univentionObjectIdentifier is required", dn=udm_user.dn)
+            raise ValueError("univentionObjectIdentifier is required")
 
         # Create User object with basic properties
-        user = User(
-            schemas=schemas,
+        user = self.user_type(
             id=user_id,
-            user_name=props.get("username", ""),
+            user_name=props.get("username"),
             active=not props.get("disabled", False),
-            meta=meta_data,
-            external_id=props.get("univentionObjectIdentifier"),
-            display_name=props.get("displayName", ""),
-            title=props.get("title", ""),
-            user_type=props.get("employeeType", ""),
-            preferred_language=props.get("preferredLanguage", ""),
+            meta=self._get_meta(base_url, udm_user),
+            display_name=props.get("displayName", None),
+            title=props.get("title", None),
+            user_type=props.get("employeeType", None),
+            preferred_language=props.get("preferredLanguage", None),
         )
+
+        for schema, extension in user.get_extension_models().items():
+            if not hasattr(user, extension.__name__):
+                continue
+
+            extension_obj = getattr(user, extension.__name__)
+            if extension_obj is None:
+                setattr(user, extension.__name__, extension())
+                extension_obj = getattr(user, extension.__name__)
+
+            if schema == EnterpriseUser.to_schema().id:
+                logger.debug("Mapping user extension", schema=schema)
+                self._map_user_enterprise_extension(extension_obj, props)
+            else:
+                logger.info("Ignoring unknown user extension", schema=schema)
+
+            user.schemas.append(schema)
 
         # Map name
         if any(key in props for key in ["firstname", "lastname"]):
@@ -87,7 +143,9 @@ class UdmToScimMapper:
         # Map emails
         emails = []
         if "mailPrimaryAddress" in props and props["mailPrimaryAddress"]:
-            emails.append(Email(value=props["mailPrimaryAddress"], type="work", primary=True))
+            # scim2-models are very strict and only allow specific email types while RFC allows any type
+            # so don't use scim2-models email type
+            emails.append({"value": props["mailPrimaryAddress"], "type": "mailbox", "primary": False})
 
         if "mailAlternativeAddress" in props and props["mailAlternativeAddress"]:
             alt_addresses = props["mailAlternativeAddress"]
@@ -95,46 +153,40 @@ class UdmToScimMapper:
                 alt_addresses = [alt_addresses]
 
             for email in alt_addresses:
+                # scim2-models are very strict and only allow specific email types while RFC allows any type
+                # so don't use scim2-models email type
+                emails.append({"value": email, "type": "alias", "primary": False})
+
+        if "e-mail" in props and props["e-mail"]:
+            for email in props["e-mail"]:
                 emails.append(Email(value=email, type="other", primary=False))
 
-        if emails:
+        if len(emails) > 0:
             user.emails = emails
 
         # Map phone numbers
         phones = []
         if "phone" in props and props["phone"]:
             phone_numbers = props["phone"]
-            if isinstance(phone_numbers, str):
-                phone_numbers = [phone_numbers]
-
             for phone in phone_numbers:
                 phones.append(PhoneNumber(value=phone, type="work"))
 
         if "mobileTelephoneNumber" in props and props["mobileTelephoneNumber"]:
             mobile_numbers = props["mobileTelephoneNumber"]
-            if isinstance(mobile_numbers, str):
-                mobile_numbers = [mobile_numbers]
-
             for mobile in mobile_numbers:
                 phones.append(PhoneNumber(value=mobile, type="mobile"))
 
         if "homeTelephoneNumber" in props and props["homeTelephoneNumber"]:
             home_numbers = props["homeTelephoneNumber"]
-            if isinstance(home_numbers, str):
-                home_numbers = [home_numbers]
-
             for home in home_numbers:
                 phones.append(PhoneNumber(value=home, type="home"))
 
         if "pagerTelephoneNumber" in props and props["pagerTelephoneNumber"]:
             pager_numbers = props["pagerTelephoneNumber"]
-            if isinstance(pager_numbers, str):
-                pager_numbers = [pager_numbers]
-
             for pager in pager_numbers:
                 phones.append(PhoneNumber(value=pager, type="pager"))
 
-        if phones:
+        if len(phones) > 0:
             user.phone_numbers = phones
 
         # Map addresses
@@ -188,7 +240,7 @@ class UdmToScimMapper:
                     )
                 )
 
-        if addresses:
+        if len(addresses) > 0:
             user.addresses = addresses
 
         # Handle X.509 certificates
@@ -199,8 +251,20 @@ class UdmToScimMapper:
 
             certificates.append(X509Certificate(value=cert_value, display=display))
 
-        if certificates:
+        if len(certificates) > 0:
             user.x509_certificates = certificates
+
+        # Map roles
+        roles = []
+        if "guardianRoles" in props and props["guardianRoles"]:
+            for role in props["guardianRoles"]:
+                roles.append(Role(value=role, type="guardian-direct"))
+        if "guardianInheritedRoles" in props and props["guardianInheritedRoles"]:
+            for role in props["guardianInheritedRoles"]:
+                roles.append(Role(value=role, type="guardian-indirect"))
+
+        if len(roles) > 0:
+            user.roles = roles
 
         # TODO: Do not map groups for now, it will reduce performance because many LDAP queries are required
         # # Map groups if available
@@ -227,9 +291,12 @@ class UdmToScimMapper:
         #            )
         #        )
 
-        return user
+        return cast(UserType, user)
 
-    def map_group(self, udm_group: Any, base_url: str = "") -> Group:
+    def _map_user_enterprise_extension(self, obj: Any, props: dict[str, Any]) -> None:
+        obj.employee_number = props["employeeNumber"]
+
+    def map_group(self, udm_group: Any, base_url: str = "") -> GroupType:
         """
         Map UDM group properties to a SCIM Group.
         Args:
@@ -238,43 +305,30 @@ class UdmToScimMapper:
         Returns:
             SCIM Group object
         """
-        logger.debug(f"Mapping UDM group {udm_group.dn} to SCIM Group")
+        logger.debug("Mapping UDM group to SCIM Group", dn=udm_group.dn)
         # Access properties directly from UDM group object
         props = udm_group.properties
         # Extract group ID
-        group_id = props.get("univentionObjectIdentifier", props.get("name", "unknown"))
+        group_id = props.get("univentionObjectIdentifier")
 
-        # Get last_modified timestamp directly from UDM object
-        if hasattr(udm_group, "last_modified"):
-            pass
-
-        # Prepare meta object
-        meta_data = {
-            "resource_type": "Group",
-            "location": f"{base_url}/Groups/{group_id}" if base_url else None,
-        }
-
-        # Add version if available from etag
-        if hasattr(udm_group, "etag") and udm_group.etag:
-            meta_data["version"] = udm_group.etag
+        if not group_id:
+            logger.error("No univentionObjectIdentifier found", dn=udm_group.dn)
+            raise ValueError("univentionObjectIdentifier is required")
 
         # Create Group object
-        group = Group(
-            schemas=["urn:ietf:params:scim:schemas:core:2.0:Group"],
+        group = self.group_type(
             id=group_id,
             display_name=props.get("name", ""),
-            meta=meta_data,
+            meta=self._get_meta(base_url, udm_group),
             external_id=props.get("univentionObjectIdentifier"),
         )
 
         # Map members if available
         if "users" in props and props["users"] and self.cache:
-            group.members = []
-            user_dns = props["users"]
-            if isinstance(user_dns, str):
-                user_dns = [user_dns]
+            if not group.members:
+                group.members = []
 
-            from scim2_models import GroupMember
+            user_dns = props["users"]
 
             for dn in user_dns:
                 user = self.cache.get_user(dn)
@@ -287,8 +341,31 @@ class UdmToScimMapper:
                     GroupMember(
                         value=user.uuid,
                         display=user.display_name,
+                        ref=self._get_ref(base_url, "User", user.uuid),
                         type="User",
                     )
                 )
 
-        return group
+        if "nestedGroup" in props and props["nestedGroup"] and self.cache:
+            if not group.members:
+                group.members = []
+
+            group_dns = props["nestedGroup"]
+
+            for dn in group_dns:
+                group = self.cache.get_group(dn)
+                # When mapping from UDM to SCIM it is a read request from the scim-server
+                # so just ignore entities which are not found
+                if not group:
+                    continue
+
+                group.members.append(
+                    GroupMember(
+                        value=group.uuid,
+                        display=group.display_name,
+                        ref=self._get_ref(base_url, "Group", group.uuid),
+                        type="Group",
+                    )
+                )
+
+        return cast(GroupType, group)

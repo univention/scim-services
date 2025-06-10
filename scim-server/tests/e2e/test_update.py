@@ -41,10 +41,10 @@ async def test_put_user_endpoint(
     updated_user_data["name"]["familyName"] = "UpdatedLast"
 
     # Add a new email address
-    new_email = {"value": f"updated-{test_user.user_name}@example.org", "type": "work", "primary": True}
-    # Make sure we don't have duplicate primary emails
-    for email in updated_user_data["emails"]:
-        email["primary"] = False
+    new_email = {"value": f"updated-alias-{test_user.user_name}@example.org", "type": "alias", "primary": False}
+    updated_user_data["emails"].append(new_email)
+
+    new_email = {"value": f"updated-mailbox-{test_user.user_name}@example.org", "type": "mailbox", "primary": False}
     updated_user_data["emails"].append(new_email)
 
     # Send PUT request
@@ -63,11 +63,6 @@ async def test_put_user_endpoint(
     updated_emails = [email["value"] for email in updated_user["emails"]]
     assert new_email["value"] in updated_emails
 
-    # Verify primary email is set correctly
-    primary_emails = [email for email in updated_user["emails"] if email.get("primary", False)]
-    assert len(primary_emails) == 1
-    assert primary_emails[0]["value"] == new_email["value"]
-
     # Verify meta information is updated
     assert "meta" in updated_user
     assert "version" in updated_user["meta"]
@@ -83,6 +78,22 @@ async def test_put_user_endpoint(
     assert get_updated_user["displayName"] == updated_user["displayName"]
     assert get_updated_user["name"]["givenName"] == updated_user["name"]["givenName"]
     assert get_updated_user["name"]["familyName"] == updated_user["name"]["familyName"]
+
+    # Verify email addresses
+    # email type can not be mapped so all emails have type "other" when queried from UDM
+    # there are to special cases:
+    #  * type == mailbox: This is the "mailPrimaryAddress" property in UDM
+    #  * type == alias: This is the "mailAlternativeAddress" property in UDM
+    assert len(get_updated_user["emails"]) == len(updated_user_data["emails"])
+    for email in get_updated_user["emails"]:
+        if email["value"].startswith("updated-alias-"):
+            assert email["type"] == "alias"
+        elif email["value"].startswith("updated-mailbox-"):
+            assert email["type"] == "mailbox"
+        else:
+            assert email["type"] == "other"
+        assert not email["primary"]
+        assert email["value"] in [x["value"] for x in updated_user_data["emails"]]
 
     # Verify the new email exists in the GET response
     get_updated_emails = [email["value"] for email in get_updated_user["emails"]]

@@ -29,6 +29,7 @@ from univention.scim.server.domain.repo.udm.crud_udm import CrudUdm
 from univention.scim.server.domain.repo.udm.udm_id_cache import UdmIdCache
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
 from univention.scim.server.main import app
+from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions, UserWithExtensions
 from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 
 
@@ -42,15 +43,15 @@ class CreateUserFactory:
         udm_client: UDM,
         scim2udm_mapper: ScimToUdmMapper,
         udm2scim_mapper: UdmToScimMapper,
-        random_user_factory: Callable[[list[GroupMember]], User],
+        random_user_factory: Callable[[list[GroupMember]], UserWithExtensions],
     ) -> None:
         self.udm_client = udm_client
         self.scim2udm_mapper = scim2udm_mapper
         self.udm2scim_mapper = udm2scim_mapper
         self.random_user_factory = random_user_factory
-        self.users: list[User] = []
+        self.users: list[UserWithExtensions] = []
 
-    async def __call__(self, groups: list[GroupMember] | None = None, /) -> User:
+    async def __call__(self, groups: list[GroupMember] | None = None, /) -> UserWithExtensions:
         if groups is None:
             groups = []
         user = self.random_user_factory(groups)
@@ -81,15 +82,15 @@ class CreateGroupFactory:
         udm_client: UDM,
         scim2udm_mapper: ScimToUdmMapper,
         udm2scim_mapper: UdmToScimMapper,
-        random_group_factory: Callable[[list[GroupMember]], Group],
+        random_group_factory: Callable[[list[GroupMember]], GroupWithExtensions],
     ) -> None:
         self.udm_client = udm_client
         self.scim2udm_mapper = scim2udm_mapper
         self.udm2scim_mapper = udm2scim_mapper
         self.random_group_factory = random_group_factory
-        self.groups: list[Group] = []
+        self.groups: list[GroupWithExtensions] = []
 
-    async def __call__(self, members: list[GroupMember] | None = None, /) -> Group:
+    async def __call__(self, members: list[GroupMember] | None = None, /) -> GroupWithExtensions:
         if members is None:
             members = []
         group = self.random_group_factory(members)
@@ -131,9 +132,11 @@ def application_settings(monkeypatch: pytest.MonkeyPatch) -> Generator[Applicati
 def setup_mocks(application_settings: ApplicationSettings, udm_client: UDM | MockUdm) -> Generator[None, None, None]:
     cache = UdmIdCache(udm_client, 120)
     scim2udm_mapper = ScimToUdmMapper(cache)
-    udm2scim_mapper = UdmToScimMapper(cache)
+    udm2scim_mapper = UdmToScimMapper[UserWithExtensions, GroupWithExtensions](
+        cache=cache, user_type=UserWithExtensions, group_type=GroupWithExtensions
+    )
 
-    user_repo = CrudUdm[User](
+    user_repo = CrudUdm[UserWithExtensions](
         resource_type="User",
         scim2udm_mapper=scim2udm_mapper,
         udm2scim_mapper=udm2scim_mapper,
@@ -142,7 +145,7 @@ def setup_mocks(application_settings: ApplicationSettings, udm_client: UDM | Moc
         base_url=f"{application_settings.host}{application_settings.api_prefix}",
     )
 
-    group_repo = CrudUdm[Group](
+    group_repo = CrudUdm[GroupWithExtensions](
         resource_type="Group",
         scim2udm_mapper=scim2udm_mapper,
         udm2scim_mapper=udm2scim_mapper,
@@ -151,8 +154,8 @@ def setup_mocks(application_settings: ApplicationSettings, udm_client: UDM | Moc
         base_url=f"{application_settings.host}{application_settings.api_prefix}",
     )
 
-    user_crud_manager = CrudManager[User](user_repo, "User")
-    group_crud_manager = CrudManager[Group](group_repo, "Group")
+    user_crud_manager = CrudManager[UserWithExtensions](user_repo, "User")
+    group_crud_manager = CrudManager[GroupWithExtensions](group_repo, "Group")
 
     # Create service instances
     user_service = UserServiceImpl(user_crud_manager)
@@ -317,8 +320,8 @@ def disable_auththentication(application_settings: ApplicationSettings) -> Appli
 
 @pytest.fixture
 def udm_client(
-    random_user_factory: Callable[[list[GroupMember]], User],
-    random_group_factory: Callable[[list[GroupMember]], Group],
+    random_user_factory: Callable[[list[GroupMember]], UserWithExtensions],
+    random_group_factory: Callable[[list[GroupMember]], GroupWithExtensions],
     force_mock: bool,
 ) -> Generator[UDM | MockUdm, None, None]:
     if force_mock or skip_if_no_udm():
@@ -445,29 +448,28 @@ async def ensure_group_deleted(udm_client: UDM, group_name: str | None = None, g
 
 
 @pytest.fixture
-def random_user_factory() -> Callable[[list[GroupMember]], User]:
+def random_user_factory() -> Callable[[list[GroupMember]], UserWithExtensions]:
     """Create a factory function that returns a random user each time it's called"""
 
-    def factory(groups: list[GroupMember] | None = None) -> User:
+    def factory(groups: list[GroupMember] | None = None) -> UserWithExtensions:
         if groups is None:
             groups = []
         data = random_user_data()
 
-        user = User(
+        user = UserWithExtensions(
             id=fake.uuid4(),
-            schemas=["urn:ietf:params:scim:schemas:core:2.0:User"],
             user_name=data["username"],
             name=Name(
                 given_name=data["given_name"],
                 family_name=data["family_name"],
                 formatted=f"{data['given_name']} {data['family_name']}",
-            ),
+            ).model_dump(),
             password="securepassword",
             display_name=f"{data['given_name']} {data['family_name']}",
             title="Senior Engineer",
             emails=[
-                Email(value=data["email"], primary=True, type="work"),
-                Email(value=data["personal_email"], type="home"),
+                Email(value=data["email"], primary=True, type="work").model_dump(),
+                Email(value=data["personal_email"], type="home").model_dump(),
             ],
             addresses=[
                 Address(
@@ -478,7 +480,7 @@ def random_user_factory() -> Callable[[list[GroupMember]], User]:
                     postal_code="12345",
                     country="USA",
                     type="work",
-                )
+                ).model_dump()
             ],
             active=True,
             preferred_language="en-US",
@@ -493,19 +495,21 @@ def random_user_factory() -> Callable[[list[GroupMember]], User]:
 
 
 @pytest.fixture
-def random_user(random_user_factory: Callable[[list[GroupMember]], User]) -> User:
+def random_user(random_user_factory: Callable[[list[GroupMember]], UserWithExtensions]) -> UserWithExtensions:
     """Create a single random user (for backwards compatibility)"""
     return random_user_factory([])
 
 
 @pytest.fixture
 async def create_random_user(
-    random_user_factory: Callable[[list[GroupMember]], User], udm_client: UDM
+    random_user_factory: Callable[[list[GroupMember]], UserWithExtensions], udm_client: UDM
 ) -> AsyncGenerator[CreateUserFactory, None]:
     """Create a user factory fixture with proper cleanup"""
     cache = UdmIdCache(udm_client, 120)
     scim2udm_mapper = ScimToUdmMapper(cache)
-    udm2scim_mapper = UdmToScimMapper(cache)
+    udm2scim_mapper = UdmToScimMapper[UserWithExtensions, GroupWithExtensions](
+        cache=cache, user_type=UserWithExtensions, group_type=GroupWithExtensions
+    )
 
     factory = CreateUserFactory(udm_client, scim2udm_mapper, udm2scim_mapper, random_user_factory)
     yield factory
@@ -519,17 +523,16 @@ async def create_random_user(
 
 
 @pytest.fixture
-def random_group_factory() -> Callable[[list[GroupMember]], Group]:
+def random_group_factory() -> Callable[[list[GroupMember]], GroupWithExtensions]:
     """Create a factory function that returns a random group each time it's called"""
 
-    def factory(members: list[GroupMember] | None = None) -> Group:
+    def factory(members: list[GroupMember] | None = None) -> GroupWithExtensions:
         if members is None:
             members = []
         data = random_group_data()
 
-        return Group(
+        return GroupWithExtensions(
             id=fake.uuid4(),
-            schemas=["urn:ietf:params:scim:schemas:core:2.0:Group"],
             display_name=data["display_name"],
             members=members,
             meta={},
@@ -539,20 +542,22 @@ def random_group_factory() -> Callable[[list[GroupMember]], Group]:
 
 
 @pytest.fixture
-def random_group(random_group_factory: Callable[[list[GroupMember]], Group]) -> Group:
+def random_group(random_group_factory: Callable[[list[GroupMember]], GroupWithExtensions]) -> GroupWithExtensions:
     """Create a single random group (for backwards compatibility)"""
     return random_group_factory([])
 
 
 @pytest.fixture
 async def create_random_group(
-    random_group_factory: Callable[[list[GroupMember]], Group], udm_client: UDM
+    random_group_factory: Callable[[list[GroupMember]], GroupWithExtensions], udm_client: UDM
 ) -> AsyncGenerator[CreateGroupFactory, None]:
     """Create a group factory fixture with proper cleanup"""
 
     cache = UdmIdCache(udm_client, 120)
     scim2udm_mapper = ScimToUdmMapper(cache)
-    udm2scim_mapper = UdmToScimMapper(cache)
+    udm2scim_mapper = UdmToScimMapper[UserWithExtensions, GroupWithExtensions](
+        cache=cache, user_type=UserWithExtensions, group_type=GroupWithExtensions
+    )
 
     factory = CreateGroupFactory(udm_client, scim2udm_mapper, udm2scim_mapper, random_group_factory)
     yield factory
@@ -566,9 +571,15 @@ async def create_random_group(
 
 
 @pytest.fixture
-def api_prefix() -> str:
+def api_prefix(application_settings: ApplicationSettings) -> str:
     """Get the API prefix for the SCIM server."""
-    return os.environ.get("API_PREFIX", "/scim/v2")
+    return str(application_settings.api_prefix)
+
+
+@pytest.fixture
+def host(application_settings: ApplicationSettings) -> str:
+    """Get the API prefix for the SCIM server."""
+    return str(application_settings.host)
 
 
 @pytest.fixture

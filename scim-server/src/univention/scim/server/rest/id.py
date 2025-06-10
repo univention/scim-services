@@ -6,23 +6,23 @@ from typing import Annotated
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path, status
 from loguru import logger
-from scim2_models import Group, User
 
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.domain.group_service import GroupService
 from univention.scim.server.domain.user_service import UserService
+from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions, UserWithExtensions
 
 
 router = APIRouter()
 
 
-@router.get("/{id}", response_model=User | Group)
+@router.get("/{id}", response_model=UserWithExtensions | GroupWithExtensions)
 @inject
-async def get_user(
+async def get_user_or_group(
     user_service: Annotated[UserService, Depends(Provide[ApplicationContainer.user_service])],
     group_service: Annotated[GroupService, Depends(Provide[ApplicationContainer.group_service])],
     id: str = Path(..., description="Object ID"),
-) -> User:
+) -> UserWithExtensions | GroupWithExtensions:
     """
     Get a specific object by ID.
 

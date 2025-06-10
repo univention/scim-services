@@ -3,10 +3,11 @@
 
 from faker import Faker
 from fastapi.testclient import TestClient
-from scim2_models import Group
+
+from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions
 
 
-test_group = Group(
+test_group = GroupWithExtensions(
     display_name="Test Group",
 )
 

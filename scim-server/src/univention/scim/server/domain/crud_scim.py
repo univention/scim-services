@@ -28,7 +28,9 @@ class CrudScim(Generic[T], ABC):
         pass
 
     @abstractmethod
-    async def list(self, filter_str: str | None = None, start_index: int = 1, count: int | None = None) -> list[T]:
+    async def list(
+        self, filter_str: str | None = None, start_index: int = 1, count: int | None = None
+    ) -> tuple[int, list[T]]:
         """
         List resources with optional filtering and pagination.
         Args:
@@ -36,18 +38,7 @@ class CrudScim(Generic[T], ABC):
             start_index: 1-based index for the first result
             count: Maximum number of results to return
         Returns:
-            List of resources matching the criteria
-        """
-        pass
-
-    @abstractmethod
-    async def count(self, filter_str: str | None = None) -> int:
-        """
-        Count resources matching a filter.
-        Args:
-            filter_str: SCIM filter expression
-        Returns:
-            Number of matching resources
+            tuple of int the total results and List of resources matching the criteria
         """
         pass
 

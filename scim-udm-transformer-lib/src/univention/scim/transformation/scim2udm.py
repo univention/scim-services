@@ -4,7 +4,7 @@
 from typing import Any
 
 from loguru import logger
-from scim2_models import Group, User
+from scim2_models import EnterpriseUser, Group, User
 
 from univention.scim.transformation.exceptions import MappingError
 from univention.scim.transformation.id_cache import IdCache
@@ -39,7 +39,31 @@ class ScimToUdmMapper:
             "password": user.password,
             "disabled": not user.active if user.active is not None else False,
             "univentionObjectIdentifier": user.id,
+            "preferredLanguage": user.preferred_language,
+            "employeeType": user.user_type,
+            "title": user.title,
+            "displayName": user.display_name,
         }
+
+        for schema, extension in user.get_extension_models().items():
+            if not hasattr(user, extension.__name__):
+                continue
+
+            extension_obj = getattr(user, extension.__name__)
+            if extension_obj is None:
+                setattr(user, extension.__name__, extension())
+                extension_obj = getattr(user, extension.__name__)
+
+            if schema == EnterpriseUser.to_schema().id:
+                logger.debug("Mapping user extension", schema=schema)
+                self._map_user_enterprise_extension(extension_obj, properties)
+            else:
+                logger.info("Ignoring unknown user extension", schema=schema)
+
+            user.schemas.append(schema)
+
+        if user.roles:
+            properties["guardianRoles"] = [x.value for x in user.roles if x.type == "guardian-direct"]
 
         # Map name components
         if user.name:
@@ -49,28 +73,36 @@ class ScimToUdmMapper:
             properties["firstname"] = None
             properties["lastname"] = None
 
-        properties["displayName"] = user.display_name
-
         # Map email addresses
         if user.emails:
-            primary_email = next((email.value for email in user.emails if email.primary), None)
+            primary_email = next((email.value for email in user.emails if email.type == "mailbox"), None)
             properties["mailPrimaryAddress"] = primary_email
-            # Additional emails as alternative addresses
-            alt_emails = [email.value for email in user.emails if not email.primary]
-            properties["mailAlternativeAddress"] = alt_emails
+            # Alias emails as alternative addresses
+            alias_emails = [email.value for email in user.emails if email.type == "alias"]
+            properties["mailAlternativeAddress"] = alias_emails
+            # Other emails as e-mails
+            other_emails = [email.value for email in user.emails if email.type != "alias" and email.type != "mailbox"]
+            properties["e-mail"] = other_emails
         else:
             properties["mailPrimaryAddress"] = None
             properties["mailAlternativeAddress"] = None
+            properties["e-mail"] = None
 
         # Map phone numbers
         if user.phone_numbers:
-            work_phone = next((phone.value for phone in user.phone_numbers if phone.type == "work"), None)
+            work_phone = [phone.value for phone in user.phone_numbers if phone.type == "work"]
             properties["phone"] = work_phone
-            mobile_phone = next((phone.value for phone in user.phone_numbers if phone.type == "mobile"), None)
+            mobile_phone = [phone.value for phone in user.phone_numbers if phone.type == "mobile"]
             properties["mobileTelephoneNumber"] = mobile_phone
+            pager_phone = [phone.value for phone in user.phone_numbers if phone.type == "pager"]
+            properties["pagerTelephoneNumber"] = pager_phone
+            home_phone = [phone.value for phone in user.phone_numbers if phone.type == "home"]
+            properties["homeTelephoneNumber"] = home_phone
         else:
-            properties["phone"] = None
-            properties["mobileTelephoneNumber"] = None
+            properties["phone"] = []
+            properties["mobileTelephoneNumber"] = []
+            properties["pagerTelephoneNumber"] = []
+            properties["homeTelephoneNumber"] = []
 
         # Map title
         if user.title:
@@ -94,6 +126,9 @@ class ScimToUdmMapper:
 
         # Return both properties and object attributes that should be set on the UDM object directly
         return properties
+
+    def _map_user_enterprise_extension(self, obj: Any, props: dict[str, Any]) -> None:
+        props["employeeNumber"] = obj.employee_number
 
     def map_group(self, group: Group) -> dict[str, Any]:
         """

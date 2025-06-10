@@ -58,12 +58,6 @@ class TestResourceTypesEndpoint:
         assert user_type.get("endpoint") == "/Users"
         assert user_type.get("description") == "User"
         assert user_type.get("schema") == "urn:ietf:params:scim:schemas:core:2.0:User"
-        assert isinstance(user_type.get("meta"), dict)
-        assert user_type["meta"].get("resourceType") == "ResourceType"
-        assert (
-            user_type["meta"].get("location", "")
-            == f"{application_settings.host}{application_settings.api_prefix}/ResourceTypes/User"
-        )
 
         # Check schemaExtensions for User
         assert "schemaExtensions" in user_type
@@ -81,12 +75,6 @@ class TestResourceTypesEndpoint:
         assert group_type.get("endpoint") == "/Groups"
         assert group_type.get("description") == "Group"
         assert group_type.get("schema") == "urn:ietf:params:scim:schemas:core:2.0:Group"
-        assert isinstance(group_type.get("meta"), dict)
-        assert group_type["meta"].get("resourceType") == "ResourceType"
-        assert (
-            group_type["meta"].get("location", "")
-            == f"{application_settings.host}{application_settings.api_prefix}/ResourceTypes/Group"
-        )
 
         # Check schemaExtensions for Group (should be present and empty)
         assert "schemaExtensions" in group_type

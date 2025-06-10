@@ -4,7 +4,9 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from scim2_models import Group, ListResponse
+from scim2_models import ListResponse
+
+from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions
 
 
 class GroupService(ABC):
@@ -14,7 +16,7 @@ class GroupService(ABC):
     """
 
     @abstractmethod
-    async def get_group(self, group_id: str) -> Group:
+    async def get_group(self, group_id: str) -> GroupWithExtensions:
         """
         Get a group by ID.
         Args:
@@ -29,7 +31,7 @@ class GroupService(ABC):
     @abstractmethod
     async def list_groups(
         self, filter_str: str | None = None, start_index: int = 1, count: int | None = None
-    ) -> ListResponse[Group]:
+    ) -> ListResponse[GroupWithExtensions]:
         """
         List groups with optional filtering and pagination.
         Args:
@@ -42,7 +44,7 @@ class GroupService(ABC):
         pass
 
     @abstractmethod
-    async def create_group(self, group: Group) -> Group:
+    async def create_group(self, group: GroupWithExtensions) -> GroupWithExtensions:
         """
         Create a new group.
         Args:
@@ -55,7 +57,7 @@ class GroupService(ABC):
         pass
 
     @abstractmethod
-    async def update_group(self, group_id: str, group: Group) -> Group:
+    async def update_group(self, group_id: str, group: GroupWithExtensions) -> GroupWithExtensions:
         """
         Update an existing group.
         Args:
@@ -82,5 +84,5 @@ class GroupService(ABC):
         pass
 
     @abstractmethod
-    async def apply_patch_operations(self, group_id: str, operations: list[dict[str, Any]]) -> Group:
+    async def apply_patch_operations(self, group_id: str, operations: list[dict[str, Any]]) -> GroupWithExtensions:
         pass

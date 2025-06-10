@@ -22,29 +22,24 @@ class ApplicationContainer(DeclarativeContainer):
     settings: ApplicationSettings = Singleton(application_settings)
 
     # Initialize repository container for CRUD operations
-    repo_config = settings().udm.model_dump()
-    repo_config["base_url"] = f"{settings().host}{settings().api_prefix}"
-    repo_config["url"] = repo_config["url"].rstrip("/") + "/"
-
-    repositories: RepositoryContainer = Singleton(RepositoryContainer)
-    repositories().config.from_dict(repo_config)
+    repositories: RepositoryContainer = RepositoryContainer(settings=settings)
 
     # Use repositories from the repository container if specified in DI settings
     # Otherwise use the default implementations
     if di.di_user_repo == "univention.scim.server.domain.repo.container.RepositoryContainer.user_crud_manager":
-        user_repo = repositories.provided.user_crud_manager()
+        user_repo = repositories.user_crud_manager
     else:
         user_repo = Singleton(di.di_user_repo)
 
     user_service: UserService = Singleton(di.di_user_service, user_repository=user_repo)
 
     if di.di_group_repo == "univention.scim.server.domain.repo.container.RepositoryContainer.group_crud_manager":
-        group_repo = repositories.provided.group_crud_manager()
+        group_repo = repositories.group_crud_manager
     else:
         group_repo = Singleton(di.di_group_repo)
 
     group_service: GroupService = Singleton(di.di_group_service, group_repository=group_repo)
-    schema_loader: LoadSchemas = Singleton(di.di_schema_loader, settings=settings)
+    schema_loader: LoadSchemas = Singleton(di.di_schema_loader)
 
     if settings().auth_enabled:
         oidc_configuration: OpenIDConnectConfiguration = Singleton(

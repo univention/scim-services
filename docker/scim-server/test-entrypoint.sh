@@ -1,10 +1,10 @@
 #!/bin/bash
- # SPDX-License-Identifier: AGPL-3.0-only
- # SPDX-FileCopyrightText: 2025 Univention GmbH
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2025 Univention GmbH
 
 
- cd scim-server
- uv sync
+cd scim-server
+uv sync
 
 # FIXME: tests need to be run in isolation because when they are run all in the same session some are failing
 # https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1236

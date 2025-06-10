@@ -3,14 +3,12 @@
 
 from __future__ import annotations
 
-import builtins
-from itertools import islice
 from typing import Any, Generic, TypeVar, cast
 
 from asgi_correlation_id import correlation_id as asgi_correlation_id  # Added for accessing upstream correlation ID
 from loguru import logger
 from scim2_models import Group, Resource, User
-from univention.admin.rest.client import UDM
+from univention.admin.rest.client import UDM, Object
 
 from univention.scim.server.domain.crud_scim import CrudScim
 from univention.scim.transformation.exceptions import MappingError
@@ -100,14 +98,7 @@ class CrudUdm(Generic[T], CrudScim[T]):
             udm_obj = results[0].open()
 
             # Convert UDM object to SCIM resource
-            if self.resource_class == User:
-                scim_resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.base_url)
-            elif self.resource_class == Group:
-                scim_resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.base_url)
-            else:
-                raise ValueError(f"Unsupported resource class: {self.resource_class}")
-
-            return cast(T, scim_resource)
+            return self._convert_object_to_scim(udm_obj)
 
         except Exception as e:
             self.logger.error(f"Error retrieving {self.resource_type}: {e}")
@@ -115,7 +106,7 @@ class CrudUdm(Generic[T], CrudScim[T]):
 
     async def list(
         self, filter_str: str | None = None, start_index: int = 1, count: int | None = None
-    ) -> builtins.list[T]:
+    ) -> tuple[int, list[T]]:
         """
         List resources with optional filtering and pagination.
         Args:
@@ -148,58 +139,29 @@ class CrudUdm(Generic[T], CrudScim[T]):
             )
 
             # Convert UDM objects to SCIM resources
-            resources: builtins.list[T] = []
+            resources: list[T] = []
             end_pos = offset + limit if limit else None
-            for result in islice(results, offset, end_pos):
+            total_results = 0
+            valid_objects = 0
+            for result in results:
                 udm_obj = result.open()
-                if self.resource_class == User:
-                    resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.base_url)
-                elif self.resource_class == Group:
-                    resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.base_url)
-                else:
+
+                try:
+                    resource = self._convert_object_to_scim(udm_obj)
+                except ValueError:
                     continue
 
-                resources.append(cast(T, resource))
+                total_results += 1
+                if valid_objects >= offset and (not end_pos or valid_objects < end_pos):
+                    resources.append(resource)
 
-            return resources
+                valid_objects += 1
+
+            return total_results, resources
 
         except Exception as e:
             self.logger.error(f"Error listing {self.resource_type}s: {e}")
             raise ValueError(f"Error listing {self.resource_type}s: {str(e)}") from e
-
-    async def count(self, filter_str: str | None = None) -> int:
-        """
-        Count resources matching a filter.
-        Args:
-            filter_str: SCIM filter expression
-        Returns:
-            Number of matching resources
-        """
-        self.logger.trace("Counting resources in UDM", filter_str=filter_str)
-
-        # Convert SCIM filter to UDM filter if provided
-        udm_filter = self._convert_scim_filter_to_udm(filter_str) if filter_str else None
-
-        try:
-            # Get the module
-            module = self.udm_client.get(self.udm_module_name)
-
-            # Count the objects by fetching them (UDM client doesn't have a dedicated count method)
-            num_results = sum(
-                1
-                for _ in module.search(
-                    udm_filter,
-                    position=None,  # Search everywhere
-                    scope="sub",  # Subtree search
-                    hidden=False,  # Don't include hidden objects
-                )
-            )
-
-            return num_results
-
-        except Exception as e:
-            self.logger.error(f"Error counting {self.resource_type}s: {e}")
-            raise ValueError(f"Error counting {self.resource_type}s: {str(e)}") from e
 
     async def create(self, resource: T) -> T:
         """
@@ -235,14 +197,7 @@ class CrudUdm(Generic[T], CrudScim[T]):
             udm_obj.save()
 
             # Convert the saved UDM object back to SCIM resource
-            if self.resource_class == User:
-                created_resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.base_url)
-            elif self.resource_class == Group:
-                created_resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.base_url)
-            else:
-                raise ValueError(f"Unsupported resource class: {self.resource_class}")
-
-            return cast(T, created_resource)
+            return self._convert_object_to_scim(udm_obj)
 
         except MappingError as e:
             self.logger.error(f"Error creating {self.resource_type}: {e}")
@@ -304,14 +259,7 @@ class CrudUdm(Generic[T], CrudScim[T]):
             udm_obj.save()
 
             # Convert the saved UDM object back to SCIM resource
-            if self.resource_class == User:
-                updated_resource = self.udm2scim_mapper.map_user(udm_obj, base_url=self.base_url)
-            elif self.resource_class == Group:
-                updated_resource = self.udm2scim_mapper.map_group(udm_obj, base_url=self.base_url)
-            else:
-                raise ValueError(f"Unsupported resource class: {self.resource_class}")
-
-            return cast(T, updated_resource)
+            return self._convert_object_to_scim(udm_obj)
 
         except MappingError as e:
             self.logger.error(f"Error updating {self.resource_type}: {e}")
@@ -356,6 +304,23 @@ class CrudUdm(Generic[T], CrudScim[T]):
         except Exception as e:
             self.logger.error(f"Error deleting {self.resource_type}: {e}")
             raise ValueError(f"Error deleting {self.resource_type}: {str(e)}") from e
+
+    def _convert_object_to_scim(self, obj: Object) -> T:
+        # Convert the saved UDM object back to SCIM resource
+        if self.resource_class == User:
+            try:
+                return cast(T, self.udm2scim_mapper.map_user(obj, base_url=self.base_url))
+            except ValueError:
+                logger.error("Failed to map object, ignoring it")
+                raise
+        elif self.resource_class == Group:
+            try:
+                return cast(T, self.udm2scim_mapper.map_group(obj, base_url=self.base_url))
+            except ValueError:
+                logger.error("Failed to map object, ignoring it")
+                raise
+        else:
+            raise ValueError(f"Unsupported resource class: {self.resource_class}")
 
     def _convert_scim_filter_to_udm(self, scim_filter: str) -> str:
         """
