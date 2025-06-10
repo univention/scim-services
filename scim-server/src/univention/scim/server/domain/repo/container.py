@@ -3,7 +3,9 @@
 
 from typing import TypeVar
 
+from asgi_correlation_id import correlation_id as asgi_correlation_id
 from dependency_injector import containers, providers
+from loguru import logger
 from scim2_models import Group, Resource, User
 from univention.admin.rest.client import UDM
 
@@ -17,12 +19,26 @@ from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 T = TypeVar("T", bound=Resource)
 
 
+def _generate_udm_request_id() -> str:
+    """
+    Returns the upstream correlation ID for UDM requests to maintain
+    the same correlation ID throughout the request chain.
+    """
+    upstream_correlation_id: str = str(asgi_correlation_id.get())
+    logger.bind(
+        correlation_id=upstream_correlation_id,
+    ).debug("Using upstream correlation ID for UDM request in repository container.")
+    return upstream_correlation_id
+
+
 class RepositoryContainer(containers.DeclarativeContainer):
     """Container for repository-related dependencies."""
 
     config = providers.Configuration()
 
-    udm_client: UDM = providers.Singleton(UDM.http, config.url, config.username, config.password)
+    udm_client: UDM = providers.Singleton(
+        UDM.http, config.url, config.username, config.password, request_id_generator=_generate_udm_request_id
+    )
     cache: UdmIdCache = providers.Singleton(UdmIdCache, udm_client, 120)
 
     # Mappers

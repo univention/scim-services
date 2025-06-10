@@ -5,6 +5,7 @@ import time
 from datetime import UTC, datetime
 from typing import Any
 
+from asgi_correlation_id import correlation_id as asgi_correlation_id
 from fastapi import HTTPException, Request, status
 from loguru import logger
 from univention.admin.rest.client import UDM
@@ -22,8 +23,24 @@ class AllowGroup(Authorization):
         self.group_dn = group_dn
         self.valid_user_cache: dict[str, int] = {}
 
-        # Initialize UDM client
-        self.udm_client = UDM.http(f"{udm_settings.url.rstrip('/')}/", udm_settings.username, udm_settings.password)
+        # Initialize UDM client with correlation ID support
+        self.udm_client = UDM.http(
+            f"{udm_settings.url.rstrip('/')}/",
+            udm_settings.username,
+            udm_settings.password,
+            request_id_generator=self._generate_udm_request_id,
+        )
+
+    def _generate_udm_request_id(self) -> str:
+        """
+        Returns the upstream correlation ID for UDM requests to maintain
+        the same correlation ID throughout the request chain.
+        """
+        upstream_correlation_id: str = str(asgi_correlation_id.get())
+        logger.bind(
+            correlation_id=upstream_correlation_id,
+        ).debug("Using upstream correlation ID for UDM request in authz.")
+        return upstream_correlation_id
 
     def _check_cache(self, user: dict[str, Any]) -> bool:
         cache_to_delete = set()

@@ -13,9 +13,10 @@ dependencies = [
     "dependency-injector>=4",
     "requests>=2.32.3",
     "jwcrypto>=1.5.6",
-    "udm-rest-api-client[async]>=0.0.2",
+    "udm-rest-api-client[async]==0.0.4",
     "scim-udm-transformer-lib",
     "requests>=2.32.3",
+    "asgi-correlation-id>=4.3.4",
 ]
 
 [dependency-groups]
@@ -26,11 +27,14 @@ dev = [
     "pytest-httpserver>=1.1.2",
     "pytestarch>=3",
     "requests>=2.32.3",
+    "requests-mock>=1.12.1",
+    "respx>=0.22.0",
 ]
 
 [tool.uv.sources]
 scim-udm-transformer-lib = { workspace = true }
 lancelog = { index = "gitlab" }
+udm-rest-api-client = { index = "univention" }
 
 [[tool.uv.index]]
 name = "gitlab"
@@ -38,6 +42,11 @@ url = "https://git.knut.univention.de/api/v4/projects/1449/packages/pypi/simple"
 explicit = true
 default = false
 
+[[tool.uv.index]]
+name = "univention"
+url = "https://git.knut.univention.de/api/v4/projects/1155/packages/pypi/simple"  # udm-rest-api-client
+explicit = true
+default = false
 
 [project.scripts]
 scim-server = "univention.scim.server.main:run"

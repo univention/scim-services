@@ -49,6 +49,7 @@ services:
       TLS_MODE: "off"
       MACHINE_SECRET: univention
       LDAP_CN_ADMIN_PW: univention
+      DEBUG_LEVEL: 99
 
   ldap-server:
     platform: linux/amd64

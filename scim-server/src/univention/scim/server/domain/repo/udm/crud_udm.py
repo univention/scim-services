@@ -7,6 +7,7 @@ import builtins
 from itertools import islice
 from typing import Any, Generic, TypeVar, cast
 
+from asgi_correlation_id import correlation_id as asgi_correlation_id  # Added for accessing upstream correlation ID
 from loguru import logger
 from scim2_models import Group, Resource, User
 from univention.admin.rest.client import UDM
@@ -55,6 +56,17 @@ class CrudUdm(Generic[T], CrudScim[T]):
 
         self.logger = logger.bind(resource_type=resource_type)
         self.logger.info("Initialized UDM CRUD with UDM REST API client")
+
+    def _generate_udm_request_id(self) -> str:
+        """
+        Returns the upstream correlation ID for UDM requests to maintain
+        the same correlation ID throughout the request chain.
+        """
+        upstream_correlation_id: str = str(asgi_correlation_id.get())
+        self.logger.bind(
+            correlation_id=upstream_correlation_id,
+        ).debug("Using upstream correlation ID for UDM request.")
+        return upstream_correlation_id
 
     async def get(self, resource_id: str) -> T:
         """

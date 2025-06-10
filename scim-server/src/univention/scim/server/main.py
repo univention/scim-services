@@ -4,6 +4,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 import uvicorn
+from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI, HTTPException, Security
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -116,6 +117,10 @@ app: FastAPI = FastAPI(
         "appName": "Nubus SCIM-API documentation",
     },
 )
+
+# Add correlation ID middleware
+
+app.add_middleware(CorrelationIdMiddleware)
 
 # Add timing middleware (before request logging middleware)
 add_timing_middleware(app, prefix="SCIM ")

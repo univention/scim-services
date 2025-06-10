@@ -58,7 +58,7 @@ RUN \
 COPY --from=build --chown=scim-server:scim-server /app/dist/ /app/
 
 RUN apt install -y python3-pip
-RUN pip3 install --break-system-packages --no-cache-dir --extra-index-url https://git.knut.univention.de/api/v4/projects/1449/packages/pypi/simple /app/*.whl
+RUN pip3 install --break-system-packages --no-cache-dir --extra-index-url https://git.knut.univention.de/api/v4/projects/1449/packages/pypi/simple --extra-index-url https://git.knut.univention.de/api/v4/projects/1155/packages/pypi/simple /app/*.whl
 
 WORKDIR /app/
 USER scim-server
