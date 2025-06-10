@@ -9,5 +9,5 @@
   docker compose pull
   docker compose build test
   docker compose run --rm -ti test $@
-  docker compose down --volumes
+  docker compose down --volumes --remove-orphans
 )

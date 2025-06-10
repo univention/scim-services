@@ -354,7 +354,6 @@ async def test_put_user_with_members_endpoint(
     assert get_user_response.status_code == 200
     updated_user = get_user_response.json()
 
-    print(updated_user)
     # Because of performance concerns we do not map user groups
     assert "groups" not in updated_user, "Groups field available also it should not be mapped"
 

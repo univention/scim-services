@@ -10,5 +10,6 @@
   docker compose build scim-server
   docker compose run --rm -ti scim2-tester
   docker compose logs scim-server > ../../scim-server.logs
-  docker compose down --volumes
+  docker compose logs udm-rest-api > ../../udm-rest-api.logs
+  docker compose down --volumes --remove-orphans
 )

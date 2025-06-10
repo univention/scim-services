@@ -54,7 +54,7 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
 
         raise ValueError(f"Unknown resource type: {resource_type}")
 
-    def _get_meta(self, base_url: str, obj: Any) -> Meta:
+    def _get_meta(self, base_url: str, obj: Any, resource_type: str) -> Meta:
         """
         Map UDM object to SCIM Meta object
         Args:
@@ -63,14 +63,6 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
         Returns:
             SCIM Meta object
         """
-
-        if obj.module.name == "users/user":
-            resource_type = "User"
-        elif obj.module.name == "groups/group":
-            resource_type = "Group"
-        else:
-            raise ValueError(f"Unknown UDM module: {obj.module.name}")
-
         meta_data = Meta(
             resource_type=resource_type,
             location=self._get_ref(base_url, resource_type, obj.properties.get("univentionObjectIdentifier")),
@@ -83,6 +75,23 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
             meta_data.version = obj.etag
 
         return meta_data
+
+    def _get_formarted_address(self, data: dict[str, str]) -> str:
+        formatted_address = ""
+        if "street" in data and data["street"]:
+            formatted_address += data["street"] + "\n"
+        if "city" in data and data["city"]:
+            formatted_address += data["city"] + " "
+        if "postcode" in data and data["postcode"]:
+            formatted_address += data["postcode"] + "\n"
+        if "zipcode" in data and data["zipcode"]:
+            formatted_address += data["zipcode"] + "\n"
+        if "state" in data and data["state"]:
+            formatted_address += data["state"] + " "
+        if "country" in data and data["country"]:
+            formatted_address += data["country"]
+
+        return formatted_address.strip()
 
     def map_user(self, udm_user: Any, base_url: str = "") -> UserType:
         """
@@ -100,7 +109,7 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
         user_id = props.get("univentionObjectIdentifier")
 
         if not user_id:
-            logger.errorr("univentionObjectIdentifier is required", dn=udm_user.dn)
+            logger.error("univentionObjectIdentifier is required", dn=udm_user.dn)
             raise ValueError("univentionObjectIdentifier is required")
 
         # Create User object with basic properties
@@ -108,12 +117,16 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
             id=user_id,
             user_name=props.get("username"),
             active=not props.get("disabled", False),
-            meta=self._get_meta(base_url, udm_user),
-            display_name=props.get("displayName", None),
-            title=props.get("title", None),
-            user_type=props.get("employeeType", None),
-            preferred_language=props.get("preferredLanguage", None),
+            meta=self._get_meta(base_url, udm_user, "User"),
+            display_name=props.get("displayName"),
+            title=props.get("title"),
+            user_type=props.get("employeeType"),
+            preferred_language=props.get("preferredLanguage"),
         )
+
+        # To make consumer tests happy map out UUID to external id for now
+        # FIXME: https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1235
+        user.external_id = user_id
 
         for schema, extension in user.get_extension_models().items():
             if not hasattr(user, extension.__name__):
@@ -136,13 +149,13 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
             else:
                 logger.info("Ignoring unknown user extension", schema=schema)
 
-            user.schemas.append(schema)
+            user.schemas = user.set_extension_schemas([schema])
 
         # Map name
         if any(key in props for key in ["firstname", "lastname"]):
             user.name = Name(
-                given_name=props.get("firstname", ""),
-                family_name=props.get("lastname", ""),
+                given_name=props.get("firstname"),
+                family_name=props.get("lastname"),
                 formatted=f"{props.get('firstname', '')} {props.get('lastname', '')}".strip(),
             )
 
@@ -207,21 +220,9 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
 
         # If any address field is available, create an address
         if any(value for value in address_fields.values() if value):
-            formatted_address = ""
-            if address_fields["street"]:
-                formatted_address += address_fields["street"] + "\n"
-            if address_fields["city"]:
-                formatted_address += address_fields["city"] + " "
-            if address_fields["postcode"]:
-                formatted_address += address_fields["postcode"] + "\n"
-            if address_fields["state"]:
-                formatted_address += address_fields["state"] + " "
-            if address_fields["country"]:
-                formatted_address += address_fields["country"]
-
             addresses.append(
                 Address(
-                    formatted=formatted_address.strip(),
+                    formatted=self._get_formarted_address(address_fields),
                     street_address=address_fields["street"],
                     locality=address_fields["city"],
                     postal_code=address_fields["postcode"],
@@ -233,15 +234,14 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
 
         if "homePostalAddress" in props and props["homePostalAddress"]:
             home_addresses = props["homePostalAddress"]
-            if isinstance(home_addresses, str):
-                home_addresses = [home_addresses]
 
-            if home_addresses:
-                # Take first home address and use it
-                home_addr = home_addresses[0]
+            for address in home_addresses:
                 addresses.append(
                     Address(
-                        formatted=home_addr,
+                        formatted=self._get_formarted_address(address),
+                        street_address=address.get("street"),
+                        locality=address.get("city"),
+                        postal_code=address.get("zipcode"),
                         type="home",
                     )
                 )
@@ -251,9 +251,9 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
 
         # Handle X.509 certificates
         certificates = []
-        if hasattr(props, "userCertificate") and props.get("userCertificate"):
+        if props.get("userCertificate"):
             cert_value = props["userCertificate"]
-            display = props.get("certificateSubjectCommonName", "")
+            display = props.get("certificateSubjectCommonName")
 
             certificates.append(X509Certificate(value=cert_value, display=display))
 
@@ -300,15 +300,15 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
         return cast(UserType, user)
 
     def _map_user_enterprise_extension(self, obj: Any, props: dict[str, Any]) -> None:
-        obj.employee_number = props["employeeNumber"]
+        obj.employee_number = props.get("employeeNumber")
 
     def _map_user_univention_extension(self, obj: Any, props: dict[str, Any]) -> None:
-        obj.description = props["description"]
-        obj.password_recovery_email = props["PasswordRecoveryEmail"]
+        obj.description = props.get("description")
+        obj.password_recovery_email = props.get("PasswordRecoveryEmail")
 
     def _map_user_customer1_extension(self, obj: Any, props: dict[str, Any]) -> None:
-        obj.primary_org_unit = props["primaryOrgUnit"]
-        obj.secondary_org_units = props["secondaryOrgUnits"]
+        obj.primary_org_unit = props.get("primaryOrgUnit")
+        obj.secondary_org_units = props.get("secondaryOrgUnits")
 
     def map_group(self, udm_group: Any, base_url: str = "") -> GroupType:
         """
@@ -331,11 +331,12 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
 
         # Create Group object
         group = self.group_type(
-            id=group_id,
-            display_name=props.get("name", ""),
-            meta=self._get_meta(base_url, udm_group),
-            external_id=props.get("univentionObjectIdentifier"),
+            id=group_id, display_name=props.get("name", ""), meta=self._get_meta(base_url, udm_group, "Group")
         )
+
+        # To make consumer tests happy map out UUID to external id for now
+        # FIXME: https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1235
+        group.external_id = group_id
 
         for schema, extension in group.get_extension_models().items():
             if not hasattr(group, extension.__name__):
@@ -362,17 +363,17 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
             user_dns = props["users"]
 
             for dn in user_dns:
-                user = self.cache.get_user(dn)
+                cached_user = self.cache.get_user(dn)
                 # When mapping from UDM to SCIM it is a read request from the scim-server
                 # so just ignore entities which are not found
-                if not user:
+                if not cached_user:
                     continue
 
                 group.members.append(
                     GroupMember(
-                        value=user.uuid,
-                        display=user.display_name,
-                        ref=self._get_ref(base_url, "User", user.uuid),
+                        value=cached_user.uuid,
+                        display=cached_user.display_name,
+                        ref=self._get_ref(base_url, "User", cached_user.uuid),
                         type="User",
                     )
                 )
@@ -384,17 +385,17 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
             group_dns = props["nestedGroup"]
 
             for dn in group_dns:
-                group = self.cache.get_group(dn)
+                cached_group = self.cache.get_group(dn)
                 # When mapping from UDM to SCIM it is a read request from the scim-server
                 # so just ignore entities which are not found
-                if not group:
+                if not cached_group:
                     continue
 
                 group.members.append(
                     GroupMember(
-                        value=group.uuid,
-                        display=group.display_name,
-                        ref=self._get_ref(base_url, "Group", group.uuid),
+                        value=cached_group.uuid,
+                        display=cached_group.display_name,
+                        ref=self._get_ref(base_url, "Group", cached_group.uuid),
                         type="Group",
                     )
                 )
@@ -409,4 +410,6 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
             from univention.scim.server.models.extensions.univention_group import GuardianMember
 
             for member_role in props["guardianMemberRoles"]:
-                obj.member_roles.append({"value": member_role, "type": "guardian"})
+                obj.member_roles.append(GuardianMember(value=member_role, type="guardian"))
+
+        obj.description = props.get("description")

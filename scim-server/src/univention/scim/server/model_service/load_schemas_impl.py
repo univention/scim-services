@@ -13,8 +13,8 @@ from scim2_models import (
 )
 
 from univention.scim.server.models.extensions.customer1_user import Customer1User
-from univention.scim.server.model_service.extensions.univention_group import UniventionGroup
-from univention.scim.server.model_service.extensions.univention_user import UniventionUser
+from univention.scim.server.models.extensions.univention_group import UniventionGroup
+from univention.scim.server.models.extensions.univention_user import UniventionUser
 from univention.scim.server.model_service.load_schemas import LoadSchemas
 
 

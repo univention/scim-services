@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+import base64
 from typing import Any
 
 from loguru import logger
@@ -66,8 +67,6 @@ class ScimToUdmMapper:
             else:
                 logger.info("Ignoring unknown user extension", schema=schema)
 
-            user.schemas.append(schema)
-
         if user.roles:
             properties["guardianRoles"] = [x.value for x in user.roles if x.type == "guardian-direct"]
 
@@ -114,6 +113,43 @@ class ScimToUdmMapper:
         if user.title:
             properties["title"] = user.title
 
+        # Map addresses
+        if user.addresses:
+            work_address = None
+            other_addresses = []
+            for address in user.addresses:
+                if address.type == "work":
+                    work_address = address
+                else:
+                    other_addresses.append(address)
+
+            if work_address:
+                properties["street"] = work_address.street_address
+                properties["city"] = work_address.locality
+                properties["postcode"] = work_address.postal_code
+                properties["country"] = work_address.country
+                properties["state"] = work_address.region
+            if len(other_addresses) > 0:
+                properties["homePostalAddress"] = []
+                for address in other_addresses:
+                    properties["homePostalAddress"].append(
+                        {"street": address.street_address, "city": address.locality, "zipcode": address.postal_code}
+                    )
+
+        # Map certificates
+        if user.x509_certificates and len(user.x509_certificates) == 1:
+            # Store cert as b64 encoded string in UDM
+            properties["userCertificate"] = base64.b64encode(user.x509_certificates[0].value).decode("utf-8")
+            properties["certificateSubjectCommonName"] = user.x509_certificates[0].display
+
+        # Map roles
+        if user.roles:
+            properties["guardianRoles"] = [x.value for x in user.roles if x.type == "guardian-direct"]
+            properties["guardianInheritedRoles"] = [x.value for x in user.roles if x.type == "guardian-indirect"]
+        else:
+            properties["guardianRoles"] = []
+            properties["guardianInheritedRoles"] = []
+
         # TODO: Do not map groups for now, it will reduce performance because many LDAP queries are required
         # Map groups
         # if user.groups and self.cache:
@@ -134,15 +170,20 @@ class ScimToUdmMapper:
         return properties
 
     def _map_user_enterprise_extension(self, obj: Any, props: dict[str, Any]) -> None:
-        props["employeeNumber"] = obj.employee_number
+        if obj.employee_number:
+            props["employeeNumber"] = obj.employee_number
 
     def _map_user_univention_extension(self, obj: Any, props: dict[str, Any]) -> None:
-        props["description"] = obj.description
-        props["PasswordRecoveryEmail"] = obj.password_recovery_email
+        if obj.description:
+            props["description"] = obj.description
+        if obj.password_recovery_email:
+            props["PasswordRecoveryEmail"] = obj.password_recovery_email
 
     def _map_user_customer1_extension(self, obj: Any, props: dict[str, Any]) -> None:
-        props["primaryOrgUnit"] = obj.primary_org_unit
-        props["secondaryOrgUnits"] = obj.secondary_org_units
+        if obj.primary_org_unit:
+            props["primaryOrgUnit"] = obj.primary_org_unit
+        if obj.secondary_org_units:
+            props["secondaryOrgUnits"] = obj.secondary_org_units
 
     def map_group(self, group: Group) -> dict[str, Any]:
         """
@@ -178,7 +219,7 @@ class ScimToUdmMapper:
 
         # Map members
         if group.members and self.cache:
-            members = [x for x in group.members if x.type == "User"]
+            members = [x for x in group.members if x.type != "Group"]
             nested_groups = [x for x in group.members if x.type == "Group"]
 
             if len(members) > 0:
@@ -213,3 +254,6 @@ class ScimToUdmMapper:
 
             for member_role in obj.member_roles:
                 props["guardianMemberRoles"].append(member_role.value)
+
+        if obj.description:
+            props["description"] = obj.description

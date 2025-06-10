@@ -3,10 +3,10 @@
 
 from typing import Annotated
 
-from scim2_models import ComplexAttribute, Extension, Required
+from scim2_models import Extension, MultiValuedComplexAttribute, Required
 
 
-class GuardianMember(ComplexAttribute):
+class GuardianMember(MultiValuedComplexAttribute):
     value: str | None = None
     type: str | None = None
 

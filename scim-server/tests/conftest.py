@@ -5,7 +5,7 @@ import random
 import socket
 import urllib.parse
 from collections.abc import AsyncGenerator, Callable, Generator
-from contextlib import _GeneratorContextManager, contextmanager
+from contextlib import _GeneratorContextManager, contextmanager, suppress
 from typing import Any, TypeVar
 from unittest.mock import MagicMock
 
@@ -16,7 +16,7 @@ from faker import Faker
 from fastapi.testclient import TestClient
 from loguru import logger
 from scim2_models import Address, Email, Group, GroupMember, Name, Resource, User
-from univention.admin.rest.client import UDM
+from univention.admin.rest.client import UDM, UnprocessableEntity
 
 from helpers.allow_all_authn import AllowAllAuthorization, AllowAllBearerAuthentication, OpenIDConnectConfigurationMock
 from helpers.udm_client import MockUdm
@@ -316,6 +316,83 @@ def authenticator_mock() -> Authentication:
 def disable_auththentication(application_settings: ApplicationSettings) -> ApplicationSettings:
     application_settings.auth_enabled = False
     return application_settings
+
+
+@pytest.fixture(scope="session", autouse=True)
+def add_extended_attributes() -> None:
+    if skip_if_no_udm():
+        return
+
+    udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
+    udm_username = os.environ.get("UDM_USERNAME", "admin")
+    udm_password = os.environ.get("UDM_PASSWORD", "univention")
+
+    print("Adding extended attributes")
+    client = UDM.http(udm_url, udm_username, udm_password)
+    module = client.get("settings/extended_attribute")
+
+    # Univention extended attribute PasswordRecoveryEmail
+    udm_obj = module.new(position="cn=custom attributes,cn=univention,dc=univention-organization,dc=intranet")
+    udm_obj.properties["name"] = "UniventionPasswordSelfServiceEmail"
+    udm_obj.properties["CLIName"] = "PasswordRecoveryEmail"
+    udm_obj.properties["module"] = ["users/user"]
+    udm_obj.properties["default"] = ""
+    udm_obj.properties["ldapMapping"] = "univentionPasswordSelfServiceEmail"
+    udm_obj.properties["objectClass"] = "univentionPasswordSelfService"
+    udm_obj.properties["shortDescription"] = "Password recovery e-mail address"
+    udm_obj.properties["multivalue"] = False
+    udm_obj.properties["valueRequired"] = False
+    udm_obj.properties["mayChange"] = True
+    udm_obj.properties["doNotSearch"] = False
+    udm_obj.properties["deleteObjectClass"] = False
+    udm_obj.properties["overwriteTab"] = False
+    udm_obj.properties["fullWidth"] = True
+
+    # ignore error 422, it is thrown if the attribute already exists
+    with suppress(UnprocessableEntity):
+        udm_obj.save()
+
+    # Customer1 extended attribute primaryOrgUnit
+    udm_obj = module.new(position="cn=custom attributes,cn=univention,dc=univention-organization,dc=intranet")
+    udm_obj.properties["name"] = "Customer1PrimaryOrgUnit"
+    udm_obj.properties["CLIName"] = "primaryOrgUnit"
+    udm_obj.properties["module"] = ["users/user"]
+    udm_obj.properties["default"] = ""
+    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute1"
+    udm_obj.properties["objectClass"] = "univentionFreeAttributes"
+    udm_obj.properties["shortDescription"] = "Customer1 primary org unit"
+    udm_obj.properties["multivalue"] = False
+    udm_obj.properties["valueRequired"] = False
+    udm_obj.properties["mayChange"] = True
+    udm_obj.properties["doNotSearch"] = False
+    udm_obj.properties["deleteObjectClass"] = False
+    udm_obj.properties["overwriteTab"] = False
+    udm_obj.properties["fullWidth"] = True
+
+    # ignore error 422, it is thrown if the attribute already exists
+    with suppress(UnprocessableEntity):
+        udm_obj.save()
+
+    # Customer1 extended attribute secondaryOrgUnits
+    udm_obj = module.new(position="cn=custom attributes,cn=univention,dc=univention-organization,dc=intranet")
+    udm_obj.properties["name"] = "Customer1SecondaryOrgUnits"
+    udm_obj.properties["CLIName"] = "secondaryOrgUnits"
+    udm_obj.properties["module"] = ["users/user"]
+    udm_obj.properties["default"] = ""
+    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute2"
+    udm_obj.properties["objectClass"] = "univentionFreeAttributes"
+    udm_obj.properties["shortDescription"] = "Customer1 primary secondary org units"
+    udm_obj.properties["multivalue"] = True
+    udm_obj.properties["valueRequired"] = False
+    udm_obj.properties["mayChange"] = True
+    udm_obj.properties["doNotSearch"] = False
+    udm_obj.properties["deleteObjectClass"] = False
+    udm_obj.properties["overwriteTab"] = False
+    udm_obj.properties["fullWidth"] = True
+
+    # ignore error 422, it is thrown if the attribute already exists
+    with suppress(UnprocessableEntity):
+        udm_obj.save()
 
 
 @pytest.fixture

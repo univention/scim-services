@@ -12,7 +12,7 @@ services:
     #image: gitregistry.knut.univention.de/dev/projects/scim/scim-services/scim-server/testrunner:${IMAGE_TAG:-latest}
     depends_on:
       udm-rest-api:
-        condition: service_started
+        condition: service_healthy
     cap_drop:
       - ALL
     volumes:
@@ -34,7 +34,7 @@ services:
     platform: "linux/amd64"
     depends_on:
       ldap-server:
-        condition: service_started
+        condition: service_healthy
     ports:
       - 9979:9979
     volumes:
@@ -50,6 +50,12 @@ services:
       MACHINE_SECRET: univention
       LDAP_CN_ADMIN_PW: univention
       DEBUG_LEVEL: 99
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import sys, requests; sys.exit(0) if requests.get('http://localhost:9979/udm').status_code == 401 else sys.exit(1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
 
   ldap-server:
     platform: linux/amd64
@@ -74,6 +80,12 @@ services:
         source: ./base.conf
         target: /etc/univention/base.conf
         read_only: true
+    healthcheck:
+      test: ["CMD-SHELL", "ldapsearch -H ldapi:/// -Y EXTERNAL -b \"cn=config\" -LLL \"(&(objectClass=mdb))\" dn"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 5s
 
   scim-server:
     build:
@@ -88,11 +100,12 @@ services:
       API_PREFIX: /scim/v2
       LOG_LEVEL: DEBUG
       PATCH_ENABLED: true
+      ADD_LDAP_ATTRIBUTES: true
     ports:
       - "8000:8000"
     depends_on:
       udm-rest-api:
-        condition: service_started
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "python3", "-c", "import sys, requests; sys.exit(0) if requests.get('http://localhost:8000/scim/v2/ServiceProviderConfig').status_code == 200 else sys.exit(1)"]
       interval: 30s
@@ -102,10 +115,13 @@ services:
     command: uvicorn univention.scim.server.main:app --host 0.0.0.0 --port 8000
 
   scim2-tester:
-    image: python:3.11-slim
+    # slim image has no git installed
+    #image: python:3.11-slim
+    image: python:3.11
     entrypoint: ""
+    # For now use a forked scim2-client with a fix for multiple extension until a new upstream release is available
     command: >
-      bash -c "pip install scim2-cli &&
+      bash -c "pip install git+https://github.com/J-Bu/scim2-client.git scim2-cli &&
       scim2 -u http://scim-server:8000/scim/v2/ test"
     depends_on:
       scim-server:

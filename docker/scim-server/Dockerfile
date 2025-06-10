@@ -63,4 +63,6 @@ RUN pip3 install --break-system-packages --no-cache-dir --extra-index-url https:
 WORKDIR /app/
 USER scim-server
 
-CMD ["scim-server"]
+COPY docker/scim-server/scim-server-entrypoint.sh /entrypoint.sh
+COPY docker/scim-server/create_ldap_attributes.py /create_ldap_attributes.py
+ENTRYPOINT ["/entrypoint.sh"]

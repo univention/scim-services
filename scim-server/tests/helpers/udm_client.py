@@ -89,6 +89,13 @@ class MockUdm:
 
         return group
 
+    def add_raw_group(self, props: dict[str, Any]) -> MagicMock:
+        group = self._create_object(self.groups, self._get_group_dn, self.get("groups/group"))
+        group.properties = props
+        group.save()
+
+        return group
+
     def add_user(self, groups: list[str] | None = None) -> MagicMock:
         user_data = self.random_user_factory([])
         user_properties = self.scim2udm_mapper.map_user(user_data)
@@ -97,6 +104,13 @@ class MockUdm:
 
         user = self._create_object(self.users, self._get_user_dn, self.get("users/user"))
         user.properties = user_properties
+        user.save()
+
+        return user
+
+    def add_raw_user(self, props: dict[str, Any]) -> MagicMock:
+        user = self._create_object(self.users, self._get_user_dn, self.get("users/user"))
+        user.properties = props
         user.save()
 
         return user
