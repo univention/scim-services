@@ -12,7 +12,7 @@ from univention.scim.server.domain.rules.action import Action
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.rules.loader import RuleLoader
 from univention.scim.server.domain.user_service import UserService
-from univention.scim.server.model_service.load_schemas_impl import UserWithExtensions
+from univention.scim.server.models.types import UserWithExtensions
 
 
 class UserServiceImpl(UserService, PatchMixin):

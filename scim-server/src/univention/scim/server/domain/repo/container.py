@@ -14,7 +14,7 @@ from univention.scim.server.domain.crud_scim import CrudScim
 from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.repo.udm.crud_udm import CrudUdm
 from univention.scim.server.domain.repo.udm.udm_id_cache import UdmIdCache
-from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions, UserWithExtensions
+from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
 from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 
 

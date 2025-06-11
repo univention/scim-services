@@ -405,5 +405,8 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
         if "guardianMemberRoles" in props and props["guardianMemberRoles"]:
             obj.member_roles = []
 
+            # FIXME: Hack for now to hardcode it, when only using a dict pydantic will fail to serialize it
+            from univention.scim.server.models.extensions.univention_group import GuardianMember
+
             for member_role in props["guardianMemberRoles"]:
                 obj.member_roles.append({"value": member_role, "type": "guardian"})

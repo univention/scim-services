@@ -11,7 +11,7 @@ from scim2_models import ListResponse
 from univention.scim.server.config import application_settings
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.domain.group_service import GroupService
-from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions
+from univention.scim.server.models.types import GroupWithExtensions
 from univention.scim.transformation.exceptions import MappingError
 
 

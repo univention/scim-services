@@ -29,7 +29,7 @@ from univention.scim.server.domain.repo.udm.crud_udm import CrudUdm
 from univention.scim.server.domain.repo.udm.udm_id_cache import UdmIdCache
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
 from univention.scim.server.main import app
-from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions, UserWithExtensions
+from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
 from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 
 

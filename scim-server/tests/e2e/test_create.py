@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from tests.conftest import skip_if_no_udm
-from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions, UserWithExtensions
+from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
 
 
 @pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")

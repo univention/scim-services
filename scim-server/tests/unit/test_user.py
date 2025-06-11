@@ -6,7 +6,7 @@ from faker import Faker
 from fastapi.testclient import TestClient
 from scim2_models import Name
 
-from univention.scim.server.model_service.load_schemas_impl import UserWithExtensions
+from univention.scim.server.models.types import UserWithExtensions
 
 
 # We can only test this with the mocked UDM because a real UDM

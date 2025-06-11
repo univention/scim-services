@@ -4,7 +4,7 @@
 from faker import Faker
 from fastapi.testclient import TestClient
 
-from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions
+from univention.scim.server.models.types import GroupWithExtensions
 
 
 test_group = GroupWithExtensions(

@@ -1,22 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-from typing import Annotated, Union
-
 from loguru import logger
-from pydantic import Field
 from scim2_models import (
-    AnyExtension,
-    Email as ScimEmail,
     EnterpriseUser,
     Group,
-    Name as ScimName,
-    Required,
     ResourceType,
     Schema,
     SchemaExtension,
     ServiceProviderConfig,
-    User as ScimUser,
+    User,
 )
 
 from univention.scim.server.models.extensions.customer1_user import Customer1User
@@ -36,7 +29,7 @@ class LoadSchemasImpl(LoadSchemas):
         """Get the User schema."""
         # scim2-models does not add parent members to schema so patch schema on our own
         logger.debug("Loading User schema")
-        user_schema = ScimUser.to_schema()
+        user_schema = User.to_schema()
 
         # UDM requires a last name so adept our schema accordingly
         name_attribute = next(x for x in user_schema.attributes if x.name == "name")
@@ -84,7 +77,7 @@ class LoadSchemasImpl(LoadSchemas):
         """Get the available resource types."""
         logger.debug("Loading resource types")
 
-        user_type = ResourceType.from_resource(ScimUser)
+        user_type = ResourceType.from_resource(User)
         for extension in self._get_user_extension_schemas():
             user_type.schema_extensions.append(
                 SchemaExtension(

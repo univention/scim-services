@@ -15,7 +15,7 @@ from univention.scim.server.domain.rules.action import Action
 from univention.scim.server.domain.rules.display_name import UserDisplayNameRule
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
-from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions, UserWithExtensions
+from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
 from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 
 

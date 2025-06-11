@@ -9,7 +9,7 @@ from scim2_models import GroupMember
 
 from helpers.udm_client import MockUdm
 from univention.scim.server.domain.repo.udm.udm_id_cache import CacheItem, UdmIdCache
-from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions, UserWithExtensions
+from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
 
 
 @pytest.fixture

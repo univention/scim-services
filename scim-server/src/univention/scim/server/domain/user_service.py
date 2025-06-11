@@ -6,7 +6,7 @@ from typing import Any
 
 from scim2_models import ListResponse
 
-from univention.scim.server.model_service.load_schemas_impl import UserWithExtensions
+from univention.scim.server.models.types import UserWithExtensions
 
 
 class UserService(ABC):

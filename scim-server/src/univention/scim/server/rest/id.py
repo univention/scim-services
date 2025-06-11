@@ -10,7 +10,7 @@ from loguru import logger
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.domain.group_service import GroupService
 from univention.scim.server.domain.user_service import UserService
-from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions, UserWithExtensions
+from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
 
 
 router = APIRouter()

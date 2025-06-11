@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 from scim2_models import GroupMember
 from univention.admin.rest.client import Module, ShallowObject
 
-from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions, UserWithExtensions
+from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
 from univention.scim.transformation import ScimToUdmMapper
 
 

@@ -7,7 +7,7 @@ from typing import Any
 from loguru import logger
 from scim2_models import Resource
 
-from univention.scim.server.model_service.load_schemas_impl import GroupWithExtensions, UserWithExtensions
+from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
 
 
 class ScimPatchError(Exception):
