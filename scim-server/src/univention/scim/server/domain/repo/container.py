@@ -32,6 +32,7 @@ def _generate_udm_request_id() -> str:
     ).debug("Using upstream correlation ID for UDM request in repository container.")
     return upstream_correlation_id
 
+
 def _get_base_url(host: str, api_prefix: str) -> str:
     return f"{host}{api_prefix}"
 
@@ -42,7 +43,11 @@ class RepositoryContainer(containers.DeclarativeContainer):
     settings = providers.Dependency(instance_of=ApplicationSettings)
 
     udm_client: UDM = providers.Singleton(
-        UDM.http, settings.provided.udm.url, settings.provided.udm.username, settings.provided.udm.password, request_id_generator=_generate_udm_request_id
+        UDM.http,
+        settings.provided.udm.url,
+        settings.provided.udm.username,
+        settings.provided.udm.password,
+        request_id_generator=_generate_udm_request_id,
     )
     cache: UdmIdCache = providers.Singleton(UdmIdCache, udm_client, 120)
 
@@ -64,7 +69,9 @@ class RepositoryContainer(containers.DeclarativeContainer):
         udm2scim_mapper=udm2scim_mapper,
         resource_class=User,
         udm_client=udm_client,
-        base_url=providers.Callable(_get_base_url, host=settings.provided.host, api_prefix=settings.provided.api_prefix),
+        base_url=providers.Callable(
+            _get_base_url, host=settings.provided.host, api_prefix=settings.provided.api_prefix
+        ),
     )
 
     group_repository: CrudScim[GroupWithExtensions] = providers.Factory(
@@ -74,7 +81,9 @@ class RepositoryContainer(containers.DeclarativeContainer):
         udm2scim_mapper=udm2scim_mapper,
         resource_class=Group,
         udm_client=udm_client,
-        base_url=providers.Callable(_get_base_url, host=settings.provided.host, api_prefix=settings.provided.api_prefix),
+        base_url=providers.Callable(
+            _get_base_url, host=settings.provided.host, api_prefix=settings.provided.api_prefix
+        ),
     )
 
     # CRUD Manager factories
