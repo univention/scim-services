@@ -87,6 +87,7 @@ services:
       AUTH_ENABLED: false
       API_PREFIX: /scim/v2
       LOG_LEVEL: DEBUG
+      PATCH_ENABLED: true
     ports:
       - "8000:8000"
     depends_on:

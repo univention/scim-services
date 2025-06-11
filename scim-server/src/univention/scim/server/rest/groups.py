@@ -8,6 +8,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Respon
 from loguru import logger
 from scim2_models import Group, ListResponse
 
+from univention.scim.server.config import application_settings
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.domain.group_service import GroupService
 from univention.scim.transformation.exceptions import MappingError
@@ -132,6 +133,10 @@ async def patch_group(
     Patch a group using a raw SCIM JSON patch body.
     The request must contain an 'Operations' list, and may optionally contain a 'schemas' field.
     """
+    settings = application_settings()
+    if not settings.patch_enabled:
+        raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="PATCH operations are not implemented")
+
     logger.debug("REST: Patch group with ID", id=group_id)
 
     try:

@@ -57,6 +57,8 @@ class ApplicationSettings(BaseSettings):
     # Authentication and authorization
     auth_enabled: bool = True
     authenticator: AuthenticatorConfig = AuthenticatorConfig()
+    # PATCH operations
+    patch_enabled: bool = False
     # UDM configuration
     udm: UdmConfig = UdmConfig()
 
