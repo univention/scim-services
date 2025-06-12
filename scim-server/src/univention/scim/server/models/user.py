@@ -28,3 +28,6 @@ class Name(ScimName):
 class User(ScimUser[AnyExtension]):
     name: Annotated[Name | ScimName | None, Required.true] = None
     emails: list[Email | ScimEmail] | None = None
+
+    # FIXME: Remove when empty passwords are handled by UDM
+    ignore_password_policy: Annotated[bool, Field(exclude=True)] = False

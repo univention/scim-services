@@ -53,6 +53,12 @@ class MockUdm:
         obj_shallow = MagicMock(spec=ShallowObject)
         obj_shallow.open.return_value = obj
 
+        # Remove control properties
+        if "overridePWHistory" in obj.properties:
+            del obj.properties["overridePWHistory"]
+        if "overridePWLength" in obj.properties:
+            del obj.properties["overridePWLength"]
+
         obj.dn = get_dn(obj)
         obj.etag = "1.0"
         store[obj.dn] = obj_shallow

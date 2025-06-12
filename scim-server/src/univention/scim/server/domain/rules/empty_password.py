@@ -61,6 +61,7 @@ class UserEmptyPasswordRule(Rule[User]):
             if action == Action.Create:
                 logger.debug(f"Generated random password for user {user.id}")
                 user.password = self._get_random_password()
+                user.ignore_password_policy = True
         elif len(user.password) == 0:
             logger.error("Empty password is not allowed")
             raise ValueError("Empty password is not allowed")

@@ -189,6 +189,12 @@ class CrudUdm(Generic[T], CrudScim[T]):
             # Convert SCIM resource to UDM properties
             if self.resource_class == User:
                 properties = self.scim2udm_mapper.map_user(resource)
+
+                if resource.ignore_password_policy:
+                    self.logger.debug("Ignore password policy and history")
+                    properties["overridePWHistory"] = True
+                    properties["overridePWLength"] = True
+
             elif self.resource_class == Group:
                 properties = self.scim2udm_mapper.map_group(resource)
             else:
