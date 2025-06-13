@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.28.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.27.0...v0.28.0) (2025-06-13)
+
+
+### Features
+
+* **scim-server:** Add Customer1 and Univention extensions ([9ea0ffe](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/9ea0ffe5012a9cee1bb013d0134c1ce011fcefdb)), closes [univention/dev/internal/team-nubus#1152](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1152)
+* **scim-server:** Apply correct SCIM <-> UDM mapping ([8f82811](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/8f82811df53fad40985bcc7232929d9847f1e780)), closes [univention/dev/internal/team-nubus#1152](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1152)
+
+
+### Bug Fixes
+
+* **scim-server:** Add unit tests for group and user mapping ([b715288](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/b7152889b0073b914f9db2598f72e40c638e7c93)), closes [univention/dev/internal/team-nubus#1152](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1152)
+* **scim-server:** Do not use global app object in tests, make sure every test uses its own app object ([228b934](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/228b9348efde5970ab2475bf50e362991062adb4)), closes [univention/dev/internal/team-nubus#1152](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1152)
+* **scim-server:** Fix formarting after rebase ([de949fc](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/de949fc83e453406c58f674fe71e60df7f699e44))
+* **scim-server:** Imrpove schema and resource type handling ([685c7bd](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/685c7bdb423163d7b40b9f0351dc3733b67c11c7)), closes [univention/dev/internal/team-nubus#1152](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1152)
+* **scim-server:** Move our scim2-models and extensions to own module ([2117a0a](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/2117a0ad2b4b336121dd65f1eaa2c2ea5c1779f0)), closes [univention/dev/internal/team-nubus#1152](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1152)
+
 ## [0.27.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.26.0...v0.27.0) (2025-06-13)
 
 
