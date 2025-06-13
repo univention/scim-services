@@ -6,5 +6,5 @@
 cd scim-server
 uv sync
 
-uv run pytest tests/ $@
+uv run pytest -p no:cacheprovider tests/ $@
 uv run coverage xml --ignore-errors

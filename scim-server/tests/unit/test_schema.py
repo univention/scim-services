@@ -99,10 +99,10 @@ class TestSchemasEndpoint:
         assert customer1_user_schema["name"] == "Customer1User"
         customer1_user_attributes = {attr["name"] for attr in customer1_user_schema["attributes"]}
         assert "primaryOrgUnit" in customer1_user_attributes, (
-            f"primaryOrgUnit attribute missing from {customer1_user_attributes['name']} schema"
+            f"primaryOrgUnit attribute missing from {customer1_user_schema['name']} schema"
         )
         assert "secondaryOrgUnits" in customer1_user_attributes, (
-            f"secondaryOrgUnits attribute missing from {customer1_user_attributes['name']} schema"
+            f"secondaryOrgUnits attribute missing from {customer1_user_schema['name']} schema"
         )
 
     def test_get_schema_by_id(self, client: TestClient) -> None:

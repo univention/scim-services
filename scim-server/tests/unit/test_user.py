@@ -403,10 +403,6 @@ class TestUserAPI:
         assert any(u["userName"] == test_user.user_name for u in data["Resources"])
 
     # Level 1: Basic operations (what you already support)
-
-    @pytest.mark.skip(
-        reason="Breaks running tests all together: https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1236"
-    )
     def test_level1_simple_replace(self, client: TestClient) -> None:
         """Test simple attribute replacement."""
         user_id = _create_test_user(client)
@@ -418,9 +414,6 @@ class TestUserAPI:
         data = response.json()
         assert data["displayName"] == "Updated Name"
 
-    @pytest.mark.skip(
-        reason="Breaks running tests all together: https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1236"
-    )
     def test_level1_nested_path(self, client: TestClient) -> None:
         """Test nested path with dot notation."""
         user_id = _create_test_user(client)
@@ -432,9 +425,6 @@ class TestUserAPI:
         data = response.json()
         assert data["name"]["givenName"] == "NewFirst"
 
-    @pytest.mark.skip(
-        reason="Breaks running tests all together: https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1236"
-    )
     def test_level1_remove_operation(self, client: TestClient) -> None:
         """Test remove operation."""
         user_id = _create_test_user(client)
@@ -447,9 +437,6 @@ class TestUserAPI:
         assert "givenName" not in data["name"] or data["name"]["givenName"] is None
 
     # Level 2: Multi-valued attributes without filters
-    @pytest.mark.skip(
-        reason="Breaks running tests all together: https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1236"
-    )
     def test_level1_multiple_operations(self, client: TestClient) -> None:
         """Test multiple operations in a single patch request."""
         user_id = _create_test_user(client)
@@ -489,9 +476,6 @@ class TestUserAPI:
         assert new_email is not None, f"New email {new_email_value} not found"
         assert new_email["type"] == "alias"
 
-    @pytest.mark.skip(
-        reason="Breaks running tests all together: https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1236"
-    )
     def test_level2_replace_entire_array(self, client: TestClient) -> None:
         """Test replacing entire multi-valued attribute."""
         user_id = _create_test_user(client)
@@ -512,9 +496,6 @@ class TestUserAPI:
         assert len(data["emails"]) == 1
         assert data["emails"][0]["value"] == "new@email.com"
 
-    @pytest.mark.skip(
-        reason="Breaks running tests all together: https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1236"
-    )
     def test_level2_add_to_array(self, client: TestClient) -> None:
         """Test adding to multi-valued attribute."""
         user_id = _create_test_user(client)
@@ -535,9 +516,6 @@ class TestUserAPI:
         assert len(data["emails"]) == 3  # Original 2 + 1 new
 
     # Level 3: Array index notation (if supported)
-    @pytest.mark.skip(
-        reason="Breaks running tests all together: https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1236"
-    )
     def test_level3_array_index(self, client: TestClient) -> None:
         """Test array index notation."""
         user_id = _create_test_user(client)
@@ -557,9 +535,6 @@ class TestUserAPI:
         assert data["emails"][0]["value"] == "indexed@email.com"
 
     # Level 4: Filter expressions (full SCIM compliance)
-    @pytest.mark.skip(
-        reason="Breaks running tests all together: https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1236"
-    )
     def test_level4_filter_expression(self, client: TestClient) -> None:
         """Test filter expression in path."""
         user_id = _create_test_user(client)
@@ -591,9 +566,6 @@ class TestUserAPI:
         assert home_email is not None
         assert home_email["value"] == "other@example.org"
 
-    @pytest.mark.skip(
-        reason="Breaks running tests all together: https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1236"
-    )
     def test_level4_remove_with_filter(self, client: TestClient) -> None:
         """Test removing with filter."""
         user_id = _create_test_user(client)
@@ -615,9 +587,6 @@ class TestUserAPI:
         assert data["emails"][0]["type"] == "alias"
 
     # Level 5: Path-less operations
-    @pytest.mark.skip(
-        reason="Breaks running tests all together: https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1236"
-    )
     def test_level5_pathless_operation(self, client: TestClient) -> None:
         """Test operation without path."""
         user_id = _create_test_user(client)

@@ -28,7 +28,7 @@ from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.repo.udm.crud_udm import CrudUdm
 from univention.scim.server.domain.repo.udm.udm_id_cache import UdmIdCache
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
-from univention.scim.server.main import app
+from univention.scim.server.main import make_app
 from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
 from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 
@@ -198,6 +198,7 @@ def client(
     after_setup: Callable[[], _GeneratorContextManager[Any, None, None]],
     force_mock: bool,
 ) -> Generator[TestClient, None, None]:
+    app = make_app(application_settings)
     if force_mock or skip_if_no_udm():
         with (
             setup_mocks(application_settings, udm_client),
@@ -217,13 +218,6 @@ def client(
             TestClient(app, headers={"Authorization": "Bearer let-me-in"}) as client,
         ):
             yield client
-
-    # remove routes to make sure they are re-added when reusing
-    # global app object with updated parameters like disabled authentication
-    app.router.routes = []
-
-    # setup OpenAPI routes again
-    app.setup()
 
 
 @pytest.fixture

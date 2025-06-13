@@ -10,7 +10,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
-from univention.scim.server.config import application_settings
+from univention.scim.server.config import ApplicationSettings, application_settings
 from univention.scim.server.configure_logging import configure_logging
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.fast_api_auth_adapter import FastAPIAuthAdapter
@@ -27,9 +27,6 @@ from univention.scim.server.rest.resource_type import router as resources_types_
 from univention.scim.server.rest.schema import router as schema_router
 from univention.scim.server.rest.service_provider import router as service_provider_router
 from univention.scim.server.rest.users import router as users_router
-
-
-settings = application_settings()
 
 
 @asynccontextmanager
@@ -88,46 +85,54 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Shutting down SCIM server")
 
 
-# Configure logging
-configure_logging(settings.log_level)
+# Use a function to create the app, this allows the tests to always use a new app object
+# reusing the same global app object seems to sporadically break the tests with very wired
+# FastAPI errors
+def make_app(settings: ApplicationSettings) -> FastAPI:
+    # Configure logging
+    configure_logging(settings.log_level)
+
+    # Setup app
+    app: FastAPI = FastAPI(
+        title="Univention SCIM Server",
+        description="SCIM 2.0 API implementation for Univention",
+        version="0.1.0",
+        lifespan=lifespan,
+        swagger_ui_init_oauth={
+            "clientId": settings.authenticator.client_id,
+            "clientSecret": settings.authenticator.client_secret,
+            "appName": "Nubus SCIM-API documentation",
+        },
+    )
+
+    # Add correlation ID middleware
+    app.add_middleware(CorrelationIdMiddleware)
+
+    # Add timing middleware (before request logging middleware)
+    add_timing_middleware(app, prefix="SCIM ")
+
+    # Add request logging middleware
+    setup_request_logging_middleware(app)
+
+    # Add CORS middleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # Register exception handlers
+    app.add_exception_handler(HTTPException, scim_exception_handler)
+    app.add_exception_handler(RequestValidationError, fastapi_request_exception_handler)
+    app.add_exception_handler(Exception, generic_exception_handler)
+
+    return app
 
 
-# Setup app
-app: FastAPI = FastAPI(
-    title="Univention SCIM Server",
-    description="SCIM 2.0 API implementation for Univention",
-    version="0.1.0",
-    lifespan=lifespan,
-    swagger_ui_init_oauth={
-        "clientId": settings.authenticator.client_id,
-        "clientSecret": settings.authenticator.client_secret,
-        "appName": "Nubus SCIM-API documentation",
-    },
-)
-
-# Add correlation ID middleware
-
-app.add_middleware(CorrelationIdMiddleware)
-
-# Add timing middleware (before request logging middleware)
-add_timing_middleware(app, prefix="SCIM ")
-
-# Add request logging middleware
-setup_request_logging_middleware(app)
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Register exception handlers
-app.add_exception_handler(HTTPException, scim_exception_handler)
-app.add_exception_handler(RequestValidationError, fastapi_request_exception_handler)
-app.add_exception_handler(Exception, generic_exception_handler)
+settings = application_settings()
+app = make_app(settings)
 
 
 def run() -> None:
