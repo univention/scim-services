@@ -113,7 +113,7 @@ class CreateGroupFactory:
         return scim_group
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def application_settings(monkeypatch: pytest.MonkeyPatch) -> Generator[ApplicationSettings, None, None]:
     env = {
         "IDP_OPENID_CONFIGURATION_URL": os.environ.get("IDP_OPENID_CONFIGURATION_URL", "test"),
@@ -121,6 +121,8 @@ def application_settings(monkeypatch: pytest.MonkeyPatch) -> Generator[Applicati
         "UDM_USERNAME": os.environ.get("UDM_USERNAME", "admin"),
         "UDM_PASSWORD": os.environ.get("UDM_PASSWORD", "secret"),
         "HOST": os.environ.get("HOST", "https://scim.unit.test"),
+        "EXTERNAL_ID_USER_MAPPING": os.environ.get("EXTERNAL_ID_USER_MAPPING", "testExternalId"),
+        "EXTERNAL_ID_GROUP_MAPPING": os.environ.get("EXTERNAL_ID_GROUP_MAPPING", "testExternalId"),
     }
     for k, v in env.items():
         monkeypatch.setenv(k, v)
@@ -128,13 +130,52 @@ def application_settings(monkeypatch: pytest.MonkeyPatch) -> Generator[Applicati
     yield ApplicationSettings()
 
 
-@contextmanager
-def setup_mocks(application_settings: ApplicationSettings, udm_client: UDM | MockUdm) -> Generator[None, None, None]:
-    cache = UdmIdCache(udm_client, 120)
-    scim2udm_mapper = ScimToUdmMapper(cache)
-    udm2scim_mapper = UdmToScimMapper[UserWithExtensions, GroupWithExtensions](
-        cache=cache, user_type=UserWithExtensions, group_type=GroupWithExtensions
+@pytest.fixture
+def cache(udm_client: UDM | MockUdm) -> UdmIdCache:
+    return UdmIdCache(udm_client, 120)
+
+
+@pytest.fixture
+def mappers(cache: UdmIdCache) -> tuple[ScimToUdmMapper, UdmToScimMapper]:
+    scim2udm_mapper = ScimToUdmMapper(
+        cache=cache,
+        external_id_user_mapping="testExternalId",
+        external_id_group_mapping="testExternalId",
     )
+    udm2scim_mapper = UdmToScimMapper[UserWithExtensions, GroupWithExtensions](
+        cache=cache,
+        user_type=UserWithExtensions,
+        group_type=GroupWithExtensions,
+        external_id_user_mapping="testExternalId",
+        external_id_group_mapping="testExternalId",
+    )
+
+    return scim2udm_mapper, udm2scim_mapper
+
+
+@pytest.fixture
+def mappers_no_cache() -> tuple[ScimToUdmMapper, UdmToScimMapper]:
+    scim2udm_mapper = ScimToUdmMapper(
+        external_id_user_mapping="testExternalId",
+        external_id_group_mapping="testExternalId",
+    )
+    udm2scim_mapper = UdmToScimMapper[UserWithExtensions, GroupWithExtensions](
+        user_type=UserWithExtensions,
+        group_type=GroupWithExtensions,
+        external_id_user_mapping="testExternalId",
+        external_id_group_mapping="testExternalId",
+    )
+
+    return scim2udm_mapper, udm2scim_mapper
+
+
+@contextmanager
+def setup_mocks(
+    application_settings: ApplicationSettings,
+    udm_client: UDM | MockUdm,
+    mappers: tuple[ScimToUdmMapper, UdmToScimMapper],
+) -> Generator[None, None, None]:
+    scim2udm_mapper, udm2scim_mapper = mappers
 
     user_repo = CrudUdm[UserWithExtensions](
         resource_type="User",
@@ -143,6 +184,7 @@ def setup_mocks(application_settings: ApplicationSettings, udm_client: UDM | Moc
         resource_class=User,
         udm_client=udm_client,
         base_url=f"{application_settings.host}{application_settings.api_prefix}",
+        external_id_mapping="testExternalId",
     )
 
     group_repo = CrudUdm[GroupWithExtensions](
@@ -152,6 +194,7 @@ def setup_mocks(application_settings: ApplicationSettings, udm_client: UDM | Moc
         resource_class=Group,
         udm_client=udm_client,
         base_url=f"{application_settings.host}{application_settings.api_prefix}",
+        external_id_mapping="testExternalId",
     )
 
     user_crud_manager = CrudManager[UserWithExtensions](user_repo, "User")
@@ -197,11 +240,12 @@ def client(
     udm_client: UDM | MockUdm,
     after_setup: Callable[[], _GeneratorContextManager[Any, None, None]],
     force_mock: bool,
+    mappers: tuple[ScimToUdmMapper, UdmToScimMapper],
 ) -> Generator[TestClient, None, None]:
     app = make_app(application_settings)
     if force_mock or skip_if_no_udm():
         with (
-            setup_mocks(application_settings, udm_client),
+            setup_mocks(application_settings, udm_client, mappers),
             after_setup(),
             TestClient(app, headers={"Authorization": "Bearer let-me-in"}) as client,
         ):
@@ -388,16 +432,60 @@ def add_extended_attributes() -> None:
     with suppress(UnprocessableEntity):
         udm_obj.save()
 
+    # Place to store user externalID extended attribute
+    udm_obj = module.new(position="cn=custom attributes,cn=univention,dc=univention-organization,dc=intranet")
+    udm_obj.properties["name"] = "TestUserExternalId"
+    udm_obj.properties["CLIName"] = "testExternalId"
+    udm_obj.properties["module"] = ["users/user"]
+    udm_obj.properties["default"] = ""
+    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute3"
+    udm_obj.properties["objectClass"] = "univentionFreeAttributes"
+    udm_obj.properties["shortDescription"] = "Test external ID for users"
+    udm_obj.properties["multivalue"] = False
+    udm_obj.properties["valueRequired"] = False
+    udm_obj.properties["mayChange"] = True
+    udm_obj.properties["doNotSearch"] = False
+    udm_obj.properties["deleteObjectClass"] = False
+    udm_obj.properties["overwriteTab"] = False
+    udm_obj.properties["fullWidth"] = True
+
+    # ignore error 422, it is thrown if the attribute already exists
+    with suppress(UnprocessableEntity):
+        udm_obj.save()
+
+    # Place to store group externalID extended attribute
+    udm_obj = module.new(position="cn=custom attributes,cn=univention,dc=univention-organization,dc=intranet")
+    udm_obj.properties["name"] = "TestGroupExternalId"
+    udm_obj.properties["CLIName"] = "testExternalId"
+    udm_obj.properties["module"] = ["groups/group"]
+    udm_obj.properties["default"] = ""
+    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute4"
+    udm_obj.properties["objectClass"] = "univentionFreeAttributes"
+    udm_obj.properties["shortDescription"] = "Test external ID for groups"
+    udm_obj.properties["multivalue"] = False
+    udm_obj.properties["valueRequired"] = False
+    udm_obj.properties["mayChange"] = True
+    udm_obj.properties["doNotSearch"] = False
+    udm_obj.properties["deleteObjectClass"] = False
+    udm_obj.properties["overwriteTab"] = False
+    udm_obj.properties["fullWidth"] = True
+
+    # ignore error 422, it is thrown if the attribute already exists
+    with suppress(UnprocessableEntity):
+        udm_obj.save()
+
 
 @pytest.fixture
 def udm_client(
     random_user_factory: Callable[[list[GroupMember]], UserWithExtensions],
     random_group_factory: Callable[[list[GroupMember]], GroupWithExtensions],
     force_mock: bool,
+    mappers_no_cache: tuple[ScimToUdmMapper, UdmToScimMapper],
 ) -> Generator[UDM | MockUdm, None, None]:
     if force_mock or skip_if_no_udm():
         print("Using mocked UDM")
-        yield MockUdm(random_user_factory, random_group_factory)
+        scim2udm_mapper, _ = mappers_no_cache
+        yield MockUdm(random_user_factory, random_group_factory, scim2udm_mapper)
     else:
         print("Using real UDM")
         udm_url = os.environ.get("UDM_URL", "http://localhost:9979/univention/udm")
@@ -529,6 +617,7 @@ def random_user_factory() -> Callable[[list[GroupMember]], UserWithExtensions]:
 
         user = UserWithExtensions(
             id=fake.uuid4(),
+            external_id=fake.uuid4(),
             user_name=data["username"],
             name=Name(
                 given_name=data["given_name"],
@@ -573,14 +662,12 @@ def random_user(random_user_factory: Callable[[list[GroupMember]], UserWithExten
 
 @pytest.fixture
 async def create_random_user(
-    random_user_factory: Callable[[list[GroupMember]], UserWithExtensions], udm_client: UDM
+    random_user_factory: Callable[[list[GroupMember]], UserWithExtensions],
+    udm_client: UDM,
+    mappers: tuple[ScimToUdmMapper, UdmToScimMapper],
 ) -> AsyncGenerator[CreateUserFactory, None]:
     """Create a user factory fixture with proper cleanup"""
-    cache = UdmIdCache(udm_client, 120)
-    scim2udm_mapper = ScimToUdmMapper(cache)
-    udm2scim_mapper = UdmToScimMapper[UserWithExtensions, GroupWithExtensions](
-        cache=cache, user_type=UserWithExtensions, group_type=GroupWithExtensions
-    )
+    scim2udm_mapper, udm2scim_mapper = mappers
 
     factory = CreateUserFactory(udm_client, scim2udm_mapper, udm2scim_mapper, random_user_factory)
     yield factory
@@ -604,6 +691,7 @@ def random_group_factory() -> Callable[[list[GroupMember]], GroupWithExtensions]
 
         return GroupWithExtensions(
             id=fake.uuid4(),
+            external_id=fake.uuid4(),
             display_name=data["display_name"],
             members=members,
             meta={},
@@ -620,15 +708,12 @@ def random_group(random_group_factory: Callable[[list[GroupMember]], GroupWithEx
 
 @pytest.fixture
 async def create_random_group(
-    random_group_factory: Callable[[list[GroupMember]], GroupWithExtensions], udm_client: UDM
+    random_group_factory: Callable[[list[GroupMember]], GroupWithExtensions],
+    udm_client: UDM,
+    mappers: tuple[ScimToUdmMapper, UdmToScimMapper],
 ) -> AsyncGenerator[CreateGroupFactory, None]:
     """Create a group factory fixture with proper cleanup"""
-
-    cache = UdmIdCache(udm_client, 120)
-    scim2udm_mapper = ScimToUdmMapper(cache)
-    udm2scim_mapper = UdmToScimMapper[UserWithExtensions, GroupWithExtensions](
-        cache=cache, user_type=UserWithExtensions, group_type=GroupWithExtensions
-    )
+    scim2udm_mapper, udm2scim_mapper = mappers
 
     factory = CreateGroupFactory(udm_client, scim2udm_mapper, udm2scim_mapper, random_group_factory)
     yield factory

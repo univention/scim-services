@@ -29,6 +29,7 @@ class CrudUdm(Generic[T], CrudScim[T]):
         resource_class: type[T],
         udm_client: UDM,
         base_url: str,
+        external_id_mapping: str | None = None,
     ):
         """
         Initialize the UDM CRUD implementation.
@@ -39,19 +40,21 @@ class CrudUdm(Generic[T], CrudScim[T]):
             resource_class: The class of resource being managed (e.g., User, Group)
             udm_client: UDM REST API client
             base_url: Base URL used for SCIM resource location
+            external_id_mapping: UDM property to map to SCIM externalId (optional)
         """
         self.resource_type = resource_type
         self.resource_class = resource_class
         self.scim2udm_mapper = scim2udm_mapper
         self.udm2scim_mapper = udm2scim_mapper
         self.udm_module_name = "users/user" if resource_class == User else "groups/group"
+        self.external_id_mapping = external_id_mapping
 
         self.base_url = base_url.rstrip("/")
 
         self.udm_client = udm_client
 
         self.logger = logger.bind(resource_type=resource_type)
-        self.logger.info("Initialized UDM CRUD with UDM REST API client")
+        self.logger.info("Initialized UDM CRUD with UDM REST API client", external_id_mapping=external_id_mapping)
 
     def _generate_udm_request_id(self) -> str:
         """
@@ -323,7 +326,7 @@ class CrudUdm(Generic[T], CrudScim[T]):
     def _convert_scim_filter_to_udm(self, scim_filter: str) -> str:
         """
         Convert a SCIM filter to a UDM filter.
-        This is a simplified implementation that handles basic univentionObjectIdentifier filtering.
+        This is a simplified implementation that handles basic filtering.
 
         Args:
             scim_filter: SCIM filter expression
@@ -336,6 +339,19 @@ class CrudUdm(Generic[T], CrudScim[T]):
             # Extract the ID value
             id_value = scim_filter.split("id eq ")[1].strip("\"'")
             return f"univentionObjectIdentifier={id_value}"
+
+        # Handle externalId filter using configured mapping
+        if "externalId eq " in scim_filter:
+            external_id_value = scim_filter.split("externalId eq ")[1].strip("\"'")
+            if self.external_id_mapping:
+                self.logger.trace(
+                    "Converting externalId filter", udm_property=self.external_id_mapping, value=external_id_value
+                )
+                return f"{self.external_id_mapping}={external_id_value}"
+            else:
+                self.logger.warning("externalId filter requested but no mapping configured")
+                # Fall back to univentionObjectIdentifier if no mapping is configured
+                return f"univentionObjectIdentifier={external_id_value}"
 
         # Handle userName filter for users
         if "userName eq " in scim_filter and self.resource_class == User:

@@ -51,6 +51,7 @@ def test_get_group_mapping(udm_client: MockUdm, client: TestClient) -> None:
     group = udm_client.add_raw_group(
         {
             **udm_properties,
+            "testExternalId": fake.uuid4(),
             "createTimestamp": int(time.time()),
             "modifyTimestamp": int(time.time()),
             "univentionObjectIdentifier": fake.uuid4(),
@@ -67,7 +68,7 @@ def test_get_group_mapping(udm_client: MockUdm, client: TestClient) -> None:
     expected_data = {
         **scim_schema,
         "id": group.properties["univentionObjectIdentifier"],
-        "externalId": group.properties["univentionObjectIdentifier"],
+        "externalId": group.properties["testExternalId"],
         "meta": {
             "resourceType": "Group",
             "created": f"{create_date_time.replace(microsecond=0, tzinfo=None).isoformat()}Z",
@@ -105,6 +106,8 @@ def test_get_group_mapping(udm_client: MockUdm, client: TestClient) -> None:
 
 
 def test_create_group_mapping(udm_client: MockUdm, client: TestClient) -> None:
+    fake = Faker()
+
     user_1 = udm_client.add_user()
     user_2 = udm_client.add_user()
     nested_group = udm_client.add_group()
@@ -112,6 +115,7 @@ def test_create_group_mapping(udm_client: MockUdm, client: TestClient) -> None:
     test_group = GroupWithExtensions.model_validate(
         {
             **scim_schema,
+            "externalId": fake.uuid4(),
             "members": [
                 {
                     "type": "User",
@@ -140,6 +144,7 @@ def test_create_group_mapping(udm_client: MockUdm, client: TestClient) -> None:
     expected_properties = {
         **udm_properties,
         "univentionObjectIdentifier": response_data["id"],
+        "testExternalId": response_data["externalId"],
         "users": [
             user_1.dn,
             user_2.dn,

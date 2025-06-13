@@ -34,16 +34,69 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
     """
 
     def __init__(
-        self, cache: IdCache | None = None, user_type: type[UserType] = User, group_type: type[GroupType] = Group
+        self,
+        cache: IdCache | None = None,
+        user_type: type[UserType] = User,
+        group_type: type[GroupType] = Group,
+        external_id_user_mapping: str | None = None,
+        external_id_group_mapping: str | None = None,
     ):
         """
         Initialize the UdmToScimMapper.
         Args:
             cache: Cache to map DNs to SCIM IDs
+            external_id_user_mapping: UDM property to map to SCIM User externalId
+            external_id_group_mapping: UDM property to map to SCIM Group externalId
         """
         self.cache = cache
         self.user_type = user_type
         self.group_type = group_type
+        self.external_id_user_mapping = external_id_user_mapping
+        self.external_id_group_mapping = external_id_group_mapping
+
+    def _get_external_id(self, obj: Any, resource_type: str) -> str | None:
+        """
+        Get external ID from UDM object based on configuration.
+
+        Args:
+            obj: UDM object
+            resource_type: Type of resource ("User" or "Group")
+
+        Returns:
+            External ID value
+        """
+        mapping_property = None
+        if resource_type == "User":
+            mapping_property = self.external_id_user_mapping
+        elif resource_type == "Group":
+            mapping_property = self.external_id_group_mapping
+
+        # If no mapping configured, use fallback
+        if not mapping_property:
+            logger.warning("No external ID mapping configured", resource_type=resource_type)
+            return None
+
+        # Try to get the configured property
+        external_id: str = obj.properties.get(mapping_property)
+
+        if external_id is None:
+            logger.warning(
+                "Configured external ID property not found in UDM object, external ID will not be mapped",
+                resource_type=resource_type,
+                configured_property=mapping_property,
+                dn=obj.dn,
+                available_properties=list(obj.properties.keys()),
+            )
+            return None
+
+        logger.debug(
+            "Mapped external ID from configured property",
+            resource_type=resource_type,
+            configured_property=mapping_property,
+            external_id=external_id,
+            dn=obj.dn,
+        )
+        return external_id
 
     def _get_ref(self, base_url: str, resource_type: str, id: str) -> str | None:
         if not base_url:
@@ -124,10 +177,6 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
             preferred_language=props.get("preferredLanguage"),
         )
 
-        # To make consumer tests happy map out UUID to external id for now
-        # FIXME: https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1235
-        user.external_id = user_id
-
         for schema, extension in user.get_extension_models().items():
             if not hasattr(user, extension.__name__):
                 continue
@@ -150,6 +199,9 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
                 logger.info("Ignoring unknown user extension", schema=schema)
 
             user.schemas = user.set_extension_schemas([schema])
+
+        # Map external ID using configurable property
+        user.external_id = self._get_external_id(udm_user, "User")
 
         # Map name
         if any(key in props for key in ["firstname", "lastname"]):
@@ -334,10 +386,6 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
             id=group_id, display_name=props.get("name", ""), meta=self._get_meta(base_url, udm_group, "Group")
         )
 
-        # To make consumer tests happy map out UUID to external id for now
-        # FIXME: https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1235
-        group.external_id = group_id
-
         for schema, extension in group.get_extension_models().items():
             if not hasattr(group, extension.__name__):
                 continue
@@ -354,6 +402,9 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
                 logger.info("Ignoring unknown group extension", schema=schema)
 
             group.schemas.append(schema)
+
+        # Map external ID using configurable property
+        group.external_id = self._get_external_id(udm_group, "Group")
 
         # Map members if available
         if "users" in props and props["users"] and self.cache:

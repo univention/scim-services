@@ -144,6 +144,7 @@ def test_get_user_mapping(udm_client: MockUdm, client: TestClient) -> None:
             "createTimestamp": int(time.time()),
             "modifyTimestamp": int(time.time()),
             "univentionObjectIdentifier": fake.uuid4(),
+            "testExternalId": fake.uuid4(),
         }
     )
 
@@ -152,7 +153,7 @@ def test_get_user_mapping(udm_client: MockUdm, client: TestClient) -> None:
     expected_data = {
         **scim_schema,
         "id": user.properties["univentionObjectIdentifier"],
-        "externalId": user.properties["univentionObjectIdentifier"],
+        "externalId": user.properties["testExternalId"],
         "meta": {
             "resourceType": "User",
             "created": f"{create_date_time.replace(microsecond=0, tzinfo=None).isoformat()}Z",
@@ -170,15 +171,19 @@ def test_get_user_mapping(udm_client: MockUdm, client: TestClient) -> None:
 
 
 def test_create_user_mapping(udm_client: MockUdm, client: TestClient) -> None:
-    test_user = UserWithExtensions.model_validate(scim_schema)
+    fake = Faker()
+
+    test_user = UserWithExtensions.model_validate({**scim_schema, "externalId": fake.uuid4()})
 
     response = client.post("/scim/v2/Users", json=test_user.model_dump(by_alias=True, exclude_none=True))
     assert response.status_code == 201
     response_data = response.json()
 
+    print(response_data)
     expected_properties = {
         **udm_properties,
         "univentionObjectIdentifier": response_data["id"],
+        "testExternalId": response_data["externalId"],
     }
 
     created_user = next(

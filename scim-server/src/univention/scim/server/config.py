@@ -61,6 +61,13 @@ class ApplicationSettings(BaseSettings):
     patch_enabled: bool = False
     # UDM configuration
     udm: UdmConfig = UdmConfig()
+    # SCIM externalId mapping configuration
+    external_id_user_mapping: str | None = Field(
+        default=None, description="UDM property to map to SCIM User externalId"
+    )
+    external_id_group_mapping: str | None = Field(
+        default=None, description="UDM property to map to SCIM Group externalId"
+    )
 
 
 class DependencyInjectionSettings(BaseSettings):

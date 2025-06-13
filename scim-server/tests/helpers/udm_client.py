@@ -17,10 +17,11 @@ class MockUdm:
         self,
         random_user_factory: Callable[[list[GroupMember]], UserWithExtensions],
         random_group_factory: Callable[[list[GroupMember]], GroupWithExtensions],
+        scim2udm_mapper: ScimToUdmMapper,
     ):
-        self.scim2udm_mapper = ScimToUdmMapper(None)
         self.random_user_factory = random_user_factory
         self.random_group_factory = random_group_factory
+        self.scim2udm_mapper = scim2udm_mapper
         self.users: dict[str, MagicMock] = {}
         self.groups: dict[str, MagicMock] = {}
 

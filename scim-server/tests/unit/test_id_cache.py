@@ -10,14 +10,17 @@ from scim2_models import GroupMember
 from helpers.udm_client import MockUdm
 from univention.scim.server.domain.repo.udm.udm_id_cache import CacheItem, UdmIdCache
 from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
+from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 
 
 @pytest.fixture
 def udm_client(
     random_user_factory: Callable[[list[GroupMember]], UserWithExtensions],
     random_group_factory: Callable[[list[GroupMember]], GroupWithExtensions],
+    mappers_no_cache: tuple[ScimToUdmMapper, UdmToScimMapper],
 ) -> MockUdm:
-    mock = MockUdm(random_user_factory, random_group_factory)
+    scim2udm_mapper, _ = mappers_no_cache
+    mock = MockUdm(random_user_factory, random_group_factory, scim2udm_mapper)
     mock.add_user()
     mock.add_group()
 

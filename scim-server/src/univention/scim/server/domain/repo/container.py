@@ -52,13 +52,20 @@ class RepositoryContainer(containers.DeclarativeContainer):
     cache: UdmIdCache = providers.Singleton(UdmIdCache, udm_client, 120)
 
     # Mappers
-    scim2udm_mapper: ScimToUdmMapper = providers.Singleton(ScimToUdmMapper, cache=cache)
+    scim2udm_mapper: ScimToUdmMapper = providers.Singleton(
+        ScimToUdmMapper,
+        cache=cache,
+        external_id_user_mapping=settings.provided.external_id_user_mapping,
+        external_id_group_mapping=settings.provided.external_id_group_mapping,
+    )
 
     udm2scim_mapper: UdmToScimMapper = providers.Singleton(
         UdmToScimMapper[UserWithExtensions, GroupWithExtensions],
         cache=cache,
         user_type=UserWithExtensions,
         group_type=GroupWithExtensions,
+        external_id_user_mapping=settings.provided.external_id_user_mapping,
+        external_id_group_mapping=settings.provided.external_id_group_mapping,
     )
 
     # Repository factories
@@ -72,6 +79,7 @@ class RepositoryContainer(containers.DeclarativeContainer):
         base_url=providers.Callable(
             _get_base_url, host=settings.provided.host, api_prefix=settings.provided.api_prefix
         ),
+        external_id_mapping=settings.provided.external_id_user_mapping,
     )
 
     group_repository: CrudScim[GroupWithExtensions] = providers.Factory(
@@ -84,6 +92,7 @@ class RepositoryContainer(containers.DeclarativeContainer):
         base_url=providers.Callable(
             _get_base_url, host=settings.provided.host, api_prefix=settings.provided.api_prefix
         ),
+        external_id_mapping=settings.provided.external_id_group_mapping,
     )
 
     # CRUD Manager factories

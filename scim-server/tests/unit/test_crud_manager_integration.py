@@ -10,12 +10,10 @@ from tests.conftest import CreateGroupFactory, CreateUserFactory
 from univention.scim.server.domain.group_service_impl import GroupServiceImpl
 from univention.scim.server.domain.repo.crud_manager import CrudManager
 from univention.scim.server.domain.repo.udm.crud_udm import CrudUdm
-from univention.scim.server.domain.repo.udm.udm_id_cache import UdmIdCache
 from univention.scim.server.domain.rules.action import Action
 from univention.scim.server.domain.rules.display_name import UserDisplayNameRule
 from univention.scim.server.domain.rules.evaluate import RuleEvaluator
 from univention.scim.server.domain.user_service_impl import UserServiceImpl
-from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
 from univention.scim.transformation import ScimToUdmMapper, UdmToScimMapper
 
 
@@ -39,16 +37,14 @@ def create_crud_manager(
 
 
 @pytest.mark.asyncio
-async def test_user_service(create_random_user: CreateUserFactory, udm_client: UDM) -> None:
+async def test_user_service(
+    create_random_user: CreateUserFactory, udm_client: UDM, mappers: tuple[ScimToUdmMapper, UdmToScimMapper]
+) -> None:
     print("\n=== Testing User Service ===")
 
-    cache = UdmIdCache(udm_client, 120)
-    udm2scim_mapper = UdmToScimMapper[UserWithExtensions, GroupWithExtensions](
-        cache=cache, user_type=UserWithExtensions, group_type=GroupWithExtensions
-    )
-
+    scim2udm_mapper, udm2scim_mapper = mappers
     user_crud_manager = create_crud_manager(
-        "User", User, udm_client, scim2udm_mapper=ScimToUdmMapper(cache), udm2scim_mapper=udm2scim_mapper
+        "User", User, udm_client, scim2udm_mapper=scim2udm_mapper, udm2scim_mapper=udm2scim_mapper
     )
     UserServiceImpl(user_crud_manager)
 
@@ -70,16 +66,14 @@ async def test_user_service(create_random_user: CreateUserFactory, udm_client: U
 
 
 @pytest.mark.asyncio
-async def test_group_service(create_random_group: CreateGroupFactory, udm_client: UDM) -> None:
+async def test_group_service(
+    create_random_group: CreateGroupFactory, udm_client: UDM, mappers: tuple[ScimToUdmMapper, UdmToScimMapper]
+) -> None:
     print("\n=== Testing Group Service ===")
 
-    cache = UdmIdCache(udm_client, 120)
-    udm2scim_mapper = UdmToScimMapper[UserWithExtensions, GroupWithExtensions](
-        cache=cache, user_type=UserWithExtensions, group_type=GroupWithExtensions
-    )
-
+    scim2udm_mapper, udm2scim_mapper = mappers
     group_crud_manager = create_crud_manager(
-        "Group", Group, udm_client, scim2udm_mapper=ScimToUdmMapper(cache), udm2scim_mapper=udm2scim_mapper
+        "Group", Group, udm_client, scim2udm_mapper=scim2udm_mapper, udm2scim_mapper=udm2scim_mapper
     )
     GroupServiceImpl(group_crud_manager)
 

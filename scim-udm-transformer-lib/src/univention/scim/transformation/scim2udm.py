@@ -18,13 +18,22 @@ class ScimToUdmMapper:
     Converts SCIM objects to the property format expected by UDM.
     """
 
-    def __init__(self, cache: IdCache | None = None):
+    def __init__(
+        self,
+        cache: IdCache | None = None,
+        external_id_user_mapping: str | None = None,
+        external_id_group_mapping: str | None = None,
+    ):
         """
         Initialize the ScimToUdmMapper.
         Args:
             cache: Cache to map SCIM IDs to DNs
+            external_id_user_mapping: UDM property to map to SCIM User externalId
+            external_id_group_mapping: UDM property to map to SCIM Group externalId
         """
         self.cache = cache
+        self.external_id_user_mapping = external_id_user_mapping
+        self.external_id_group_mapping = external_id_group_mapping
 
     def map_user(self, user: User) -> dict[str, Any]:
         """
@@ -69,6 +78,13 @@ class ScimToUdmMapper:
 
         if user.roles:
             properties["guardianRoles"] = [x.value for x in user.roles if x.type == "guardian-direct"]
+
+        # Map external ID using configurable property
+        if self.external_id_user_mapping:
+            if user.external_id:
+                properties[self.external_id_user_mapping] = user.external_id
+        else:
+            logger.warning("No external ID mapping configured", resource_type="User")
 
         # Map name components
         if user.name:
@@ -216,6 +232,13 @@ class ScimToUdmMapper:
                 logger.info("Ignoring unknown group extension", schema=schema)
 
             group.schemas.append(schema)
+
+        # Map external ID using configurable property
+        if self.external_id_group_mapping:
+            if group.external_id:
+                properties[self.external_id_group_mapping] = group.external_id
+        else:
+            logger.warning("No external ID mapping configured", resource_type="Group")
 
         # Map members
         if group.members and self.cache:
