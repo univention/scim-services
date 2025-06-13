@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.27.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.26.0...v0.27.0) (2025-06-13)
+
+
+### Features
+
+* disable patch ([a172269](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/a1722699d27c83216cb66cfd863ffd5783d05882))
+* make patch support configurable ([f4979ce](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/f4979ceebd2926dabb676f7696ce601f822f47bc))
+
 ## [0.26.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.25.0...v0.26.0) (2025-06-10)
 
 
