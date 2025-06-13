@@ -13,6 +13,9 @@ keycloak:
 udm:
   connection:
     url: "https://udm.univention.test"
+  externalId:
+    userMapping: "employeeNumber"
+    groupMapping: "description"
 
 config:
   corsOrigins: '["https://scim.univention.test"]'

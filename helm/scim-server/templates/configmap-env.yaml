@@ -23,3 +23,9 @@ data:
   UDM_URL: {{ required ".Values.udm.connection.url is required" (tpl .Values.udm.connection.url .) | quote }}
   AUTHENTICATOR_ALLOW_GROUP_DN: {{ tpl .Values.config.auth.allowGroupDn . | quote }}
   HOST: {{ tpl .Values.config.host . | quote }}
+  {{- if .Values.config.externalId.userMapping }}
+  EXTERNAL_ID_USER_MAPPING: {{ .Values.config.externalId.userMapping | quote }}
+  {{- end }}
+  {{- if .Values.config.externalId.groupMapping }}
+  EXTERNAL_ID_GROUP_MAPPING: {{ .Values.config.externalId.groupMapping | quote }}
+  {{- end }}

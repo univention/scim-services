@@ -14,6 +14,8 @@ scim-udm-transformer-lib = { workspace = true }
 udm-to-scim-sync = { workspace = true }
 scim-consumer = { workspace = true }
 lancelog = { index = "gitlab" }
+helm-test-harness = { index = "common-helm" }
+pytest-helm = { index = "common-helm" }
 
 [tool.uv.workspace]
 members = [
@@ -26,6 +28,12 @@ members = [
 [[tool.uv.index]]
 name = "gitlab"
 url = "https://git.knut.univention.de/api/v4/projects/1449/packages/pypi/simple"  # lancelog
+explicit = true
+default = false
+
+[[tool.uv.index]]
+name = "common-helm"
+url = "https://git.knut.univention.de/api/v4/projects/829/packages/pypi/simple"  # common-helm
 explicit = true
 default = false
 
@@ -63,4 +71,7 @@ known-first-party = ["helpers", "univention.scim"]
 [dependency-groups]
 dev = [
     "pytest>=8.3.5",
+    "pytest-asyncio>=1.0.0",
+    "helm-test-harness>=0.20.0",
+    "pytest-helm>=0.20.0"
 ]

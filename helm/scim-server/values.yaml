@@ -36,6 +36,14 @@ config:
   auth:
     enabled: true
     allowGroupDn: ""
+  # -- External ID mapping configuration for SCIM filtering
+  externalId:
+    # -- UDM property to map to SCIM User externalId. If not set, externalID will not be mapped.
+    # Example: "employeeNumber"
+    userMapping: null
+    # -- UDM property to map to SCIM Group externalId. If not set, externalID will not be mapped.
+    # Example: "description"
+    groupMapping: null
 
 keycloak:
   connection:
