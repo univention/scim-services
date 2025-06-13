@@ -7,6 +7,8 @@ from fastapi import APIRouter
 from loguru import logger
 from scim2_models import ServiceProviderConfig
 
+from univention.scim.server.config import application_settings
+
 
 router = APIRouter()
 
@@ -19,10 +21,11 @@ async def get_service_provider_config() -> Any:
     Returns information about the SCIM service provider's capabilities.
     """
     logger.debug("REST: Get ServiceProviderConfig")
+    settings = application_settings()
     return ServiceProviderConfig(
         schemas=["urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig"],
         documentation_uri="https://docs.univention.de/scim-api/",
-        patch={"supported": True},
+        patch={"supported": settings.patch_enabled},
         bulk={"supported": False},
         filter={"supported": True, "max_results": 100},  # Note: document only 'eq' is supported
         change_password={"supported": True},
