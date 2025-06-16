@@ -101,7 +101,7 @@ test-unit-and-integration:
     - docker cp test-unit-and-integration:/tmp/pytest-junit.xml ./pytest-junit-test-unit-and-integration.xml
     - docker stop -t0 test-unit-and-integration
     - docker rm test-unit-and-integration
-    - docker compose down --volumes
+    - docker compose -f scim-server/tests/docker-compose.yml down --volumes
   artifacts:
     paths:
       - ldap-server.log
@@ -178,8 +178,7 @@ test-scim-consumer:
     - docker cp test-scim-consumer:/tmp/scim-coverage.xml ./coverage-test-scim-consumer.xml
     - docker stop -t0 test-scim-consumer
     - docker rm test-scim-consumer
-    - cd scim-consumer/tests
-    - docker compose down --volumes
+    - docker compose -f scim-consumer/tests/docker-compose.yaml down --volumes
   artifacts:
     paths:
       - ldap-server.log
