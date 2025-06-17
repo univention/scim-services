@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 include:
-  - project: "univention/customers/dataport/upx/common-ci"
+  - project: "univention/dev/nubus-for-k8s/common-ci"
     ref: "main"
     file:
       - "defaults/stages.yaml"

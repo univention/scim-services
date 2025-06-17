@@ -67,7 +67,13 @@ class ScimConsumer:
         raises:
             ValueError: If topic is not users/user or groups/group
         """
-        mapper = UdmToScimMapper()
+        # FIXME: Use correct properties for external ID mapping or set it manually after the mapping.
+        #        For now use univentionObjectIdentifier to make the existing tests happy, it was also the
+        #        previouse workaround.
+        mapper = UdmToScimMapper(
+            external_id_user_mapping="univentionObjectIdentifier",
+            external_id_group_mapping="univentionObjectIdentifier",
+        )
         if topic == "users/user":
             scim_resource = mapper.map_user(udm_user=udm_object)
 

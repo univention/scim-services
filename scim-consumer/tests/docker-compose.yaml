@@ -21,7 +21,7 @@ services:
       - scim
 
   events-and-consumer-api:
-    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-events-and-consumer-api:latest
+    image: artifacts.software-univention.de/nubus/images/provisioning-events-and-consumer-api:0.55.0
     container_name: "events-and-consumer-api-dev"
     restart: "on-failure"
     environment:
@@ -69,7 +69,7 @@ services:
     command: --name nats --cluster_name JetStreamCluster --jetstream -m 8222 -p 4222 -config /etc/nats-config/nats.conf
 
   dispatcher:
-    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-dispatcher:latest
+    image: artifacts.software-univention.de/nubus/images/provisioning-dispatcher:0.55.0
     container_name: "provisioning-dispatcher"
     restart: "on-failure"
     environment:
@@ -90,7 +90,7 @@ services:
       - scim
 
   udm-transformer:
-    image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-udm-transformer:latest"
+    image: artifacts.software-univention.de/nubus/images/provisioning-udm-transformer:0.55.0
     container_name: "provisioning-udm-transformer"
     restart: "on-failure"
     environment:
@@ -122,7 +122,7 @@ services:
       - scim
 
   prefill:
-    image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-prefill:latest"
+    image: artifacts.software-univention.de/nubus/images/provisioning-prefill:0.55.0
     container_name: "provisioning-prefill"
     restart: "on-failure"
     environment:
@@ -150,7 +150,7 @@ services:
       - scim
 
   udm-listener:
-    image: "gitregistry.knut.univention.de/univention/customers/dataport/upx/provisioning/provisioning-udm-listener:latest"
+    image: artifacts.software-univention.de/nubus/images/provisioning-udm-listener:0.55.0
     container_name: "udm-listener"
     environment:
       NATS_HOST: "nats"
@@ -181,7 +181,7 @@ services:
 
   ldap-notifier:
     platform: linux/amd64
-    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-ldap/ldap-notifier:latest
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/ldap/ldap-notifier:latest
     container_name: "ldap-notifier"
     depends_on:
       ldap-server:
@@ -196,7 +196,7 @@ services:
 
   ldap-server:
     platform: linux/amd64
-    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-ldap/ldap-server:latest
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/ldap/ldap-server:latest
     container_name: "ldap-server"
     healthcheck:
       test: ["CMD-SHELL", "ldapsearch -H ldapi:/// -Y EXTERNAL -b \"cn=config\" -LLL \"(&(objectClass=mdb))\" dn"]
@@ -220,7 +220,7 @@ services:
       - scim
 
   udm-rest-api:
-    image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-udm-rest/udm-rest-api:latest
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/udm-rest-api/udm-rest-api:latest
     container_name: "udm-rest-api"
     platform: "linux/amd64"
     depends_on:
