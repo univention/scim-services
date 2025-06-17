@@ -81,8 +81,7 @@ class ScimConsumer:
 
         elif topic == "groups/group":
             scim_resource = mapper.map_group(udm_group=udm_object)
-            # if scim_resource.members is None:
-            #     scim_resource.members = []
+
         else:
             raise ValueError(f"Unsupported message topic {topic}")
 
