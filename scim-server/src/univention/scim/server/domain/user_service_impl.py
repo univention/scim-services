@@ -51,7 +51,7 @@ class UserServiceImpl(UserService, PatchMixin):
             schemas=["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
             total_results=total,
             resources=users,
-            start_index=start_index,
+            start_index=1,
             items_per_page=len(users),
         )
 

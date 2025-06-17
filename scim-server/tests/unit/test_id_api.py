@@ -1,92 +1,179 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
+
+import urllib.parse
+
+import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
-from scim2_models import Email, Group, Name, User
 
-
-# Test data
-test_user = User(
-    user_name="jdoe",
-    name=Name(
-        given_name="John",
-        family_name="Doe",
-        formatted="John Doe",
-    ),
-    password="securepassword",
-    active=True,
-    emails=[
-        Email(
-            value="john.doe@example.org",
-            type="work",
-            primary=True,
-        )
-    ],
-)
-
-test_group = Group(
-    display_name="Test Group",
-)
-
-
-def _create_test_user(client: TestClient) -> str:
-    """Helper method to create a test user and return the ID."""
-    response = client.post("/scim/v2/Users", json=test_user.model_dump(by_alias=True, exclude_none=True))
-    assert response.status_code == 201
-    data = response.json()
-    return str(data["id"])
-
-
-def _create_test_group(client: TestClient) -> str:
-    """Helper method to create a test group and return the ID."""
-    response = client.post("/scim/v2/Groups", json=test_group.model_dump(by_alias=True, exclude_none=True))
-    assert response.status_code == 201
-    data = response.json()
-    return str(data["id"])
+from tests.conftest import CreateGroupFactory, CreateUserFactory
 
 
 class TestIdAPI:
     """Tests for the global UUID endpoints of the SCIM API."""
 
-    def test_get_user_by_id(self, client: TestClient) -> None:
+    @pytest.mark.asyncio
+    async def test_get_user_by_id(
+        self, client: TestClient, create_random_user: CreateUserFactory, create_random_group: CreateGroupFactory
+    ) -> None:
         # First create a user and group
-        user_id = _create_test_user(client)
-        _create_test_group(client)
+        test_user = await create_random_user()
+        await create_random_group()
 
-        # Get the user
-        response = client.get(f"/scim/v2/{user_id}")
+        # Get the resource
+        response = client.get(f"/scim/v2/{test_user.id}")
         assert response.status_code == 200
         data = response.json()
 
         # Verify response data
-        assert data["id"] == user_id
+        assert data["id"] == test_user.id
         assert data["userName"] == test_user.user_name
         assert data["name"]["givenName"] == test_user.name.given_name
         assert data["name"]["familyName"] == test_user.name.family_name
 
-    def test_get_group_by_id(self, client: TestClient) -> None:
+    @pytest.mark.asyncio
+    async def test_get_group_by_id(
+        self, client: TestClient, create_random_user: CreateUserFactory, create_random_group: CreateGroupFactory
+    ) -> None:
         # First create a user and group
-        _create_test_user(client)
-        group_id = _create_test_group(client)
+        await create_random_user()
+        test_group = await create_random_group()
 
-        # Get the group
-        response = client.get(f"/scim/v2/{group_id}")
+        # Get the resource
+        response = client.get(f"/scim/v2/{test_group.id}")
 
         assert response.status_code == 200
         data = response.json()
 
         # Verify response data
-        assert data["id"] == group_id
+        assert data["id"] == test_group.id
         assert data["displayName"] == test_group.display_name
 
-    def test_object_not_found(self, client: TestClient) -> None:
+    @pytest.mark.asyncio
+    async def test_object_not_found(
+        self, client: TestClient, create_random_user: CreateUserFactory, create_random_group: CreateGroupFactory
+    ) -> None:
         # First create a user and group
-        _create_test_user(client)
-        _create_test_group(client)
+        await create_random_user()
+        await create_random_group()
 
-        # Get the user
+        # Get the resource
         fake = Faker()
         response = client.get(f"/scim/v2/{fake.uuid4()}")
         assert response.status_code == 404
         data = response.json()
         assert data["schemas"] == ["urn:ietf:params:scim:api:messages:2.0:Error"]
+
+    @pytest.mark.asyncio
+    async def test_get_users_and_groups(
+        self, client: TestClient, create_random_user: CreateUserFactory, create_random_group: CreateGroupFactory
+    ) -> None:
+        # First create a user and group
+        test_user = await create_random_user()
+        test_group = await create_random_group()
+
+        # Get the resources
+        response = client.get("/scim/v2/")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify response data
+        assert data["schemas"] == ["urn:ietf:params:scim:api:messages:2.0:ListResponse"]
+        assert data["totalResults"] >= 2
+        assert len(data["Resources"]) >= 2
+        assert any(resource["id"] == test_user.id for resource in data["Resources"])
+        assert any(resource["id"] == test_group.id for resource in data["Resources"])
+
+    @pytest.mark.asyncio
+    async def test_get_users_and_groups_partly(
+        self, client: TestClient, create_random_user: CreateUserFactory, create_random_group: CreateGroupFactory
+    ) -> None:
+        # First create a user and group
+        await create_random_user()
+        await create_random_user()
+        await create_random_user()
+        await create_random_user()
+        await create_random_user()
+
+        await create_random_group()
+        await create_random_group()
+        await create_random_group()
+        await create_random_group()
+        await create_random_group()
+
+        # Get the resources
+        response = client.get("/scim/v2/?start_index=3&count=4")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify response data
+        assert data["schemas"] == ["urn:ietf:params:scim:api:messages:2.0:ListResponse"]
+        assert data["totalResults"] >= 4
+        assert len(data["Resources"]) >= 4
+        assert len([resource for resource in data["Resources"] if resource["meta"]["resourceType"] == "User"]) == 3
+        assert len([resource for resource in data["Resources"] if resource["meta"]["resourceType"] == "Group"]) == 1
+
+    @pytest.mark.asyncio
+    async def test_filter_by_id(
+        self, client: TestClient, create_random_user: CreateUserFactory, create_random_group: CreateGroupFactory
+    ) -> None:
+        # First create a user and group
+        test_user = await create_random_user()
+        test_group = await create_random_group()
+
+        # Filter users by id
+        response = client.get(f"/scim/v2/?filter=id eq {test_user.id}")
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify filtered results
+        assert data["totalResults"] == 1
+        assert len(data["Resources"]) == 1
+        assert data["Resources"][0]["id"] == test_user.id
+        assert data["Resources"][0]["meta"]["resourceType"] == "User"
+
+        # Filter groups by id
+        response = client.get(f"/scim/v2/?filter=id eq {test_group.id}")
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify filtered results
+        assert data["totalResults"] == 1
+        assert len(data["Resources"]) == 1
+        assert data["Resources"][0]["id"] == test_group.id
+        assert data["Resources"][0]["meta"]["resourceType"] == "Group"
+
+    @pytest.mark.asyncio
+    async def test_filter_by_id_url_encoded(
+        self, client: TestClient, create_random_user: CreateUserFactory, create_random_group: CreateGroupFactory
+    ) -> None:
+        # First create a user and group
+        test_user = await create_random_user()
+        test_group = await create_random_group()
+
+        # Filter users by id
+        encoded_filter = urllib.parse.quote(f"externalId eq {test_user.external_id}")
+        response = client.get(f"/scim/v2/?filter={encoded_filter}")
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify filtered results
+        assert data["totalResults"] == 1
+        assert len(data["Resources"]) == 1
+        assert data["Resources"][0]["id"] == test_user.id
+        assert data["Resources"][0]["meta"]["resourceType"] == "User"
+
+        # Filter groups by id
+        encoded_filter = urllib.parse.quote(f"externalId eq {test_group.external_id}")
+        response = client.get(f"/scim/v2/?filter={encoded_filter}")
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify filtered results
+        assert data["totalResults"] == 1
+        assert len(data["Resources"]) == 1
+        assert data["Resources"][0]["id"] == test_group.id
+        assert data["Resources"][0]["meta"]["resourceType"] == "Group"

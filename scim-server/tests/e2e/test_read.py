@@ -38,8 +38,8 @@ async def test_list_user_endpoint(
 
     assert response.status_code == 200, f"Failed to get partial list of users: {response.text}"
     partial_users = response.json()
-    assert partial_users["totalResults"] == 5
-    assert partial_users["startIndex"] == 2
+    assert partial_users["totalResults"] == 2
+    assert partial_users["startIndex"] == 1
     assert len(partial_users["Resources"]) == 2
     assert partial_users["Resources"][0] == all_users["Resources"][1]
     assert partial_users["Resources"][1] == all_users["Resources"][2]
@@ -117,8 +117,8 @@ async def test_list_group_endpoint(
 
     assert response.status_code == 200, f"Failed to get partial list of groups: {response.text}"
     partial_groups = response.json()
-    assert partial_groups["totalResults"] >= 5
-    assert partial_groups["startIndex"] == 3
+    assert partial_groups["totalResults"] == 3
+    assert partial_groups["startIndex"] == 1
     assert len(partial_groups["Resources"]) == 3
     assert partial_groups["Resources"][0] == all_groups["Resources"][2]
     assert partial_groups["Resources"][1] == all_groups["Resources"][3]

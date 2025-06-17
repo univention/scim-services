@@ -152,8 +152,11 @@ class CrudUdm(Generic[T], CrudScim[T]):
                 except ValueError:
                     continue
 
-                total_results += 1
                 if valid_objects >= offset and (not end_pos or valid_objects < end_pos):
+                    # might be different if pagination is implemented:
+                    #  - resources: only contains the values on one page
+                    #  - total_results: all available results based on the request
+                    total_results += 1
                     resources.append(resource)
 
                 valid_objects += 1
@@ -323,7 +326,7 @@ class CrudUdm(Generic[T], CrudScim[T]):
         else:
             raise ValueError(f"Unsupported resource class: {self.resource_class}")
 
-    def _convert_scim_filter_to_udm(self, scim_filter: str) -> str:
+    def _convert_scim_filter_to_udm(self, scim_filter: str) -> str | None:
         """
         Convert a SCIM filter to a UDM filter.
         This is a simplified implementation that handles basic filtering.
@@ -349,9 +352,8 @@ class CrudUdm(Generic[T], CrudScim[T]):
                 )
                 return f"{self.external_id_mapping}={external_id_value}"
             else:
-                self.logger.warning("externalId filter requested but no mapping configured")
-                # Fall back to univentionObjectIdentifier if no mapping is configured
-                return f"univentionObjectIdentifier={external_id_value}"
+                self.logger.error("externalId filter requested but no mapping configured", filter={scim_filter})
+                raise ValueError("externalId filter requested but no mapping configured")
 
         # Handle userName filter for users
         if "userName eq " in scim_filter and self.resource_class == User:
@@ -361,7 +363,11 @@ class CrudUdm(Generic[T], CrudScim[T]):
         # Handle displayName filter for groups
         if "displayName eq " in scim_filter and self.resource_class == Group:
             displayname = scim_filter.split("displayName eq ")[1].strip("\"'")
-            return f"name={displayname}"
+            if self.resource_class == User:
+                return f"displayName={displayname}"
+            if self.resource_class == Group:
+                return f"name={displayname}"
 
-        # Pass through other filters as-is (would need proper conversion in production)
-        return scim_filter
+        raise ValueError(
+            "Filter query not supported yet. Filtering is only supported for: id, externalId, userName and displayName"
+        )

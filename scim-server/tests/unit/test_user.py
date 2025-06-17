@@ -399,7 +399,7 @@ class TestUserAPI:
         data = response.json()
 
         # Verify filtered results
-        assert data["totalResults"] >= 1
+        assert data["totalResults"] == 1
         assert any(u["userName"] == test_user.user_name for u in data["Resources"])
 
     # Level 1: Basic operations (what you already support)

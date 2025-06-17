@@ -179,7 +179,6 @@ def test_create_user_mapping(udm_client: MockUdm, client: TestClient) -> None:
     assert response.status_code == 201
     response_data = response.json()
 
-    print(response_data)
     expected_properties = {
         **udm_properties,
         "univentionObjectIdentifier": response_data["id"],
