@@ -134,7 +134,7 @@ class ScimToUdmMapper:
             work_address = None
             other_addresses = []
             for address in user.addresses:
-                if address.type == "work":
+                if address.type == "work" and work_address is None:
                     work_address = address
                 else:
                     other_addresses.append(address)
@@ -212,7 +212,6 @@ class ScimToUdmMapper:
         logger.debug(f"Mapping SCIM Group {group.id} to UDM properties")
         properties = {
             "name": group.display_name,
-            "description": group.display_name,  # Use display name as description if no description is provided
             "univentionObjectIdentifier": group.id,
         }
 
@@ -276,7 +275,8 @@ class ScimToUdmMapper:
             props["guardianMemberRoles"] = []
 
             for member_role in obj.member_roles:
-                props["guardianMemberRoles"].append(member_role.value)
+                if member_role.type == "guardian":
+                    props["guardianMemberRoles"].append(member_role.value)
 
         if obj.description:
             props["description"] = obj.description
