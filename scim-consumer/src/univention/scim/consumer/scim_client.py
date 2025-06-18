@@ -3,8 +3,9 @@
 
 from httpx import Client
 from loguru import logger
+from scim2_client import SCIMResponseError
 from scim2_client.engines.httpx import SyncSCIMClient
-from scim2_models import Group, Resource, ResourceType, SearchRequest
+from scim2_models import Group, Resource, ResourceType, SchemaExtension, SearchRequest
 from scim2_tester import check_server
 
 from univention.scim.consumer.helper import cust_pformat
@@ -53,6 +54,11 @@ class ScimClient:
                     name="User",
                     schemas=[
                         "urn:ietf:params:scim:schemas:core:2.0:ResourceType",
+                    ],
+                    schema_extensions=[
+                        SchemaExtension(_schema="urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"),
+                        SchemaExtension(_schema="urn:ietf:params:scim:schemas:extension:Univention:1.0:User"),
+                        SchemaExtension(_schema="urn:ietf:params:scim:schemas:extension:DapUser:2.0:User"),
                     ],
                     endpoint="/Users",
                     description="User Account",
@@ -115,9 +121,17 @@ class ScimClient:
         logger.info("Create SCIM resource {}", resource.external_id)
         logger.debug("Resource data:\n{}", cust_pformat(resource.model_dump()))
 
-        response = self.get_client().create(resource)
-
-        logger.debug("Response:\n{}", cust_pformat(response))
+        try:
+            response = self.get_client().create(resource)
+            logger.debug("Response:\n{}", cust_pformat(response))
+        
+        # FIXME Happens when the object exists, but without externalId
+        #       e.g. group "Domain Users" when the SCIM server is an
+        #       Univention SCIM server.
+        #
+        #       Maybe trigger an update here ... But could be dangerous?!
+        except SCIMResponseError as e:
+            logger.warning(e)
 
     def update_resource(self, resource: Resource):
         """
@@ -160,7 +174,8 @@ class ScimClient:
         """
         search_request = SearchRequest(filter=f'externalId eq "{external_id}"')
         response = self.get_client().query(search_request=search_request)
-
+        logger.debug("SCIM query response:\n{}", response)
+        
         if response.total_results == 1:
             return response.resources[0]
 

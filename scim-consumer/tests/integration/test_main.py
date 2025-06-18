@@ -45,7 +45,7 @@ def test_add_group_member(udm_client, scim_consumer, group_data, user_data, scim
     # Create group
     #
     create_udm_group(udm_client=udm_client, group_data=group_data)
-    group = wait_for_resource_exists(scim_client, group_data["univentionObjectIdentifier"], max_attemps=150)
+    group = wait_for_resource_exists(scim_client, group_data["univentionObjectIdentifier"])
 
     assert group.display_name == group_data.get("name")
 

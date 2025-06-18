@@ -44,7 +44,7 @@ scim-consumer = "univention.scim.consumer.main:run"
 [tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "session"
 env = [
-    "D:SCIM_SERVER_BASE_URL = http://localhost:8888/",
+    "D:SCIM_SERVER_BASE_URL = http://localhost:8888/v2/",
     "D:PROVISIONING_API_BASE_URL = http://localhost:7777/",
     "D:PROVISIONING_API_USERNAME = scim-consumer",
     "D:PROVISIONING_API_PASSWORD = univention",
@@ -55,6 +55,9 @@ env = [
     "D:UDM_BASE_URL = http://localhost:9979/udm/",
     "D:UDM_USERNAME = cn=admin",
     "D:UDM_PASSWORD = univention",
+    "D:SCIM_UDM_BASE_URL = http://localhost:9999/udm/",
+    "D:SCIM_UDM_USERNAME = cn=admin",
+    "D:SCIM_UDM_PASSWORD = univention",
     "D:LDAP_URL = localhost",
     "D:LDAP_BASE_DN = dc=univention-organization,dc=intranet",
     "D:LDAP_USERNAME = cn=admin,dc=univention-organization,dc=intranet",
