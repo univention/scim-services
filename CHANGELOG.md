@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.29.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.28.0...v0.29.0) (2025-06-18)
+
+
+### Features
+
+* add externalId mapping configuration to helm chart ([6ed6553](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/6ed65530a16d9c4252d6417d43b47311349d4a02)), closes [univention/dev/internal/team-nubus#1235](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1235)
+* get by externalId ([977a7ac](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/977a7ace2f433c95353f67161fdaeac06c6dfa3a)), closes [univention/dev/internal/team-nubus#1235](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1235)
+
+
+### Bug Fixes
+
+* **scim-server:** Implement listing resources on base URL ([2093522](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/20935229e22fd15fd2da0a701289eee0c541ce9b)), closes [univention/dev/internal/team-nubus#1235](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1235)
+
 ## [0.28.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.27.0...v0.28.0) (2025-06-13)
 
 
