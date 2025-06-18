@@ -58,7 +58,9 @@ env = [
     "D:LDAP_URL = localhost",
     "D:LDAP_BASE_DN = dc=univention-organization,dc=intranet",
     "D:LDAP_USERNAME = cn=admin,dc=univention-organization,dc=intranet",
-    "D:LDAP_PASSWORD = univention"
+    "D:LDAP_PASSWORD = univention",
+    "D:EXTERNAL_ID_USER_MAPPING = univentionObjectIdentifier",
+    "D:EXTERNAL_ID_GROUP_MAPPING = univentionObjectIdentifier",
 ]
 addopts = "-lvv --cov --cov-report term-missing --junit-xml=/tmp/pytest-junit.xml"
 

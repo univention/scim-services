@@ -7,14 +7,19 @@ from scim2_models import Resource
 from univention.scim.consumer.group_membership_resolver import GroupMembershipLdapResolver
 from univention.scim.consumer.helper import cust_pformat
 from univention.scim.consumer.scim_client import ScimClient, ScimClientNoDataFoundException
-from univention.scim.server.models.user import User
+from univention.scim.consumer.scim_consumer_settings import ScimConsumerSettings
+from univention.scim.server.models.user import User as UniventionScimUser
 from univention.scim.transformation.udm2scim import UdmToScimMapper
 
 
 class ScimConsumer:
     """ """
 
-    def __init__(self):
+    def __init__(
+        self,
+        settings: ScimConsumerSettings | None = None,
+    ):
+        self.settings = settings or ScimConsumerSettings()
         self.scim_client = ScimClient()
 
     def write_udm_object(self, udm_object: object, topic: str) -> None:
@@ -69,12 +74,12 @@ class ScimConsumer:
         raises:
             ValueError: If topic is not users/user or groups/group
         """
-        # FIXME: Use correct properties for external ID mapping or set it manually after the mapping.
-        #        For now use univentionObjectIdentifier to make the existing tests happy, it was also the
-        #        previouse workaround.
+        group_membership_resolver = GroupMembershipLdapResolver(scim_client=self.scim_client)
         mapper = UdmToScimMapper(
-            external_id_user_mapping="univentionObjectIdentifier",
-            external_id_group_mapping="univentionObjectIdentifier",
+            cache=group_membership_resolver,
+            user_type=UniventionScimUser,
+            external_id_user_mapping=self.settings.external_id_user_mapping,
+            external_id_group_mapping=self.settings.external_id_group_mapping,
         )
         if topic == "users/user":
             scim_resource = mapper.map_user(udm_user=udm_object)

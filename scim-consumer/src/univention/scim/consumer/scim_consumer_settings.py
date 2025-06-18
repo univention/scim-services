@@ -10,7 +10,8 @@ class ScimConsumerSettings(BaseSettings):
     # Attribute in the UDM user object that controls SCIM processing.
     # If it is truthy , the object will be transfered to SCIM.
     scim_user_filter_attribute: str | None = None
-    # TODO Add auth settings
+    external_id_user_mapping: str | None = None
+    external_id_group_mapping: str | None = None
 
     def __new__(cls, *args, **kwargs):
         """
