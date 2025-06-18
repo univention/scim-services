@@ -15,5 +15,5 @@ metadata:
   annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.additionalAnnotations "context" . ) | nindent 4 }}
   {{- end }}
 data:
-  KEYCLOAK_URL: {{ required ".Values.setup.keycloak.connection.baseUrl is required" (tpl .Values.setup.keycloak.connection.baseUrl .) | quote }}
+  KEYCLOAK_URL: {{ printf "%s/admin" (required ".Values.keycloak.connection.url is required" (tpl .Values.keycloak.connection.url .)) | quote }}
   UDM_API_URL: {{ required ".Values.udm.connection.url is required" (tpl .Values.udm.connection.url .) | quote }}

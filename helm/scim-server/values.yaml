@@ -157,40 +157,5 @@ serviceAccount:
   automountServiceAccountToken: false
   labels: {}
 
-setup:
-  enabled: true
-  restartPolicy: "OnFailure"
-  backoffLimit: 900
-  ttlSecondsAfterFinished: 300
-  image:
-    registry: ""
-    repository: "nubus/images/keycloak-bootstrap"
-    tag: "0.8.0"
-    sha256: null
-    imagePullPolicy: ""
-  keycloak:
-    connection:
-      host: ""
-      port: ""
-      baseUrl: ""
-    auth:
-      username: ""
-      existingSecret:
-        name: null
-        keyMapping:
-          password: null
-  config:
-    nubusBaseUrl: ""
-    debug:
-      enabled: false
-      pauseBeforeScriptStart: 0
-  user:
-    create: false
-    username: "scim-api"
-    password: null
-    group:
-      create: false
-      name: "scim-api-access"
-
 additionalLabels: {}
 additionalAnnotations: {}

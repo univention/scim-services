@@ -98,6 +98,7 @@ def make_app(settings: ApplicationSettings) -> FastAPI:
     swagger_ui_init_oauth = None
 
     if settings.docu.enabled:
+        logger.info("Enabling docu endpoints")
         docs_url = "/docs"
         redoc_url = "/redoc"
         openapi_url = "/openapi.json"
