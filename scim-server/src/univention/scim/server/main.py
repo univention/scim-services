@@ -92,17 +92,31 @@ def make_app(settings: ApplicationSettings) -> FastAPI:
     # Configure logging
     configure_logging(settings.log_level)
 
+    docs_url = None
+    redoc_url = None
+    openapi_url = None
+    swagger_ui_init_oauth = None
+
+    if settings.docu.enabled:
+        docs_url = "/docs"
+        redoc_url = "/redoc"
+        openapi_url = "/openapi.json"
+        swagger_ui_init_oauth = {
+            "clientId": settings.docu.client_id,
+            "clientSecret": settings.docu.client_secret,
+            "appName": "Nubus SCIM-API documentation",
+        }
+
     # Setup app
     app: FastAPI = FastAPI(
         title="Univention SCIM Server",
         description="SCIM 2.0 API implementation for Univention",
         version="0.1.0",
         lifespan=lifespan,
-        swagger_ui_init_oauth={
-            "clientId": settings.authenticator.client_id,
-            "clientSecret": settings.authenticator.client_secret,
-            "appName": "Nubus SCIM-API documentation",
-        },
+        docs_url=docs_url,
+        redoc_url=redoc_url,
+        openapi_url=openapi_url,
+        swagger_ui_init_oauth=swagger_ui_init_oauth,
     )
 
     # Add correlation ID middleware

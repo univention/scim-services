@@ -83,12 +83,12 @@ spec:
             - name: KEYCLOAK_APP_BASE_URL
               value: {{ tpl .Values.setup.config.nubusBaseUrl . | quote }}
             - name: SCIM_API_CLIENT_ID
-              value: {{ .Values.oauth.clientId | quote }}
+              value: {{ .Values.config.auth.allowedCliendId | quote }}
             - name: SCIM_API_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.oauth.auth.existingSecret.name "defaultNameSuffix" "keycloak-client-secret" "context" .) | quote }}
-                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.oauth.auth.existingSecret.name "key" "clientSecret") }}
+                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.docu.auth.existingSecret.name "defaultNameSuffix" "keycloak-client-secret" "context" .) | quote }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.docu.auth.existingSecret.name "key" "clientSecret") }}
           volumeMounts:
             - mountPath: "/credentials/keycloak.secret"
               name: "keycloak-credentials-volume"

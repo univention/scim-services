@@ -35,7 +35,10 @@ config:
   corsOrigins: '["*"]'
   auth:
     enabled: true
-    allowGroupDn: ""
+    # -- Only tokens with the given clientId are valid
+    allowedCliendId: ""
+    # -- Only tokens with the given audience are valid
+    allowedAudience: ""
   # -- External ID mapping configuration for SCIM filtering
   externalId:
     # -- UDM property to map to SCIM User externalId. If not set, externalID will not be mapped.
@@ -61,12 +64,12 @@ udm:
       keyMapping:
         password: null
 
-# The clientId is required for authentication because only tokens from that client are considered valid
-# There exists also another parameter to create a keycloak client if it is set, the clientId from here is used for the new client
-# The secret is only needed for convenience to allow logging in in the swagger UI
-oauth:
-  clientId: "scim-api"
+docu:
+  # -- If enabled swagger UI will be availble at the /docs and /redoc endpoint
+  enabled: false
   auth:
+    # -- clientId and clientSecret will be used in swagger UI to allow login when testing the API
+    clientId: null
     existingSecret:
       name: null
       keyMapping:

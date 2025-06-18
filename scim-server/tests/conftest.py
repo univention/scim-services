@@ -174,6 +174,8 @@ def setup_mocks(
     application_settings: ApplicationSettings,
     udm_client: UDM | MockUdm,
     mappers: tuple[ScimToUdmMapper, UdmToScimMapper],
+    host: str,
+    api_prefix: str,
 ) -> Generator[None, None, None]:
     scim2udm_mapper, udm2scim_mapper = mappers
 
@@ -183,7 +185,7 @@ def setup_mocks(
         udm2scim_mapper=udm2scim_mapper,
         resource_class=User,
         udm_client=udm_client,
-        base_url=f"{application_settings.host}{application_settings.api_prefix}",
+        base_url=f"{host}{api_prefix}",
         external_id_mapping="testExternalId",
     )
 
@@ -193,7 +195,7 @@ def setup_mocks(
         udm2scim_mapper=udm2scim_mapper,
         resource_class=Group,
         udm_client=udm_client,
-        base_url=f"{application_settings.host}{application_settings.api_prefix}",
+        base_url=f"{host}{api_prefix}",
         external_id_mapping="testExternalId",
     )
 
@@ -241,13 +243,14 @@ def client(
     after_setup: Callable[[], _GeneratorContextManager[Any, None, None]],
     force_mock: bool,
     mappers: tuple[ScimToUdmMapper, UdmToScimMapper],
+    host: str,
+    api_prefix: str,
 ) -> Generator[TestClient, None, None]:
-    app = make_app(application_settings)
     if force_mock or skip_if_no_udm():
         with (
-            setup_mocks(application_settings, udm_client, mappers),
+            setup_mocks(application_settings, udm_client, mappers, host, api_prefix),
             after_setup(),
-            TestClient(app, headers={"Authorization": "Bearer let-me-in"}) as client,
+            TestClient(make_app(application_settings), headers={"Authorization": "Bearer let-me-in"}) as client,
         ):
             yield client
     else:
@@ -259,7 +262,7 @@ def client(
             # Use settings from unit tests
             ApplicationContainer.settings.override(application_settings),
             after_setup(),
-            TestClient(app, headers={"Authorization": "Bearer let-me-in"}) as client,
+            TestClient(make_app(application_settings), headers={"Authorization": "Bearer let-me-in"}) as client,
         ):
             yield client
 
@@ -735,7 +738,7 @@ def api_prefix(application_settings: ApplicationSettings) -> str:
 @pytest.fixture
 def host(application_settings: ApplicationSettings) -> str:
     """Get the API prefix for the SCIM server."""
-    return str(application_settings.host)
+    return str(application_settings.host).rstrip("/")
 
 
 @pytest.fixture

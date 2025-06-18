@@ -6,6 +6,7 @@ from typing import TypeVar
 from asgi_correlation_id import correlation_id as asgi_correlation_id
 from dependency_injector import containers, providers
 from loguru import logger
+from pydantic import AnyHttpUrl
 from scim2_models import Group, Resource, User
 from univention.admin.rest.client import UDM
 
@@ -33,8 +34,8 @@ def _generate_udm_request_id() -> str:
     return upstream_correlation_id
 
 
-def _get_base_url(host: str, api_prefix: str) -> str:
-    return f"{host}{api_prefix}"
+def _get_base_url(host: AnyHttpUrl, api_prefix: str) -> str:
+    return f"{str(host).rstrip('/')}{api_prefix}"
 
 
 class RepositoryContainer(containers.DeclarativeContainer):

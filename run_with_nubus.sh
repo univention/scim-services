@@ -4,27 +4,26 @@
 
 
 client_secret="$(kubectl get secret nubus-scim-server-keycloak-client-secret -o jsonpath='{.data.oauthAdapterM2mSecret}' | base64 --decode)"
-client_id="$(kubectl get configmap nubus-scim-server-env -o jsonpath='{.data.AUTHENTICATOR_CLIENT_ID}')"
+allowed_client_id="$(kubectl get configmap nubus-scim-server-env -o jsonpath='{.data.AUTHENTICATOR_ALLOWED_CLIENT_ID}')"
+allowed_audience="$(kubectl get configmap nubus-scim-server-env -o jsonpath='{.data.AUTHENTICATOR_ALLOWED_AUDIENCE}')"
 udm_url="https://$(kubectl get ingress nubus-udm-rest-api --no-headers | awk '{ print $3}')/univention/udm"
 udm_username="$(kubectl get secret nubus-scim-server-udm-secret -o jsonpath='{.data.username}' | base64 --decode)"
 udm_password="$(kubectl get secret nubus-scim-server-udm-secret -o jsonpath='{.data.password}' | base64 --decode)"
-scim_api_group_dn="$(kubectl get configmap nubus-scim-server-env -o jsonpath='{.data.AUTHENTICATOR_ALLOW_GROUP_DN}')"
 idp_config_url="$(kubectl get configmap nubus-scim-server-env -o jsonpath='{.data.AUTHENTICATOR_IDP_OPENID_CONFIGURATION_URL}')"
 
-echo "Client secret: ${client_secret}"
-echo "Client ID: ${client_id}"
+echo "Allowed client ID: ${allowed_client_id}"
+echo "Allowed audience: ${allowed_audience}"
 echo "UDM URL: ${udm_url}"
 echo "UDM username: ${udm_username}"
 echo "UDM password: ${udm_password}"
-echo "SCIM allowed groupd DN: ${scim_api_group_dn}"
 echo "IDP config URL: ${idp_config_url}"
 
 (
   cd scim-server && \
+    DOCU_ENABLED="true" \
     LOG_LEVEL="DEBUG" \
-    AUTHENTICATOR_CLIENT_SECRET="${client_secret}" \
-    AUTHENTICATOR_CLIENT_ID="${client_id}" \
-    AUTHENTICATOR_ALLOW_GROUP_DN="${scim_api_group_dn}" \
+    AUTHENTICATOR_ALLOWED_CLIENT_ID="${allowed_client_id}" \
+    AUTHENTICATOR_ALLOWED_AUDIENCE="${scim_api_group_dn}" \
     UDM_URL="${udm_url}" \
     UDM_USERNAME="${udm_username}" \
     UDM_PASSWORD="${udm_password}" \

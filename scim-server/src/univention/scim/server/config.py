@@ -4,16 +4,15 @@
 from functools import lru_cache
 
 from lancelog import LogLevel
-from pydantic import Field
+from pydantic import AnyHttpUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class AuthenticatorConfig(BaseSettings):
     model_config = SettingsConfigDict()
-    idp_openid_configuration_url: str = ""
-    client_id: str = ""
-    client_secret: str = ""
-    allow_group_dn: str = ""
+    idp_openid_configuration_url: AnyHttpUrl = AnyHttpUrl("http://id.example.test/.well-known/openid-configuration")
+    allowed_client_id: str = ""
+    allowed_audience: str = ""
 
 
 class UdmConfig(BaseSettings):
@@ -23,9 +22,19 @@ class UdmConfig(BaseSettings):
 
     model_config = SettingsConfigDict()
 
-    url: str = Field(default="http://localhost:9979/univention/udm/")
-    username: str = Field(default="admin")
-    password: str = Field(default="univention")
+    url: AnyHttpUrl = AnyHttpUrl("http://localhost:9979/univention/udm/")
+    username: str = "admin"
+    password: str = "univention"
+
+
+class DocuConfig(BaseSettings):
+    model_config = SettingsConfigDict()
+
+    enabled: bool = Field(
+        default=False, description="If true swagger UI will be enabled under the /docs and /redocs endpoints"
+    )
+    client_id: str = Field(default="", description="Client ID to be used to login at the swagger UI")
+    client_secret: str = Field(default="", description="Client secret to be used to login at the swagger UI")
 
 
 class ApplicationSettings(BaseSettings):
@@ -44,7 +53,7 @@ class ApplicationSettings(BaseSettings):
     )
 
     # API settings
-    host: str = "http://scim.example.test"
+    host: AnyHttpUrl = AnyHttpUrl("http://scim.example.test")
     api_prefix: str = "/scim/v2"
     # Logging
     log_level: LogLevel = LogLevel.INFO
@@ -57,6 +66,8 @@ class ApplicationSettings(BaseSettings):
     # Authentication and authorization
     auth_enabled: bool = True
     authenticator: AuthenticatorConfig = AuthenticatorConfig()
+    # Configuration for Swagger-UI docu
+    docu: DocuConfig = DocuConfig()
     # PATCH operations
     patch_enabled: bool = False
     # UDM configuration
@@ -77,7 +88,7 @@ class DependencyInjectionSettings(BaseSettings):
 
     di_oidc_configuration: str = "univention.scim.server.authn.oidc_configuration_impl.OpenIDConnectConfigurationImpl"
     di_authenticator: str = "univention.scim.server.authn.authn_impl.OpenIDConnectAuthentication"
-    di_authorization: str = "univention.scim.server.authz.authz_impl.AllowGroup"
+    di_authorization: str = "univention.scim.server.authz.authz_impl.AllowAudience"
 
     # Use UDM-backed repositories for users
     di_user_repo: str = "univention.scim.server.domain.repo.container.RepositoryContainer.user_crud_manager"

@@ -46,10 +46,10 @@ class ApplicationContainer(DeclarativeContainer):
             di.di_oidc_configuration, config=settings().authenticator
         )
         authenticator: Authentication = Singleton(
-            di.di_authenticator, oidc_configuration=oidc_configuration, client_id=settings().authenticator.client_id
+            di.di_authenticator,
+            oidc_configuration=oidc_configuration,
+            client_id=settings().authenticator.allowed_client_id,
         )
-        # TODO: Switch to using our own UserService if group mapping is implemented.
-        # For now use the UDM REST API directly
         authorization: Authorization = Singleton(
-            di.di_authorization, group_dn=settings().authenticator.allow_group_dn, udm_settings=settings().udm
+            di.di_authorization, audience=settings().authenticator.allowed_audience
         )

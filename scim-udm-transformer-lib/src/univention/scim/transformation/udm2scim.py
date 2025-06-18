@@ -444,9 +444,10 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
 
         # Map members if available
         if "users" in props and props["users"] is not None and self.cache:
-            user_dns = props["users"]
             if not group.members:
                 group.members = []
+
+            user_dns = props["users"]
 
             for dn in user_dns:
                 cached_user = self.cache.get_user(dn)
