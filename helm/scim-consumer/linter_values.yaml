@@ -8,8 +8,18 @@ global:
 
 nubusProvisioning:
   connection:
-    url: "http://nubus-provisioning-api"
+    url: "http://stub-nubus-provisioning-api"
 
 scimServer:
+  connection:
+    url: "http://stub-scim-server"
   auth:
     username: "stub-scim-api-username"
+
+ldap:
+  connection:
+    uri: "ldap://stub-ldap-server"
+  auth:
+    bindDn: "uid=stub,cn=users,dc=univention-organization,dc=intranet"
+    existingSecret:
+      name: stub-ldap-server-credentials

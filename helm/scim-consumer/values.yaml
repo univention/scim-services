@@ -32,14 +32,14 @@ nubusProvisioning:
     # -- Username of the nubus provisioning subscription / this consumer
     # For a given nubus deployment, all provisioning subscription names must be unique.
     username: null
-    # -- The password used to authenticate with the source LDAP directory.
+    # -- The password used to authenticate with the Provisioning API.
     # Either this value or an existing Secret has to be specified.
     password: null
     existingSecret:
       # -- The name of an existing Secret to use for retrieving the password
-      # to authenticate with the source LDAP directory.
+      # to authenticate with the Provisionig API.
       #
-      # "udm.auth.password" will be ignored if this value is set.
+      # "nubusProvisioning.auth.password" will be ignored if this value is set.
       name: null
       keyMapping:
         # -- The key to retrieve the password from. Setting this value allows to use
@@ -48,11 +48,32 @@ nubusProvisioning:
 
 # -- Downstream SCIM Service connection configuration
 scimServer:
+  connection:
+    # -- The base URL the SCIM server is reachable at. (e.g. "http://scim-server")
+    url: null
   auth:
     username: null
-    # -- The password used to authenticate with the source LDAP directory.
+    # -- The password used to authenticate with the SCIM Server.
     # Either this value or an existing Secret has to be specified.
     password: null
+    existingSecret:
+      # -- The name of an existing Secret to use for retrieving the password
+      # to authenticate with the SCIM Server.
+      #
+      # "scimServer.auth.password" will be ignored if this value is set.
+      name: null
+      keyMapping:
+        # -- The key to retrieve the password from. Setting this value allows to use
+        # a key with a different name.
+        password: null
+
+# -- Upstream LDAP server to resolve group member DN's
+ldap:
+  connection:
+    # -- LDAP Server URI (e.g. "ldap://nubus-ldap-server")
+    uri: null
+  auth:
+    bindDn: null
     existingSecret:
       # -- The name of an existing Secret to use for retrieving the password
       # to authenticate with the source LDAP directory.

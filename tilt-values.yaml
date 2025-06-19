@@ -10,5 +10,17 @@ nubusProvisioning:
     url: "http://provisioning-api"
 
 scimServer:
+  connection:
+    url: "http://scim-server"
   auth:
     username: "stub-scim-api-username"
+
+ldap:
+  connection:
+    uri: "ldap://ldap-server"
+  auth:
+    bindDn: "cn=admin,dc=univention-organization,dc=intranet"
+    existingSecret:
+      name: ldap-server-credentials
+      keyMapping:
+        password: adminPassword

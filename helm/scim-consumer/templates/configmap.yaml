@@ -18,3 +18,6 @@ data:
   PROVISIONING_API_BASE_URL: {{ required ".Values.nubusProvisioning.connection.url is required." .Values.nubusProvisioning.connection.url | quote }}
   MAX_ACKNOWLEDGEMENT_RETRIES: {{ required ".Values.nubusProvisioning.connection.maxAcknowledgementRetries is required." .Values.nubusProvisioning.connection.maxAcknowledgementRetries | quote }}
   SCIM_API_USERNAME: {{ required ".Values.scimServer.auth.username is required" .Values.scimServer.auth.username }}
+  SCIM_SERVER_BASE_URL: {{ required ".Values.scimServer.connection.url is required" .Values.scimServer.connection.url }}
+  LDAP_URI: {{ required ".Values.ldap.connection.uri is required" .Values.ldap.connection.uri }}
+  LDAP_BIND_DN: {{ required ".Values.ldap.auth.bindDn is required" .Values.ldap.auth.bindDn }}
