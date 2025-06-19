@@ -248,6 +248,21 @@ services:
     networks:
       - scim
 
+  keycloak:
+    image: artifacts.software-univention.de/nubus-dev/images/keycloak:0.2.0-post-main
+    container_name: keycloak
+    command: start-dev --http-enabled=true --import-realm
+    ports:
+      - 5050:8080
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=univention
+      - PROXY_ADDRESS_FORWARDING=true
+      - KC_PROXY=edge
+      - KEYCLOAK_LOGLEVEL=ALL
+      - ROOT_LOGLEVEL=ALL
+
+
   test:
     profiles:
       - test
