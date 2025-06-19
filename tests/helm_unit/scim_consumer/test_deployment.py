@@ -20,3 +20,17 @@ class TestDeployment(Deployment):
 class TestMainContainer(ContainerEnvVarSecret):
     template_file = "templates/deployment.yaml"
     container_name = "scim-consumer"
+
+
+@pytest.mark.parametrize(
+    "key, env_var",
+    [
+        ("ldap", "LDAP_BIND_PASSWORD"),
+    ],
+)
+class TestMainContainerLdapPassword(ContainerEnvVarSecret):
+    template_file = "templates/deployment.yaml"
+    container_name = "scim-consumer"
+
+    @pytest.mark.skip("Not relevant for secrets with password generation")
+    def test_auth_disabling_existing_secret(self, key, env_var): ...

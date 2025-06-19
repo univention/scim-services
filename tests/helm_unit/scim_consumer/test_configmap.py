@@ -20,6 +20,9 @@ class TestConfigMap(ConfigMap):
         ("nubusProvisioning.connection.url", "PROVISIONING_API_BASE_URL"),
         ("scimServer.auth.username", "SCIM_API_USERNAME"),
         ("nubusProvisioning.connection.maxAcknowledgementRetries", "MAX_ACKNOWLEDGEMENT_RETRIES"),
+        ("scimServer.connection.url", "SCIM_SERVER_BASE_URL"),
+        ("ldap.connection.uri", "LDAP_URI"),
+        ("ldap.auth.bindDn", "LDAP_BIND_DN"),
     ],
 )
 class TestRequiredConfigMapEnv(RequiredEnvVariables):
