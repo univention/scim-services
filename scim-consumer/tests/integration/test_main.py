@@ -132,7 +132,7 @@ def test_update_group_member_dn(udm_client, scim_consumer, group_data, user_data
     wait_for_resource_deleted(scim_client, group_data["univentionObjectIdentifier"])
 
 
-@pytest.mark.skip()
+@pytest.mark.skip("Will be developed further in a future MR")
 def test_prefilled_sync(scim_consumer_prefilled, scim_client):
     udm_users, udm_group = scim_consumer_prefilled
 

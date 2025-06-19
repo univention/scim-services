@@ -1,14 +1,20 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-import os
-
 from ldap3 import AUTO_BIND_NO_TLS, BASE, SAFE_SYNC, Connection, Server
 from loguru import logger
+from pydantic import AnyUrl
+from pydantic_settings import BaseSettings
 
 from univention.scim.consumer.helper import cust_pformat
 from univention.scim.consumer.scim_client import ScimClient, ScimClientNoDataFoundException
 from univention.scim.transformation.id_cache import CacheItem, IdCache
+
+
+class LdapSettings(BaseSettings):
+    ldap_uri: AnyUrl
+    ldap_bind_dn: str
+    ldap_bind_password: str
 
 
 class GroupMembershipLdapResolver(IdCache):
@@ -22,34 +28,28 @@ class GroupMembershipLdapResolver(IdCache):
             cls.instance = super().__new__(cls)
         return cls.instance
 
-    def __init__(self, scim_client: ScimClient | None = None):
+    def __init__(self, scim_client: ScimClient | None = None, ldap_settings: LdapSettings | None = None):
         """ """
         self.scim_client = scim_client
 
-        # TODO Dirty hack - has to be refactored after ProvisioningMessage upgrade
-        self.ldap_client = self._ldap3_connect(
-            os.environ["LDAP_URL"], os.environ["LDAP_USERNAME"], os.environ["LDAP_PASSWORD"], os.environ["LDAP_BASE_DN"]
-        )
+        self.ldap_client = self.connect_to_ldap(ldap_settings or LdapSettings())
 
-        self.ldap_base_dn = os.environ["LDAP_BASE_DN"]
-
-    def _ldap3_connect(self, ldap_uri: str, ldap_admin_user: str, ldap_admin_password: str, ldap_base_dn: str):
-        logger.debug("Try connect to {} ({}) with {}", ldap_uri, ldap_base_dn, ldap_admin_user)
-
-        server = Server(ldap_uri)
+    def connect_to_ldap(self, ldap_settings: LdapSettings):
+        server = Server(str(ldap_settings.ldap_uri))
         ldap_connection = Connection(
-            server, ldap_admin_user, ldap_admin_password, client_strategy=SAFE_SYNC, auto_bind=AUTO_BIND_NO_TLS
+            server,
+            ldap_settings.ldap_bind_dn,
+            ldap_settings.ldap_bind_password,
+            client_strategy=SAFE_SYNC,
+            auto_bind=AUTO_BIND_NO_TLS,
         )
-
-        logger.debug("Connected to {} ({}) with {}", ldap_uri, ldap_base_dn, ldap_admin_user)
-
         return ldap_connection
 
     def get_group(self, key: str) -> CacheItem | None:
         """
         Mapping from groups in the user objects and nested groups are out of scope at the moment.
         """
-        pass
+        return None
 
     def get_user(self, key: str) -> CacheItem | None:
         """ """
@@ -89,10 +89,8 @@ class GroupMembershipLdapResolver(IdCache):
             paged_size=1,
         )
 
-        try:
-            entry = next(response)
-        except StopIteration:
-            logger.warning("LDAP user with DN {dn} not found!", dn=dn)
+        if (entry := next(response, None)) is None:
+            logger.warning("Could not resolve group member DN to SCIM ID. LDAP user with DN {dn} not found!", dn=dn)
             return None
 
         univention_object_identifier = entry["attributes"].get("univentionObjectIdentifier")

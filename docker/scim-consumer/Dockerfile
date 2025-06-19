@@ -86,6 +86,8 @@ COPY --from=build --chown=${USER}:${USER} /app/requirements.txt /app/requirement
 
 USER ${USER}
 
+CMD ["scim-consumer"]
+
 RUN \
   python3.11 -V && \
   python3.11 -m site && \
