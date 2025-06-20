@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.29.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.29.0...v0.29.1) (2025-06-20)
+
+
+### Bug Fixes
+
+* **scim-consumer:** Add new LDAP env variables to the scim-consumer helm chart ([d5f0c87](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/d5f0c87788def1ce2d79a682bc3297f3b0720f59)), closes [univention/dev/internal/team-nubus#1228](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1228)
+* **scim-consumer:** Changes for external_id mappping. ([35cec1b](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/35cec1b8b708293d2af3bb555173d39dd76e73e6)), closes [univention/dev/internal/team-nubus#1228](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1228)
+* **scim-consumer:** Fix group sync ([e2ef123](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/e2ef123656c2f8763cc99c52b9240b92c04fe39f)), closes [univention/dev/internal/team-nubus#1228](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1228)
+
 ## [0.29.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.28.0...v0.29.0) (2025-06-18)
 
 
