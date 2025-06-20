@@ -72,6 +72,6 @@ known-first-party = ["helpers", "univention.scim"]
 dev = [
     "pytest>=8.3.5",
     "pytest-asyncio>=1.0.0",
-    "helm-test-harness>=0.20.0",
-    "pytest-helm>=0.20.0"
+    "helm-test-harness>=0.21.0",
+    "pytest-helm>=0.21.0"
 ]

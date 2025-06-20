@@ -58,10 +58,9 @@ env = [
     "D:SCIM_UDM_BASE_URL = http://localhost:9999/udm/",
     "D:SCIM_UDM_USERNAME = cn=admin",
     "D:SCIM_UDM_PASSWORD = univention",
-    "D:LDAP_URL = localhost",
-    "D:LDAP_BASE_DN = dc=univention-organization,dc=intranet",
-    "D:LDAP_USERNAME = cn=admin,dc=univention-organization,dc=intranet",
-    "D:LDAP_PASSWORD = univention",
+    "D:LDAP_HOST = localhost",
+    "D:LDAP_BIND_DN = cn=admin,dc=univention-organization,dc=intranet",
+    "D:LDAP_BIND_PASSWORD = univention",
     "D:EXTERNAL_ID_USER_MAPPING = univentionObjectIdentifier",
     "D:EXTERNAL_ID_GROUP_MAPPING = univentionObjectIdentifier",
 ]

@@ -28,6 +28,5 @@ class Name(ScimName):
 class User(ScimUser[AnyExtension]):
     name: Annotated[Name | ScimName | None, Required.true] = None
     emails: list[Email | ScimEmail] | None = None
-    description: dict | None = None
 
-    model_config = ConfigDict(extra='allow')
+    model_config = ConfigDict(extra="ignore")

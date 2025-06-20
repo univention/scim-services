@@ -39,7 +39,7 @@ class ScimConsumer:
 
         except ScimClientNoDataFoundException:
             self.scim_client.create_resource(scim_resource)
-            
+
         else:
             scim_resource.id = existing_scim_resource.id
             scim_resource.meta = existing_scim_resource.meta

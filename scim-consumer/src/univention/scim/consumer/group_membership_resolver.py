@@ -3,7 +3,6 @@
 
 from ldap3 import AUTO_BIND_NO_TLS, BASE, SAFE_SYNC, Connection, Server
 from loguru import logger
-from pydantic import AnyUrl
 from pydantic_settings import BaseSettings
 
 from univention.scim.consumer.helper import cust_pformat
@@ -12,7 +11,7 @@ from univention.scim.transformation.id_cache import CacheItem, IdCache
 
 
 class LdapSettings(BaseSettings):
-    ldap_uri: AnyUrl
+    ldap_host: str
     ldap_bind_dn: str
     ldap_bind_password: str
 
@@ -35,7 +34,7 @@ class GroupMembershipLdapResolver(IdCache):
         self.ldap_client = self.connect_to_ldap(ldap_settings or LdapSettings())
 
     def connect_to_ldap(self, ldap_settings: LdapSettings):
-        server = Server(str(ldap_settings.ldap_uri))
+        server = Server(ldap_settings.ldap_host)
         ldap_connection = Connection(
             server,
             ldap_settings.ldap_bind_dn,

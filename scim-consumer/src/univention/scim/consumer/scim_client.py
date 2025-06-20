@@ -124,7 +124,7 @@ class ScimClient:
         try:
             response = self.get_client().create(resource)
             logger.debug("Response:\n{}", cust_pformat(response))
-        
+
         # FIXME Happens when the object exists, but without externalId
         #       e.g. group "Domain Users" when the SCIM server is an
         #       Univention SCIM server.
@@ -175,7 +175,7 @@ class ScimClient:
         search_request = SearchRequest(filter=f'externalId eq "{external_id}"')
         response = self.get_client().query(search_request=search_request)
         logger.debug("SCIM query response:\n{}", response)
-        
+
         if response.total_results == 1:
             return response.resources[0]
 

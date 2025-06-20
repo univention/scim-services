@@ -284,10 +284,9 @@ services:
       UDM_BASE_URL: http://udm-rest-api:9979/udm/
       UDM_USERNAME: cn=admin
       UDM_PASSWORD: univention
-      LDAP_URL: ldap-server
-      LDAP_BASE_DN: dc=univention-organization,dc=intranet
-      LDAP_USERNAME: cn=admin,dc=univention-organization,dc=intranet
-      LDAP_PASSWORD: univention
+      LDAP_HOST: ldap-server
+      LDAP_BIND_DN: cn=admin,dc=univention-organization,dc=intranet
+      LDAP_BIND_PASSWORD: univention
       EXTERNAL_ID_USER_MAPPING: univentionObjectIdentifier
       EXTERNAL_ID_GROUP_MAPPING: univentionObjectIdentifier
     networks:
