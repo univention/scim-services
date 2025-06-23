@@ -52,7 +52,14 @@ scimServer:
     # -- The base URL the SCIM server is reachable at. (e.g. "http://scim-server")
     url: null
   auth:
-    username: null
+    # -- Disable authentication with the SCIM Server for testing purposes
+    enabled: true
+    # -- Base url of the OIDC identity provider where this service account is created.
+    idpBaseUrl: null
+    # --
+    realm: null
+    # -- Service account client ID (username)
+    clientId: null
     # -- The password used to authenticate with the SCIM Server.
     # Either this value or an existing Secret has to be specified.
     password: null

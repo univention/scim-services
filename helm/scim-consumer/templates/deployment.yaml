@@ -64,7 +64,7 @@ spec:
             - configMapRef:
                 name: {{ $name }}
           env:
-            - name: SCIM_API_PASSWORD
+            - name: SCIM_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.scimServer.auth.existingSecret "defaultNameSuffix" "scim-server" "context" .) | quote }}

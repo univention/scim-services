@@ -13,7 +13,10 @@ scimServer:
   connection:
     url: "http://scim-server"
   auth:
-    username: "stub-scim-api-username"
+    enabled: false
+    idpBaseUrl: "foo"
+    realm: "bar"
+    clientId: "stub-scim-api-username"
 
 ldap:
   connection:
