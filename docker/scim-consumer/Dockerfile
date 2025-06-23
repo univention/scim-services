@@ -64,9 +64,6 @@ RUN uv sync \
         --package=scim-consumer \
         --dev
 
-COPY ./docker/scim-consumer/test-entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
-
 ###############################################
 # Stage 3: final image
 FROM ${UCS_BASE_IMAGE}:${UCS_BASE_IMAGE_TAG} AS final

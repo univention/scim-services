@@ -290,9 +290,14 @@ services:
       LDAP_PASSWORD: univention
       EXTERNAL_ID_USER_MAPPING: univentionObjectIdentifier
       EXTERNAL_ID_GROUP_MAPPING: univentionObjectIdentifier
-
     networks:
       - scim
+    command: >
+      /bin/bash -c "uv run pytest
+      --config-file=/app/scim-consumer/pyproject.toml
+      --cov-config=/app/scim-consumer/pyproject.toml
+      --cov-report=xml:/tmp/scim-coverage.xml
+      -p no:cacheprovider scim-consumer/tests"
 
 volumes:
   ldap-shared-data:
