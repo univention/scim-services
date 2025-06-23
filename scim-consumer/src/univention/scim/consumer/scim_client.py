@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-from httpx import Client
+from httpx import Auth, Client
 from loguru import logger
 from scim2_client import SCIMResponseError
 from scim2_client.engines.httpx import SyncSCIMClient
@@ -20,7 +20,7 @@ class ScimClientTooManyResultsException(Exception): ...
 
 
 class ScimClient:
-    _scim_client: SyncSCIMClient = None
+    _scim_client: SyncSCIMClient | None = None
 
     def __new__(cls, *args, **kwargs):
         """
@@ -32,9 +32,18 @@ class ScimClient:
 
     def __init__(
         self,
+        auth: Auth,
         settings: ScimConsumerSettings | None = None,
     ):
+        # TODO: remove the or path
+        self.auth = auth
         self.settings = settings or ScimConsumerSettings()
+        if self.settings.scim_oidc_authentication:
+            logger.info("OIDC authentication enabled. SCIM API requests will be authenticated.")
+            self.auth = auth
+        else:
+            logger.info("OIDC authentication disabled. SCIM API requests will be unauthenticated.")
+            self.auth = None
 
     def _create_client(self) -> SyncSCIMClient:
         """
@@ -43,7 +52,10 @@ class ScimClient:
         """
         logger.info("Connect to SCIM server ({}).", self.settings.scim_server_base_url)
 
-        client = Client(base_url=self.settings.scim_server_base_url)
+        client = Client(
+            auth=self.auth,
+            base_url=self.settings.scim_server_base_url,
+        )
 
         scim = SyncSCIMClient(
             client=client,

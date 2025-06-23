@@ -4,6 +4,7 @@
 from loguru import logger
 from scim2_models import Resource
 
+from univention.scim.consumer.authentication import Authenticator
 from univention.scim.consumer.group_membership_resolver import GroupMembershipLdapResolver
 from univention.scim.consumer.helper import cust_pformat
 from univention.scim.consumer.scim_client import ScimClient, ScimClientNoDataFoundException
@@ -20,7 +21,8 @@ class ScimConsumer:
         settings: ScimConsumerSettings | None = None,
     ):
         self.settings = settings or ScimConsumerSettings()
-        self.scim_client = ScimClient()
+        auth = Authenticator()
+        self.scim_client = ScimClient(auth)
 
     def write_udm_object(self, udm_object: object, topic: str) -> None:
         """
@@ -30,21 +32,18 @@ class ScimConsumer:
             ValueError: If no external_id is given.
         """
         scim_resource = self.prepare_data(udm_object, topic)
-
         if not scim_resource.external_id:
             raise ValueError("No external_id given!")
 
         try:
             existing_scim_resource = self.scim_client.get_resource_by_external_id(scim_resource.external_id)
-
         except ScimClientNoDataFoundException:
             self.scim_client.create_resource(scim_resource)
+            return
+        scim_resource.id = existing_scim_resource.id
+        scim_resource.meta = existing_scim_resource.meta
 
-        else:
-            scim_resource.id = existing_scim_resource.id
-            scim_resource.meta = existing_scim_resource.meta
-
-            self.scim_client.update_resource(scim_resource)
+        self.scim_client.update_resource(scim_resource)
 
     def delete_udm_object(self, udm_object: object, topic: str) -> None:
         """
@@ -54,18 +53,14 @@ class ScimConsumer:
             ValueError: If no external_id is given.
         """
         scim_resource = self.prepare_data(udm_object, topic)
-
         if not scim_resource.external_id:
             raise ValueError("No external_id given!")
 
         try:
             existing_scim_resource = self.scim_client.get_resource_by_external_id(scim_resource.external_id)
-
         except ScimClientNoDataFoundException:
-            pass
-
-        else:
-            self.scim_client.delete_resource(existing_scim_resource)
+            return
+        self.scim_client.delete_resource(existing_scim_resource)
 
     def prepare_data(self, udm_object: object, topic: str) -> Resource:
         """
@@ -84,10 +79,8 @@ class ScimConsumer:
         )
         if topic == "users/user":
             scim_resource = mapper.map_user(udm_user=udm_object)
-
         elif topic == "groups/group":
             scim_resource = mapper.map_group(udm_group=udm_object)
-
         else:
             raise ValueError(f"Unsupported message topic {topic}")
 

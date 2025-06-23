@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings
 
 class ScimConsumerSettings(BaseSettings):
     scim_server_base_url: str
+    scim_oidc_authentication: bool
     health_check_enabled: bool = True
     # Attribute in the UDM user object that controls replication to the SCIM API.
     # If it is truthy , the object will be transfered to SCIM.

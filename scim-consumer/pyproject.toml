@@ -61,6 +61,7 @@ env = [
     "D:LDAP_BIND_PASSWORD = univention",
     "D:EXTERNAL_ID_USER_MAPPING = univentionObjectIdentifier",
     "D:EXTERNAL_ID_GROUP_MAPPING = univentionObjectIdentifier",
+    "D:SCIM_OIDC_AUTHENTICATION = false",
     #
     # Configuration for tests with Univention SCIM-Server
     #
