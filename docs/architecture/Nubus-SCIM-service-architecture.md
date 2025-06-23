@@ -107,22 +107,10 @@ From the PM email (2025-02-19):
 
 We will implement this in the following way:
 
-- MS1: The client/user in the token must exist as a `users/ldap` or `users/user` object in UDM and
-  must be member of a certain `groups/group` object in UDM.
-  - When a request comes in it must be authenticated.
-    Thus, we retrieve the mentioned group from UDM or a cache.
-  - We cache the group data for a _configurable_ number of seconds.
-  - If the client/user is member of that group, then it is permitted access, otherwise denied.
-  - We do not support nested groups.
-  - _Update_: We may configure Keycloak to do the authz, and just check the token.
-    The description in this section will be updated when it's clear if that approach works.
-    The work is done in [issue #1151](https://git.knut.univention.de/univention/dev/internal/team-nubus/-/issues/1151).
-- MS2: The client/user in the token must exist as a user object in the SCIM (SQL) DB and
-  must be member of a certain group object in the SCIM DB.
-  - When a request comes in it must be authenticated.
-    Thus, we retrieve the mentioned group from the SCIM DB.
-  - If the client/user is member of that group, then it is permitted access, otherwise denied.
-  - We do not support nested groups.
+- MS1: The `aud` and `azp` claims of the token are verified. The `azp` contains the ClientID and the `aud` must be configured on keycloak
+       to contain a well known token. The values for validation of the ClientID and audience can be configured via ENV vars or via the helm chart.
+- MS2:
+  - TODO: Input from PM here please
 
 ### Performance
 
