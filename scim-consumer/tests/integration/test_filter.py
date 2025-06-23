@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-import os
 
 import pytest
 
@@ -11,28 +10,12 @@ from univention.scim.consumer.scim_consumer import ScimConsumer
 from ..data.provisioning_message_factory import get_provisioning_message
 
 
-@pytest.fixture(scope="function")
-def set_scim_user_filter_attribute():
-    #
-    # Enable filter on field isNextcloudUser
-    #
-    os.environ["SCIM_USER_FILTER_ATTRIBUTE"] = "isNextcloudUser"
-
-    yield
-
-    #
-    # Disable filter on field isNextcloudUser
-    #
-    os.environ.pop("SCIM_USER_FILTER_ATTRIBUTE")
-
-
 @pytest.mark.asyncio
-async def test_create_user(set_scim_user_filter_attribute, scim_client, scim_consumer: ScimConsumer):
+async def test_create_user(scim_client, scim_consumer: ScimConsumer):
     # Create user
     pm = get_provisioning_message("user_create")
     pm.body.new["properties"]["isNextcloudUser"] = True
-    # TODO: Don't rely on the fixture order
-    # scim_consumer.settings.scim_user_filter_attribute = "isNextcloudUser"
+    scim_consumer.settings.scim_user_filter_attribute = "isNextcloudUser"
 
     await scim_consumer.handle_udm_message(pm)
 
@@ -59,12 +42,13 @@ async def test_create_user(set_scim_user_filter_attribute, scim_client, scim_con
 
 
 @pytest.mark.asyncio
-async def test_create_user_with_update(set_scim_user_filter_attribute, scim_client, scim_consumer):
+async def test_create_user_with_update(scim_client, scim_consumer):
     #
     # Create user, should not created in SCIM
     #
     pm = get_provisioning_message("user_create")
     pm.body.new["properties"]["isNextcloudUser"] = False
+    scim_consumer.settings.scim_user_filter_attribute = "isNextcloudUser"
 
     await scim_consumer.handle_udm_message(pm)
 
@@ -97,12 +81,13 @@ async def test_create_user_with_update(set_scim_user_filter_attribute, scim_clie
 
 
 @pytest.mark.asyncio
-async def test_not_create_user(set_scim_user_filter_attribute, scim_client, scim_consumer):
+async def test_not_create_user(scim_client, scim_consumer):
     #
     # Create user, should not created in SCIM
     #
     pm = get_provisioning_message("user_create")
     pm.body.new["properties"]["isNextcloudUser"] = False
+    scim_consumer.settings.scim_user_filter_attribute = "isNextcloudUser"
 
     await scim_consumer.handle_udm_message(pm)
 
