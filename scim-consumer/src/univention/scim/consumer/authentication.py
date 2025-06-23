@@ -26,10 +26,9 @@ class Authenticator(Auth):
     access_token: str | None = None
 
     def __init__(
-        self, settings: AuthenticatorSettings | None = None, keycloak_adapter: type[KeycloakOpenID] = KeycloakOpenID
+        self, settings: AuthenticatorSettings, keycloak_adapter: type[KeycloakOpenID] = KeycloakOpenID
     ) -> None:
-        # TODO: remove the or path
-        self.settings = settings or AuthenticatorSettings()
+        self.settings = settings
         self.keycloak = keycloak_adapter(
             server_url=str(self.settings.scim_idp_base_url),
             realm_name=self.settings.scim_idp_realm,

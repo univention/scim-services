@@ -3,7 +3,7 @@
 
 import pytest
 
-from univention.scim.consumer.message_handler import get_should_exist_in_scim
+from univention.scim.consumer.scim_consumer import should_exist_in_scim
 
 from ..data.provisioning_message_factory import get_provisioning_message
 
@@ -53,6 +53,6 @@ def test_should_exist_in_scim(
         if pm.body.old:
             pm.body.old["properties"][user_filter_attribute] = is_user_filter_attribute_old
 
-    should_exist_in_scim = get_should_exist_in_scim(message=pm, user_filter_attribute=user_filter_attribute)
+    actual = should_exist_in_scim(message=pm, user_filter_attribute=user_filter_attribute)
 
-    assert should_exist_in_scim == expected_state
+    assert actual == expected_state

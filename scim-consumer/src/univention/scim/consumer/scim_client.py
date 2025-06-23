@@ -22,22 +22,13 @@ class ScimClientTooManyResultsException(Exception): ...
 class ScimClient:
     _scim_client: SyncSCIMClient | None = None
 
-    def __new__(cls, *args, **kwargs):
-        """
-        Singleton pattern
-        """
-        if not hasattr(cls, "instance"):
-            cls.instance = super().__new__(cls)
-        return cls.instance
-
     def __init__(
         self,
         auth: Auth,
-        settings: ScimConsumerSettings | None = None,
+        settings: ScimConsumerSettings,
     ):
-        # TODO: remove the or path
         self.auth = auth
-        self.settings = settings or ScimConsumerSettings()
+        self.settings = settings
         if self.settings.scim_oidc_authentication:
             logger.info("OIDC authentication enabled. SCIM API requests will be authenticated.")
             self.auth = auth

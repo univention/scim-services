@@ -13,11 +13,3 @@ class ScimConsumerSettings(BaseSettings):
     scim_user_filter_attribute: str | None = None
     external_id_user_mapping: str | None = None
     external_id_group_mapping: str | None = None
-
-    def __new__(cls, *args, **kwargs):
-        """
-        Singleton pattern
-        """
-        if not hasattr(cls, "instance"):
-            cls.instance = super().__new__(cls)
-        return cls.instance

@@ -17,21 +17,11 @@ class LdapSettings(BaseSettings):
 
 
 class GroupMembershipLdapResolver(IdCache):
-    """ """
-
-    def __new__(cls, *args, **kwargs):
-        """
-        Singleton
-        """
-        if not hasattr(cls, "instance"):
-            cls.instance = super().__new__(cls)
-        return cls.instance
-
-    def __init__(self, scim_client: ScimClient | None = None, ldap_settings: LdapSettings | None = None):
+    def __init__(self, scim_client: ScimClient, ldap_settings: LdapSettings):
         """ """
         self.scim_client = scim_client
 
-        self.ldap_client = self.connect_to_ldap(ldap_settings or LdapSettings())
+        self.ldap_client = self.connect_to_ldap(ldap_settings)
 
     def connect_to_ldap(self, ldap_settings: LdapSettings):
         server = Server(ldap_settings.ldap_host)

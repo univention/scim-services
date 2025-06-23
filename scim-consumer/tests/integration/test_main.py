@@ -14,8 +14,8 @@ from ..data.udm_helper import (
 )
 
 
-def test_user_crud(udm_client, scim_consumer, scim_client, user_data, user_data_updated):
-    assert scim_consumer
+def test_user_crud(udm_client, background_scim_consumer, scim_client, user_data, user_data_updated):
+    assert background_scim_consumer
 
     # Test create
     create_udm_user(udm_client=udm_client, user_data=user_data)
@@ -38,8 +38,8 @@ def test_user_crud(udm_client, scim_consumer, scim_client, user_data, user_data_
     assert is_deleted
 
 
-def test_add_group_member(udm_client, scim_consumer, group_data, user_data, scim_client):
-    assert scim_consumer
+def test_add_group_member(udm_client, background_scim_consumer, group_data, user_data, scim_client):
+    assert background_scim_consumer
 
     #
     # Create group
@@ -85,8 +85,8 @@ def test_add_group_member(udm_client, scim_consumer, group_data, user_data, scim
 
 
 @pytest.mark.skip("No impact at the moment. Activate again when needed.")
-def test_update_group_member_dn(udm_client, scim_consumer, group_data, user_data, scim_client):
-    assert scim_consumer
+def test_update_group_member_dn(udm_client, background_scim_consumer, group_data, user_data, scim_client):
+    assert background_scim_consumer
 
     #
     # Create user
@@ -133,8 +133,8 @@ def test_update_group_member_dn(udm_client, scim_consumer, group_data, user_data
 
 
 @pytest.mark.skip("Will be developed further in a future MR")
-def test_prefilled_sync(scim_consumer_prefilled, scim_client):
-    udm_users, udm_group = scim_consumer_prefilled
+def test_prefilled_sync(background_scim_consumer_prefilled, scim_client):
+    udm_users, udm_group = background_scim_consumer_prefilled
 
     user_ids = []
     for udm_user in udm_users:
