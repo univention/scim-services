@@ -21,6 +21,45 @@ from ..data.udm_helper import create_udm_group, delete_udm_group, delete_udm_use
 
 
 @pytest.fixture(scope="session")
+def scim_udm_client() -> UDM:
+    if "UNIVENTION_SCIM_SERVER" not in os.environ:
+        return None
+
+    logger.info("Create SCIM udm_client.")
+    udm = UDM.http(os.environ["SCIM_UDM_BASE_URL"], os.environ["SCIM_UDM_USERNAME"], os.environ["SCIM_UDM_PASSWORD"])
+
+    return udm
+
+
+@pytest.fixture(scope="session", autouse=True)
+def scim_maildomain(scim_udm_client):
+    """
+    Is only needed, when the tests are running against the
+    Univention SCIM server. This uses UDM as backend and there
+    we need the maildomain configuration too!
+    """
+    if "UNIVENTION_SCIM_SERVER" not in os.environ:
+        yield None
+
+    else:
+        name = "scim-consumer.unittests"
+        domains = scim_udm_client.get("mail/domain")
+        if maildomains := list(domains.search(f"name={name}")):
+            maildomain = domains.get(maildomains[0].dn)
+            logger.info(f"Using existing mail domain {maildomain!r} on UDM for SCIM.")
+        else:
+            maildomain = domains.new()
+            maildomain.properties.update({"name": name})
+            maildomain.save()
+            logger.info(f"Created new mail domain {maildomain!r} on UDM for SCIM.")
+
+        yield name
+
+        maildomain.delete()
+        logger.info(f"Deleted mail domain {maildomain!r} on UDM for SCIM.")
+
+
+@pytest.fixture(scope="session")
 def maildomain(udm_client):
     name = "scim-consumer.unittests"
     domains = udm_client.get("mail/domain")

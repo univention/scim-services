@@ -441,7 +441,7 @@ def get_provisioning_message_data(data_type: str):
                     "hosts": [],
                     "mailAddress": None,
                     "memberOf": [],
-                    "name": "Test Users (Updated)",
+                    "name": "Test Users Updated",
                     "nestedGroup": [],
                     "objectFlag": [],
                     "sambaGroupType": "2",

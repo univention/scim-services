@@ -3,7 +3,7 @@
 
 from typing import Annotated
 
-from pydantic import ConfigDict, Field
+from pydantic import Field
 from scim2_models import (
     AnyExtension,
     Email as ScimEmail,
@@ -28,5 +28,3 @@ class Name(ScimName):
 class User(ScimUser[AnyExtension]):
     name: Annotated[Name | ScimName | None, Required.true] = None
     emails: list[Email | ScimEmail] | None = None
-
-    model_config = ConfigDict(extra="ignore")

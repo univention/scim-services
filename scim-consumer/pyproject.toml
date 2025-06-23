@@ -55,14 +55,17 @@ env = [
     "D:UDM_BASE_URL = http://localhost:9979/udm/",
     "D:UDM_USERNAME = cn=admin",
     "D:UDM_PASSWORD = univention",
-    "D:SCIM_UDM_BASE_URL = http://localhost:9999/udm/",
-    "D:SCIM_UDM_USERNAME = cn=admin",
-    "D:SCIM_UDM_PASSWORD = univention",
     "D:LDAP_HOST = localhost",
     "D:LDAP_BIND_DN = cn=admin,dc=univention-organization,dc=intranet",
     "D:LDAP_BIND_PASSWORD = univention",
     "D:EXTERNAL_ID_USER_MAPPING = univentionObjectIdentifier",
     "D:EXTERNAL_ID_GROUP_MAPPING = univentionObjectIdentifier",
+    #
+    # Configuration for tests with Univention SCIM-Server
+    #
+    "D:SCIM_UDM_BASE_URL = http://localhost:9999/udm/",
+    "D:SCIM_UDM_USERNAME = cn=admin",
+    "D:SCIM_UDM_PASSWORD = univention",
 ]
 addopts = "-lvv --cov --cov-report term-missing --junit-xml=/tmp/pytest-junit.xml"
 

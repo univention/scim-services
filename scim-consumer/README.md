@@ -1,11 +1,27 @@
 # SCIM Cunsumer
 
-## Running tests
+## Running tests local
+
+The tests running agains the SCIM server from
 
 ```bash
-docker compose up --remove-orphans -d
+docker compose up --build --remove-orphans -d
 
 docker compose run --rm --build --remove-orphans test
+# or
+uv run pytest -v -s ./
 
 docker compose down --volumes
+```
+
+To run the tests against the Univention SCIM server
+
+```bash
+docker compose --file docker-compose-univention-scim.yaml up -d --remove-orphans --build
+
+docker compose --file docker-compose-univention-scim.yaml run --rm --build --remove-orphans test
+# or
+UNIVENTION_SCIM_SERVER=true uv run pytest -v -s ./
+
+docker compose --file docker-compose-univention-scim.yaml down --volumes
 ```

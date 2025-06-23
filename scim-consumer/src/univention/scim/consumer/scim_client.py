@@ -5,12 +5,12 @@ from httpx import Client
 from loguru import logger
 from scim2_client import SCIMResponseError
 from scim2_client.engines.httpx import SyncSCIMClient
-from scim2_models import Group, Resource, ResourceType, SchemaExtension, SearchRequest
+from scim2_models import Resource, ResourceType, SchemaExtension, SearchRequest
 from scim2_tester import check_server
 
 from univention.scim.consumer.helper import cust_pformat
 from univention.scim.consumer.scim_consumer_settings import ScimConsumerSettings
-from univention.scim.server.models.user import User as UniventionScimUser
+from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
 
 
 class ScimClientNoDataFoundException(Exception): ...
@@ -47,7 +47,7 @@ class ScimClient:
 
         scim = SyncSCIMClient(
             client=client,
-            resource_models=[UniventionScimUser, Group],
+            resource_models=[UserWithExtensions, GroupWithExtensions],
             resource_types=[
                 ResourceType(
                     id="User",
@@ -69,6 +69,9 @@ class ScimClient:
                     name="Group",
                     schemas=[
                         "urn:ietf:params:scim:schemas:core:2.0:ResourceType",
+                    ],
+                    schema_extensions=[
+                        SchemaExtension(_schema="urn:ietf:params:scim:schemas:extension:Univention:1.0:Group"),
                     ],
                     endpoint="/Groups",
                     description="User groups",
@@ -125,11 +128,9 @@ class ScimClient:
             response = self.get_client().create(resource)
             logger.debug("Response:\n{}", cust_pformat(response))
 
-        # FIXME Happens when the object exists, but without externalId
-        #       e.g. group "Domain Users" when the SCIM server is an
-        #       Univention SCIM server.
-        #
-        #       Maybe trigger an update here ... But could be dangerous?!
+        # Happens when the object exists, but without externalId
+        # e.g. group "Domain Users" when the SCIM server is an
+        # Univention SCIM server.
         except SCIMResponseError as e:
             logger.warning(e)
 

@@ -193,6 +193,48 @@ test-scim-consumer:
     reports:
       junit: pytest-junit-test-scim-consumer.xml
 
+test-scim-services-integration:
+  stage: test
+  extends: .dind
+  image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    - if: '$AUTO_TRIGGER_TESTS == "yes"'
+      when: on_success
+    - when: manual
+  before_script:
+    - cd scim-consumer/tests
+    # Allow that the Docker API version is negotiated between client and server
+    - unset DOCKER_API_VERSION
+    - export IMAGE_TAG=${RELEASE_VERSION}
+    - echo -e "\e[0Ksection_start:`date +%s`:docker_debug[collapsed=true]\r\e[0KDocker version details"
+    - echo $IMAGE_TAG
+    - docker version
+    - echo -e "\e[0Ksection_end:`date +%s`:docker_debug\r\e[0K"
+    - echo -e "\e[0Ksection_start:`date +%s`:docker_compose_config[collapsed=true]\r\e[0KDocker Compose configuration"
+    - docker compose --file docker-compose-univention-scim.yaml config test
+    - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
+  script:
+    - docker compose --file docker-compose-univention-scim.yaml run --quiet-pull --name test-scim-services test
+  after_script:
+    - docker logs ldap-server >& ldap-server.log
+    - docker logs udm-rest-api >& udm-rest-api.log
+    - docker logs scim-server >& scim-server.log
+    - docker logs test-scim-services >& test-scim-services.log
+    - docker stop -t0 test-scim-services
+    - docker rm test-scim-services
+    - docker compose -f scim-consumer/tests/docker-compose-univention-scim.yaml down --volumes
+  artifacts:
+    paths:
+      - ldap-server.log
+      - udm-rest-api.log
+      - scim-server.log
+      - test-scim-services.log
+    expire_in: "1 day"
+    when: "always"
+    expose_as: "docker compose server logs"
+
 sonarqube-scan:
   stage: test
   needs:

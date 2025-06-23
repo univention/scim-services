@@ -8,7 +8,7 @@ from univention.scim.consumer.group_membership_resolver import GroupMembershipLd
 from univention.scim.consumer.helper import cust_pformat
 from univention.scim.consumer.scim_client import ScimClient, ScimClientNoDataFoundException
 from univention.scim.consumer.scim_consumer_settings import ScimConsumerSettings
-from univention.scim.server.models.user import User as UniventionScimUser
+from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
 from univention.scim.transformation.udm2scim import UdmToScimMapper
 
 
@@ -77,7 +77,8 @@ class ScimConsumer:
         group_membership_resolver = GroupMembershipLdapResolver(scim_client=self.scim_client)
         mapper = UdmToScimMapper(
             cache=group_membership_resolver,
-            user_type=UniventionScimUser,
+            user_type=UserWithExtensions,
+            group_type=GroupWithExtensions,
             external_id_user_mapping=self.settings.external_id_user_mapping,
             external_id_group_mapping=self.settings.external_id_group_mapping,
         )

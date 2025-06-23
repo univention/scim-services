@@ -181,7 +181,8 @@ async def delete_user(
         success = await user_service.delete_user(user_id)
         if not success:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found")
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
+        # The great hack! The SCIM client library expects a HTTP 204 NO_CONTENT with content type ... no comment!
+        return Response(status_code=status.HTTP_204_NO_CONTENT, media_type="application/scim+json")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
     except Exception as e:

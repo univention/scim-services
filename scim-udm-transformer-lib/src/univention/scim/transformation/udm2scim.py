@@ -407,10 +407,10 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
         group.external_id = self._get_external_id(udm_group, "Group")
 
         # Map members if available
-        if not group.members:
-            group.members = []
-        if "users" in props and props["users"] and self.cache:
+        if "users" in props and (props["users"] or props["users"] == []) and self.cache:
             user_dns = props["users"]
+            if not group.members:
+                group.members = []
 
             for dn in user_dns:
                 cached_user = self.cache.get_user(dn)

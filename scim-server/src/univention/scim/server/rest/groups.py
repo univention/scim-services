@@ -182,7 +182,8 @@ async def delete_group(
         success = await group_service.delete_group(group_id)
         if not success:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Group {group_id} not found")
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
+        # The great hack! The SCIM client library expects a HTTP 204 NO_CONTENT with content type ... no comment!
+        return Response(status_code=status.HTTP_204_NO_CONTENT, media_type="application/scim+json")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
     except Exception as e:
