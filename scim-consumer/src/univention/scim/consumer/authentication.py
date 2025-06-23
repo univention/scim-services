@@ -19,7 +19,6 @@ class AuthenticatorSettings(BaseSettings):
     scim_client_id: str
     scim_client_secret: str
     scim_idp_realm: str
-    scim_idp_audience: str
 
 
 class Authenticator(Auth):

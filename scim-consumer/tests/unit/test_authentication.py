@@ -17,7 +17,6 @@ def authenticator_settings() -> AuthenticatorSettings:
         scim_client_secret="client-secret",
         scim_idp_base_url="http://keycloak-url",
         scim_idp_realm="idp-realm",
-        scim_idp_audience="idp-audience",
     )
 
 

@@ -7,6 +7,9 @@ from keycloak import KeycloakAdmin, KeycloakPostError
 from univention.scim.consumer.authentication import Authenticator, AuthenticatorSettings, GetTokenError
 
 
+AUDIENCE = "nubus-scim"
+
+
 @pytest.fixture(scope="session")
 def authenticator_settings() -> AuthenticatorSettings:
     return AuthenticatorSettings(
@@ -14,7 +17,6 @@ def authenticator_settings() -> AuthenticatorSettings:
         scim_client_secret="supersecret",
         scim_idp_base_url="http://localhost:5050",
         scim_idp_realm="master",
-        scim_idp_audience="nubus-scim",
     )
 
 
@@ -33,7 +35,7 @@ def keycloak_admin(authenticator_settings) -> KeycloakAdmin:
 def audience_client_scope(keycloak_admin: KeycloakAdmin, authenticator_settings: AuthenticatorSettings):
     scope_id = "e0f7c5f0-1234-5678-90ab-cdef12345678"
 
-    scope_name = f"{authenticator_settings.scim_idp_audience}-test-scope"
+    scope_name = f"{AUDIENCE}-test-scope"
     scope_payload = {"name": scope_name, "protocol": "openid-connect", "id": scope_id}
     try:
         scope_id = keycloak_admin.create_client_scope(scope_payload)
@@ -46,7 +48,7 @@ def audience_client_scope(keycloak_admin: KeycloakAdmin, authenticator_settings:
         "protocol": "openid-connect",
         "protocolMapper": "oidc-audience-mapper",
         "config": {
-            "included.client.audience": authenticator_settings.scim_idp_audience,
+            "included.client.audience": AUDIENCE,
             "access.token.claim": "true",
         },
     }
