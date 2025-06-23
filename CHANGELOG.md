@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.29.2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.29.1...v0.29.2) (2025-06-23)
+
+
+### Bug Fixes
+
+* **scim-server:** Fix some value mappings from scim to UDM ([c280bd2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/c280bd234c4eae0cf7dcf9db2c5a20888f801c7d)), closes [univention/dev/internal/team-nubus#1191](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1191)
+
 ## [0.29.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.29.0...v0.29.1) (2025-06-20)
 
 
