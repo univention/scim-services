@@ -13,7 +13,7 @@ class TestDeployment(Deployment):
 @pytest.mark.parametrize(
     "key, env_var",
     [
-        ("scimServer", "SCIM_API_PASSWORD"),
+        ("scimServer", "SCIM_CLIENT_SECRET"),
         ("nubusProvisioning", "PROVISIONING_API_PASSWORD"),
     ],
 )

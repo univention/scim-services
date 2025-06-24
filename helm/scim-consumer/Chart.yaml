@@ -13,5 +13,5 @@ version: "0.0.1"
 
 dependencies:
   - name: "nubus-common"
-    version: "^0.15.x"
+    version: "^0.21.x"
     repository: "oci://artifacts.software-univention.de/nubus/charts"
