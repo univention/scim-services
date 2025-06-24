@@ -6,12 +6,10 @@ from typing import Any, Generic, TypeVar, cast
 from loguru import logger
 from scim2_models import (
     Address,
-    Email,
     EnterpriseUser,
     Group,
     GroupMember,
     Meta,
-    Name,
     PhoneNumber,
     Resource,
     Role,
@@ -19,6 +17,7 @@ from scim2_models import (
     X509Certificate,
 )
 
+from univention.scim.server.models.user import Email, Name
 from univention.scim.transformation.id_cache import IdCache
 
 
@@ -129,7 +128,7 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
 
         return meta_data
 
-    def _get_formarted_address(self, data: dict[str, str]) -> str:
+    def _get_formarted_address(self, data: dict[str, str | None]) -> str:
         formatted_address = ""
         if "street" in data and data["street"]:
             formatted_address += data["street"] + "\n"
@@ -145,6 +144,152 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
             formatted_address += data["country"]
 
         return formatted_address.strip()
+
+    def _map_emails(self, props: dict[str, Any]) -> list[Email] | None:
+        emails: list[Email] | None = None
+        if "mailPrimaryAddress" in props and props["mailPrimaryAddress"] is not None:
+            if not emails:
+                emails = []
+            # scim2-models are very strict and only allow specific email types while RFC allows any type
+            # so don't use scim2-models email type
+            emails.append(Email(value=props["mailPrimaryAddress"], type="mailbox", primary=False))
+
+        if "mailAlternativeAddress" in props and props["mailAlternativeAddress"] is not None:
+            if not emails:
+                emails = []
+            alt_addresses = props["mailAlternativeAddress"]
+            if isinstance(alt_addresses, str):
+                alt_addresses = [alt_addresses]
+
+            for email in alt_addresses:
+                # scim2-models are very strict and only allow specific email types while RFC allows any type
+                # so don't use scim2-models email type
+                emails.append(Email(value=email, type="alias", primary=False))
+
+        if "e-mail" in props and props["e-mail"] is not None:
+            if not emails:
+                emails = []
+            for email in props["e-mail"]:
+                emails.append(Email(value=email, type="other", primary=False))
+
+        return emails
+
+    def _map_phone_numbers(self, props: dict[str, Any]) -> list[PhoneNumber] | None:
+        phones: list[PhoneNumber] | None = None
+        if "phone" in props and props["phone"] is not None:
+            if not phones:
+                phones = []
+            phone_numbers = props["phone"]
+            for phone in phone_numbers:
+                phones.append(PhoneNumber(value=phone, type="work"))
+
+        if "mobileTelephoneNumber" in props and props["mobileTelephoneNumber"] is not None:
+            if not phones:
+                phones = []
+            mobile_numbers = props["mobileTelephoneNumber"]
+            for mobile in mobile_numbers:
+                phones.append(PhoneNumber(value=mobile, type="mobile"))
+
+        if "homeTelephoneNumber" in props and props["homeTelephoneNumber"] is not None:
+            if not phones:
+                phones = []
+            home_numbers = props["homeTelephoneNumber"]
+            for home in home_numbers:
+                phones.append(PhoneNumber(value=home, type="home"))
+
+        if "pagerTelephoneNumber" in props and props["pagerTelephoneNumber"] is not None:
+            if not phones:
+                phones = []
+            pager_numbers = props["pagerTelephoneNumber"]
+            for pager in pager_numbers:
+                phones.append(PhoneNumber(value=pager, type="pager"))
+
+        return phones
+
+    def _map_addresses(self, props: dict[str, Any]) -> list[Address] | None:
+        addresses: list[Address] | None = None
+        address_fields: dict[str, str | None] = {
+            "street": props.get("street"),
+            "city": props.get("city"),
+            "postcode": props.get("postcode"),
+            "country": props.get("country"),
+            "state": props.get("state"),
+        }
+
+        # If any address field is available, create an address
+        if any(value for value in address_fields.values() if value):
+            if not addresses:
+                addresses = []
+            addresses.append(
+                Address(
+                    formatted=self._get_formarted_address(address_fields),
+                    street_address=address_fields["street"],
+                    locality=address_fields["city"],
+                    postal_code=address_fields["postcode"],
+                    region=address_fields["state"],
+                    country=address_fields["country"],
+                    type="work",
+                )
+            )
+
+        if "homePostalAddress" in props and props["homePostalAddress"] is not None:
+            if not addresses:
+                addresses = []
+            home_addresses = props["homePostalAddress"]
+
+            for address in home_addresses:
+                addresses.append(
+                    Address(
+                        formatted=self._get_formarted_address(address),
+                        street_address=address.get("street"),
+                        locality=address.get("city"),
+                        postal_code=address.get("zipcode"),
+                        type="home",
+                    )
+                )
+
+        return addresses
+
+    def _map_roles(self, props: dict[str, Any]) -> list[Role] | None:
+        roles: list[Role] | None = None
+        if "guardianRoles" in props and props["guardianRoles"] is not None:
+            if not roles:
+                roles = []
+            for role in props["guardianRoles"]:
+                roles.append(Role(value=role, type="guardian-direct"))
+
+        if "guardianInheritedRoles" in props and props["guardianInheritedRoles"] is not None:
+            if not roles:
+                roles = []
+            for role in props["guardianInheritedRoles"]:
+                roles.append(Role(value=role, type="guardian-indirect"))
+
+        return roles
+
+    def _map_username(self, props: dict[str, Any]) -> Name | None:
+        name_fields = {
+            "firstname": props.get("firstname"),
+            "lastname": props.get("lastname"),
+        }
+        username = None
+        if any(value for value in name_fields.values() if value):
+            username = Name(
+                given_name=props.get("firstname"),
+                family_name=props.get("lastname"),
+                formatted=f"{props.get('firstname', '')} {props.get('lastname', '')}".strip(),
+            )
+        return username
+
+    def _map_certificates(self, props: dict[str, Any]) -> list[X509Certificate] | None:
+        certificates = None
+        # FIXME Check how to handle difference between None and [] (Not handled / deleted)
+        if props.get("userCertificate"):
+            cert_value = props["userCertificate"]
+            display = props.get("certificateSubjectCommonName")
+
+            certificates = [X509Certificate(value=cert_value, display=display)]
+
+        return certificates
 
     def map_user(self, udm_user: Any, base_url: str = "") -> UserType:
         """
@@ -203,126 +348,17 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
         # Map external ID using configurable property
         user.external_id = self._get_external_id(udm_user, "User")
 
-        # Map name
-        if any(key in props for key in ["firstname", "lastname"]):
-            user.name = Name(
-                given_name=props.get("firstname"),
-                family_name=props.get("lastname"),
-                formatted=f"{props.get('firstname', '')} {props.get('lastname', '')}".strip(),
-            )
+        user.name = self._map_username(props)
 
-        # Map emails
-        emails = []
-        if "mailPrimaryAddress" in props and props["mailPrimaryAddress"]:
-            # scim2-models are very strict and only allow specific email types while RFC allows any type
-            # so don't use scim2-models email type
-            emails.append({"value": props["mailPrimaryAddress"], "type": "mailbox", "primary": True})
+        user.emails = self._map_emails(props)
 
-        if "mailAlternativeAddress" in props and props["mailAlternativeAddress"]:
-            alt_addresses = props["mailAlternativeAddress"]
-            if isinstance(alt_addresses, str):
-                alt_addresses = [alt_addresses]
+        user.phone_numbers = self._map_phone_numbers(props)
 
-            for email in alt_addresses:
-                # scim2-models are very strict and only allow specific email types while RFC allows any type
-                # so don't use scim2-models email type
-                emails.append({"value": email, "type": "alias", "primary": False})
+        user.addresses = self._map_addresses(props)
 
-        if "e-mail" in props and props["e-mail"]:
-            for email in props["e-mail"]:
-                emails.append(Email(value=email, type="other", primary=False))
+        user.roles = self._map_roles(props)
 
-        if len(emails) > 0:
-            user.emails = emails
-
-        # Map phone numbers
-        phones = []
-        if "phone" in props and props["phone"]:
-            phone_numbers = props["phone"]
-            for phone in phone_numbers:
-                phones.append(PhoneNumber(value=phone, type="work"))
-
-        if "mobileTelephoneNumber" in props and props["mobileTelephoneNumber"]:
-            mobile_numbers = props["mobileTelephoneNumber"]
-            for mobile in mobile_numbers:
-                phones.append(PhoneNumber(value=mobile, type="mobile"))
-
-        if "homeTelephoneNumber" in props and props["homeTelephoneNumber"]:
-            home_numbers = props["homeTelephoneNumber"]
-            for home in home_numbers:
-                phones.append(PhoneNumber(value=home, type="home"))
-
-        if "pagerTelephoneNumber" in props and props["pagerTelephoneNumber"]:
-            pager_numbers = props["pagerTelephoneNumber"]
-            for pager in pager_numbers:
-                phones.append(PhoneNumber(value=pager, type="pager"))
-
-        if len(phones) > 0:
-            user.phone_numbers = phones
-
-        # Map addresses
-        addresses = []
-        address_fields = {
-            "street": props.get("street"),
-            "city": props.get("city"),
-            "postcode": props.get("postcode"),
-            "country": props.get("country"),
-            "state": props.get("state"),
-        }
-
-        # If any address field is available, create an address
-        if any(value for value in address_fields.values() if value):
-            addresses.append(
-                Address(
-                    formatted=self._get_formarted_address(address_fields),
-                    street_address=address_fields["street"],
-                    locality=address_fields["city"],
-                    postal_code=address_fields["postcode"],
-                    region=address_fields["state"],
-                    country=address_fields["country"],
-                    type="work",
-                )
-            )
-
-        if "homePostalAddress" in props and props["homePostalAddress"]:
-            home_addresses = props["homePostalAddress"]
-
-            for address in home_addresses:
-                addresses.append(
-                    Address(
-                        formatted=self._get_formarted_address(address),
-                        street_address=address.get("street"),
-                        locality=address.get("city"),
-                        postal_code=address.get("zipcode"),
-                        type="home",
-                    )
-                )
-
-        if len(addresses) > 0:
-            user.addresses = addresses
-
-        # Handle X.509 certificates
-        certificates = []
-        if props.get("userCertificate"):
-            cert_value = props["userCertificate"]
-            display = props.get("certificateSubjectCommonName")
-
-            certificates.append(X509Certificate(value=cert_value, display=display))
-
-        if len(certificates) > 0:
-            user.x509_certificates = certificates
-
-        # Map roles
-        roles = []
-        if "guardianRoles" in props and props["guardianRoles"]:
-            for role in props["guardianRoles"]:
-                roles.append(Role(value=role, type="guardian-direct"))
-        if "guardianInheritedRoles" in props and props["guardianInheritedRoles"]:
-            for role in props["guardianInheritedRoles"]:
-                roles.append(Role(value=role, type="guardian-indirect"))
-
-        if len(roles) > 0:
-            user.roles = roles
+        user.x509_certificates = self._map_certificates(props)
 
         # TODO: Do not map groups for now, it will reduce performance because many LDAP queries are required
         # # Map groups if available
@@ -407,7 +443,7 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
         group.external_id = self._get_external_id(udm_group, "Group")
 
         # Map members if available
-        if "users" in props and (props["users"] or props["users"] == []) and self.cache:
+        if "users" in props and props["users"] is not None and self.cache:
             user_dns = props["users"]
             if not group.members:
                 group.members = []
@@ -428,7 +464,7 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
                     )
                 )
 
-        if "nestedGroup" in props and props["nestedGroup"] and self.cache:
+        if "nestedGroup" in props and props["nestedGroup"] is not None and self.cache:
             if not group.members:
                 group.members = []
 
