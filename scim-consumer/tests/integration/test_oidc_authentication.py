@@ -2,12 +2,14 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 import pytest
-from keycloak import KeycloakAdmin, KeycloakPostError
+from keycloak import KeycloakAdmin, KeycloakOpenID, KeycloakPostError
 
 from univention.scim.consumer.authentication import Authenticator, AuthenticatorSettings, GetTokenError
 
 
 AUDIENCE = "nubus-scim"
+REALM = "master"
+KEYCLOAK_BASE_URL = "http://localhost:5050"
 
 
 @pytest.fixture(scope="session")
@@ -15,24 +17,23 @@ def authenticator_settings() -> AuthenticatorSettings:
     return AuthenticatorSettings(
         scim_client_id="scim-consumer-test-client",
         scim_client_secret="supersecret",
-        scim_idp_base_url="http://localhost:5050",
-        scim_idp_realm="master",
+        scim_oidc_token_url="http://localhost:5050/realms/master/protocol/openid-connect/token",
     )
 
 
 @pytest.fixture(scope="session")
-def keycloak_admin(authenticator_settings) -> KeycloakAdmin:
+def keycloak_admin() -> KeycloakAdmin:
     return KeycloakAdmin(
-        server_url=str(authenticator_settings.scim_idp_base_url),
+        server_url=KEYCLOAK_BASE_URL,
         username="admin",
         password="univention",
-        realm_name=authenticator_settings.scim_idp_realm,
+        realm_name=REALM,
         verify=True,
     )
 
 
 @pytest.fixture(scope="session")
-def audience_client_scope(keycloak_admin: KeycloakAdmin, authenticator_settings: AuthenticatorSettings):
+def audience_client_scope(keycloak_admin: KeycloakAdmin):
     scope_id = "e0f7c5f0-1234-5678-90ab-cdef12345678"
 
     scope_name = f"{AUDIENCE}-test-scope"
@@ -103,8 +104,7 @@ def test_authentication(authenticator_settings: AuthenticatorSettings):
     [
         {"scim_client_id": "invalid-client-id"},
         {"scim_client_secret": "invalid-secret"},
-        {"scim_idp_base_url": "https://wrong-url.xyz"},
-        {"scim_idp_realm": "invalid-keycloak-realm"},
+        {"scim_oidc_token_url": "https://wrong-url.xyz"},
     ],
 )
 def test_failed_authentication(customization, authenticator_settings: AuthenticatorSettings):
@@ -123,5 +123,13 @@ def test_token_has_audience(authenticator_settings):
     token = authenticator.get_token()
     assert token
 
-    decoded_token = authenticator.keycloak.decode_token(token)
+    keycloak_openid = KeycloakOpenID(
+        server_url=KEYCLOAK_BASE_URL,
+        client_id=authenticator_settings.scim_client_id,
+        client_secret_key=authenticator_settings.scim_client_secret,
+        realm_name=REALM,
+        verify=True,
+    )
+
+    decoded_token = keycloak_openid.decode_token(token)
     assert "nubus-scim" in decoded_token["aud"]

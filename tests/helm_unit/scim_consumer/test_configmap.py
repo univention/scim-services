@@ -23,8 +23,7 @@ class TestConfigMap(ConfigMap):
         ("ldap.connection.uri", "LDAP_URI"),
         ("ldap.auth.bindDn", "LDAP_BIND_DN"),
         ("scimServer.auth.clientId", "SCIM_CLIENT_ID"),
-        ("scimServer.auth.idpBaseUrl", "SCIM_IDP_BASE_URL"),
-        ("scimServer.auth.realm", "SCIM_IDP_REALM"),
+        ("scimServer.auth.oidcTokenUrl", "SCIM_OIDC_TOKEN_URL"),
         ("scimServer.auth.enabled", "SCIM_OIDC_AUTHENTICATION"),
     ],
 )

@@ -1439,11 +1439,11 @@ name = "scim-consumer"
 version = "0.1.0"
 source = { editable = "scim-consumer" }
 dependencies = [
+    { name = "httpx" },
     { name = "icecream" },
     { name = "ldap3" },
     { name = "nubus-provisioning-consumer" },
     { name = "pydantic" },
-    { name = "python-keycloak" },
     { name = "scim-server" },
     { name = "scim-udm-transformer-lib" },
     { name = "scim2-client", extra = ["httpx"] },
@@ -1459,16 +1459,17 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-env" },
     { name = "pytest-mock" },
+    { name = "python-keycloak" },
     { name = "requests" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "icecream", specifier = ">=2.1.4" },
     { name = "ldap3", specifier = ">=2.9.1" },
     { name = "nubus-provisioning-consumer", specifier = ">=0.53.0", index = "https://git.knut.univention.de/api/v4/projects/882/packages/pypi/simple" },
     { name = "pydantic", specifier = ">=2.10.6" },
-    { name = "python-keycloak", specifier = ">=5.6.0" },
     { name = "scim-server", editable = "scim-server" },
     { name = "scim-udm-transformer-lib", editable = "scim-udm-transformer-lib" },
     { name = "scim2-client", extras = ["httpx"], specifier = ">=0.5.1" },
@@ -1485,6 +1486,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=6.1.1" },
     { name = "pytest-env", specifier = ">=1.1.5" },
     { name = "pytest-mock", specifier = ">=3.14.1" },
+    { name = "python-keycloak", specifier = ">=5.6.0" },
     { name = "requests", specifier = ">=2.32.3" },
 ]
 

@@ -14,8 +14,7 @@ scimServer:
   connection:
     url: "http://stub-scim-server"
   auth:
-    idpBaseUrl: "foo"
-    realm: "bar"
+    oidcTokenUrl: "foo"
     clientId: "stub-scim-api-username"
     username: "stub-scim-api-username"
 

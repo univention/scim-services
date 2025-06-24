@@ -21,6 +21,5 @@ data:
   LDAP_URI: {{ required ".Values.ldap.connection.uri is required" .Values.ldap.connection.uri | quote }}
   LDAP_BIND_DN: {{ required ".Values.ldap.auth.bindDn is required" .Values.ldap.auth.bindDn | quote }}
   SCIM_OIDC_AUTHENTICATION: {{ required ".Values.scimServer.auth.enabled is required" .Values.scimServer.auth.enabled | quote }}
-  SCIM_IDP_BASE_URL: {{ required ".Values.scimServer.auth.idpBaseUrl is required" .Values.scimServer.auth.idpBaseUrl | quote }}
-  SCIM_IDP_REALM: {{ required ".Values.scimServer.auth.realm is required" .Values.scimServer.auth.realm | quote }}
+  SCIM_OIDC_TOKEN_URL: {{ required ".Values.scimServer.auth.oidcTokenUrl is required" .Values.scimServer.auth.oidcTokenUrl | quote }}
   SCIM_CLIENT_ID: {{ required ".Values.scimServer.auth.clientId is required" .Values.scimServer.auth.clientId | quote }}

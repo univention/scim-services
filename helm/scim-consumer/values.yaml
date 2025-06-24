@@ -54,10 +54,8 @@ scimServer:
   auth:
     # -- Disable authentication with the SCIM Server for testing purposes
     enabled: true
-    # -- Base url of the OIDC identity provider where this service account is created.
-    idpBaseUrl: null
-    # --
-    realm: null
+    # -- URL to obtain an OIDC access token from the Identity Provider using the client-credentials-flow.
+    oidcTokenUrl: null
     # -- Service account client ID (username)
     clientId: null
     # -- The password used to authenticate with the SCIM Server.
@@ -108,17 +106,6 @@ scimConsumer:
     # for all existing objets in the Domain before recieving live events.
     prefill: true
     groupSync: true
-
-
-init:
-  image:
-    imagePullSecrets: []
-
-    registry: ""
-    repository: "nubus/images/wait-for-dependency"
-    tag: "0.31.0"
-    # -- Define image sha256 as an alternative to `tag`
-    # sha256: null
 
 resources:
   requests:
