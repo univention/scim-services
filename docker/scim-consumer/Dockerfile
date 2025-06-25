@@ -56,7 +56,7 @@ FROM build AS test
 SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
 
 ENV PYTHONUNBUFFERED=1 \
-    PATH=/app/scim-consumer/.venv/bin:$PATH
+    PATH=/app/.venv/bin:$PATH
 
 COPY ./scim-consumer/tests /app/scim-consumer/tests
 

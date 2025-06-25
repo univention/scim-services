@@ -9,7 +9,7 @@ docker compose up --build --remove-orphans -d
 
 docker compose run --rm --build --remove-orphans test
 # or
-uv run pytest -v -s ./
+pytest -v -s ./
 
 docker compose down --volumes
 ```
@@ -21,7 +21,7 @@ docker compose --file docker-compose-univention-scim.yaml up -d --remove-orphans
 
 docker compose --file docker-compose-univention-scim.yaml run --rm --build --remove-orphans test
 # or
-UNIVENTION_SCIM_SERVER=true uv run pytest -v -s ./
+UNIVENTION_SCIM_SERVER=true pytest -v -s ./
 
 docker compose --file docker-compose-univention-scim.yaml down --volumes
 ```

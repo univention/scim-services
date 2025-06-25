@@ -276,6 +276,8 @@ services:
     depends_on:
       udm-rest-api:
         condition: service_started
+      keycloak:
+        condition: service_started
       udm-listener:
         condition: service_started
       prefill:
@@ -307,7 +309,7 @@ services:
     networks:
       - scim
     command: >
-      /bin/bash -c "uv run pytest
+      /bin/bash -c "pytest
       --config-file=/app/scim-consumer/pyproject.toml
       --cov-config=/app/scim-consumer/pyproject.toml
       --cov-report=xml:/tmp/scim-coverage.xml
