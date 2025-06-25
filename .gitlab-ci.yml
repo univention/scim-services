@@ -172,6 +172,7 @@ test-scim-consumer:
   after_script:
     - docker logs ldap-server >& ldap-server.log
     - docker logs udm-rest-api >& udm-rest-api.log
+    - docker logs keycloak >& keycloak.log
     - docker logs scim-dev-server >& scim-dev-server.log
     - docker logs test-scim-consumer >& test-scim-consumer.log
     - docker cp test-scim-consumer:/tmp/pytest-junit.xml ./pytest-junit-test-scim-consumer.xml
