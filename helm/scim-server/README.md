@@ -181,6 +181,15 @@ null
 			<td></td>
 		</tr>
 		<tr>
+			<td>config.roles.userMapping</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>UDM property to map to SCIM User roles. If not set, roles will not be mapped. Example: "scimRoles"</td>
+		</tr>
+		<tr>
 			<td>containerSecurityContext.allowPrivilegeEscalation</td>
 			<td>bool</td>
 			<td><pre lang="json">

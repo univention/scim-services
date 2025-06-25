@@ -47,6 +47,10 @@ config:
     # -- UDM property to map to SCIM Group externalId. If not set, externalID will not be mapped.
     # Example: "description"
     groupMapping: null
+  roles:
+    # -- UDM property to map to SCIM User roles. If not set, roles will not be mapped.
+    # Example: "scimRoles"
+    userMapping: null
 
 keycloak:
   connection:

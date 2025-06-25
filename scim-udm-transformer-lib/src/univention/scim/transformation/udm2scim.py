@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+import json
 from typing import Any, Generic, TypeVar, cast
 
 from loguru import logger
@@ -39,19 +40,24 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
         group_type: type[GroupType] = Group,
         external_id_user_mapping: str | None = None,
         external_id_group_mapping: str | None = None,
+        roles_user_mapping: str | None = None,
     ):
         """
         Initialize the UdmToScimMapper.
         Args:
             cache: Cache to map DNs to SCIM IDs
+            user_type: Pydantic model to return when mapping a user
+            group_type: Pydantic model to return when mapping a group
             external_id_user_mapping: UDM property to map to SCIM User externalId
             external_id_group_mapping: UDM property to map to SCIM Group externalId
+            roles_user_mapping: UDM property to map to SCIM User roles
         """
         self.cache = cache
         self.user_type = user_type
         self.group_type = group_type
         self.external_id_user_mapping = external_id_user_mapping
         self.external_id_group_mapping = external_id_group_mapping
+        self.roles_user_mapping = roles_user_mapping
 
     def _get_external_id(self, obj: Any, resource_type: str) -> str | None:
         """
@@ -263,6 +269,13 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
                 roles = []
             for role in props["guardianInheritedRoles"]:
                 roles.append(Role(value=role, type="guardian-indirect"))
+
+        if self.roles_user_mapping and self.roles_user_mapping in props and props[self.roles_user_mapping] is not None:
+            if not roles:
+                roles = []
+
+            for role in json.loads(props[self.roles_user_mapping]):
+                roles.append(Role(**role))
 
         return roles
 

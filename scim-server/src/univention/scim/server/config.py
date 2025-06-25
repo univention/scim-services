@@ -79,6 +79,7 @@ class ApplicationSettings(BaseSettings):
     external_id_group_mapping: str | None = Field(
         default=None, description="UDM property to map to SCIM Group externalId"
     )
+    roles_user_mapping: str | None = Field(default=None, description="UDM property to map to SCIM User roles")
 
 
 class DependencyInjectionSettings(BaseSettings):

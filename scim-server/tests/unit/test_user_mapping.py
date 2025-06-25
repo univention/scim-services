@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 import base64
+import json
 import time
 from datetime import UTC, datetime
 
@@ -58,6 +59,7 @@ udm_properties = {
     "PasswordRecoveryEmail": "recovery@testmail.org",
     "primaryOrgUnit": "Sales",
     "secondaryOrgUnits": ["Marketing", "CustomerService"],
+    "scimRoles": json.dumps([{"type": "test", "value": "admin"}, {"type": "test2", "value": "user"}]),
 }
 
 scim_schema = {
@@ -114,6 +116,8 @@ scim_schema = {
         {"type": "guardian-direct", "value": "Role2"},
         {"type": "guardian-indirect", "value": "InheritedRole1"},
         {"type": "guardian-indirect", "value": "InheritedRole2"},
+        {"type": "test", "value": "admin"},
+        {"type": "test2", "value": "user"},
     ],
     "x509Certificates": [
         {

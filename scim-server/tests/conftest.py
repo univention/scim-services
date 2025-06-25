@@ -141,6 +141,7 @@ def mappers(cache: UdmIdCache) -> tuple[ScimToUdmMapper, UdmToScimMapper]:
         cache=cache,
         external_id_user_mapping="testExternalId",
         external_id_group_mapping="testExternalId",
+        roles_user_mapping="scimRoles",
     )
     udm2scim_mapper = UdmToScimMapper[UserWithExtensions, GroupWithExtensions](
         cache=cache,
@@ -148,6 +149,7 @@ def mappers(cache: UdmIdCache) -> tuple[ScimToUdmMapper, UdmToScimMapper]:
         group_type=GroupWithExtensions,
         external_id_user_mapping="testExternalId",
         external_id_group_mapping="testExternalId",
+        roles_user_mapping="scimRoles",
     )
 
     return scim2udm_mapper, udm2scim_mapper
@@ -158,12 +160,14 @@ def mappers_no_cache() -> tuple[ScimToUdmMapper, UdmToScimMapper]:
     scim2udm_mapper = ScimToUdmMapper(
         external_id_user_mapping="testExternalId",
         external_id_group_mapping="testExternalId",
+        roles_user_mapping="scimRoles",
     )
     udm2scim_mapper = UdmToScimMapper[UserWithExtensions, GroupWithExtensions](
         user_type=UserWithExtensions,
         group_type=GroupWithExtensions,
         external_id_user_mapping="testExternalId",
         external_id_group_mapping="testExternalId",
+        roles_user_mapping="scimRoles",
     )
 
     return scim2udm_mapper, udm2scim_mapper
@@ -393,13 +397,34 @@ def add_extended_attributes() -> None:
     with suppress(UnprocessableEntity):
         udm_obj.save()
 
+    # Univention extended attribute roles
+    udm_obj = module.new(position="cn=custom attributes,cn=univention,dc=univention-organization,dc=intranet")
+    udm_obj.properties["name"] = "UniventionScimRoles"
+    udm_obj.properties["CLIName"] = "scimRoles"
+    udm_obj.properties["module"] = ["users/user"]
+    udm_obj.properties["default"] = ""
+    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute1"
+    udm_obj.properties["objectClass"] = "univentionFreeAttributes"
+    udm_obj.properties["shortDescription"] = "Roles mapped from scim"
+    udm_obj.properties["multivalue"] = False
+    udm_obj.properties["valueRequired"] = False
+    udm_obj.properties["mayChange"] = True
+    udm_obj.properties["doNotSearch"] = False
+    udm_obj.properties["deleteObjectClass"] = False
+    udm_obj.properties["overwriteTab"] = False
+    udm_obj.properties["fullWidth"] = True
+
+    # ignore error 422, it is thrown if the attribute already exists
+    with suppress(UnprocessableEntity):
+        udm_obj.save()
+
     # Customer1 extended attribute primaryOrgUnit
     udm_obj = module.new(position="cn=custom attributes,cn=univention,dc=univention-organization,dc=intranet")
     udm_obj.properties["name"] = "Customer1PrimaryOrgUnit"
     udm_obj.properties["CLIName"] = "primaryOrgUnit"
     udm_obj.properties["module"] = ["users/user"]
     udm_obj.properties["default"] = ""
-    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute1"
+    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute2"
     udm_obj.properties["objectClass"] = "univentionFreeAttributes"
     udm_obj.properties["shortDescription"] = "Customer1 primary org unit"
     udm_obj.properties["multivalue"] = False
@@ -420,7 +445,7 @@ def add_extended_attributes() -> None:
     udm_obj.properties["CLIName"] = "secondaryOrgUnits"
     udm_obj.properties["module"] = ["users/user"]
     udm_obj.properties["default"] = ""
-    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute2"
+    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute3"
     udm_obj.properties["objectClass"] = "univentionFreeAttributes"
     udm_obj.properties["shortDescription"] = "Customer1 primary secondary org units"
     udm_obj.properties["multivalue"] = True
@@ -441,7 +466,7 @@ def add_extended_attributes() -> None:
     udm_obj.properties["CLIName"] = "testExternalId"
     udm_obj.properties["module"] = ["users/user"]
     udm_obj.properties["default"] = ""
-    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute3"
+    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute4"
     udm_obj.properties["objectClass"] = "univentionFreeAttributes"
     udm_obj.properties["shortDescription"] = "Test external ID for users"
     udm_obj.properties["multivalue"] = False
@@ -462,7 +487,7 @@ def add_extended_attributes() -> None:
     udm_obj.properties["CLIName"] = "testExternalId"
     udm_obj.properties["module"] = ["groups/group"]
     udm_obj.properties["default"] = ""
-    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute4"
+    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute5"
     udm_obj.properties["objectClass"] = "univentionFreeAttributes"
     udm_obj.properties["shortDescription"] = "Test external ID for groups"
     udm_obj.properties["multivalue"] = False

@@ -58,6 +58,7 @@ class RepositoryContainer(containers.DeclarativeContainer):
         cache=cache,
         external_id_user_mapping=settings.provided.external_id_user_mapping,
         external_id_group_mapping=settings.provided.external_id_group_mapping,
+        roles_user_mapping=settings.provided.roles_user_mapping,
     )
 
     udm2scim_mapper: UdmToScimMapper = providers.Singleton(
@@ -67,6 +68,7 @@ class RepositoryContainer(containers.DeclarativeContainer):
         group_type=GroupWithExtensions,
         external_id_user_mapping=settings.provided.external_id_user_mapping,
         external_id_group_mapping=settings.provided.external_id_group_mapping,
+        roles_user_mapping=settings.provided.roles_user_mapping,
     )
 
     # Repository factories

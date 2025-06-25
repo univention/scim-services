@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 import base64
+import json
 from typing import Any
 
 from loguru import logger
@@ -23,6 +24,7 @@ class ScimToUdmMapper:
         cache: IdCache | None = None,
         external_id_user_mapping: str | None = None,
         external_id_group_mapping: str | None = None,
+        roles_user_mapping: str | None = None,
     ):
         """
         Initialize the ScimToUdmMapper.
@@ -30,10 +32,12 @@ class ScimToUdmMapper:
             cache: Cache to map SCIM IDs to DNs
             external_id_user_mapping: UDM property to map to SCIM User externalId
             external_id_group_mapping: UDM property to map to SCIM Group externalId
+            roles_user_mapping: UDM property to map to SCIM User roles
         """
         self.cache = cache
         self.external_id_user_mapping = external_id_user_mapping
         self.external_id_group_mapping = external_id_group_mapping
+        self.roles_user_mapping = roles_user_mapping
 
     def map_user(self, user: User) -> dict[str, Any]:
         """
@@ -75,9 +79,6 @@ class ScimToUdmMapper:
                 self._map_user_customer1_extension(extension_obj, properties)
             else:
                 logger.info("Ignoring unknown user extension", schema=schema)
-
-        if user.roles:
-            properties["guardianRoles"] = [x.value for x in user.roles if x.type == "guardian-direct"]
 
         # Map external ID using configurable property
         if self.external_id_user_mapping:
@@ -153,18 +154,33 @@ class ScimToUdmMapper:
                     )
 
         # Map certificates
-        if user.x509_certificates and len(user.x509_certificates) == 1:
-            # Store cert as b64 encoded string in UDM
-            properties["userCertificate"] = base64.b64encode(user.x509_certificates[0].value).decode("utf-8")
-            properties["certificateSubjectCommonName"] = user.x509_certificates[0].display
+        if user.x509_certificates:
+            if len(user.x509_certificates) == 0:
+                properties["userCertificate"] = None
+                properties["certificateSubjectCommonName"] = None
+            elif len(user.x509_certificates) == 1:
+                # Store cert as b64 encoded string in UDM
+                properties["userCertificate"] = base64.b64encode(user.x509_certificates[0].value).decode("utf-8")
+                properties["certificateSubjectCommonName"] = user.x509_certificates[0].display
 
         # Map roles
         if user.roles:
             properties["guardianRoles"] = [x.value for x in user.roles if x.type == "guardian-direct"]
             properties["guardianInheritedRoles"] = [x.value for x in user.roles if x.type == "guardian-indirect"]
+
+            if self.roles_user_mapping:
+                properties[self.roles_user_mapping] = json.dumps(
+                    [
+                        x.model_dump()
+                        for x in user.roles
+                        if x.type != "guardian-direct" and x.type != "guardian-indirect"
+                    ]
+                )
         else:
             properties["guardianRoles"] = []
             properties["guardianInheritedRoles"] = []
+            if self.roles_user_mapping:
+                properties[self.roles_user_mapping] = None
 
         # TODO: Do not map groups for now, it will reduce performance because many LDAP queries are required
         # Map groups
