@@ -66,6 +66,7 @@ env = [
     "D:EXTERNAL_ID_USER_MAPPING = univentionObjectIdentifier",
     "D:EXTERNAL_ID_GROUP_MAPPING = univentionObjectIdentifier",
     "D:SCIM_OIDC_AUTHENTICATION = false",
+    "D:KEYCLOAK_BASE_URL = http://localhost:5050",
     #
     # Configuration for tests with Univention SCIM-Server
     #

@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+import os
+
 import pytest
 from keycloak import KeycloakAdmin, KeycloakOpenID, KeycloakPostError
 
@@ -9,22 +11,26 @@ from univention.scim.consumer.authentication import Authenticator, Authenticator
 
 AUDIENCE = "nubus-scim"
 REALM = "master"
-KEYCLOAK_BASE_URL = "http://localhost:5050"
 
 
 @pytest.fixture(scope="session")
-def authenticator_settings() -> AuthenticatorSettings:
+def keycloak_base_url() -> str:
+    return os.environ["KEYCLOAK_BASE_URL"]
+
+
+@pytest.fixture(scope="session")
+def authenticator_settings(keycloak_base_url) -> AuthenticatorSettings:
     return AuthenticatorSettings(
         scim_client_id="scim-consumer-test-client",
         scim_client_secret="supersecret",
-        scim_oidc_token_url="http://localhost:5050/realms/master/protocol/openid-connect/token",
+        scim_oidc_token_url=f"{keycloak_base_url}/realms/master/protocol/openid-connect/token",
     )
 
 
 @pytest.fixture(scope="session")
-def keycloak_admin() -> KeycloakAdmin:
+def keycloak_admin(keycloak_base_url) -> KeycloakAdmin:
     return KeycloakAdmin(
-        server_url=KEYCLOAK_BASE_URL,
+        server_url=keycloak_base_url,
         username="admin",
         password="univention",
         realm_name=REALM,
@@ -117,14 +123,14 @@ def test_failed_authentication(customization, authenticator_settings: Authentica
         authenticator.get_token()
 
 
-def test_token_has_audience(authenticator_settings):
+def test_token_has_audience(authenticator_settings, keycloak_base_url):
     authenticator = Authenticator(authenticator_settings)
 
     token = authenticator.get_token()
     assert token
 
     keycloak_openid = KeycloakOpenID(
-        server_url=KEYCLOAK_BASE_URL,
+        server_url=keycloak_base_url,
         client_id=authenticator_settings.scim_client_id,
         client_secret_key=authenticator_settings.scim_client_secret,
         realm_name=REALM,
