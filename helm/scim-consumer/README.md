@@ -1,89 +1,601 @@
-# scim-server
+# scim-consumer
 
-![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+A Helm chart for the Nubus SCIM consumer
 
-A Helm chart for the scim server
+- **Version**: 0.0.1
+- **Type**: application
+- **AppVersion**:
+- **Homepage:** <https://www.univention.de/>
 
-**Homepage:** <https://www.univention.de/>
+## TL;DR
+
+```console
+helm upgrade --install scim-consumer oci://artifacts.software-univention.de/nubus/charts/scim-consumer
+```
+
+## Introduction
+
+This chart does install the Nubus Provisioning SCIM Consumer.
+
+The service provides a way to provision downstream systems via the SCIM Protocol.
+
+## Installing
+
+To install the chart with the release name `scim-consumer`:
+
+```console
+helm upgrade --install scim-consumer oci://artifacts.software-univention.de/nubus/charts/scim-consumer
+```
+
+## Uninstalling
+
+To uninstall the chart with the release name `scim-consumer`:
+
+```console
+helm uninstall scim-consumer
+```
 
 ## Requirements
 
 | Repository | Name | Version |
 |------------|------|---------|
-| oci://registry-1.docker.io/bitnamicharts | common | ^2.x.x |
+| oci://artifacts.software-univention.de/nubus/charts | nubus-common | ^0.21.x |
 
 ## Values
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| config.logLevel | string | `"INFO"` |  |
-| config.loggingConfig | string | `nil` |  |
-| config.repeat | bool | `true` |  |
-| config.repeatDelay | int | `300` |  |
-| configFile.source.bind_dn | string | `"CN=readonly-ad-machine-user,CN=Users,DC=ad,DC=test"` |  |
-| configFile.source.group_base | string | `"CN=Groups,DC=ad,DC=test"` |  |
-| configFile.source.group_scope | string | `"sub"` |  |
-| configFile.source.ldap_uri | string | `"ldap://my_active_directory_server.test:1234"` |  |
-| configFile.source.password | string | `nil` |  |
-| configFile.source.search_pagesize | int | `500` |  |
-| configFile.source.timeout | int | `5` |  |
-| configFile.source.user_attrs[0] | string | `"objectGUID"` |  |
-| configFile.source.user_attrs[10] | string | `"st"` |  |
-| configFile.source.user_attrs[1] | string | `"sAMAccountName"` |  |
-| configFile.source.user_attrs[2] | string | `"givenName"` |  |
-| configFile.source.user_attrs[3] | string | `"description"` |  |
-| configFile.source.user_attrs[4] | string | `"sn"` |  |
-| configFile.source.user_attrs[5] | string | `"ou"` |  |
-| configFile.source.user_attrs[6] | string | `"o"` |  |
-| configFile.source.user_attrs[7] | string | `"street"` |  |
-| configFile.source.user_attrs[8] | string | `"l"` |  |
-| configFile.source.user_attrs[9] | string | `"postalCode"` |  |
-| configFile.source.user_base | string | `"CN=Users,DC=ad,DC=test"` |  |
-| configFile.source.user_filter | string | `"(&(objectClass=user)(sAMAccountType=805306368)(givenName=*)(sn=*)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"` |  |
-| configFile.source.user_scope | string | `"sub"` |  |
-| configFile.udm.group_ou | string | `"ou=ad-domain-example"` |  |
-| configFile.udm.group_primary_key_property | string | `"univentionObjectIdentifier"` |  |
-| configFile.udm.password | string | `nil` |  |
-| configFile.udm.skip_writes | bool | `false` |  |
-| configFile.udm.uri | string | `"https://nubus-kubernetes-deployment.test/univention/udm/"` |  |
-| configFile.udm.user | string | `"Administrator"` |  |
-| configFile.udm.user_ou | string | `"ou=ad-domain-example"` |  |
-| configFile.udm.user_primary_key_property | string | `"univentionObjectIdentifier"` |  |
-| containerSecurityContext.allowPrivilegeEscalation | bool | `false` |  |
-| containerSecurityContext.capabilities.drop[0] | string | `"ALL"` |  |
-| containerSecurityContext.enabled | bool | `false` |  |
-| containerSecurityContext.privileged | bool | `false` |  |
-| containerSecurityContext.readOnlyRootFilesystem | bool | `true` |  |
-| containerSecurityContext.runAsGroup | int | `1000` |  |
-| containerSecurityContext.runAsNonRoot | bool | `true` |  |
-| containerSecurityContext.runAsUser | int | `1000` |  |
-| containerSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
-| extraEnvVars | list | `[]` | Array with extra environment variables to add to containers.  extraEnvVars:   - name: FOO     value: "bar" |
-| extraSecrets | list | `[]` | Optionally specify a secret to create (primarily intended to be used in development environments to provide custom certificates) |
-| extraVolumeMounts | list | `[]` | Optionally specify an extra list of additional volumeMounts. |
-| extraVolumes | list | `[]` | Optionally specify an extra list of additional volumes. |
-| global.imagePullPolicy | string | `"IfNotPresent"` | Define an ImagePullPolicy.  Ref.: https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy  |
-| global.imagePullSecrets | list | `[]` | Credentials to fetch images from private registry. Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/  imagePullSecrets:   - "docker-registry" |
-| global.imageRegistry | string | `"artifacts.software-univention.de"` | Container registry address. |
-| image | object | `{"imagePullPolicy":"","registry":"","repository":"nubus-dev/images/scim-server","sha256":null,"tag":"latest"}` | Container image configuration |
-| image.sha256 | string | `nil` | Define image sha256 as an alternative to `tag` |
-| podSecurityContext.enabled | bool | `false` |  |
-| replicaCount | int | `1` |  |
-| resources.limits.cpu | string | `"4"` |  |
-| resources.limits.memory | string | `"4Gi"` |  |
-| serviceAccount.annotations | object | `{}` |  |
-| serviceAccount.automountServiceAccountToken | bool | `false` |  |
-| serviceAccount.create | bool | `true` |  |
-| serviceAccount.labels | object | `{}` | Additional custom labels for the ServiceAccount. |
-| serviceAccount.name | string | `""` |  |
-| sourceDirectory | object | `{"auth":{"existingSecret":{"keyMapping":{"password":null},"name":null},"password":null}}` | Source connection configuration that is not part of the main config file |
-| sourceDirectory.auth.existingSecret.keyMapping.password | string | `nil` | The key to retrieve the password from. Setting this value allows to use a key with a different name. |
-| sourceDirectory.auth.existingSecret.name | string | `nil` | The name of an existing Secret to use for retrieving the password to authenticate with the source LDAP directory.  "udm.auth.password" will be ignored if this value is set. |
-| sourceDirectory.auth.password | string | `nil` | The password used to authenticate with the source LDAP directory. Either this value or an existing Secret has to be specified. |
-| udm | object | `{"auth":{"existingSecret":{"keyMapping":{"password":null},"name":null},"password":null}}` | UDM REST API connection configuration that is not part of the main config file |
-| udm.auth.existingSecret.keyMapping.password | string | `nil` | The key to retrieve the password from. Setting this value allows to use a key with a different name. |
-| udm.auth.existingSecret.name | string | `nil` | The name of an existing Secret to use for retrieving the password to use with the UDM Rest API.  "udm.auth.password" will be ignored if this value is set. |
-| udm.auth.password | string | `nil` | The password used to authenticate with the UDM Rest API. Either this value or an existing Secret has to be specified. |
+<table>
+	<thead>
+		<th>Key</th>
+		<th>Type</th>
+		<th>Default</th>
+		<th>Description</th>
+	</thead>
+	<tbody>
+		<tr>
+			<td>containerSecurityContext.allowPrivilegeEscalation</td>
+			<td>bool</td>
+			<td><pre lang="json">
+false
+</pre>
+</td>
+			<td>Enable container privileged escalation.</td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.capabilities</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "drop": [
+    "ALL"
+  ]
+}
+</pre>
+</td>
+			<td>Security capabilities for container.</td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td>Enable security context.</td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.privileged</td>
+			<td>bool</td>
+			<td><pre lang="json">
+false
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.readOnlyRootFilesystem</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td>Mounts the container's root filesystem as read-only.</td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.runAsGroup</td>
+			<td>int</td>
+			<td><pre lang="json">
+1000
+</pre>
+</td>
+			<td>Process group id.</td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.runAsNonRoot</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td>Run container as a user.</td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.runAsUser</td>
+			<td>int</td>
+			<td><pre lang="json">
+1000
+</pre>
+</td>
+			<td>Process user id.</td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.seccompProfile.type</td>
+			<td>string</td>
+			<td><pre lang="json">
+"RuntimeDefault"
+</pre>
+</td>
+			<td>Disallow custom Seccomp profile by setting it to RuntimeDefault.</td>
+		</tr>
+		<tr>
+			<td>extraEnvVars</td>
+			<td>list</td>
+			<td><pre lang="json">
+[]
+</pre>
+</td>
+			<td>Array with extra environment variables to add to containers.  extraEnvVars:   - name: FOO     value: "bar"</td>
+		</tr>
+		<tr>
+			<td>extraSecrets</td>
+			<td>list</td>
+			<td><pre lang="json">
+[]
+</pre>
+</td>
+			<td>Optionally specify a secret to create (primarily intended to be used in development environments to provide custom certificates)</td>
+		</tr>
+		<tr>
+			<td>extraVolumeMounts</td>
+			<td>list</td>
+			<td><pre lang="json">
+[]
+</pre>
+</td>
+			<td>Optionally specify an extra list of additional volumeMounts.</td>
+		</tr>
+		<tr>
+			<td>extraVolumes</td>
+			<td>list</td>
+			<td><pre lang="json">
+[]
+</pre>
+</td>
+			<td>Optionally specify an extra list of additional volumes.</td>
+		</tr>
+		<tr>
+			<td>global.imagePullPolicy</td>
+			<td>string</td>
+			<td><pre lang="json">
+"IfNotPresent"
+</pre>
+</td>
+			<td>Define an ImagePullPolicy.  Ref.: https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy </td>
+		</tr>
+		<tr>
+			<td>global.imagePullSecrets</td>
+			<td>list</td>
+			<td><pre lang="json">
+[]
+</pre>
+</td>
+			<td>Credentials to fetch images from private registry. Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/  imagePullSecrets:   - "docker-registry"</td>
+		</tr>
+		<tr>
+			<td>global.imageRegistry</td>
+			<td>string</td>
+			<td><pre lang="json">
+"artifacts.software-univention.de"
+</pre>
+</td>
+			<td>Container registry address.</td>
+		</tr>
+		<tr>
+			<td>global.secrets.masterPassword</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>ldap</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "auth": {
+    "bindDn": null,
+    "existingSecret": {
+      "keyMapping": {
+        "password": null
+      },
+      "name": null
+    }
+  },
+  "connection": {
+    "host": null
+  }
+}
+</pre>
+</td>
+			<td>Upstream LDAP server to resolve group member DN's</td>
+		</tr>
+		<tr>
+			<td>ldap.auth.existingSecret.keyMapping.password</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>The key to retrieve the password from. Setting this value allows to use a key with a different name.</td>
+		</tr>
+		<tr>
+			<td>ldap.auth.existingSecret.name</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>The name of an existing Secret to use for retrieving the password to authenticate with the source LDAP directory.  "udm.auth.password" will be ignored if this value is set.</td>
+		</tr>
+		<tr>
+			<td>ldap.connection.host</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>LDAP Server hostname (e.g. "nubus-ldap-server")</td>
+		</tr>
+		<tr>
+			<td>podSecurityContext.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td>Enable security context.</td>
+		</tr>
+		<tr>
+			<td>podSecurityContext.fsGroup</td>
+			<td>int</td>
+			<td><pre lang="json">
+1000
+</pre>
+</td>
+			<td>If specified, all processes of the container are also part of the supplementary group.</td>
+		</tr>
+		<tr>
+			<td>podSecurityContext.fsGroupChangePolicy</td>
+			<td>string</td>
+			<td><pre lang="json">
+"Always"
+</pre>
+</td>
+			<td>Change ownership and permission of the volume before being exposed inside a Pod.</td>
+		</tr>
+		<tr>
+			<td>podSecurityContext.sysctls</td>
+			<td>list</td>
+			<td><pre lang="json">
+[
+  {
+    "name": "net.ipv4.ip_unprivileged_port_start",
+    "value": "1"
+  }
+]
+</pre>
+</td>
+			<td>Allow binding to ports below 1024 without root access.</td>
+		</tr>
+		<tr>
+			<td>provisioningApi</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "auth": {
+    "existingSecret": {
+      "keyMapping": {
+        "password": null
+      },
+      "name": null
+    },
+    "password": null,
+    "username": null
+  },
+  "config": {
+    "maxAcknowledgementRetries": 3
+  },
+  "connection": {
+    "url": null
+  }
+}
+</pre>
+</td>
+			<td>Upstream Nubus Provisioning connection configuration</td>
+		</tr>
+		<tr>
+			<td>provisioningApi.auth.existingSecret.keyMapping.password</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>The key to retrieve the password from. Setting this value allows to use a key with a different name.</td>
+		</tr>
+		<tr>
+			<td>provisioningApi.auth.existingSecret.name</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>The name of an existing Secret to use for retrieving the password to authenticate with the Provisionig API.  "provisioningApi.auth.password" will be ignored if this value is set.</td>
+		</tr>
+		<tr>
+			<td>provisioningApi.auth.password</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>The password used to authenticate with the Provisioning API. Either this value or an existing Secret has to be specified.</td>
+		</tr>
+		<tr>
+			<td>provisioningApi.auth.username</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>Username of the nubus provisioning subscription / this consumer For a given nubus deployment, all provisioning subscription names must be unique.</td>
+		</tr>
+		<tr>
+			<td>provisioningApi.config.maxAcknowledgementRetries</td>
+			<td>int</td>
+			<td><pre lang="json">
+3
+</pre>
+</td>
+			<td>The maximum number of retries for acknowledging a message</td>
+		</tr>
+		<tr>
+			<td>provisioningApi.connection.url</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>The base URL the provisioning API is reachable at. (e.g. "http://provisioning-api")</td>
+		</tr>
+		<tr>
+			<td>resources.limits.cpu</td>
+			<td>string</td>
+			<td><pre lang="json">
+"4"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>resources.limits.memory</td>
+			<td>string</td>
+			<td><pre lang="json">
+"4Gi"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>resources.requests.cpu</td>
+			<td>string</td>
+			<td><pre lang="json">
+"250m"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>resources.requests.memory</td>
+			<td>string</td>
+			<td><pre lang="json">
+"512Mi"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>scimConsumer</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "config": {
+    "groupSync": true,
+    "logLevel": "INFO",
+    "prefill": true
+  },
+  "image": {
+    "imagePullPolicy": "",
+    "registry": "",
+    "repository": "nubus-dev/images/scim-consumer",
+    "sha256": null,
+    "tag": "latest"
+  }
+}
+</pre>
+</td>
+			<td>Container image configuration</td>
+		</tr>
+		<tr>
+			<td>scimConsumer.config.prefill</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td>Toggle prefill for the provisioning subscription If activated, the consumer will recieve a synthetic "create" event for all existing objets in the Domain before recieving live events.</td>
+		</tr>
+		<tr>
+			<td>scimConsumer.image.sha256</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>Define image sha256 as an alternative to `tag`</td>
+		</tr>
+		<tr>
+			<td>scimServer</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "auth": {
+    "clientId": null,
+    "enabled": true,
+    "existingSecret": {
+      "keyMapping": {
+        "password": null
+      },
+      "name": null
+    },
+    "oidcTokenUrl": null,
+    "password": null
+  },
+  "connection": {
+    "url": null
+  }
+}
+</pre>
+</td>
+			<td>Downstream SCIM Service connection configuration</td>
+		</tr>
+		<tr>
+			<td>scimServer.auth.clientId</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>Service account client ID (username)</td>
+		</tr>
+		<tr>
+			<td>scimServer.auth.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td>Disable authentication with the SCIM Server for testing purposes</td>
+		</tr>
+		<tr>
+			<td>scimServer.auth.existingSecret.keyMapping.password</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>The key to retrieve the password from. Setting this value allows to use a key with a different name.</td>
+		</tr>
+		<tr>
+			<td>scimServer.auth.existingSecret.name</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>The name of an existing Secret to use for retrieving the password to authenticate with the SCIM Server.  "scimServer.auth.password" will be ignored if this value is set.</td>
+		</tr>
+		<tr>
+			<td>scimServer.auth.oidcTokenUrl</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>URL to obtain an OIDC access token from the Identity Provider using the client-credentials-flow.</td>
+		</tr>
+		<tr>
+			<td>scimServer.auth.password</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>The password used to authenticate with the SCIM Server. Either this value or an existing Secret has to be specified.</td>
+		</tr>
+		<tr>
+			<td>scimServer.connection.url</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>The base URL the SCIM server is reachable at. (e.g. "http://scim-server")</td>
+		</tr>
+		<tr>
+			<td>serviceAccount.annotations</td>
+			<td>object</td>
+			<td><pre lang="json">
+{}
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>serviceAccount.automountServiceAccountToken</td>
+			<td>bool</td>
+			<td><pre lang="json">
+false
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>serviceAccount.create</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>serviceAccount.labels</td>
+			<td>object</td>
+			<td><pre lang="json">
+{}
+</pre>
+</td>
+			<td>Additional custom labels for the ServiceAccount.</td>
+		</tr>
+		<tr>
+			<td>serviceAccount.name</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>tolerations</td>
+			<td>list</td>
+			<td><pre lang="json">
+[]
+</pre>
+</td>
+			<td></td>
+		</tr>
+	</tbody>
+</table>
 
-----------------------------------------------
-Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

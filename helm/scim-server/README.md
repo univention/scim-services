@@ -1,89 +1,1103 @@
 # scim-server
 
-![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
-
 A Helm chart for the scim server
 
-**Homepage:** <https://www.univention.de/>
+- **Version**: 0.0.1
+- **Type**: application
+- **AppVersion**:
+- **Homepage:** <https://www.univention.de/>
+
+## TL;DR
+
+```console
+helm upgrade --install scim-server oci://artifacts.software-univention.de/nubus/charts/scim-server
+```
+
+## Introduction
+
+This chart does install the Nubus SCIM Server.
+
+This service provides a REST API implementing the SCIM Protocol.
+
+## Installing
+
+To install the chart with the release name `scim-server`:
+
+```console
+helm upgrade --install scim-server oci://artifacts.software-univention.de/nubus/charts/scim-server
+```
+
+## Uninstalling
+
+To uninstall the chart with the release name `scim-server`:
+
+```console
+helm uninstall scim-server
+```
 
 ## Requirements
 
 | Repository | Name | Version |
 |------------|------|---------|
-| oci://registry-1.docker.io/bitnamicharts | common | ^2.x.x |
+| oci://artifacts.software-univention.de/nubus/charts | nubus-common | ^0.21.x |
 
 ## Values
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| config.logLevel | string | `"INFO"` |  |
-| config.loggingConfig | string | `nil` |  |
-| config.repeat | bool | `true` |  |
-| config.repeatDelay | int | `300` |  |
-| configFile.source.bind_dn | string | `"CN=readonly-ad-machine-user,CN=Users,DC=ad,DC=test"` |  |
-| configFile.source.group_base | string | `"CN=Groups,DC=ad,DC=test"` |  |
-| configFile.source.group_scope | string | `"sub"` |  |
-| configFile.source.ldap_uri | string | `"ldap://my_active_directory_server.test:1234"` |  |
-| configFile.source.password | string | `nil` |  |
-| configFile.source.search_pagesize | int | `500` |  |
-| configFile.source.timeout | int | `5` |  |
-| configFile.source.user_attrs[0] | string | `"objectGUID"` |  |
-| configFile.source.user_attrs[10] | string | `"st"` |  |
-| configFile.source.user_attrs[1] | string | `"sAMAccountName"` |  |
-| configFile.source.user_attrs[2] | string | `"givenName"` |  |
-| configFile.source.user_attrs[3] | string | `"description"` |  |
-| configFile.source.user_attrs[4] | string | `"sn"` |  |
-| configFile.source.user_attrs[5] | string | `"ou"` |  |
-| configFile.source.user_attrs[6] | string | `"o"` |  |
-| configFile.source.user_attrs[7] | string | `"street"` |  |
-| configFile.source.user_attrs[8] | string | `"l"` |  |
-| configFile.source.user_attrs[9] | string | `"postalCode"` |  |
-| configFile.source.user_base | string | `"CN=Users,DC=ad,DC=test"` |  |
-| configFile.source.user_filter | string | `"(&(objectClass=user)(sAMAccountType=805306368)(givenName=*)(sn=*)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"` |  |
-| configFile.source.user_scope | string | `"sub"` |  |
-| configFile.udm.group_ou | string | `"ou=ad-domain-example"` |  |
-| configFile.udm.group_primary_key_property | string | `"univentionObjectIdentifier"` |  |
-| configFile.udm.password | string | `nil` |  |
-| configFile.udm.skip_writes | bool | `false` |  |
-| configFile.udm.uri | string | `"https://nubus-kubernetes-deployment.test/univention/udm/"` |  |
-| configFile.udm.user | string | `"Administrator"` |  |
-| configFile.udm.user_ou | string | `"ou=ad-domain-example"` |  |
-| configFile.udm.user_primary_key_property | string | `"univentionObjectIdentifier"` |  |
-| containerSecurityContext.allowPrivilegeEscalation | bool | `false` |  |
-| containerSecurityContext.capabilities.drop[0] | string | `"ALL"` |  |
-| containerSecurityContext.enabled | bool | `false` |  |
-| containerSecurityContext.privileged | bool | `false` |  |
-| containerSecurityContext.readOnlyRootFilesystem | bool | `true` |  |
-| containerSecurityContext.runAsGroup | int | `1000` |  |
-| containerSecurityContext.runAsNonRoot | bool | `true` |  |
-| containerSecurityContext.runAsUser | int | `1000` |  |
-| containerSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
-| extraEnvVars | list | `[]` | Array with extra environment variables to add to containers.  extraEnvVars:   - name: FOO     value: "bar" |
-| extraSecrets | list | `[]` | Optionally specify a secret to create (primarily intended to be used in development environments to provide custom certificates) |
-| extraVolumeMounts | list | `[]` | Optionally specify an extra list of additional volumeMounts. |
-| extraVolumes | list | `[]` | Optionally specify an extra list of additional volumes. |
-| global.imagePullPolicy | string | `"IfNotPresent"` | Define an ImagePullPolicy.  Ref.: https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy  |
-| global.imagePullSecrets | list | `[]` | Credentials to fetch images from private registry. Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/  imagePullSecrets:   - "docker-registry" |
-| global.imageRegistry | string | `"artifacts.software-univention.de"` | Container registry address. |
-| image | object | `{"imagePullPolicy":"","registry":"","repository":"nubus-dev/images/scim-server","sha256":null,"tag":"latest"}` | Container image configuration |
-| image.sha256 | string | `nil` | Define image sha256 as an alternative to `tag` |
-| podSecurityContext.enabled | bool | `false` |  |
-| replicaCount | int | `1` |  |
-| resources.limits.cpu | string | `"4"` |  |
-| resources.limits.memory | string | `"4Gi"` |  |
-| serviceAccount.annotations | object | `{}` |  |
-| serviceAccount.automountServiceAccountToken | bool | `false` |  |
-| serviceAccount.create | bool | `true` |  |
-| serviceAccount.labels | object | `{}` | Additional custom labels for the ServiceAccount. |
-| serviceAccount.name | string | `""` |  |
-| sourceDirectory | object | `{"auth":{"existingSecret":{"keyMapping":{"password":null},"name":null},"password":null}}` | Source connection configuration that is not part of the main config file |
-| sourceDirectory.auth.existingSecret.keyMapping.password | string | `nil` | The key to retrieve the password from. Setting this value allows to use a key with a different name. |
-| sourceDirectory.auth.existingSecret.name | string | `nil` | The name of an existing Secret to use for retrieving the password to authenticate with the source LDAP directory.  "udm.auth.password" will be ignored if this value is set. |
-| sourceDirectory.auth.password | string | `nil` | The password used to authenticate with the source LDAP directory. Either this value or an existing Secret has to be specified. |
-| udm | object | `{"auth":{"existingSecret":{"keyMapping":{"password":null},"name":null},"password":null}}` | UDM REST API connection configuration that is not part of the main config file |
-| udm.auth.existingSecret.keyMapping.password | string | `nil` | The key to retrieve the password from. Setting this value allows to use a key with a different name. |
-| udm.auth.existingSecret.name | string | `nil` | The name of an existing Secret to use for retrieving the password to use with the UDM Rest API.  "udm.auth.password" will be ignored if this value is set. |
-| udm.auth.password | string | `nil` | The password used to authenticate with the UDM Rest API. Either this value or an existing Secret has to be specified. |
+<table>
+	<thead>
+		<th>Key</th>
+		<th>Type</th>
+		<th>Default</th>
+		<th>Description</th>
+	</thead>
+	<tbody>
+		<tr>
+			<td>additionalAnnotations</td>
+			<td>object</td>
+			<td><pre lang="json">
+{}
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>additionalLabels</td>
+			<td>object</td>
+			<td><pre lang="json">
+{}
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>config.apiPrefix</td>
+			<td>string</td>
+			<td><pre lang="json">
+"/scim/v2"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>config.auth.allowGroupDn</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>config.auth.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>config.corsOrigins</td>
+			<td>string</td>
+			<td><pre lang="json">
+"[\"*\"]"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>config.externalId</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "groupMapping": null,
+  "userMapping": null
+}
+</pre>
+</td>
+			<td>External ID mapping configuration for SCIM filtering</td>
+		</tr>
+		<tr>
+			<td>config.externalId.groupMapping</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>UDM property to map to SCIM Group externalId. If not set, externalID will not be mapped. Example: "description"</td>
+		</tr>
+		<tr>
+			<td>config.externalId.userMapping</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>UDM property to map to SCIM User externalId. If not set, externalID will not be mapped. Example: "employeeNumber"</td>
+		</tr>
+		<tr>
+			<td>config.host</td>
+			<td>string</td>
+			<td><pre lang="json">
+"https://scim.example.test"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>config.listenAddress</td>
+			<td>string</td>
+			<td><pre lang="json">
+"0.0.0.0"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>config.logLevel</td>
+			<td>string</td>
+			<td><pre lang="json">
+"INFO"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>config.port</td>
+			<td>int</td>
+			<td><pre lang="json">
+80
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.allowPrivilegeEscalation</td>
+			<td>bool</td>
+			<td><pre lang="json">
+false
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.capabilities.drop[0]</td>
+			<td>string</td>
+			<td><pre lang="json">
+"ALL"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.privileged</td>
+			<td>bool</td>
+			<td><pre lang="json">
+false
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.readOnlyRootFilesystem</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.runAsGroup</td>
+			<td>int</td>
+			<td><pre lang="json">
+1000
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.runAsNonRoot</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.runAsUser</td>
+			<td>int</td>
+			<td><pre lang="json">
+1000
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>containerSecurityContext.seccompProfile.type</td>
+			<td>string</td>
+			<td><pre lang="json">
+"RuntimeDefault"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>extraEnvVars</td>
+			<td>list</td>
+			<td><pre lang="json">
+[]
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>extraVolumeMounts</td>
+			<td>list</td>
+			<td><pre lang="json">
+[]
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>extraVolumes</td>
+			<td>list</td>
+			<td><pre lang="json">
+[]
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>global.certManagerIssuer</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>global.domain</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>global.imagePullPolicy</td>
+			<td>string</td>
+			<td><pre lang="json">
+"IfNotPresent"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>global.imagePullSecrets</td>
+			<td>list</td>
+			<td><pre lang="json">
+[]
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>global.imageRegistry</td>
+			<td>string</td>
+			<td><pre lang="json">
+"artifacts.software-univention.de"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>global.ingressClass</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>global.nubusDeployment</td>
+			<td>bool</td>
+			<td><pre lang="json">
+false
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>ingress.annotations</td>
+			<td>object</td>
+			<td><pre lang="json">
+{}
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>ingress.certManager.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>ingress.certManager.issuerRef.kind</td>
+			<td>string</td>
+			<td><pre lang="json">
+"ClusterIssuer"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>ingress.certManager.issuerRef.name</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>ingress.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>ingress.host</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>ingress.ingressClassName</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>ingress.tls.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>ingress.tls.secretName</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>keycloak.connection.realm</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>keycloak.connection.url</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>oauth.auth.existingSecret.keyMapping.clientSecret</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>oauth.auth.existingSecret.name</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>oauth.clientId</td>
+			<td>string</td>
+			<td><pre lang="json">
+"scim-api"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>podSecurityContext.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>podSecurityContext.fsGroup</td>
+			<td>int</td>
+			<td><pre lang="json">
+1000
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>podSecurityContext.fsGroupChangePolicy</td>
+			<td>string</td>
+			<td><pre lang="json">
+"Always"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>podSecurityContext.sysctls[0].name</td>
+			<td>string</td>
+			<td><pre lang="json">
+"net.ipv4.ip_unprivileged_port_start"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>podSecurityContext.sysctls[0].value</td>
+			<td>string</td>
+			<td><pre lang="json">
+"1"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.liveness.failureThreshold</td>
+			<td>int</td>
+			<td><pre lang="json">
+10
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.liveness.initialDelaySeconds</td>
+			<td>int</td>
+			<td><pre lang="json">
+15
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.liveness.periodSeconds</td>
+			<td>int</td>
+			<td><pre lang="json">
+20
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.liveness.successThreshold</td>
+			<td>int</td>
+			<td><pre lang="json">
+1
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.liveness.tcpSocket.port</td>
+			<td>int</td>
+			<td><pre lang="json">
+80
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.liveness.timeoutSeconds</td>
+			<td>int</td>
+			<td><pre lang="json">
+5
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.readiness.failureThreshold</td>
+			<td>int</td>
+			<td><pre lang="json">
+10
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.readiness.initialDelaySeconds</td>
+			<td>int</td>
+			<td><pre lang="json">
+15
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.readiness.periodSeconds</td>
+			<td>int</td>
+			<td><pre lang="json">
+20
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.readiness.successThreshold</td>
+			<td>int</td>
+			<td><pre lang="json">
+1
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.readiness.tcpSocket.port</td>
+			<td>int</td>
+			<td><pre lang="json">
+80
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.readiness.timeoutSeconds</td>
+			<td>int</td>
+			<td><pre lang="json">
+5
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.startup.failureThreshold</td>
+			<td>int</td>
+			<td><pre lang="json">
+10
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.startup.initialDelaySeconds</td>
+			<td>int</td>
+			<td><pre lang="json">
+15
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.startup.periodSeconds</td>
+			<td>int</td>
+			<td><pre lang="json">
+20
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.startup.successThreshold</td>
+			<td>int</td>
+			<td><pre lang="json">
+1
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.startup.tcpSocket.port</td>
+			<td>int</td>
+			<td><pre lang="json">
+80
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>probes.startup.timeoutSeconds</td>
+			<td>int</td>
+			<td><pre lang="json">
+5
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>replicaCount</td>
+			<td>int</td>
+			<td><pre lang="json">
+1
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>resources.limits.cpu</td>
+			<td>string</td>
+			<td><pre lang="json">
+"4"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>resources.limits.memory</td>
+			<td>string</td>
+			<td><pre lang="json">
+"4Gi"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>scimServer.image.imagePullPolicy</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>scimServer.image.registry</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>scimServer.image.repository</td>
+			<td>string</td>
+			<td><pre lang="json">
+"nubus-dev/images/scim-server"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>scimServer.image.sha256</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>scimServer.image.tag</td>
+			<td>string</td>
+			<td><pre lang="json">
+"latest"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>scimServer.waitForDependency.image.registry</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>scimServer.waitForDependency.image.repository</td>
+			<td>string</td>
+			<td><pre lang="json">
+"nubus/images/wait-for-dependency"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>scimServer.waitForDependency.image.sha256</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>scimServer.waitForDependency.image.tag</td>
+			<td>string</td>
+			<td><pre lang="json">
+"0.31.0"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>service.annotations</td>
+			<td>object</td>
+			<td><pre lang="json">
+{}
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>serviceAccount.annotations</td>
+			<td>object</td>
+			<td><pre lang="json">
+{}
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>serviceAccount.automountServiceAccountToken</td>
+			<td>bool</td>
+			<td><pre lang="json">
+false
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>serviceAccount.create</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>serviceAccount.labels</td>
+			<td>object</td>
+			<td><pre lang="json">
+{}
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>serviceAccount.name</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.backoffLimit</td>
+			<td>int</td>
+			<td><pre lang="json">
+900
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.config.debug.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+false
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.config.debug.pauseBeforeScriptStart</td>
+			<td>int</td>
+			<td><pre lang="json">
+0
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.config.nubusBaseUrl</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.image.imagePullPolicy</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.image.registry</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.image.repository</td>
+			<td>string</td>
+			<td><pre lang="json">
+"nubus/images/keycloak-bootstrap"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.image.sha256</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.image.tag</td>
+			<td>string</td>
+			<td><pre lang="json">
+"0.8.0"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.keycloak.auth.existingSecret.keyMapping.password</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.keycloak.auth.existingSecret.name</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.keycloak.auth.username</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.keycloak.connection.baseUrl</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.keycloak.connection.host</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.keycloak.connection.port</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.restartPolicy</td>
+			<td>string</td>
+			<td><pre lang="json">
+"OnFailure"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.ttlSecondsAfterFinished</td>
+			<td>int</td>
+			<td><pre lang="json">
+300
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.user.create</td>
+			<td>bool</td>
+			<td><pre lang="json">
+false
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.user.group.create</td>
+			<td>bool</td>
+			<td><pre lang="json">
+false
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.user.group.name</td>
+			<td>string</td>
+			<td><pre lang="json">
+"scim-api-access"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.user.password</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>setup.user.username</td>
+			<td>string</td>
+			<td><pre lang="json">
+"scim-api"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>tolerations</td>
+			<td>list</td>
+			<td><pre lang="json">
+[]
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>udm.auth.existingSecret.keyMapping.password</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>udm.auth.existingSecret.name</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>udm.auth.password</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>udm.auth.username</td>
+			<td>string</td>
+			<td><pre lang="json">
+"Administrator"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>udm.connection.url</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td></td>
+		</tr>
+	</tbody>
+</table>
 
-----------------------------------------------
-Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

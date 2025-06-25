@@ -11,6 +11,7 @@ repos:
     - id: check-merge-conflict
     - id: trailing-whitespace
     - id: end-of-file-fixer
+      exclude: "^helm/.+/README.md$"
     - id: check-json
     - id: check-toml
     - id: check-yaml
@@ -64,7 +65,7 @@ repos:
     rev: v0.9.29
     hooks:
       - id: pymarkdown
-        exclude: ^CHANGELOG\.md$
+        exclude: ^CHANGELOG\.md$|^helm/.+/README.md$
         args:
           - -d line-length,no-bare-urls,no-duplicate-heading,no-duplicate-header
           - scan
@@ -73,11 +74,6 @@ repos:
     rev: 0.7.6
     hooks:
       - id: uv-lock
-
-  - repo: "https://git.knut.univention.de/univention/dev/tooling/kyverno-test-pre-commit"
-    rev: "v0.3.0"
-    hooks:
-      - id: "kyverno-test"
 
   - repo: "https://git.knut.univention.de/univention/infrastructure/pre-commit-hooks/addlicense"
     rev: "v1.0.1"
@@ -91,3 +87,19 @@ repos:
       - id: "conventional-pre-commit"
         name: "Conventional Commit"
         stages: ["commit-msg"]
+
+  - repo: "https://github.com/norwoodj/helm-docs"
+    rev: "v1.12.0"
+    hooks:
+      - id: "helm-docs"
+        name: "Helm Docs"
+        args:
+          - "--chart-search-root=helm"
+          - "--template-files=README.md.gotmpl"
+        always_run: true
+
+
+  - repo: "https://git.knut.univention.de/univention/dev/tooling/kyverno-test-pre-commit"
+    rev: "v0.3.0"
+    hooks:
+      - id: "kyverno-test"
