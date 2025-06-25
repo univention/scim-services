@@ -131,9 +131,9 @@ registerConsumers:
   createUsers:
     scimConsumer:
       existingSecret:
-        name: scim-consumer-provisioning-subscription
+        name: scim-consumer-provisioning
         keyMapping:
-          password: "scim-consumer.json"
+          password: "registration"
 ```
 
 ### Helm unittests

@@ -14,11 +14,11 @@ metadata:
   {{- end }}
 data:
   LOG_LEVEL: {{ .Values.scimConsumer.config.logLevel | required ".Values.config.LogLevel is required" | quote }}
-  PROVISIONING_API_USERNAME: {{ default (include "common.names.fullname" .) .Values.nubusProvisioning.auth.username | quote }}
-  PROVISIONING_API_BASE_URL: {{ required ".Values.nubusProvisioning.connection.url is required." .Values.nubusProvisioning.connection.url | quote }}
-  MAX_ACKNOWLEDGEMENT_RETRIES: {{ required ".Values.nubusProvisioning.connection.maxAcknowledgementRetries is required." .Values.nubusProvisioning.connection.maxAcknowledgementRetries | quote }}
+  PROVISIONING_API_USERNAME: {{ default (include "common.names.fullname" .) .Values.provisioningApi.auth.username | quote }}
+  PROVISIONING_API_BASE_URL: {{ required ".Values.provisioningApi.connection.url is required." .Values.provisioningApi.connection.url | quote }}
+  MAX_ACKNOWLEDGEMENT_RETRIES: {{ required ".Values.provisioningApi.config.maxAcknowledgementRetries is required." .Values.provisioningApi.config.maxAcknowledgementRetries | quote }}
   SCIM_SERVER_BASE_URL: {{ required ".Values.scimServer.connection.url is required" .Values.scimServer.connection.url | quote }}
-  LDAP_HOST: {{ required ".Values.ldap.connection.hostname is required" .Values.ldap.connection.hostname | quote }}
+  LDAP_HOST: {{ required ".Values.ldap.connection.host is required" .Values.ldap.connection.host | quote }}
   LDAP_BIND_DN: {{ required ".Values.ldap.auth.bindDn is required" .Values.ldap.auth.bindDn | quote }}
   SCIM_OIDC_AUTHENTICATION: {{ required ".Values.scimServer.auth.enabled is required" .Values.scimServer.auth.enabled | quote }}
   SCIM_OIDC_TOKEN_URL: {{ required ".Values.scimServer.auth.oidcTokenUrl is required" .Values.scimServer.auth.oidcTokenUrl | quote }}

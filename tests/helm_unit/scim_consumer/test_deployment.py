@@ -14,7 +14,7 @@ class TestDeployment(Deployment):
     "key, env_var",
     [
         ("scimServer", "SCIM_CLIENT_SECRET"),
-        ("nubusProvisioning", "PROVISIONING_API_PASSWORD"),
+        ("provisioningApi", "PROVISIONING_API_PASSWORD"),
     ],
 )
 class TestMainContainer(ContainerEnvVarSecret):

@@ -17,10 +17,10 @@ class TestConfigMap(ConfigMap):
     "key, env_var",
     [
         ("scimConsumer.config.logLevel", "LOG_LEVEL"),
-        ("nubusProvisioning.connection.url", "PROVISIONING_API_BASE_URL"),
-        ("nubusProvisioning.connection.maxAcknowledgementRetries", "MAX_ACKNOWLEDGEMENT_RETRIES"),
+        ("provisioningApi.connection.url", "PROVISIONING_API_BASE_URL"),
+        ("provisioningApi.config.maxAcknowledgementRetries", "MAX_ACKNOWLEDGEMENT_RETRIES"),
         ("scimServer.connection.url", "SCIM_SERVER_BASE_URL"),
-        ("ldap.connection.uri", "LDAP_URI"),
+        ("ldap.connection.host", "LDAP_HOST"),
         ("ldap.auth.bindDn", "LDAP_BIND_DN"),
         ("scimServer.auth.clientId", "SCIM_CLIENT_ID"),
         ("scimServer.auth.oidcTokenUrl", "SCIM_OIDC_TOKEN_URL"),
@@ -34,7 +34,7 @@ class TestRequiredConfigMapEnv(RequiredEnvVariables):
 @pytest.mark.parametrize(
     "key, env_var",
     [
-        ("nubusProvisioning.auth.username", "PROVISIONING_API_USERNAME"),
+        ("provisioningApi.auth.username", "PROVISIONING_API_USERNAME"),
     ],
 )
 class TestDefaultEnvVariables(DefaultEnvVariables):

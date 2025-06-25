@@ -26,11 +26,13 @@ class TestScimServer(SecretPasswords):
     def test_global_secrets_keep_is_ignored(self): ...
 
 
-class NubusProvisionigSecret:
+class TestNubusProvisioningSubscription(Annotations, Labels, Namespace):
     template_file = "templates/secret-provisioning.yaml"
+    manifest_name = "release-name-scim-consumer-provisioning"
+    secret_key = "registration"
 
     def values(self, localpart: dict) -> dict:
-        return {"nubusProvisioning": localpart}
+        return {"provisioningApi": localpart}
 
     def helm_template_file(
         self,
@@ -47,19 +49,6 @@ class NubusProvisionigSecret:
         except LookupError:
             return {}
         return secret
-
-
-class TestNubusProvisioningCredentials(NubusProvisionigSecret, TestScimServer):
-    manifest_name = "release-name-scim-consumer-provisioning-credentials"
-
-
-class TestNubusProvisioningSubscription(NubusProvisionigSecret, Annotations, Labels, Namespace):
-    template_file = "templates/secret-provisioning.yaml"
-    manifest_name = "release-name-scim-consumer-provisioning-subscription"
-    secret_key = "release-name-scim-consumer.json"
-
-    def values(self, localpart: dict) -> dict:
-        return {"nubusProvisioning": localpart}
 
     def get_password(self, result):
         result = json.loads(result["stringData"][self.secret_key])["password"]
@@ -78,17 +67,15 @@ class TestNubusProvisioningSubscription(NubusProvisionigSecret, Annotations, Lab
             chart=chart_path, template_file=self.template_file, release_name="openproject"
         )
         openproject_secret = openproject_manifest.get_resource(
-            kind="Secret", name="openproject-scim-consumer-provisioning-subscription"
+            kind="Secret", name="openproject-scim-consumer-provisioning"
         )
-        openproject = json.loads(openproject_secret["stringData"]["openproject-scim-consumer.json"])
+        openproject = json.loads(openproject_secret["stringData"]["registration"])
 
         nextcloud_manifest = helm.helm_template(
             chart=chart_path, values=nextcloud_values, template_file=self.template_file, release_name="nextcloud"
         )
-        nextcloud_secret = nextcloud_manifest.get_resource(
-            kind="Secret", name="nextcloud-scim-consumer-provisioning-subscription"
-        )
-        nextcloud = json.loads(nextcloud_secret["stringData"]["nextcloud-scim-consumer.json"])
+        nextcloud_secret = nextcloud_manifest.get_resource(kind="Secret", name="nextcloud-scim-consumer-provisioning")
+        nextcloud = json.loads(nextcloud_secret["stringData"]["registration"])
 
         assert openproject["name"] != nextcloud["name"]
         assert openproject["password"] != nextcloud["password"]

@@ -5,7 +5,7 @@ global:
   secrets:
     masterPassword: nubus
 
-nubusProvisioning:
+provisioningApi:
   connection:
     url: "http://provisioning-api"
 
@@ -14,13 +14,13 @@ scimServer:
     url: "http://scim-server"
   auth:
     enabled: false
-    idpBaseUrl: "foo"
+    oidcTokenUrl: "foo"
     realm: "bar"
     clientId: "stub-scim-api-username"
 
 ldap:
   connection:
-    uri: "ldap://ldap-server"
+    host: "ldap-server"
   auth:
     bindDn: "cn=admin,dc=univention-organization,dc=intranet"
     existingSecret:

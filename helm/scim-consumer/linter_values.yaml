@@ -6,7 +6,7 @@ global:
   secrets:
     masterPassword: stub-secret
 
-nubusProvisioning:
+provisioningApi:
   connection:
     url: "http://stub-nubus-provisioning-api"
 
@@ -20,7 +20,7 @@ scimServer:
 
 ldap:
   connection:
-    hostname: "stub-ldap-server"
+    host: "stub-ldap-server"
   auth:
     bindDn: "uid=stub,cn=users,dc=univention-organization,dc=intranet"
     existingSecret:

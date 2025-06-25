@@ -72,8 +72,8 @@ spec:
             - name: PROVISIONING_API_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.nubusProvisioning.auth.existingSecret "defaultNameSuffix" "provisioning-credentials" "context" .) | quote }}
-                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.nubusProvisioning.auth.existingSecret "key" "password") | quote }}
+                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.provisioningApi.auth.existingSecret "defaultNameSuffix" "provisioning" "context" .) | quote }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.provisioningApi.auth.existingSecret "key" "password") | quote }}
             - name: LDAP_BIND_PASSWORD
               valueFrom:
                 secretKeyRef:

@@ -22,12 +22,13 @@ global:
     masterPassword: null
 
 # -- Upstream Nubus Provisioning connection configuration
-nubusProvisioning:
+provisioningApi:
+  config:
+    # -- The maximum number of retries for acknowledging a message
+    maxAcknowledgementRetries: 3
   connection:
     # -- The base URL the provisioning API is reachable at. (e.g. "http://provisioning-api")
     url: null
-    # -- The maximum number of retries for acknowledging a message
-    maxAcknowledgementRetries: 3
   auth:
     # -- Username of the nubus provisioning subscription / this consumer
     # For a given nubus deployment, all provisioning subscription names must be unique.
@@ -39,7 +40,7 @@ nubusProvisioning:
       # -- The name of an existing Secret to use for retrieving the password
       # to authenticate with the Provisionig API.
       #
-      # "nubusProvisioning.auth.password" will be ignored if this value is set.
+      # "provisioningApi.auth.password" will be ignored if this value is set.
       name: null
       keyMapping:
         # -- The key to retrieve the password from. Setting this value allows to use
@@ -76,7 +77,7 @@ scimServer:
 ldap:
   connection:
     # -- LDAP Server hostname (e.g. "nubus-ldap-server")
-    hostname: null
+    host: null
   auth:
     bindDn: null
     existingSecret:
