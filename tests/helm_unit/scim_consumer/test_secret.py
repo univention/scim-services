@@ -5,9 +5,9 @@ import json
 
 import pytest
 from pytest_helm.helm import Helm
-from pytest_helm.utils import load_yaml
 from univention.testing.helm.base import Annotations, Labels, Namespace
 from univention.testing.helm.secret import SecretPasswords
+from yaml import safe_load
 
 
 class TestScimServer(SecretPasswords):
@@ -66,7 +66,7 @@ class TestNubusProvisioningSubscription(NubusProvisionigSecret, Annotations, Lab
         return result
 
     def test_can_be_deployed_multiple_times(self, helm, chart_path):
-        nextcloud_values = load_yaml("""
+        nextcloud_values = safe_load("""
         scimConsumer:
             config:
                 prefill: false
@@ -98,7 +98,7 @@ class TestNubusProvisioningSubscription(NubusProvisionigSecret, Annotations, Lab
 
     def test_auth_plain_values_generate_secret(self, helm, chart_path):
         values = self.values(
-            load_yaml("""
+            safe_load("""
             auth:
               password: "stub-password"
         """),
@@ -108,7 +108,7 @@ class TestNubusProvisioningSubscription(NubusProvisionigSecret, Annotations, Lab
 
     def test_auth_plain_values_password_is_not_templated(self, helm, chart_path):
         values = self.values(
-            load_yaml("""
+            safe_load("""
             auth:
               password: "{{ value }}"
         """),
@@ -122,7 +122,7 @@ class TestNubusProvisioningSubscription(NubusProvisionigSecret, Annotations, Lab
         chart_path,
     ):
         values = self.values(
-            load_yaml(
+            safe_load(
                 """
             auth:
               existingSecret:
@@ -139,7 +139,7 @@ class TestNubusProvisioningSubscription(NubusProvisionigSecret, Annotations, Lab
         chart_path,
     ):
         values = self.values(
-            load_yaml(
+            safe_load(
                 """
             auth:
               password: null
@@ -153,7 +153,7 @@ class TestNubusProvisioningSubscription(NubusProvisionigSecret, Annotations, Lab
 
     def test_auth_existing_secret_has_precedence(self, helm, chart_path):
         values = self.values(
-            load_yaml(
+            safe_load(
                 """
             auth:
               password: stub-plain-password

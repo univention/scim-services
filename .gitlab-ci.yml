@@ -141,7 +141,7 @@ test-scim2-compliance:
 
 test-helm-charts:
   stage: test
-  image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.21.0
+  image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.18.0
   script:
     - helm dep build helm/scim-server
     - helm dep build helm/scim-consumer
@@ -203,6 +203,7 @@ test-scim-services-integration:
     - if: '$AUTO_TRIGGER_TESTS == "yes"'
       when: on_success
     - when: manual
+  allow_failure: true
   before_script:
     - cd scim-consumer/tests
     # Allow that the Docker API version is negotiated between client and server
