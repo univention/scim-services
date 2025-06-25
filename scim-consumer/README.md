@@ -5,23 +5,23 @@
 The tests running agains the SCIM server from
 
 ```bash
-docker compose up --build --remove-orphans -d
+docker compose --profile develop up --build --remove-orphans -d
 
-docker compose run --rm --build --remove-orphans test
+docker compose --profile develop run --rm --build --remove-orphans test
 # or
 pytest -v -s ./
 
-docker compose down --volumes
+docker compose --profile develop down --volumes
 ```
 
 To run the tests against the Univention SCIM server
 
 ```bash
-docker compose --file docker-compose-univention-scim.yaml up -d --remove-orphans --build
+docker compose --profile integration up -d --remove-orphans --build
 
-docker compose --file docker-compose-univention-scim.yaml run --rm --build --remove-orphans test
+docker compose --profile integration run --rm --build --remove-orphans test-integration
 # or
 UNIVENTION_SCIM_SERVER=true pytest -v -s ./
 
-docker compose --file docker-compose-univention-scim.yaml down --volumes
+docker compose --profile integration down --volumes
 ```
