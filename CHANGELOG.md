@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.30.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.29.2...v0.30.0) (2025-06-25)
+
+
+### Features
+
+* **scim-consumer:** Add support for Univention scim-server as target system. ([8c2a2cf](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/8c2a2cf769f9c1b8f3b1346ed458e4459a2297a9)), closes [univention/dev/internal/team-nubus#1207](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1207)
+
+
+### Bug Fixes
+
+* Changes and pipeline for scim-server and scim-consumer integration. ([d3c0848](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/d3c0848bf1ae0832545e1bf177211f9ce6d0dfad)), closes [univention/dev/internal/team-nubus#1207](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1207)
+* **scim-consumer:** Fixed LDAP connection errors and replaced YAML lib in Helm test. ([9ed282b](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/9ed282b458098de7d2a772abbafd99553db809b6)), closes [univention/dev/internal/team-nubus#1207](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1207)
+* **scim-consumer:** Revert Helm chart test to previous version. ([169dfda](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/169dfdabb79c4b7cdd7dc9f25ae0f8450a703d85)), closes [univention/dev/internal/team-nubus#1207](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1207)
+* **Sonarqube:** Modified coverage call and pipeline configuration. ([8e71293](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/8e71293fd7b69708887fd13e72c5ae04f69c29c4)), closes [univention/dev/projects/scim/scim-services#2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/issues/2)
+
 ## [0.29.2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.29.1...v0.29.2) (2025-06-23)
 
 
