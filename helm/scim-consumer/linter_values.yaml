@@ -20,7 +20,7 @@ scimServer:
 
 ldap:
   connection:
-    uri: "ldap://stub-ldap-server"
+    hostname: "stub-ldap-server"
   auth:
     bindDn: "uid=stub,cn=users,dc=univention-organization,dc=intranet"
     existingSecret:

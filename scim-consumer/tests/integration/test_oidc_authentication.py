@@ -29,13 +29,14 @@ def authenticator_settings(keycloak_base_url) -> AuthenticatorSettings:
 
 @pytest.fixture(scope="session")
 def keycloak_admin(keycloak_base_url) -> KeycloakAdmin:
-    return KeycloakAdmin(
+    keycloak_admin = KeycloakAdmin(
         server_url=keycloak_base_url,
         username="admin",
         password="univention",
         realm_name=REALM,
         verify=True,
     )
+    return keycloak_admin
 
 
 @pytest.fixture(scope="session")

@@ -261,6 +261,8 @@ services:
       - KC_PROXY=edge
       - KEYCLOAK_LOGLEVEL=ALL
       - ROOT_LOGLEVEL=ALL
+    networks:
+      - scim
 
 
   test:
@@ -296,12 +298,12 @@ services:
       UDM_BASE_URL: http://udm-rest-api:9979/udm/
       UDM_USERNAME: cn=admin
       UDM_PASSWORD: univention
-      LDAP_URI: ldap://ldap-server:389
+      LDAP_HOST: ldap-server
       LDAP_BIND_DN: cn=admin,dc=univention-organization,dc=intranet
       LDAP_BIND_PASSWORD: univention
       EXTERNAL_ID_USER_MAPPING: univentionObjectIdentifier
       EXTERNAL_ID_GROUP_MAPPING: univentionObjectIdentifier
-      KEYCLOAK_BASE_URL: "http://localhost:5050"
+      KEYCLOAK_BASE_URL: "http://keycloak:8080"
     networks:
       - scim
     command: >

@@ -75,8 +75,8 @@ scimServer:
 # -- Upstream LDAP server to resolve group member DN's
 ldap:
   connection:
-    # -- LDAP Server URI (e.g. "ldap://nubus-ldap-server")
-    uri: null
+    # -- LDAP Server hostname (e.g. "nubus-ldap-server")
+    hostname: null
   auth:
     bindDn: null
     existingSecret:
