@@ -8,10 +8,17 @@ global:
 provisioningApi:
   connection:
     url: "http://provisioning-api"
+  auth:
+    username: "scim-consumer"
+    password: "password"
+    # existingSecret:
+    #   name: provisioning-register-consumers-json-secrets
+    #   keyMapping:
+    #     password: "scim-consumer.json"
 
 scimServer:
   connection:
-    url: "http://scim-server"
+    url: "http://scim-dev-server:8080/"
   auth:
     enabled: false
     oidcTokenUrl: "foo"
@@ -24,6 +31,11 @@ ldap:
   auth:
     bindDn: "cn=admin,dc=univention-organization,dc=intranet"
     existingSecret:
-      name: ldap-server-credentials
+      name: ldap-server-admin
       keyMapping:
-        password: adminPassword
+        password: password
+
+scimDevServer:
+  config:
+    # -- Hostname of the SCIM server
+    hostname: testhost

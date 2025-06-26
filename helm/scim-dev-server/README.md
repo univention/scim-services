@@ -1,6 +1,6 @@
-# scim-consumer
+# scim-dev-server
 
-A Helm chart for the Nubus SCIM consumer
+A Helm chart for the scim2-server (https://github.com/python-scim/scim2-server)
 
 - **Version**: 0.0.1
 - **Type**: application
@@ -200,74 +200,6 @@ null
 			<td></td>
 		</tr>
 		<tr>
-			<td>ldap</td>
-			<td>object</td>
-			<td><pre lang="json">
-{
-  "auth": {
-    "bindDn": null,
-    "existingSecret": {
-      "keyMapping": {
-        "password": null
-      },
-      "name": null
-    },
-    "password": null
-  },
-  "connection": {
-    "host": null
-  }
-}
-</pre>
-</td>
-			<td>Upstream LDAP server to resolve group member DN's</td>
-		</tr>
-		<tr>
-			<td>ldap.auth.bindDn</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>Bind destinguished name to authenticate with the LDAP Server.</td>
-		</tr>
-		<tr>
-			<td>ldap.auth.existingSecret.keyMapping.password</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The key to retrieve the password from. Setting this value allows to use a key with a different name.</td>
-		</tr>
-		<tr>
-			<td>ldap.auth.existingSecret.name</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The name of an existing Secret to use for retrieving the password to authenticate with the source LDAP directory.  "udm.auth.password" will be ignored if this value is set.</td>
-		</tr>
-		<tr>
-			<td>ldap.auth.password</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The password used to authenticate with the LDAP Server. Either this value or an existing Secret has to be specified.</td>
-		</tr>
-		<tr>
-			<td>ldap.connection.host</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>LDAP Server hostname (e.g. "nubus-ldap-server")</td>
-		</tr>
-		<tr>
 			<td>podSecurityContext.enabled</td>
 			<td>bool</td>
 			<td><pre lang="json">
@@ -309,86 +241,6 @@ true
 			<td>Allow binding to ports below 1024 without root access.</td>
 		</tr>
 		<tr>
-			<td>provisioningApi</td>
-			<td>object</td>
-			<td><pre lang="json">
-{
-  "auth": {
-    "existingSecret": {
-      "keyMapping": {
-        "password": null
-      },
-      "name": null
-    },
-    "password": null,
-    "username": null
-  },
-  "config": {
-    "maxAcknowledgementRetries": 3
-  },
-  "connection": {
-    "url": null
-  }
-}
-</pre>
-</td>
-			<td>Upstream Nubus Provisioning connection configuration</td>
-		</tr>
-		<tr>
-			<td>provisioningApi.auth.existingSecret.keyMapping.password</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The key to retrieve the password from. Setting this value allows to use a key with a different name.</td>
-		</tr>
-		<tr>
-			<td>provisioningApi.auth.existingSecret.name</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The name of an existing Secret to use for retrieving the password to authenticate with the Provisionig API.  "provisioningApi.auth.password" will be ignored if this value is set.</td>
-		</tr>
-		<tr>
-			<td>provisioningApi.auth.password</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The password used to authenticate with the Provisioning API. Either this value or an existing Secret has to be specified.</td>
-		</tr>
-		<tr>
-			<td>provisioningApi.auth.username</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>Username of the nubus provisioning subscription / this consumer For a given nubus deployment, all provisioning subscription names must be unique.</td>
-		</tr>
-		<tr>
-			<td>provisioningApi.config.maxAcknowledgementRetries</td>
-			<td>int</td>
-			<td><pre lang="json">
-3
-</pre>
-</td>
-			<td>The maximum number of retries for acknowledging a message</td>
-		</tr>
-		<tr>
-			<td>provisioningApi.connection.url</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The base URL the provisioning API is reachable at. (e.g. "http://provisioning-api")</td>
-		</tr>
-		<tr>
 			<td>resources.limits.cpu</td>
 			<td>string</td>
 			<td><pre lang="json">
@@ -425,58 +277,43 @@ null
 			<td></td>
 		</tr>
 		<tr>
-			<td>scimConsumer</td>
-			<td>object</td>
-			<td><pre lang="json">
-{
-  "config": {
-    "externalIdGroupMapping": "univentionObjectIdentifier",
-    "externalIdUserMapping": "univentionObjectIdentifier",
-    "groupSync": true,
-    "logLevel": "INFO",
-    "prefill": true
-  },
-  "image": {
-    "imagePullPolicy": "",
-    "registry": "",
-    "repository": "nubus-dev/images/scim-consumer",
-    "sha256": null,
-    "tag": "latest"
-  }
-}
-</pre>
-</td>
-			<td>Container image configuration</td>
-		</tr>
-		<tr>
-			<td>scimConsumer.config.externalIdGroupMapping</td>
+			<td>scimDevServer.config.hostname</td>
 			<td>string</td>
 			<td><pre lang="json">
-"univentionObjectIdentifier"
+null
 </pre>
 </td>
-			<td>Define external_id UDM attribute for groups</td>
+			<td>Hostname of the SCIM server</td>
 		</tr>
 		<tr>
-			<td>scimConsumer.config.externalIdUserMapping</td>
+			<td>scimDevServer.image.imagePullPolicy</td>
 			<td>string</td>
 			<td><pre lang="json">
-"univentionObjectIdentifier"
+""
 </pre>
 </td>
-			<td>Define external_id UDM attribute for users</td>
+			<td></td>
 		</tr>
 		<tr>
-			<td>scimConsumer.config.prefill</td>
-			<td>bool</td>
+			<td>scimDevServer.image.registry</td>
+			<td>string</td>
 			<td><pre lang="json">
-true
+""
 </pre>
 </td>
-			<td>Toggle prefill for the provisioning subscription If activated, the consumer will recieve a synthetic "create" event for all existing objets in the Domain before recieving live events.</td>
+			<td></td>
 		</tr>
 		<tr>
-			<td>scimConsumer.image.sha256</td>
+			<td>scimDevServer.image.repository</td>
+			<td>string</td>
+			<td><pre lang="json">
+"nubus-dev/images/scim-dev-server"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>scimDevServer.image.sha256</td>
 			<td>string</td>
 			<td><pre lang="json">
 null
@@ -485,92 +322,22 @@ null
 			<td>Define image sha256 as an alternative to `tag`</td>
 		</tr>
 		<tr>
-			<td>scimServer</td>
+			<td>scimDevServer.image.tag</td>
+			<td>string</td>
+			<td><pre lang="json">
+"latest"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>service.annotations</td>
 			<td>object</td>
 			<td><pre lang="json">
-{
-  "auth": {
-    "clientId": null,
-    "enabled": true,
-    "existingSecret": {
-      "keyMapping": {
-        "password": null
-      },
-      "name": null
-    },
-    "oidcTokenUrl": null,
-    "password": null
-  },
-  "connection": {
-    "url": null
-  }
-}
+{}
 </pre>
 </td>
-			<td>Downstream SCIM Service connection configuration</td>
-		</tr>
-		<tr>
-			<td>scimServer.auth.clientId</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>Service account client ID (username)</td>
-		</tr>
-		<tr>
-			<td>scimServer.auth.enabled</td>
-			<td>bool</td>
-			<td><pre lang="json">
-true
-</pre>
-</td>
-			<td>Disable authentication with the SCIM Server for testing purposes</td>
-		</tr>
-		<tr>
-			<td>scimServer.auth.existingSecret.keyMapping.password</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The key to retrieve the password from. Setting this value allows to use a key with a different name.</td>
-		</tr>
-		<tr>
-			<td>scimServer.auth.existingSecret.name</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The name of an existing Secret to use for retrieving the password to authenticate with the SCIM Server.  "scimServer.auth.password" will be ignored if this value is set.</td>
-		</tr>
-		<tr>
-			<td>scimServer.auth.oidcTokenUrl</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>URL to obtain an OIDC access token from the Identity Provider using the client-credentials-flow.</td>
-		</tr>
-		<tr>
-			<td>scimServer.auth.password</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The password used to authenticate with the SCIM Server. Either this value or an existing Secret has to be specified.</td>
-		</tr>
-		<tr>
-			<td>scimServer.connection.url</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The base URL the SCIM server is reachable at. (e.g. "http://scim-server")</td>
+			<td></td>
 		</tr>
 		<tr>
 			<td>serviceAccount.annotations</td>

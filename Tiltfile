@@ -24,3 +24,28 @@ docker_build(
     "./",
     dockerfile="./docker/scim-consumer/Dockerfile",
 )
+
+helm_resource(
+    "scim-dev-server",
+    chart="./helm/scim-dev-server/",
+    deps=[
+      "tilt-values.yaml",
+      "helm/scim-dev-server/",
+    ],
+    flags=[
+      "--values", "tilt-values.yaml",
+      "--set", "global.secrets.masterPassword=univention"
+    ],
+    image_deps=[
+      "artifacts.software-univention.de/nubus-dev/images/scim-dev-server:latest",
+    ],
+    image_keys=[
+      ("scimDevServer.image.registry", "scimDevServer.image.repository", "scimDevServer.image.tag"),
+    ],
+)
+
+docker_build(
+    "artifacts.software-univention.de/nubus-dev/images/scim-dev-server:latest",
+    "./",
+    dockerfile="./docker/scim-dev-server/Dockerfile",
+)
