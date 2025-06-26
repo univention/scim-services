@@ -1,6 +1,6 @@
 dependencies:
 - name: nubus-common
   repository: oci://artifacts.software-univention.de/nubus/charts
-  version: 0.21.0
-digest: sha256:00681689d6e6b08613706a94061bb3bd5e2eed034ba9506b6ac0de3ba43aef77
-generated: "2025-06-24T10:52:41.174537442+02:00"
+  version: 0.21.1
+digest: sha256:c51c8e1006828a6eac655f3a0b7ad65ae6f9c19138cfaf66f33a8f1cfac9df28
+generated: "2025-06-26T16:50:24.647842736+02:00"

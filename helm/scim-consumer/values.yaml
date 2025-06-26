@@ -111,6 +111,10 @@ scimConsumer:
     # for all existing objets in the Domain before recieving live events.
     prefill: true
     groupSync: true
+    # -- Define external_id UDM attribute for users
+    externalIdUserMapping: univentionObjectIdentifier
+    # -- Define external_id UDM attribute for groups
+    externalIdGroupMapping: univentionObjectIdentifier
 
 resources:
   requests:

@@ -14,6 +14,7 @@ from scim2_models import (
 
 
 class Email(ScimEmail):
+    value: str | None = None
     # original type is an enum and only allows "work", "home" and "other" loosen this
     # restriction to allow mapping any type, currently we use mailbox and alias for
     # some special mail addresses in UDM
