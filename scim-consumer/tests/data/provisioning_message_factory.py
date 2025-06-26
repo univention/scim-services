@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 import datetime
+from typing import Any
 
 from univention.provisioning.models.queue import ProvisioningMessage
 
 
-def get_provisioning_message_data(data_type: str):
+def get_provisioning_message_data(data_type: str) -> dict[str, Any] | None:
     user_create = {
         "body": {
             "new": {

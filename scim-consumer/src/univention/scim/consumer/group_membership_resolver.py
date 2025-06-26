@@ -17,13 +17,13 @@ class LdapSettings(BaseSettings):
 
 
 class GroupMembershipLdapResolver(IdCache):
-    def __init__(self, scim_client: ScimClient, ldap_settings: LdapSettings):
+    def __init__(self, scim_client: ScimClient, ldap_settings: LdapSettings) -> None:
         """ """
         self.scim_client = scim_client
 
         self.ldap_client = self.connect_to_ldap(ldap_settings)
 
-    def connect_to_ldap(self, ldap_settings: LdapSettings):
+    def connect_to_ldap(self, ldap_settings: LdapSettings) -> Connection:
         server = Server(ldap_settings.ldap_host)
         ldap_connection = Connection(
             server,
@@ -82,7 +82,7 @@ class GroupMembershipLdapResolver(IdCache):
             logger.warning("Could not resolve group member DN to SCIM ID. LDAP user with DN {dn} not found!", dn=dn)
             return None
 
-        univention_object_identifier = entry["attributes"].get("univentionObjectIdentifier")
+        univention_object_identifier: str = entry["attributes"].get("univentionObjectIdentifier")
         logger.debug("LDAP univentionObjectIdentifier: {uoi}", uoi=univention_object_identifier)
 
         return univention_object_identifier

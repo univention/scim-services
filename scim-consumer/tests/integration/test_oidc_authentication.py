@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 import os
+from collections.abc import Generator
 
 import pytest
 from keycloak import KeycloakAdmin, KeycloakOpenID, KeycloakPostError
@@ -19,7 +20,7 @@ def keycloak_base_url() -> str:
 
 
 @pytest.fixture(scope="session")
-def authenticator_settings(keycloak_base_url) -> AuthenticatorSettings:
+def authenticator_settings(keycloak_base_url: str) -> AuthenticatorSettings:
     return AuthenticatorSettings(
         scim_client_id="scim-consumer-test-client",
         scim_client_secret="supersecret",
@@ -28,7 +29,7 @@ def authenticator_settings(keycloak_base_url) -> AuthenticatorSettings:
 
 
 @pytest.fixture(scope="session")
-def keycloak_admin(keycloak_base_url) -> KeycloakAdmin:
+def keycloak_admin(keycloak_base_url: str) -> KeycloakAdmin:
     keycloak_admin = KeycloakAdmin(
         server_url=keycloak_base_url,
         username="admin",
@@ -40,7 +41,7 @@ def keycloak_admin(keycloak_base_url) -> KeycloakAdmin:
 
 
 @pytest.fixture(scope="session")
-def audience_client_scope(keycloak_admin: KeycloakAdmin):
+def audience_client_scope(keycloak_admin: KeycloakAdmin) -> Generator[str, None, None]:
     scope_id = "e0f7c5f0-1234-5678-90ab-cdef12345678"
 
     scope_name = f"{AUDIENCE}-test-scope"
@@ -70,7 +71,9 @@ def audience_client_scope(keycloak_admin: KeycloakAdmin):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def scim_client(keycloak_admin: KeycloakAdmin, authenticator_settings: AuthenticatorSettings, audience_client_scope):
+def scim_client(
+    keycloak_admin: KeycloakAdmin, authenticator_settings: AuthenticatorSettings, audience_client_scope: str
+) -> Generator[None, None, None]:
     keycloak_client_id = "e0f7c5f0-1234-5678-90ab-cdef12345678"
     client_representation = {
         "id": keycloak_client_id,
@@ -98,7 +101,7 @@ def scim_client(keycloak_admin: KeycloakAdmin, authenticator_settings: Authentic
     keycloak_admin.delete_client(keycloak_client_id)
 
 
-def test_authentication(authenticator_settings: AuthenticatorSettings):
+def test_authentication(authenticator_settings: AuthenticatorSettings) -> None:
     authenticator = Authenticator(authenticator_settings)
 
     token = authenticator.get_token()
@@ -114,7 +117,7 @@ def test_authentication(authenticator_settings: AuthenticatorSettings):
         {"scim_oidc_token_url": "https://wrong-url.xyz"},
     ],
 )
-def test_failed_authentication(customization, authenticator_settings: AuthenticatorSettings):
+def test_failed_authentication(customization: dict[str, str], authenticator_settings: AuthenticatorSettings) -> None:
     customized_settings = authenticator_settings.model_copy(update=customization)
     print(customized_settings)
 
@@ -124,7 +127,7 @@ def test_failed_authentication(customization, authenticator_settings: Authentica
         authenticator.get_token()
 
 
-def test_token_has_audience(authenticator_settings, keycloak_base_url):
+def test_token_has_audience(authenticator_settings: AuthenticatorSettings, keycloak_base_url: str) -> None:
     authenticator = Authenticator(authenticator_settings)
 
     token = authenticator.get_token()

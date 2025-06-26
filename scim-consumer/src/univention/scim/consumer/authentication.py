@@ -69,7 +69,7 @@ class Authenticator(httpx.Auth):
         except json.JSONDecodeError as err:
             raise GetTokenError("token endpoint returned invalid JSON") from err
 
-        token = payload.get("access_token")
+        token: str = payload.get("access_token")
         if not token:
             description = payload.get("error_description") or payload.get("error") or "<none>"
             raise GetTokenError(f"no access_token in response: {description!r}")

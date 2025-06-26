@@ -88,7 +88,7 @@ class ScimConsumer:
 
         return scim_resource
 
-    async def handle_udm_message(self, message: Message):
+    async def handle_udm_message(self, message: Message) -> None:
         """
         Handles provisioning messages for a SCIM consumer.
         """

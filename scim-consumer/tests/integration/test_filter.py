@@ -4,14 +4,14 @@
 
 import pytest
 
-from univention.scim.consumer.scim_client import ScimClientNoDataFoundException
+from univention.scim.consumer.scim_client import ScimClient, ScimClientNoDataFoundException
 from univention.scim.consumer.scim_consumer import ScimConsumer
 
 from ..data.provisioning_message_factory import get_provisioning_message
 
 
 @pytest.mark.asyncio
-async def test_create_user(scim_client, scim_consumer: ScimConsumer):
+async def test_create_user(scim_client: ScimClient, scim_consumer: ScimConsumer) -> None:
     # Create user
     pm = get_provisioning_message("user_create")
     pm.body.new["properties"]["isNextcloudUser"] = True
@@ -42,7 +42,7 @@ async def test_create_user(scim_client, scim_consumer: ScimConsumer):
 
 
 @pytest.mark.asyncio
-async def test_create_user_with_update(scim_client, scim_consumer):
+async def test_create_user_with_update(scim_client: ScimClient, scim_consumer: ScimConsumer) -> None:
     #
     # Create user, should not created in SCIM
     #
@@ -81,7 +81,7 @@ async def test_create_user_with_update(scim_client, scim_consumer):
 
 
 @pytest.mark.asyncio
-async def test_not_create_user(scim_client, scim_consumer):
+async def test_not_create_user(scim_client: ScimClient, scim_consumer: ScimConsumer) -> None:
     #
     # Create user, should not created in SCIM
     #

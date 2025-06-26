@@ -4,9 +4,11 @@
 import asyncio
 import os
 import time
+from typing import Any
 
 from aiohttp import ClientResponseError
 from loguru import logger
+from scim2_models import Resource
 from univention.provisioning.consumer.api import (
     ProvisioningConsumerClient,
     ProvisioningConsumerClientSettings,
@@ -18,8 +20,8 @@ from univention.scim.consumer.scim_client import ScimClient, ScimClientNoDataFou
 
 
 def wait_for_resource_exists(
-    scim_client: ScimClient, univention_object_identifier: str, max_attemps: int = None
-) -> bool:
+    scim_client: ScimClient, univention_object_identifier: str, max_attemps: int = 100
+) -> Resource | None:
     """ """
     for i in range(1, max_attemps or 100):
         try:
@@ -39,9 +41,9 @@ def wait_for_resource_updated(
     scim_client: ScimClient,
     univention_object_identifier: str,
     condition_attr: str,
-    condition_val: any,
-    max_attemps: int = None,
-) -> bool:
+    condition_val: Any,
+    max_attemps: int = 100,
+) -> Resource | None:
     """ """
     for i in range(1, max_attemps or 100):
         logger.debug("Try to get resource with uoi: {}. Attemp {}", univention_object_identifier, i)
@@ -56,7 +58,7 @@ def wait_for_resource_updated(
 
 
 def wait_for_resource_deleted(
-    scim_client: ScimClient, univention_object_identifier: str, max_attemps: int = None
+    scim_client: ScimClient, univention_object_identifier: str, max_attemps: int = 100
 ) -> bool:
     """ """
     try:
@@ -70,10 +72,10 @@ def wait_for_resource_deleted(
         return True
 
 
-def create_provisioning_subscription():
+def create_provisioning_subscription() -> None:
     """ """
 
-    async def create_provisioning_subscription_async():
+    async def create_provisioning_subscription_async() -> None:
         admin_settings = ProvisioningConsumerClientSettings(
             provisioning_api_base_url=os.environ["PROVISIONING_API_BASE_URL"],
             provisioning_api_username=os.environ["PROVISIONING_API_ADMIN_USERNAME"],
@@ -99,10 +101,10 @@ def create_provisioning_subscription():
     asyncio.run(create_provisioning_subscription_async())
 
 
-def delete_provisioning_subscription():
+def delete_provisioning_subscription() -> None:
     """ """
 
-    async def delete_provisioning_subscription_async():
+    async def delete_provisioning_subscription_async() -> None:
         admin_settings = ProvisioningConsumerClientSettings(
             provisioning_api_base_url=os.environ["PROVISIONING_API_BASE_URL"],
             provisioning_api_username=os.environ["PROVISIONING_API_ADMIN_USERNAME"],

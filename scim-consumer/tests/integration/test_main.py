@@ -1,7 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+from typing import Any
+
 import pytest
+from scim2_models import Group, User
+from univention.admin.rest.client import UDM
+
+from univention.scim.consumer.scim_client import ScimClient
+from univention.scim.consumer.scim_consumer import ScimConsumer
 
 from ..data.scim_helper import wait_for_resource_deleted, wait_for_resource_exists, wait_for_resource_updated
 from ..data.udm_helper import (
@@ -14,12 +21,18 @@ from ..data.udm_helper import (
 )
 
 
-def test_user_crud(udm_client, background_scim_consumer, scim_client, user_data, user_data_updated):
+def test_user_crud(
+    udm_client: UDM,
+    background_scim_consumer: ScimConsumer,
+    scim_client: ScimClient,
+    user_data: dict[str, Any],
+    user_data_updated: dict[str, Any],
+) -> None:
     assert background_scim_consumer
 
     # Test create
     create_udm_user(udm_client=udm_client, user_data=user_data)
-    user = wait_for_resource_exists(scim_client, user_data["univentionObjectIdentifier"])
+    user: User = wait_for_resource_exists(scim_client, user_data["univentionObjectIdentifier"])
     assert user.user_name == user_data.get("username")
 
     # Test update
@@ -38,14 +51,20 @@ def test_user_crud(udm_client, background_scim_consumer, scim_client, user_data,
     assert is_deleted
 
 
-def test_add_group_member(udm_client, background_scim_consumer, group_data, user_data, scim_client):
+def test_add_group_member(
+    udm_client: UDM,
+    background_scim_consumer: ScimConsumer,
+    group_data: dict[str, Any],
+    user_data: dict[str, Any],
+    scim_client: ScimClient,
+) -> None:
     assert background_scim_consumer
 
     #
     # Create group
     #
     create_udm_group(udm_client=udm_client, group_data=group_data)
-    group = wait_for_resource_exists(scim_client, group_data["univentionObjectIdentifier"])
+    group: Group = wait_for_resource_exists(scim_client, group_data["univentionObjectIdentifier"])
 
     assert group.display_name == group_data.get("name")
 
@@ -53,7 +72,7 @@ def test_add_group_member(udm_client, background_scim_consumer, group_data, user
     # Create user
     #
     udm_user_ret = create_udm_user(udm_client=udm_client, user_data=user_data)
-    user = wait_for_resource_exists(scim_client, user_data["univentionObjectIdentifier"])
+    user: User = wait_for_resource_exists(scim_client, user_data["univentionObjectIdentifier"])
 
     assert user.user_name == user_data.get("username")
 
@@ -85,7 +104,13 @@ def test_add_group_member(udm_client, background_scim_consumer, group_data, user
 
 
 @pytest.mark.skip("No impact at the moment. Activate again when needed.")
-def test_update_group_member_dn(udm_client, background_scim_consumer, group_data, user_data, scim_client):
+def test_update_group_member_dn(
+    udm_client: UDM,
+    background_scim_consumer: ScimConsumer,
+    group_data: dict[str, Any],
+    user_data: dict[str, Any],
+    scim_client: ScimClient,
+) -> None:
     assert background_scim_consumer
 
     #
@@ -133,17 +158,17 @@ def test_update_group_member_dn(udm_client, background_scim_consumer, group_data
 
 
 @pytest.mark.skip("Will be developed further in a future MR")
-def test_prefilled_sync(background_scim_consumer_prefilled, scim_client):
+def test_prefilled_sync(background_scim_consumer_prefilled: ScimConsumer, scim_client: ScimClient) -> None:
     udm_users, udm_group = background_scim_consumer_prefilled
 
     user_ids = []
     for udm_user in udm_users:
-        user = wait_for_resource_exists(scim_client, udm_user.properties.get("univentionObjectIdentifier"))
+        user: User = wait_for_resource_exists(scim_client, udm_user.properties.get("univentionObjectIdentifier"))
         user_ids.append(user.id)
 
     assert len(udm_users) == len(user_ids)
 
-    group = wait_for_resource_exists(scim_client, udm_group.properties.get("univentionObjectIdentifier"))
+    group: Group = wait_for_resource_exists(scim_client, udm_group.properties.get("univentionObjectIdentifier"))
     group_members = []
     for group_member in group.members:
         group_members.append(group_member.value)

@@ -28,7 +28,7 @@ async def main() -> None:
         await MessageHandler(client, [scim_consumer.handle_udm_message], pop_after_handling=True).run()
 
 
-def run():
+def run() -> None:
     asyncio.run(main())
 
 

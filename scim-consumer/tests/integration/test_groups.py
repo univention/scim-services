@@ -2,14 +2,16 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 import pytest
+from pytest_mock import MockerFixture
 
-from univention.scim.consumer.scim_client import ScimClientNoDataFoundException
+from univention.scim.consumer.scim_client import ScimClient, ScimClientNoDataFoundException
+from univention.scim.consumer.scim_consumer import ScimConsumer
 
 from ..data.provisioning_message_factory import get_provisioning_message
 
 
 @pytest.mark.asyncio
-async def test_create_group(scim_client, scim_consumer):
+async def test_create_group(scim_client: ScimClient, scim_consumer: ScimConsumer) -> None:
     #
     # Create Group
     #
@@ -26,7 +28,7 @@ async def test_create_group(scim_client, scim_consumer):
 
 
 @pytest.mark.asyncio
-async def test_update_group(scim_client, scim_consumer):
+async def test_update_group(scim_client: ScimClient, scim_consumer: ScimConsumer) -> None:
     #
     # Create Group
     #
@@ -48,7 +50,7 @@ async def test_update_group(scim_client, scim_consumer):
 
 
 @pytest.mark.asyncio
-async def test_delete_group(scim_client, scim_consumer):
+async def test_delete_group(scim_client: ScimClient, scim_consumer: ScimConsumer) -> None:
     #
     # Create Group
     #
@@ -66,7 +68,7 @@ async def test_delete_group(scim_client, scim_consumer):
 
 
 @pytest.mark.asyncio
-async def test_add_group_member(scim_client, scim_consumer, mocker):
+async def test_add_group_member(scim_client: ScimClient, scim_consumer: ScimConsumer, mocker: MockerFixture) -> None:
     #
     # Create User
     #
@@ -109,7 +111,7 @@ async def test_add_group_member(scim_client, scim_consumer, mocker):
 
 
 @pytest.mark.asyncio
-async def test_remove_group_member(scim_client, scim_consumer, mocker):
+async def test_remove_group_member(scim_client: ScimClient, scim_consumer: ScimConsumer, mocker: MockerFixture) -> None:
     #
     # Create User
     #

@@ -37,22 +37,22 @@ def mock_response() -> httpx.Response:
 
 
 @pytest.fixture
-def authenticator(authenticator_settings, mock_response) -> Authenticator:
+def authenticator(authenticator_settings: AuthenticatorSettings, mock_response: httpx.Response) -> Authenticator:
     mock_client: httpx.Client = MagicMock(httpx.Client)
-    mock_client.post.return_value = mock_response
+    mock_client.post.return_value = mock_response  # type: ignore
 
     authenticator = Authenticator(authenticator_settings, http_client=mock_client)
     return authenticator
 
 
-def test_authenticator_new_token(authenticator: Authenticator):
+def test_authenticator_new_token(authenticator: Authenticator) -> None:
     token = authenticator.get_token()
 
     assert token == "new-dummy-token"
     authenticator._client.post.assert_called_once()
 
 
-def test_authenticator_existing_token(authenticator: Authenticator):
+def test_authenticator_existing_token(authenticator: Authenticator) -> None:
     expected_token = _make_jwt(time.time() + 3600)
     authenticator._access_token = expected_token
 
@@ -61,7 +61,7 @@ def test_authenticator_existing_token(authenticator: Authenticator):
     assert actual_token == expected_token
 
 
-def test_authenticator_expired_token(authenticator: Authenticator):
+def test_authenticator_expired_token(authenticator: Authenticator) -> None:
     authenticator._access_token = _make_jwt(time.time() - 1)
 
     token = authenticator.get_token()
@@ -69,16 +69,16 @@ def test_authenticator_expired_token(authenticator: Authenticator):
     authenticator._client.post.assert_called_once()
 
 
-def test_authenticator_error_response(authenticator: Authenticator, mock_response):
-    error = httpx.HTTPStatusError("500 internal-test-error", request=None, response=None)
-    mock_response.raise_for_status.side_effect = error
+def test_authenticator_error_response(authenticator: Authenticator, mock_response: httpx.Response) -> None:
+    error = httpx.HTTPStatusError("500 internal-test-error", request=None, response=None)  # type: ignore
+    mock_response.raise_for_status.side_effect = error  # type: ignore
 
     with pytest.raises(GetTokenError) as excinfo:
         authenticator.get_token()
     assert excinfo.value.__cause__ == error
 
 
-def test_authenticator_connection_error(authenticator: Authenticator):
+def test_authenticator_connection_error(authenticator: Authenticator) -> None:
     expected_error = httpx.RequestError("test-connection-error", request=None)
     authenticator._client.post.side_effect = expected_error
 

@@ -43,8 +43,12 @@ should_exist_in_scim_testdata = [
     should_exist_in_scim_testdata,
 )
 def test_should_exist_in_scim(
-    pm_type, user_filter_attribute, is_user_filter_attribute_new, is_user_filter_attribute_old, expected_state
-):
+    pm_type: str,
+    user_filter_attribute: str | None,
+    is_user_filter_attribute_new: bool,
+    is_user_filter_attribute_old: bool,
+    expected_state: bool,
+) -> None:
     pm = get_provisioning_message(pm_type)
 
     if user_filter_attribute:

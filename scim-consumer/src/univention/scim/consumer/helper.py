@@ -3,9 +3,10 @@
 
 from copy import deepcopy
 from pprint import pformat
+from typing import Any
 
 
-def cust_pformat(obj) -> str:
+def cust_pformat(obj: Any) -> str:
     """
     Custom pformat.
 
@@ -26,7 +27,7 @@ def cust_pformat(obj) -> str:
     return pformat(final_obj)
 
 
-def cust_pprint(obj):
+def cust_pprint(obj: Any) -> None:
     """
     Custom pprint.
 

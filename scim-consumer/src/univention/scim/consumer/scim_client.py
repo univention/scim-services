@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+
 from httpx import Auth, Client
 from loguru import logger
 from scim2_client import SCIMResponseError
@@ -24,7 +25,7 @@ class ScimClient:
 
     def __init__(
         self,
-        auth: Auth,
+        auth: Auth | None,
         settings: ScimConsumerSettings,
     ):
         self.auth = auth
@@ -119,7 +120,7 @@ class ScimClient:
         else:
             return True
 
-    def create_resource(self, resource: Resource):
+    def create_resource(self, resource: Resource) -> None:
         """
         Creates a SCIM resource.
 
@@ -137,7 +138,7 @@ class ScimClient:
         except SCIMResponseError as e:
             logger.warning(e)
 
-    def update_resource(self, resource: Resource):
+    def update_resource(self, resource: Resource) -> None:
         """
         Updates one SCIM resource.
 
@@ -151,7 +152,7 @@ class ScimClient:
 
         logger.debug("Response:\n{}", cust_pformat(response))
 
-    def delete_resource(self, resource: Resource):
+    def delete_resource(self, resource: Resource) -> None:
         """
         Deletes a SCIM resource.
 

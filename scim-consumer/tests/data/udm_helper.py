@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 import uuid
+from typing import Any
 
 from faker import Faker
 from faker.providers import address, profile
@@ -11,7 +12,7 @@ from univention.admin.rest.client import UDM
 from univention.scim.consumer.helper import cust_pformat
 
 
-def generate_udm_users(udm_client: UDM, amount: int, maildomain_name: str):
+def generate_udm_users(udm_client: UDM, amount: int, maildomain_name: str) -> list[Any]:
     fake = Faker(["de_DE"])
     fake.add_provider(address)
     fake.add_provider(profile)
@@ -44,7 +45,7 @@ def generate_udm_users(udm_client: UDM, amount: int, maildomain_name: str):
     return users
 
 
-def create_udm_group(udm_client, group_data):
+def create_udm_group(udm_client: UDM, group_data: dict[str, Any]) -> Any:
     logger.info("Create udm group")
     logger.debug("udm group data:\n{}", cust_pformat(group_data))
 
@@ -59,7 +60,7 @@ def create_udm_group(udm_client, group_data):
     return obj
 
 
-def update_udm_group(udm_client, group_data):
+def update_udm_group(udm_client: UDM, group_data: dict[str, Any]) -> Any:
     logger.info("Update udm group")
     logger.debug("Group data:\n{}", cust_pformat(group_data))
 
@@ -78,7 +79,7 @@ def update_udm_group(udm_client, group_data):
     return obj
 
 
-def delete_udm_group(udm_client, group_data):
+def delete_udm_group(udm_client: UDM, group_data: dict[str, Any]) -> Any:
     logger.info("Delete udm group")
     logger.debug("Group data:\n{}", cust_pformat(group_data))
 
@@ -94,7 +95,7 @@ def delete_udm_group(udm_client, group_data):
     return obj
 
 
-def create_udm_user(udm_client, user_data):
+def create_udm_user(udm_client: UDM, user_data: dict[str, Any]) -> Any:
     logger.info("Create_udm user")
     logger.debug("udm user data:\n{}", cust_pformat(user_data))
 
@@ -107,7 +108,7 @@ def create_udm_user(udm_client, user_data):
     return obj
 
 
-def update_udm_user(udm_client, user_data: dict, position: str = None):
+def update_udm_user(udm_client: UDM, user_data: dict[str, Any], position: str | None = None) -> Any:
     logger.info("Update udm user")
     logger.debug("Do update with user data:\n{}", cust_pformat(user_data))
 
@@ -130,7 +131,7 @@ def update_udm_user(udm_client, user_data: dict, position: str = None):
     return obj
 
 
-def delete_udm_user(udm_client, user_data):
+def delete_udm_user(udm_client: UDM, user_data: dict[str, Any]) -> Any:
     logger.info("Delete udm user")
     logger.debug("udm user data:\n{}", cust_pformat(user_data))
 

@@ -60,6 +60,10 @@ repos:
       name: "mypy udm-to-scim-sync"
       files: "^udm-to-scim-sync"
       additional_dependencies: ["fastapi>=0.115", "httpx>=0.28", "Jinja2>=3", "mypy-extensions>=1.0", "pydantic-settings>=2", "pytest-asyncio>=0.26.0","dependency-injector>=4", "types-requests>=2.32", "pytest>=8"]
+    - id: mypy
+      name: "mypy scim-consumer"
+      files: "^scim-consumer"
+      additional_dependencies: ["fastapi>=0.115", "httpx>=0.28", "Jinja2>=3", "mypy-extensions>=1.0", "pydantic-settings>=2", "pytest-asyncio>=0.26.0","dependency-injector>=4", "types-requests>=2.32", "pytest>=8"]
 
   - repo: https://github.com/jackdewinter/pymarkdown
     rev: v0.9.29

@@ -4,6 +4,8 @@
 import multiprocessing
 import os
 import uuid
+from collections.abc import Generator
+from typing import Any
 
 import httpx
 import pytest
@@ -36,7 +38,7 @@ def scim_udm_client() -> UDM:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def scim_maildomain(scim_udm_client):
+def scim_maildomain(scim_udm_client: ScimClient) -> Generator[str | None, None, None]:
     """
     Is only needed, when the tests are running against the
     Univention SCIM server. This uses UDM as backend and there
@@ -64,7 +66,7 @@ def scim_maildomain(scim_udm_client):
 
 
 @pytest.fixture(scope="session")
-def maildomain(udm_client):
+def maildomain(udm_client: UDM) -> Generator[str, None, None]:
     name = "scim-consumer.unittests"
     domains = udm_client.get("mail/domain")
     if maildomains := list(domains.search(f"name={name}")):
@@ -83,7 +85,7 @@ def maildomain(udm_client):
 
 
 @pytest.fixture(scope="function")
-def group_data() -> dict:
+def group_data() -> dict[str, Any]:
     return {
         "name": "Test Group",
         "univentionObjectIdentifier": str(uuid.uuid4()),
@@ -92,7 +94,7 @@ def group_data() -> dict:
 
 
 @pytest.fixture(scope="function")
-def user_data(maildomain) -> dict:
+def user_data(maildomain: str) -> dict[str, Any]:
     return {
         "username": "testuser",
         "firstname": "Test",
@@ -106,7 +108,7 @@ def user_data(maildomain) -> dict:
 
 
 @pytest.fixture
-def user_data_updated(user_data: dict) -> dict:
+def user_data_updated(user_data: dict[str, Any]) -> dict[str, Any]:
     return {
         "username": user_data["username"],
         "firstname": user_data["firstname"],
@@ -128,7 +130,7 @@ def udm_client() -> UDM:
 
 
 @pytest.fixture(scope="function")
-def background_scim_consumer():
+def background_scim_consumer() -> Generator[bool, None, None]:
     logger.info("Fixture background_scim_consumer started.")
 
     create_provisioning_subscription()
@@ -146,7 +148,9 @@ def background_scim_consumer():
 
 
 @pytest.fixture(scope="function")
-def background_scim_consumer_prefilled(udm_client, scim_client, group_data, maildomain):
+def background_scim_consumer_prefilled(
+    udm_client: UDM, scim_client: ScimClient, group_data: dict[str, Any], maildomain: str
+) -> Generator[Any, None, None]:
     logger.info("Fixture background_scim_consumer started.")
 
     # Create UDM records
@@ -183,13 +187,13 @@ def background_scim_consumer_prefilled(udm_client, scim_client, group_data, mail
 
 
 @pytest.fixture(scope="function")
-def scim_consumer_settings():
+def scim_consumer_settings() -> ScimConsumerSettings:
     """Settings are read from env to allow different configurations locally and in the testrunner container"""
     return ScimConsumerSettings()
 
 
 @pytest.fixture(scope="function")
-def scim_client(scim_consumer_settings):
+def scim_client(scim_consumer_settings: ScimConsumerSettings) -> Generator[ScimClient, None, None]:
     logger.info("Fixture scim_client start")
     scim_client = ScimClient(httpx.Auth(), scim_consumer_settings)
 
@@ -200,11 +204,15 @@ def scim_client(scim_consumer_settings):
 
 
 @pytest.fixture
-def group_membership_resolver(scim_client):
+def group_membership_resolver(scim_client: ScimClient) -> GroupMembershipLdapResolver:
     return GroupMembershipLdapResolver(scim_client, LdapSettings())
 
 
 @pytest.fixture
-def scim_consumer(scim_consumer_settings, scim_client, group_membership_resolver):
+def scim_consumer(
+    scim_consumer_settings: ScimConsumerSettings,
+    scim_client: ScimClient,
+    group_membership_resolver: GroupMembershipLdapResolver,
+) -> ScimConsumer:
     scim_consumer = ScimConsumer(scim_client, group_membership_resolver, scim_consumer_settings)
     return scim_consumer
