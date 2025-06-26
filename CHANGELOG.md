@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.32.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.31.0...v0.32.0) (2025-06-26)
+
+
+### Features
+
+* **scim-consumer:** Authenticator class to retrieve a keycloak service account token using the client-credentials flow ([0027c90](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/0027c908e3e6fc13321ffb7c701fa5b112ce47db)), closes [univention/dev/internal/team-nubus#1247](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1247)
+* **scim-consumer:** Change from keycloak-specific client-credentials flow inplementation to an IDP agnostic implementation ([9f265fc](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/9f265fc20ae55426465c5e5c1d60d116b7a69d7e)), closes [univention/dev/internal/team-nubus#1247](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1247)
+* **scim-consumer:** Integrate the new OIDC authenticator with the scim client and make it a HTTPX authentication plugin ([c841173](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/c8411737558538c9bbb531376c2856c026c3ba67)), closes [univention/dev/internal/team-nubus#1247](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1247)
+
+
+### Bug Fixes
+
+* **scim-consumer:** Add OIDC configuration to the helm chart ([be9e56f](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/be9e56f0acf9a629c7655519dba3c95621fda839)), closes [univention/dev/internal/team-nubus#1247](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1247)
+* **scim-consumer:** Further refinement of the scim-consumer helm chart and tests ([4d51732](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/4d5173222a569d60a3c874f3322f958b92243f36)), closes [univention/dev/internal/team-nubus#1247](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1247)
+* **scim-consumer:** Remove unnecessary OIDC audience configuration option ([cefdfb6](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/cefdfb6d765897628c12eecc5101133de5cbc704)), closes [univention/dev/internal/team-nubus#1247](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1247)
+* **scim-consumer:** unify back to LDAP_HOST instead of LDAP_URI because ldap3 configures TLS / StartTLS separately ([bc50510](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/bc50510e17bc7408a41cf8b2bfc0cac97384fdda)), closes [univention/dev/internal/team-nubus#1247](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1247)
+* **scim-consumer:** Update scim consumer helm chart to better align with the other nubus charts ([38ec8b4](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/38ec8b4325547bcadac991efa93423b272fbeb3e)), closes [univention/dev/internal/team-nubus#1247](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1247)
+* Update the helm-test-harness and fix small bugs detected by the new tests ([b136d6b](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/b136d6b0a5e5041dfa1e249e89601780e1e18f6b)), closes [univention/dev/internal/team-nubus#1247](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1247)
+
 ## [0.31.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.30.0...v0.31.0) (2025-06-26)
 
 
