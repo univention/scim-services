@@ -16,12 +16,9 @@ scimServer:
   auth:
     oidcTokenUrl: "foo"
     clientId: "stub-scim-api-username"
-    username: "stub-scim-api-username"
 
 ldap:
   connection:
     host: "stub-ldap-server"
   auth:
     bindDn: "uid=stub,cn=users,dc=univention-organization,dc=intranet"
-    existingSecret:
-      name: stub-ldap-server-credentials

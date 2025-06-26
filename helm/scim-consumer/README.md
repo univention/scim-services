@@ -146,15 +146,6 @@ true
 			<td>Array with extra environment variables to add to containers.  extraEnvVars:   - name: FOO     value: "bar"</td>
 		</tr>
 		<tr>
-			<td>extraSecrets</td>
-			<td>list</td>
-			<td><pre lang="json">
-[]
-</pre>
-</td>
-			<td>Optionally specify a secret to create (primarily intended to be used in development environments to provide custom certificates)</td>
-		</tr>
-		<tr>
 			<td>extraVolumeMounts</td>
 			<td>list</td>
 			<td><pre lang="json">
@@ -220,7 +211,8 @@ null
         "password": null
       },
       "name": null
-    }
+    },
+    "password": null
   },
   "connection": {
     "host": null
@@ -229,6 +221,15 @@ null
 </pre>
 </td>
 			<td>Upstream LDAP server to resolve group member DN's</td>
+		</tr>
+		<tr>
+			<td>ldap.auth.bindDn</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>Bind destinguished name to authenticate with the LDAP Server.</td>
 		</tr>
 		<tr>
 			<td>ldap.auth.existingSecret.keyMapping.password</td>
@@ -247,6 +248,15 @@ null
 </pre>
 </td>
 			<td>The name of an existing Secret to use for retrieving the password to authenticate with the source LDAP directory.  "udm.auth.password" will be ignored if this value is set.</td>
+		</tr>
+		<tr>
+			<td>ldap.auth.password</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>The password used to authenticate with the LDAP Server. Either this value or an existing Secret has to be specified.</td>
 		</tr>
 		<tr>
 			<td>ldap.connection.host</td>

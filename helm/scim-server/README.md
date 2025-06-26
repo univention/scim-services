@@ -79,13 +79,22 @@ helm uninstall scim-server
 			<td></td>
 		</tr>
 		<tr>
-			<td>config.auth.allowGroupDn</td>
+			<td>config.auth.allowedAudience</td>
 			<td>string</td>
 			<td><pre lang="json">
 ""
 </pre>
 </td>
-			<td></td>
+			<td>Only tokens with the given audience are valid</td>
+		</tr>
+		<tr>
+			<td>config.auth.allowedCliendId</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td>Only tokens with the given clientId are valid</td>
 		</tr>
 		<tr>
 			<td>config.auth.enabled</td>
@@ -251,6 +260,42 @@ true
 </pre>
 </td>
 			<td></td>
+		</tr>
+		<tr>
+			<td>docu.auth.clientId</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>clientId and clientSecret will be used in swagger UI to allow login when testing the API</td>
+		</tr>
+		<tr>
+			<td>docu.auth.existingSecret.keyMapping.clientSecret</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>docu.auth.existingSecret.name</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>docu.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+false
+</pre>
+</td>
+			<td>If enabled swagger UI will be availble at the /docs and /redoc endpoint</td>
 		</tr>
 		<tr>
 			<td>extraEnvVars</td>
@@ -437,33 +482,6 @@ true
 			<td>string</td>
 			<td><pre lang="json">
 ""
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>oauth.auth.existingSecret.keyMapping.clientSecret</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>oauth.auth.existingSecret.name</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>oauth.clientId</td>
-			<td>string</td>
-			<td><pre lang="json">
-"scim-api"
 </pre>
 </td>
 			<td></td>
@@ -833,213 +851,6 @@ true
 			<td>string</td>
 			<td><pre lang="json">
 ""
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.backoffLimit</td>
-			<td>int</td>
-			<td><pre lang="json">
-900
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.config.debug.enabled</td>
-			<td>bool</td>
-			<td><pre lang="json">
-false
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.config.debug.pauseBeforeScriptStart</td>
-			<td>int</td>
-			<td><pre lang="json">
-0
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.config.nubusBaseUrl</td>
-			<td>string</td>
-			<td><pre lang="json">
-""
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.enabled</td>
-			<td>bool</td>
-			<td><pre lang="json">
-true
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.image.imagePullPolicy</td>
-			<td>string</td>
-			<td><pre lang="json">
-""
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.image.registry</td>
-			<td>string</td>
-			<td><pre lang="json">
-""
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.image.repository</td>
-			<td>string</td>
-			<td><pre lang="json">
-"nubus/images/keycloak-bootstrap"
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.image.sha256</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.image.tag</td>
-			<td>string</td>
-			<td><pre lang="json">
-"0.8.0"
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.keycloak.auth.existingSecret.keyMapping.password</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.keycloak.auth.existingSecret.name</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.keycloak.auth.username</td>
-			<td>string</td>
-			<td><pre lang="json">
-""
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.keycloak.connection.baseUrl</td>
-			<td>string</td>
-			<td><pre lang="json">
-""
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.keycloak.connection.host</td>
-			<td>string</td>
-			<td><pre lang="json">
-""
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.keycloak.connection.port</td>
-			<td>string</td>
-			<td><pre lang="json">
-""
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.restartPolicy</td>
-			<td>string</td>
-			<td><pre lang="json">
-"OnFailure"
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.ttlSecondsAfterFinished</td>
-			<td>int</td>
-			<td><pre lang="json">
-300
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.user.create</td>
-			<td>bool</td>
-			<td><pre lang="json">
-false
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.user.group.create</td>
-			<td>bool</td>
-			<td><pre lang="json">
-false
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.user.group.name</td>
-			<td>string</td>
-			<td><pre lang="json">
-"scim-api-access"
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.user.password</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>setup.user.username</td>
-			<td>string</td>
-			<td><pre lang="json">
-"scim-api"
 </pre>
 </td>
 			<td></td>

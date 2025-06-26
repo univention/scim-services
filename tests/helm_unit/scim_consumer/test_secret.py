@@ -26,6 +26,13 @@ class TestScimServer(SecretPasswords):
     def test_global_secrets_keep_is_ignored(self): ...
 
 
+class TestLdap(TestScimServer):
+    template_file = "templates/secret-ldap.yaml"
+
+    def values(self, localpart: dict) -> dict:
+        return {"ldap": localpart}
+
+
 class TestNubusProvisioningSubscription(Annotations, Labels, Namespace):
     template_file = "templates/secret-provisioning.yaml"
     manifest_name = "release-name-scim-consumer-provisioning"
