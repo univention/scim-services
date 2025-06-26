@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.31.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.30.0...v0.31.0) (2025-06-26)
+
+
+### Features
+
+* **scim-server:** Update auth implementation to allow OIDC client credentials flow tokens ([d06e689](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/d06e689b233d3fdbaea183312b55a36a67eaa6bf)), closes [univention/dev/internal/team-nubus#1279](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1279)
+
+
+### Bug Fixes
+
+* **scim-server:** Remove helm templates for setting up user and keycloak ([d7f412a](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/d7f412a19e6e6c94119c7c1ed678f026a3ab35d0)), closes [univention/dev/internal/team-nubus#1279](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1279)
+* **scim-server:** Update authorization documentation ([e40e838](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/e40e838a3346cdc31446718bf10f1e2fcaa441de)), closes [univention/dev/internal/team-nubus#1279](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1279)
+
 ## [0.30.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.29.2...v0.30.0) (2025-06-25)
 
 
