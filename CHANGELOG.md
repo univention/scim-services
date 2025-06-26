@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.34.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.33.0...v0.34.0) (2025-06-26)
+
+
+### Features
+
+* **scim-server:** Add support for mapping scim roles to configurable UDM property ([9a89976](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/9a8997602948fc48a94e7e2f9b7800c3be608324)), closes [univention/dev/internal/team-nubus#1256](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1256)
+
 ## [0.33.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.32.0...v0.33.0) (2025-06-26)
 
 
