@@ -165,14 +165,13 @@ def test_get_user_mapping(udm_client: MockUdm, client: TestClient) -> None:
             "location": f"https://scim.unit.test/scim/v2/Users/{user.properties['univentionObjectIdentifier']}",
             "version": "1.0",
         },
-        'urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User': {
-                     'primaryOrgUnit': 'Sales',
-                     'secondaryOrgUnits': [
-                         'Marketing',
-                             'CustomerService',
-                ],
-            },
-
+        "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User": {
+            "primaryOrgUnit": "Sales",
+            "secondaryOrgUnits": [
+                "Marketing",
+                "CustomerService",
+            ],
+        },
     }
 
     # Get the user
