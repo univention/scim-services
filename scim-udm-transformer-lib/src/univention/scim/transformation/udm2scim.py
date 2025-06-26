@@ -350,7 +350,7 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
             elif schema == "urn:ietf:params:scim:schemas:extension:Univention:1.0:User":
                 logger.debug("Mapping user extension", schema=schema)
                 self._map_user_univention_extension(extension_obj, props)
-            elif schema == "urn:ietf:params:scim:schemas:extension:DapUser:2.0:User":
+            elif schema == "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User":
                 logger.debug("Mapping user extension", schema=schema)
                 self._map_user_customer1_extension(extension_obj, props)
             else:

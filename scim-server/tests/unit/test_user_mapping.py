@@ -67,7 +67,7 @@ scim_schema = {
         "urn:ietf:params:scim:schemas:core:2.0:User",
         "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
         "urn:ietf:params:scim:schemas:extension:Univention:1.0:User",
-        "urn:ietf:params:scim:schemas:extension:DapUser:2.0:User",
+        "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User",
     ],
     "userName": "test_user",
     "name": {"formatted": "Jane Doe", "familyName": "Doe", "givenName": "Jane"},
@@ -132,7 +132,7 @@ scim_schema = {
         "description": "This is a test user",
         "passwordRecoveryEmail": "recovery@testmail.org",
     },
-    "urn:ietf:params:scim:schemas:extension:DapUser:2.0:User": {
+    "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User": {
         "primaryOrgUnit": "Sales",
         "secondaryOrgUnits": ["Marketing", "CustomerService"],
     },
@@ -165,6 +165,14 @@ def test_get_user_mapping(udm_client: MockUdm, client: TestClient) -> None:
             "location": f"https://scim.unit.test/scim/v2/Users/{user.properties['univentionObjectIdentifier']}",
             "version": "1.0",
         },
+        'urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User': {
+                     'primaryOrgUnit': 'Sales',
+                     'secondaryOrgUnits': [
+                         'Marketing',
+                             'CustomerService',
+                ],
+            },
+
     }
 
     # Get the user

@@ -37,7 +37,7 @@ class TestSchemasEndpoint:
             (s for s in resources if s["id"] == "urn:ietf:params:scim:schemas:extension:Univention:1.0:Group"), None
         )
         customer1_user_schema = next(
-            (s for s in resources if s["id"] == "urn:ietf:params:scim:schemas:extension:DapUser:2.0:User"), None
+            (s for s in resources if s["id"] == "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User"), None
         )
 
         # Verify all schemas exist

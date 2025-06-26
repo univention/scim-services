@@ -12,7 +12,7 @@ class GuardianMember(ComplexAttribute):
 
 
 class Customer1User(Extension):
-    schemas: Annotated[list[str], Required.true] = ["urn:ietf:params:scim:schemas:extension:DapUser:2.0:User"]
+    schemas: Annotated[list[str], Required.true] = ["urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User"]
 
     primary_org_unit: str | None = None
     secondary_org_units: list[str] | None = None

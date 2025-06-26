@@ -82,7 +82,7 @@ class TestResourceTypesEndpoint:
         customer1_ext = next(
             x
             for x in user_type["schemaExtensions"]
-            if x["schema"] == "urn:ietf:params:scim:schemas:extension:DapUser:2.0:User"
+            if x["schema"] == "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User"
         )
         assert customer1_ext
         assert isinstance(customer1_ext, dict)
