@@ -16,9 +16,9 @@ services:
       SCIM_SERVER_HOSTNAME: scim-dev-server
     ports:
       - 8888:8080
-    volumes:
-      - ./conf/scim-server-resource-types.json:/opt/univention/scim-dev-server/resource-types.json
-      - ./conf/scim-server-schemas.json:/opt/univention/scim-dev-server/schemas.json
+    # volumes:
+    #   - ./conf/scim-server-resource-types.json:/opt/univention/scim-dev-server/resource-types.json
+    #   - ./conf/scim-server-schemas.json:/opt/univention/scim-dev-server/schemas.json
     networks:
       - scim
 
@@ -380,7 +380,7 @@ services:
 
   test:
     profiles:
-      - develop
+      - test
     build:
       context: ../../
       dockerfile: docker/scim-consumer/Dockerfile
@@ -430,7 +430,7 @@ services:
 
   test-integration:
     profiles:
-      - integration
+      - test
     build:
       context: ../../
       dockerfile: docker/scim-consumer/Dockerfile
