@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.35.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.34.0...v0.35.0) (2025-06-27)
+
+
+### Features
+
+* **scim-server:** Adapt the repo to use  UniventionUser:2.0 ([f983969](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/f983969d52fd3c0c93c4f0bd87df981d6c0f7dff))
+
 ## [0.34.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.33.0...v0.34.0) (2025-06-26)
 
 
