@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+import os
+
 import pytest
 from pytest_mock import MockerFixture
 
@@ -110,6 +112,9 @@ async def test_add_group_member(scim_client: ScimClient, scim_consumer: ScimCons
     scim_client.delete_resource(user)
 
 
+@pytest.mark.skipif(
+    "UNIVENTION_SCIM_SERVER" in os.environ, reason="Not working with Univention SCIM server at the moment!"
+)
 @pytest.mark.asyncio
 async def test_remove_group_member(scim_client: ScimClient, scim_consumer: ScimConsumer, mocker: MockerFixture) -> None:
     #

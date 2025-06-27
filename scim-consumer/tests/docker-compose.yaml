@@ -359,6 +359,9 @@ services:
   keycloak:
     image: artifacts.software-univention.de/nubus-dev/images/keycloak:0.2.0-post-main
     container_name: keycloak
+    profiles:
+      - develop
+      - integration
     command: start-dev --http-enabled=true --import-realm
     ports:
       - 5050:8080
@@ -448,6 +451,8 @@ services:
         condition: service_healthy
       scim-udm-rest-api:
         condition: service_started
+      keycloak:
+        condition: service_started
     environment:
       SCIM_SERVER_BASE_URL: http://scim-server:8000/v2/
       PROVISIONING_API_BASE_URL: http://events-and-consumer-api:7777/
@@ -465,6 +470,7 @@ services:
       LDAP_BIND_PASSWORD: univention
       EXTERNAL_ID_USER_MAPPING: univentionObjectIdentifier
       EXTERNAL_ID_GROUP_MAPPING: univentionObjectIdentifier
+      KEYCLOAK_BASE_URL: "http://keycloak:8080"
       #
       # Configuration for tests with Univention SCIM-Server
       #

@@ -10,6 +10,8 @@ docker compose --profile develop up --build --remove-orphans -d
 docker compose --profile develop run --rm --build --remove-orphans test
 # or
 pytest -v -s ./
+# or
+uv run pytest -v -s ./
 
 docker compose --profile develop down --volumes
 ```
@@ -22,6 +24,8 @@ docker compose --profile integration up -d --remove-orphans --build
 docker compose --profile integration run --rm --build --remove-orphans test-integration
 # or
 UNIVENTION_SCIM_SERVER=true pytest -v -s ./
+# or
+UNIVENTION_SCIM_SERVER=true uv run pytest -v -s ./
 
 docker compose --profile integration down --volumes
 ```

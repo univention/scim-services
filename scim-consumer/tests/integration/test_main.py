@@ -1,14 +1,17 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+import os
 from typing import Any
 
 import pytest
-from scim2_models import Group, User
+from scim2_models import EnterpriseUser, Group, User
 from univention.admin.rest.client import UDM
 
 from univention.scim.consumer.scim_client import ScimClient
 from univention.scim.consumer.scim_consumer import ScimConsumer
+from univention.scim.server.models.extensions.customer1_user import Customer1User
+from univention.scim.server.models.extensions.univention_user import UniventionUser
 
 from ..data.scim_helper import wait_for_resource_deleted, wait_for_resource_exists, wait_for_resource_updated
 from ..data.udm_helper import (
@@ -49,6 +52,33 @@ def test_user_crud(
     delete_udm_user(udm_client=udm_client, user_data=user_data)
     is_deleted = wait_for_resource_deleted(scim_client, user_data["univentionObjectIdentifier"])
     assert is_deleted
+
+
+@pytest.mark.skipif(
+    "UNIVENTION_SCIM_SERVER" in os.environ, reason="Not working with Univention SCIM server at the moment!"
+)
+def test_user_with_extensions(
+    udm_client: UDM,
+    background_scim_consumer: ScimConsumer,
+    scim_client: ScimClient,
+    user_data_with_extensions: dict[str, Any],
+) -> None:
+    assert background_scim_consumer
+
+    # Test create
+    create_udm_user(udm_client=udm_client, user_data=user_data_with_extensions)
+    user: User[EnterpriseUser | UniventionUser | Customer1User] = wait_for_resource_exists(
+        scim_client, user_data_with_extensions["univentionObjectIdentifier"]
+    )
+    assert user.user_name == user_data_with_extensions.get("username")
+    assert user.EnterpriseUser.employee_number == user_data_with_extensions.get("employeeNumber")
+    assert user.UniventionUser.password_recovery_email == user_data_with_extensions.get("PasswordRecoveryEmail")
+    assert user.Customer1User.primary_org_unit == user_data_with_extensions.get("primaryOrgUnit")
+    assert user.Customer1User.secondary_org_units == user_data_with_extensions.get("secondaryOrgUnits")
+
+    # Cleanup
+    delete_udm_user(udm_client=udm_client, user_data=user_data_with_extensions)
+    wait_for_resource_deleted(scim_client, user_data_with_extensions["univentionObjectIdentifier"])
 
 
 def test_add_group_member(

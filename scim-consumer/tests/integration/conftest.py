@@ -5,12 +5,13 @@ import multiprocessing
 import os
 import uuid
 from collections.abc import Generator
+from contextlib import suppress
 from typing import Any
 
 import httpx
 import pytest
 from loguru import logger
-from univention.admin.rest.client import UDM
+from univention.admin.rest.client import UDM, UnprocessableEntity
 
 from univention.scim.consumer.group_membership_resolver import GroupMembershipLdapResolver, LdapSettings
 from univention.scim.consumer.main import run as scim_client_run
@@ -121,6 +122,20 @@ def user_data_updated(user_data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+@pytest.fixture(scope="function")
+def user_data_with_extensions(user_data: dict[str, Any]) -> dict[str, Any]:
+    user_data_with_extensions = user_data.copy()
+    # Enterprise extension
+    user_data_with_extensions["employeeNumber"] = "4711"
+    # Univention extension
+    user_data_with_extensions["PasswordRecoveryEmail"] = "recover@univention.test"
+    # Customer1 extension
+    user_data_with_extensions["primaryOrgUnit"] = "IT"
+    user_data_with_extensions["secondaryOrgUnits"] = ["Support"]
+
+    return user_data_with_extensions
+
+
 @pytest.fixture(scope="session")
 def udm_client() -> UDM:
     logger.info("Create udm_client.")
@@ -216,3 +231,114 @@ def scim_consumer(
 ) -> ScimConsumer:
     scim_consumer = ScimConsumer(scim_client, group_membership_resolver, scim_consumer_settings)
     return scim_consumer
+
+
+@pytest.fixture(scope="session", autouse=True)
+def add_extended_attributes(udm_client: UDM) -> None:
+    print("Adding extended attributes")
+    module = udm_client.get("settings/extended_attribute")
+
+    # Univention extended attribute PasswordRecoveryEmail
+    udm_obj = module.new(position="cn=custom attributes,cn=univention,dc=univention-organization,dc=intranet")
+    udm_obj.properties["name"] = "UniventionPasswordSelfServiceEmail"
+    udm_obj.properties["CLIName"] = "PasswordRecoveryEmail"
+    udm_obj.properties["module"] = ["users/user"]
+    udm_obj.properties["default"] = ""
+    udm_obj.properties["ldapMapping"] = "univentionPasswordSelfServiceEmail"
+    udm_obj.properties["objectClass"] = "univentionPasswordSelfService"
+    udm_obj.properties["shortDescription"] = "Password recovery e-mail address"
+    udm_obj.properties["multivalue"] = False
+    udm_obj.properties["valueRequired"] = False
+    udm_obj.properties["mayChange"] = True
+    udm_obj.properties["doNotSearch"] = False
+    udm_obj.properties["deleteObjectClass"] = False
+    udm_obj.properties["overwriteTab"] = False
+    udm_obj.properties["fullWidth"] = True
+
+    # ignore error 422, it is thrown if the attribute already exists
+    with suppress(UnprocessableEntity):
+        udm_obj.save()
+
+    # Customer1 extended attribute primaryOrgUnit
+    udm_obj = module.new(position="cn=custom attributes,cn=univention,dc=univention-organization,dc=intranet")
+    udm_obj.properties["name"] = "Customer1PrimaryOrgUnit"
+    udm_obj.properties["CLIName"] = "primaryOrgUnit"
+    udm_obj.properties["module"] = ["users/user"]
+    udm_obj.properties["default"] = ""
+    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute1"
+    udm_obj.properties["objectClass"] = "univentionFreeAttributes"
+    udm_obj.properties["shortDescription"] = "Customer1 primary org unit"
+    udm_obj.properties["multivalue"] = False
+    udm_obj.properties["valueRequired"] = False
+    udm_obj.properties["mayChange"] = True
+    udm_obj.properties["doNotSearch"] = False
+    udm_obj.properties["deleteObjectClass"] = False
+    udm_obj.properties["overwriteTab"] = False
+    udm_obj.properties["fullWidth"] = True
+
+    # ignore error 422, it is thrown if the attribute already exists
+    with suppress(UnprocessableEntity):
+        udm_obj.save()
+
+    # Customer1 extended attribute secondaryOrgUnits
+    udm_obj = module.new(position="cn=custom attributes,cn=univention,dc=univention-organization,dc=intranet")
+    udm_obj.properties["name"] = "Customer1SecondaryOrgUnits"
+    udm_obj.properties["CLIName"] = "secondaryOrgUnits"
+    udm_obj.properties["module"] = ["users/user"]
+    udm_obj.properties["default"] = ""
+    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute2"
+    udm_obj.properties["objectClass"] = "univentionFreeAttributes"
+    udm_obj.properties["shortDescription"] = "Customer1 primary secondary org units"
+    udm_obj.properties["multivalue"] = True
+    udm_obj.properties["valueRequired"] = False
+    udm_obj.properties["mayChange"] = True
+    udm_obj.properties["doNotSearch"] = False
+    udm_obj.properties["deleteObjectClass"] = False
+    udm_obj.properties["overwriteTab"] = False
+    udm_obj.properties["fullWidth"] = True
+
+    # ignore error 422, it is thrown if the attribute already exists
+    with suppress(UnprocessableEntity):
+        udm_obj.save()
+
+    # Place to store user externalID extended attribute
+    udm_obj = module.new(position="cn=custom attributes,cn=univention,dc=univention-organization,dc=intranet")
+    udm_obj.properties["name"] = "TestUserExternalId"
+    udm_obj.properties["CLIName"] = "testExternalId"
+    udm_obj.properties["module"] = ["users/user"]
+    udm_obj.properties["default"] = ""
+    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute3"
+    udm_obj.properties["objectClass"] = "univentionFreeAttributes"
+    udm_obj.properties["shortDescription"] = "Test external ID for users"
+    udm_obj.properties["multivalue"] = False
+    udm_obj.properties["valueRequired"] = False
+    udm_obj.properties["mayChange"] = True
+    udm_obj.properties["doNotSearch"] = False
+    udm_obj.properties["deleteObjectClass"] = False
+    udm_obj.properties["overwriteTab"] = False
+    udm_obj.properties["fullWidth"] = True
+
+    # ignore error 422, it is thrown if the attribute already exists
+    with suppress(UnprocessableEntity):
+        udm_obj.save()
+
+    # Place to store group externalID extended attribute
+    udm_obj = module.new(position="cn=custom attributes,cn=univention,dc=univention-organization,dc=intranet")
+    udm_obj.properties["name"] = "TestGroupExternalId"
+    udm_obj.properties["CLIName"] = "testExternalId"
+    udm_obj.properties["module"] = ["groups/group"]
+    udm_obj.properties["default"] = ""
+    udm_obj.properties["ldapMapping"] = "univentionFreeAttribute4"
+    udm_obj.properties["objectClass"] = "univentionFreeAttributes"
+    udm_obj.properties["shortDescription"] = "Test external ID for groups"
+    udm_obj.properties["multivalue"] = False
+    udm_obj.properties["valueRequired"] = False
+    udm_obj.properties["mayChange"] = True
+    udm_obj.properties["doNotSearch"] = False
+    udm_obj.properties["deleteObjectClass"] = False
+    udm_obj.properties["overwriteTab"] = False
+    udm_obj.properties["fullWidth"] = True
+
+    # ignore error 422, it is thrown if the attribute already exists
+    with suppress(UnprocessableEntity):
+        udm_obj.save()
