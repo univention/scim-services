@@ -215,7 +215,7 @@ test-scim-server-and-consumer-integration:
     - docker version
     - echo -e "\e[0Ksection_end:`date +%s`:docker_debug\r\e[0K"
     - echo -e "\e[0Ksection_start:`date +%s`:docker_compose_config[collapsed=true]\r\e[0KDocker Compose configuration"
-    - docker compose --profile integration config test
+    - docker compose --profile integration config test-integration
     - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
   script:
     - docker compose --profile integration run --quiet-pull --name test-scim-services test-integration

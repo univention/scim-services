@@ -18,7 +18,7 @@
                 "required": false
             },
             {
-                "schema": "urn:ietf:params:scim:schemas:extension:DapUser:2.0:User",
+                "schema": "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User",
                 "required": false
             }
         ]

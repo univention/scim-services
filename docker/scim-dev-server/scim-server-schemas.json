@@ -4,6 +4,10 @@
             "urn:ietf:params:scim:schemas:core:2.0:Schema"
         ],
         "id": "urn:ietf:params:scim:schemas:core:2.0:User",
+        "meta": {
+            "resourceType": "Schema",
+            "location": ""
+        },
         "name": "User",
         "description": "User",
         "attributes": [
@@ -689,6 +693,10 @@
             "urn:ietf:params:scim:schemas:core:2.0:Schema"
         ],
         "id": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+        "meta": {
+            "resourceType": "Schema",
+            "location": ""
+        },
         "name": "EnterpriseUser",
         "description": "EnterpriseUser",
         "attributes": [
@@ -803,6 +811,10 @@
             "urn:ietf:params:scim:schemas:core:2.0:Schema"
         ],
         "id": "urn:ietf:params:scim:schemas:extension:Univention:1.0:User",
+        "meta": {
+            "resourceType": "Schema",
+            "location": ""
+        },
         "name": "UniventionUser",
         "description": "UniventionUser",
         "attributes": [
@@ -832,7 +844,11 @@
         "schemas": [
             "urn:ietf:params:scim:schemas:core:2.0:Schema"
         ],
-        "id": "urn:ietf:params:scim:schemas:extension:DapUser:2.0:User",
+        "id": "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User",
+        "meta": {
+            "resourceType": "Schema",
+            "location": ""
+        },
         "name": "Customer1User",
         "description": "Customer1User",
         "attributes": [
@@ -863,6 +879,10 @@
             "urn:ietf:params:scim:schemas:core:2.0:Schema"
         ],
         "id": "urn:ietf:params:scim:schemas:core:2.0:Group",
+        "meta": {
+            "resourceType": "Schema",
+            "location": ""
+        },
         "name": "Group",
         "description": "Group",
         "attributes": [
@@ -948,6 +968,10 @@
             "urn:ietf:params:scim:schemas:core:2.0:Schema"
         ],
         "id": "urn:ietf:params:scim:schemas:extension:Univention:1.0:Group",
+        "meta": {
+            "resourceType": "Schema",
+            "location": ""
+        },
         "name": "UniventionGroup",
         "description": "UniventionGroup",
         "attributes": [
@@ -988,310 +1012,6 @@
                         "required": false,
                         "caseExact": false,
                         "mutability": "readWrite",
-                        "returned": "default",
-                        "uniqueness": "none"
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "schemas": [
-            "urn:ietf:params:scim:schemas:core:2.0:Schema"
-        ],
-        "id": "urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig",
-        "name": "ServiceProviderConfig",
-        "description": "ServiceProviderConfig",
-        "attributes": [
-            {
-                "name": "id",
-                "type": "string",
-                "multiValued": false,
-                "description": "A unique identifier for a SCIM resource as defined by the service\nprovider.",
-                "required": false,
-                "caseExact": false,
-                "mutability": "readOnly",
-                "returned": "default",
-                "uniqueness": "global"
-            },
-            {
-                "name": "documentationUri",
-                "type": "reference",
-                "multiValued": false,
-                "description": "An HTTP-addressable URL pointing to the service provider's human-\nconsumable help documentation.",
-                "required": false,
-                "caseExact": false,
-                "mutability": "readOnly",
-                "returned": "default",
-                "uniqueness": "none",
-                "referenceTypes": [
-                    "external"
-                ]
-            },
-            {
-                "name": "patch",
-                "type": "complex",
-                "multiValued": false,
-                "description": "A complex type that specifies PATCH configuration options.",
-                "required": true,
-                "caseExact": false,
-                "mutability": "readOnly",
-                "returned": "default",
-                "uniqueness": "none",
-                "subAttributes": [
-                    {
-                        "name": "supported",
-                        "type": "boolean",
-                        "multiValued": false,
-                        "description": "A Boolean value specifying whether or not the operation is supported.",
-                        "required": true,
-                        "caseExact": false,
-                        "mutability": "readOnly",
-                        "returned": "default",
-                        "uniqueness": "none"
-                    }
-                ]
-            },
-            {
-                "name": "bulk",
-                "type": "complex",
-                "multiValued": false,
-                "description": "A complex type that specifies bulk configuration options.",
-                "required": true,
-                "caseExact": false,
-                "mutability": "readOnly",
-                "returned": "default",
-                "uniqueness": "none",
-                "subAttributes": [
-                    {
-                        "name": "supported",
-                        "type": "boolean",
-                        "multiValued": false,
-                        "description": "A Boolean value specifying whether or not the operation is supported.",
-                        "required": true,
-                        "caseExact": false,
-                        "mutability": "readOnly",
-                        "returned": "default",
-                        "uniqueness": "none"
-                    },
-                    {
-                        "name": "maxOperations",
-                        "type": "integer",
-                        "multiValued": false,
-                        "description": "An integer value specifying the maximum number of operations.",
-                        "required": true,
-                        "caseExact": false,
-                        "mutability": "readOnly",
-                        "returned": "default",
-                        "uniqueness": "none"
-                    },
-                    {
-                        "name": "maxPayloadSize",
-                        "type": "integer",
-                        "multiValued": false,
-                        "description": "An integer value specifying the maximum payload size in bytes.",
-                        "required": true,
-                        "caseExact": false,
-                        "mutability": "readOnly",
-                        "returned": "default",
-                        "uniqueness": "none"
-                    }
-                ]
-            },
-            {
-                "name": "filter",
-                "type": "complex",
-                "multiValued": false,
-                "description": "A complex type that specifies FILTER options.",
-                "required": true,
-                "caseExact": false,
-                "mutability": "readOnly",
-                "returned": "default",
-                "uniqueness": "none",
-                "subAttributes": [
-                    {
-                        "name": "supported",
-                        "type": "boolean",
-                        "multiValued": false,
-                        "description": "A Boolean value specifying whether or not the operation is supported.",
-                        "required": true,
-                        "caseExact": false,
-                        "mutability": "readOnly",
-                        "returned": "default",
-                        "uniqueness": "none"
-                    },
-                    {
-                        "name": "maxResults",
-                        "type": "integer",
-                        "multiValued": false,
-                        "description": "A Boolean value specifying whether or not the operation is supported.",
-                        "required": true,
-                        "caseExact": false,
-                        "mutability": "readOnly",
-                        "returned": "default",
-                        "uniqueness": "none"
-                    }
-                ]
-            },
-            {
-                "name": "changePassword",
-                "type": "complex",
-                "multiValued": false,
-                "description": "A complex type that specifies configuration options related to changing\na password.",
-                "required": true,
-                "caseExact": false,
-                "mutability": "readOnly",
-                "returned": "default",
-                "uniqueness": "none",
-                "subAttributes": [
-                    {
-                        "name": "supported",
-                        "type": "boolean",
-                        "multiValued": false,
-                        "description": "A Boolean value specifying whether or not the operation is supported.",
-                        "required": true,
-                        "caseExact": false,
-                        "mutability": "readOnly",
-                        "returned": "default",
-                        "uniqueness": "none"
-                    }
-                ]
-            },
-            {
-                "name": "sort",
-                "type": "complex",
-                "multiValued": false,
-                "description": "A complex type that specifies sort result options.",
-                "required": true,
-                "caseExact": false,
-                "mutability": "readOnly",
-                "returned": "default",
-                "uniqueness": "none",
-                "subAttributes": [
-                    {
-                        "name": "supported",
-                        "type": "boolean",
-                        "multiValued": false,
-                        "description": "A Boolean value specifying whether or not the operation is supported.",
-                        "required": true,
-                        "caseExact": false,
-                        "mutability": "readOnly",
-                        "returned": "default",
-                        "uniqueness": "none"
-                    }
-                ]
-            },
-            {
-                "name": "etag",
-                "type": "complex",
-                "multiValued": false,
-                "description": "A complex type that specifies ETag configuration options.",
-                "required": true,
-                "caseExact": false,
-                "mutability": "readOnly",
-                "returned": "default",
-                "uniqueness": "none",
-                "subAttributes": [
-                    {
-                        "name": "supported",
-                        "type": "boolean",
-                        "multiValued": false,
-                        "description": "A Boolean value specifying whether or not the operation is supported.",
-                        "required": true,
-                        "caseExact": false,
-                        "mutability": "readOnly",
-                        "returned": "default",
-                        "uniqueness": "none"
-                    }
-                ]
-            },
-            {
-                "name": "authenticationSchemes",
-                "type": "complex",
-                "multiValued": true,
-                "description": "A complex type that specifies supported authentication scheme\nproperties.",
-                "required": true,
-                "caseExact": false,
-                "mutability": "readOnly",
-                "returned": "default",
-                "uniqueness": "none",
-                "subAttributes": [
-                    {
-                        "name": "type",
-                        "type": "string",
-                        "multiValued": false,
-                        "description": "The authentication scheme.",
-                        "required": true,
-                        "canonicalValues": [
-                            "oauth",
-                            "oauth2",
-                            "oauthbreakertoken",
-                            "httpbasic",
-                            "httpdigest"
-                        ],
-                        "caseExact": false,
-                        "mutability": "readOnly",
-                        "returned": "default",
-                        "uniqueness": "none"
-                    },
-                    {
-                        "name": "name",
-                        "type": "string",
-                        "multiValued": false,
-                        "description": "The common authentication scheme name, e.g., HTTP Basic.",
-                        "required": true,
-                        "caseExact": false,
-                        "mutability": "readOnly",
-                        "returned": "default",
-                        "uniqueness": "none"
-                    },
-                    {
-                        "name": "description",
-                        "type": "string",
-                        "multiValued": false,
-                        "description": "A description of the authentication scheme.",
-                        "required": true,
-                        "caseExact": false,
-                        "mutability": "readOnly",
-                        "returned": "default",
-                        "uniqueness": "none"
-                    },
-                    {
-                        "name": "specUri",
-                        "type": "reference",
-                        "multiValued": false,
-                        "description": "An HTTP-addressable URL pointing to the authentication scheme's\nspecification.",
-                        "required": false,
-                        "caseExact": false,
-                        "mutability": "readOnly",
-                        "returned": "default",
-                        "uniqueness": "none",
-                        "referenceTypes": [
-                            "external"
-                        ]
-                    },
-                    {
-                        "name": "documentationUri",
-                        "type": "reference",
-                        "multiValued": false,
-                        "description": "An HTTP-addressable URL pointing to the authentication scheme's usage\ndocumentation.",
-                        "required": false,
-                        "caseExact": false,
-                        "mutability": "readOnly",
-                        "returned": "default",
-                        "uniqueness": "none",
-                        "referenceTypes": [
-                            "external"
-                        ]
-                    },
-                    {
-                        "name": "primary",
-                        "type": "boolean",
-                        "multiValued": false,
-                        "description": "A Boolean value indicating the 'primary' or preferred attribute value\nfor this attribute, e.g., the preferred mailing address or primary email\naddress.",
-                        "required": false,
-                        "caseExact": false,
-                        "mutability": "readOnly",
                         "returned": "default",
                         "uniqueness": "none"
                     }

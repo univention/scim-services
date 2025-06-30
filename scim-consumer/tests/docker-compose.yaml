@@ -17,22 +17,23 @@ services:
     networks:
       - scim
 
-  scim-udm-rest-api:
-    # image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-udm-rest/udm-rest-api:latest
-    image: artifacts.software-univention.de/nubus/images/udm-rest-api:0.35.0
-    container_name: "scim-udm-rest-api"
+  # UDM for the Univention SCIM server
+  downstream-udm-rest-api:
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/udm-rest-api/udm-rest-api:latest
+    # image: artifacts.software-univention.de/nubus/images/udm-rest-api:0.36.0
+    container_name: "downstream-udm-rest-api"
     platform: "linux/amd64"
     profiles:
       - integration
     depends_on:
-      scim-ldap-server:
+      downstream-ldap-server:
         condition: service_healthy
     volumes:
       - ./conf/base-scim-server.conf:/etc/univention/base.conf:ro
     environment:
       DOMAINNAME: univention-organization.intranet
-      HOSTNAME: scim-udm-rest-api:9979
-      LDAP_HOST: scim-ldap-server
+      HOSTNAME: downstream-udm-rest-api:9979
+      LDAP_HOST: downstream-ldap-server
       LDAP_PORT: 389
       LDAP_BASE_DN: dc=univention-organization,dc=intranet
       LDAP_HOST_DN: cn=admin,dc=univention-organization,dc=intranet
@@ -44,11 +45,12 @@ services:
     networks:
       - scim
 
-  scim-ldap-server:
+  # LDAP for the Univention SCIM server
+  downstream-ldap-server:
     platform: linux/amd64
-    # image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-ldap/ldap-server:latest
-    image: artifacts.software-univention.de/nubus/images/ldap-server:0.42.0
-    container_name: "scim-ldap-server"
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/ldap/ldap-server:latest
+    # image: artifacts.software-univention.de/nubus/images/ldap-server:0.43.0
+    container_name: "downstream-ldap-server"
     profiles:
       - integration
     healthcheck:
@@ -78,7 +80,7 @@ services:
     profiles:
       - integration
     environment:
-      UDM_URL: http://scim-udm-rest-api:9979/udm/
+      UDM_URL: http://downstream-udm-rest-api:9979/udm/
       UDM_USERNAME: cn=admin
       UDM_PASSWORD: univention
       AUTH_ENABLED: false
@@ -102,8 +104,8 @@ services:
       - scim
 
   events-and-consumer-api:
-    # image: gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-events-and-consumer-api:latest
-    image: artifacts.software-univention.de/nubus/images/provisioning-events-and-consumer-api:0.55.0
+    image: gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-events-and-consumer-api:latest
+    # image: artifacts.software-univention.de/nubus/images/provisioning-events-and-consumer-api:0.56.0
     container_name: "events-and-consumer-api-dev"
     restart: "on-failure"
     profiles:
@@ -157,8 +159,8 @@ services:
     command: --name nats --cluster_name JetStreamCluster --jetstream -m 8222 -p 4222 -config /etc/nats-config/nats.conf
 
   dispatcher:
-    # image: gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-dispatcher:latest
-    image: artifacts.software-univention.de/nubus/images/provisioning-dispatcher:0.55.0
+    image: gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-dispatcher:latest
+    # image: artifacts.software-univention.de/nubus/images/provisioning-dispatcher:0.56.0
     container_name: "provisioning-dispatcher"
     restart: "on-failure"
     profiles:
@@ -182,8 +184,8 @@ services:
       - scim
 
   udm-transformer:
-    # image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-udm-transformer:latest"
-    image: artifacts.software-univention.de/nubus/images/provisioning-udm-transformer:0.55.0
+    image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-udm-transformer:latest"
+    # image: artifacts.software-univention.de/nubus/images/provisioning-udm-transformer:0.56.0
     container_name: "provisioning-udm-transformer"
     restart: "on-failure"
     profiles:
@@ -215,8 +217,8 @@ services:
       - scim
 
   prefill:
-    # image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-prefill:latest"
-    image: artifacts.software-univention.de/nubus/images/provisioning-prefill:0.55.0
+    image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-prefill:latest"
+    # image: artifacts.software-univention.de/nubus/images/provisioning-prefill:0.56.0
     container_name: "provisioning-prefill"
     restart: "on-failure"
     profiles:
@@ -247,8 +249,8 @@ services:
       - scim
 
   udm-listener:
-    # image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-udm-listener:latest"
-    image: artifacts.software-univention.de/nubus/images/provisioning-udm-listener:0.55.0
+    image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-udm-listener:latest"
+    # image: artifacts.software-univention.de/nubus/images/provisioning-udm-listener:0.56.0
     container_name: "udm-listener"
     profiles:
       - develop
@@ -282,8 +284,8 @@ services:
 
   ldap-notifier:
     platform: linux/amd64
-    # image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-ldap/ldap-notifier:latest
-    image: artifacts.software-univention.de/nubus/images/ldap-notifier:0.42.0
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/ldap/ldap-notifier:latest
+    # image: artifacts.software-univention.de/nubus/images/ldap-notifier:0.43.0
     container_name: "ldap-notifier"
     profiles:
       - develop
@@ -301,8 +303,8 @@ services:
 
   ldap-server:
     platform: linux/amd64
-    # image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-ldap/ldap-server:latest
-    image: artifacts.software-univention.de/nubus/images/ldap-server:0.42.0
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/ldap/ldap-server:latest
+    # image: artifacts.software-univention.de/nubus/images/ldap-server:0.43.0
     container_name: "ldap-server"
     profiles:
       - develop
@@ -329,8 +331,8 @@ services:
       - scim
 
   udm-rest-api:
-    # image: gitregistry.knut.univention.de/univention/customers/dataport/upx/container-udm-rest/udm-rest-api
-    image: artifacts.software-univention.de/nubus/images/udm-rest-api:0.35.0
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/udm-rest-api/udm-rest-api:latest
+    # image: artifacts.software-univention.de/nubus/images/udm-rest-api:0.36.0
     container_name: "udm-rest-api"
     platform: "linux/amd64"
     profiles:
@@ -447,9 +449,9 @@ services:
         condition: service_started
       scim-server:
         condition: service_started
-      scim-ldap-server:
+      downstream-ldap-server:
         condition: service_healthy
-      scim-udm-rest-api:
+      downstream-udm-rest-api:
         condition: service_started
       keycloak:
         condition: service_started
@@ -475,7 +477,7 @@ services:
       # Configuration for tests with Univention SCIM-Server
       #
       UNIVENTION_SCIM_SERVER: true
-      SCIM_UDM_BASE_URL: http://scim-udm-rest-api:9979/udm/
+      SCIM_UDM_BASE_URL: http://downstream-udm-rest-api:9979/udm/
       SCIM_UDM_USERNAME: cn=admin
       SCIM_UDM_PASSWORD: univention
     networks:
