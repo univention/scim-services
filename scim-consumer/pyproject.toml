@@ -66,10 +66,12 @@ env = [
     "D:KEYCLOAK_BASE_URL = http://localhost:5050",
     #
     # Configuration for tests with Univention SCIM-Server
+    #   To run the tests locally pytest must be run with:
+    #     UNIVENTION_SCIM_SERVER=true pytest ...
     #
-    "D:SCIM_UDM_BASE_URL = http://localhost:9999/udm/",
-    "D:SCIM_UDM_USERNAME = cn=admin",
-    "D:SCIM_UDM_PASSWORD = univention",
+    "D:DOWNSTREAM_UDM_BASE_URL = http://localhost:9999/udm/",
+    "D:DOWNSTREAM_UDM_USERNAME = cn=admin",
+    "D:DOWNSTREAM_UDM_PASSWORD = univention",
 ]
 addopts = "-lvv --cov --cov-report term-missing --junit-xml=/tmp/pytest-junit.xml"
 

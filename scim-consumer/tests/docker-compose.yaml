@@ -477,9 +477,9 @@ services:
       # Configuration for tests with Univention SCIM-Server
       #
       UNIVENTION_SCIM_SERVER: true
-      SCIM_UDM_BASE_URL: http://downstream-udm-rest-api:9979/udm/
-      SCIM_UDM_USERNAME: cn=admin
-      SCIM_UDM_PASSWORD: univention
+      DOWNSTREAM_UDM_BASE_URL: http://downstream-udm-rest-api:9979/udm/
+      DOWNSTREAM_UDM_USERNAME: cn=admin
+      DOWNSTREAM_UDM_PASSWORD: univention
     networks:
       - scim
     command: >
