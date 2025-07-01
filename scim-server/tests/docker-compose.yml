@@ -121,8 +121,9 @@ services:
     entrypoint: ""
     # For now use a forked scim2-client with a fix for multiple extension until a new upstream release is available
     command: >
-      bash -c "pip install git+https://github.com/J-Bu/scim2-client.git scim2-cli &&
-      scim2 -u http://scim-server:8000/scim/v2/ test"
+      bash -c "
+        pip install git+https://github.com/J-Bu/scim2-models.git git+https://github.com/J-Bu/scim2-client.git git+https://github.com/J-Bu/scim2-tester.git scim2-cli &&
+        scim2 -u http://scim-server:8000/scim/v2/ test"
     depends_on:
       scim-server:
         condition: service_healthy

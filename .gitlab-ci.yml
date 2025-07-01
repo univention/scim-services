@@ -137,7 +137,6 @@ test-scim2-compliance:
     expire_in: "1 day"
     when: "always"
     expose_as: "SCIM2 Tester logs"
-  allow_failure: true
 
 test-helm-charts:
   stage: test
