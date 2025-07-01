@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.36.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.35.0...v0.36.0) (2025-07-01)
+
+
+### Features
+
+* **scim-dev-server:** Added Helm charts for scim2-server ([2c54193](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/2c541937fb08b0dd8aa4d62b7d62deb9f00cb86a)), closes [univention/dev/internal/team-nubus#1280](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1280)
+
+
+### Bug Fixes
+
+* **scim-consumer:** Changes for Helm deployment. ([8490a28](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/8490a283e2d647480621326bab8b7a0cd3a3b5bf)), closes [univention/dev/internal/team-nubus#1280](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1280)
+
 ## [0.35.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.34.0...v0.35.0) (2025-06-27)
 
 
