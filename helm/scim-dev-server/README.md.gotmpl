@@ -8,41 +8,9 @@
 - **AppVersion**: {{ template "chart.appVersion" . }}
 - {{ template "chart.homepageLine" . }}
 
-## TL;DR
-
-```console
-helm upgrade --install scim-consumer oci://artifacts.software-univention.de/nubus/charts/scim-consumer
-```
-
-
-## Introduction
-
-This chart does install the Nubus Provisioning SCIM Consumer.
-
-The service provides a way to provision downstream systems via the SCIM Protocol.
-
-
 {{ template "chart.maintainersSection" . }}
 
 {{ template "chart.sourcesSection" . }}
-
-
-## Installing
-
-To install the chart with the release name `scim-consumer`:
-
-```console
-helm upgrade --install scim-consumer oci://artifacts.software-univention.de/nubus/charts/scim-consumer
-```
-
-
-## Uninstalling
-
-To uninstall the chart with the release name `scim-consumer`:
-
-```console
-helm uninstall scim-consumer
-```
 
 {{ template "chart.requirementsSection" . }}
 

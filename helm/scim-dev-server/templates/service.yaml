@@ -8,11 +8,6 @@ metadata:
   namespace: {{ include "common.names.namespace" . | quote }}
   labels:
     {{- include "common.labels.standard" ( dict "customLabels" .Values.additionalLabels "context" $ ) | nindent 4 }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.service.annotations .Values.additionalAnnotations ) "context" . ) }}
-  {{- if $annotations }}
-  annotations:
-    {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $ ) | nindent 4 }}
-  {{- end }}
 spec:
   type: "ClusterIP"
   ports:
