@@ -6,8 +6,8 @@ version: "3"
 services:
   test:
     build:
-      context: ../../docker/scim-server/
-      dockerfile: Dockerfile
+      context: ../../
+      dockerfile: docker/scim-server/Dockerfile
       target: test
     #image: gitregistry.knut.univention.de/dev/projects/scim/scim-services/scim-server/testrunner:${IMAGE_TAG:-latest}
     depends_on:
@@ -15,13 +15,6 @@ services:
         condition: service_healthy
     cap_drop:
       - ALL
-    volumes:
-      - ../../pyproject.toml:/app/pyproject.toml:ro
-      - ../../scim-server:/app/scim-server:ro
-      - ../../scim-udm-transformer-lib/pyproject.toml:/app/scim-udm-transformer-lib/pyproject.toml:ro
-      - ../../scim-udm-transformer-lib/src/univention:/app/scim-udm-transformer-lib/src/univention:ro
-      - scim-server-venv:/app/.venv
-      - scim-transformer-lib-build:/app/scim-udm-transformer-lib/src/scim_udm_transformer_lib.egg-info
     environment:
       UDM_URL: http://udm-rest-api:9979/udm/
       UDM_USERNAME: cn=admin

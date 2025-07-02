@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.9
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
@@ -8,58 +7,96 @@ ARG UCS_BASE_IMAGE=gitregistry.knut.univention.de/univention/dev/projects/ucs-ba
 ARG UCS_BASE_IMAGE_TAG=0.18.2-build-2025-06-12
 
 ###############################################
+# Stage 0: get build tools
+FROM ${UCS_BASE_IMAGE}:${UCS_BASE_IMAGE_TAG} AS tools
+SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
+
+# A glibc-based uv binary is currently necessary for dns resolution of private pypi repos: https://github.com/astral-sh/uv/issues/8450
+RUN apt-get update \
+    && apt-get --assume-yes --verbose-versions --no-install-recommends install \
+      wget \
+      ca-certificates \
+    && wget -qO- https://github.com/astral-sh/uv/releases/download/0.7.11/uv-x86_64-unknown-linux-gnu.tar.gz | tar -xz --strip-components=1 -C /usr/local/bin/
+
+###############################################
+# Stage 1: build dependencies and software
 FROM ${UCS_BASE_IMAGE}:${UCS_BASE_IMAGE_TAG} AS build
 SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
 
-COPY --from=ghcr.io/astral-sh/uv:0.7.11@sha256:d7e699d374d4e5cb52a37d5c8f0ee15e3c7572850325953bf9fa8d781cfa92fc /uv /usr/local/bin/uv
+COPY --from=tools /usr/local/bin/uv /usr/local/bin/
 
 ENV UV_LINK_MODE=copy \
-  UV_COMPILE_BYTECODE=1 \
-  UV_PYTHON_DOWNLOADS=never \
-  UV_PYTHON=python3.11
+    UV_COMPILE_BYTECODE=1 \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_PYTHON=python3.11
 
-COPY scim-udm-transformer-lib /app/scim-udm-transformer-lib
-COPY scim-server /app/scim-server
-COPY pyproject.toml README.md /app/
+COPY ./pyproject.toml ./uv.lock /app/
+COPY ./scim-udm-transformer-lib/pyproject.toml /app/scim-udm-transformer-lib/
+COPY ./scim-server/pyproject.toml /app/scim-server/
 
 WORKDIR /app
-RUN --mount=type=cache,target=/root/.cache uv build scim-udm-transformer-lib
-RUN --mount=type=cache,target=/root/.cache uv build scim-server
 
-##########################################################################
-# Test stage: Contains all tools to run unit tests
-FROM ${UCS_BASE_IMAGE}:${UCS_BASE_IMAGE_TAG} AS test
+# copy source code
+COPY ./scim-server/src /app/scim-server/src
+COPY ./scim-udm-transformer-lib/src /app/scim-udm-transformer-lib/src
+
+RUN uv sync \
+        --package=scim-server \
+        --no-dev \
+        --no-editable \
+        --frozen
+
+###############################################
+# Stage 2: test
+FROM build AS test
 SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
-WORKDIR /app
 
-# unbuffered output
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=1 \
+    PATH=/app/.venv/bin:$PATH
 
-COPY --from=ghcr.io/astral-sh/uv:0.7.11@sha256:d7e699d374d4e5cb52a37d5c8f0ee15e3c7572850325953bf9fa8d781cfa92fc /uv /usr/local/bin/uv
+COPY ./scim-server/tests /app/scim-server/tests
 
-# Only necessary once we add helm unittests
-# COPY --from=alpine/helm:3.17.1@sha256:e8d29e13b8218a8cb7b117a10a5210922474a74467bf70b6f3f1f7d9c1818ab0 /usr/bin/helm /usr/local/bin/helm
+ARG USER=scim-server
+RUN rm -fv /usr/lib/python*/EXTERNALLY-MANAGED && \
+    rm -fr /var/lib/apt/lists/* /var/cache/apt/archives/* && \
+    groupadd -r ${USER} -g 1000 && \
+    useradd -r -d /app -g ${USER} -N ${USER} -u 1000
 
-COPY ./test-entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+COPY --from=build --chown=${USER}:${USER} /app/.venv /app/.venv
 
-##########################################################################
+RUN uv sync \
+        --package=scim-server \
+        --dev \
+        --frozen
+
+USER ${USER}
+
+ENTRYPOINT [ \
+    "pytest", \
+    "--config-file=/app/scim-server/pyproject.toml", \
+    "--cov-config=/app/scim-server/pyproject.toml", \
+    "--cov-report=xml:/tmp/scim-coverage.xml", \
+    "-p", "no:cacheprovider", \
+    "scim-server/tests" \
+]
+
+###############################################
+# Stage 3: final image
 FROM ${UCS_BASE_IMAGE}:${UCS_BASE_IMAGE_TAG} AS final
 SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
 
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=1 \
+    PATH=/app/.venv/bin:$PATH
 
-RUN \
-    groupadd -r scim-server -g 1000 && \
-    useradd -r -d /app -g scim-server -N scim-server -u 1000
+ARG USER=scim-server
+RUN rm -fv /usr/lib/python*/EXTERNALLY-MANAGED && \
+    rm -fr /var/lib/apt/lists/* /var/cache/apt/archives/* && \
+    groupadd -r ${USER} -g 1000 && \
+    useradd -r -d /app -g ${USER} -N ${USER} -u 1000
 
-COPY --from=build --chown=scim-server:scim-server /app/dist/ /app/
+COPY --from=build --chown=${USER}:${USER} /app/.venv /app/.venv
 
-RUN apt install -y python3-pip
-RUN pip3 install --break-system-packages --no-cache-dir --extra-index-url https://git.knut.univention.de/api/v4/projects/1449/packages/pypi/simple --extra-index-url https://git.knut.univention.de/api/v4/projects/1155/packages/pypi/simple /app/*.whl
-
-WORKDIR /app/
-USER scim-server
+USER ${USER}
 
 COPY docker/scim-server/scim-server-entrypoint.sh /entrypoint.sh
 COPY docker/scim-server/create_ldap_attributes.py /create_ldap_attributes.py

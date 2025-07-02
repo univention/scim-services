@@ -29,8 +29,8 @@ lint-pre-commit:
     KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
     DOCKERFILE_PATH: "docker/scim-server/Dockerfile"
   - IMAGE_NAME: "testrunner"
-    KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR/docker/scim-server
-    DOCKERFILE_PATH: "Dockerfile"
+    KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
+    DOCKERFILE_PATH: "docker/scim-server/Dockerfile"
     KANIKO_ARGS: "--target=test"
   - IMAGE_NAME: "scim-consumer-testrunner"
     KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
@@ -178,7 +178,7 @@ test-scim-consumer:
     - docker cp test-scim-consumer:/tmp/scim-coverage.xml ./coverage-test-scim-consumer.xml
     - docker stop -t0 test-scim-consumer
     - docker rm test-scim-consumer
-    - docker compose -f scim-consumer/tests/docker-compose.yaml down --volumes
+    - docker compose -f scim-consumer/tests/docker-compose.yaml --profile test down --volumes
   artifacts:
     paths:
       - ldap-server.log
@@ -225,7 +225,7 @@ test-scim-server-and-consumer-integration:
     - docker logs test-scim-services >& test-scim-services.log
     - docker stop -t0 test-scim-services
     - docker rm test-scim-services
-    - docker compose -f scim-consumer/tests/docker-compose.yaml down --volumes
+    - docker compose -f scim-consumer/tests/docker-compose.yaml --profile test down --volumes
   artifacts:
     paths:
       - ldap-server.log

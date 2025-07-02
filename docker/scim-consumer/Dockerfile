@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-# SPDX-FileCopyrightText: 2024 Univention GmbH
+# SPDX-FileCopyrightText: 2025 Univention GmbH
 
 # Inspired by: https://hynek.me/articles/docker-uv/
 
@@ -31,24 +31,25 @@ ENV UV_LINK_MODE=copy \
     UV_PYTHON=python3.11
 
 COPY ./pyproject.toml ./uv.lock /app/
-COPY ./scim-udm-transformer-lib /app/scim-udm-transformer-lib
+COPY ./scim-udm-transformer-lib/pyproject.toml /app/scim-udm-transformer-lib/
 COPY ./scim-consumer/pyproject.toml /app/scim-consumer/
-COPY ./scim-server /app/scim-server
+#TODO: Currently in the PoC the scim-consumer uses pydantic models from the scim server so it is a requirement
+COPY ./scim-server/pyproject.toml /app/scim-server/
 
 WORKDIR /app
-RUN uv sync \
-        --package=scim-consumer \
-        --no-dev \
-        --no-install-project \
-    && uv export --package=scim-consumer -o ./requirements.txt
 
 # copy source code
 COPY ./scim-consumer/src /app/scim-consumer/src
+COPY ./scim-udm-transformer-lib/src /app/scim-udm-transformer-lib/src
+
+#TODO: Currently in the PoC the scim-consumer uses pydantic models from the scim server so it is a requirement
+COPY ./scim-server/src /app/scim-server/src
 
 RUN uv sync \
         --package=scim-consumer \
         --no-dev \
-        --no-editable
+        --no-editable \
+        --frozen
 
 ###############################################
 # Stage 2: test
@@ -58,11 +59,29 @@ SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
 ENV PYTHONUNBUFFERED=1 \
     PATH=/app/.venv/bin:$PATH
 
+ARG USER=scim-consumer
+RUN rm -fv /usr/lib/python*/EXTERNALLY-MANAGED && \
+    rm -fr /var/lib/apt/lists/* /var/cache/apt/archives/* && \
+    groupadd -r ${USER} -g 1000 && \
+    useradd -r -d /app -g ${USER} -N ${USER} -u 1000
+
 COPY ./scim-consumer/tests /app/scim-consumer/tests
 
 RUN uv sync \
         --package=scim-consumer \
-        --dev
+        --dev \
+        --frozen
+
+USER ${USER}
+
+ENTRYPOINT [ \
+  "pytest", \
+  "--config-file=/app/scim-consumer/pyproject.toml", \
+  "--cov-config=/app/scim-consumer/pyproject.toml", \
+  "--cov-report=xml:/tmp/scim-coverage.xml", \
+  "-p no:cacheprovider", \
+  "scim-consumer/tests" \
+]
 
 ###############################################
 # Stage 3: final image
@@ -79,7 +98,6 @@ RUN rm -fv /usr/lib/python*/EXTERNALLY-MANAGED && \
     useradd -r -d /app -g ${USER} -N ${USER} -u 1000
 
 COPY --from=build --chown=${USER}:${USER} /app/.venv /app/.venv
-COPY --from=build --chown=${USER}:${USER} /app/requirements.txt /app/requirements.txt
 
 USER ${USER}
 
