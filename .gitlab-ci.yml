@@ -165,10 +165,10 @@ test-scim-consumer:
     - docker version
     - echo -e "\e[0Ksection_end:`date +%s`:docker_debug\r\e[0K"
     - echo -e "\e[0Ksection_start:`date +%s`:docker_compose_config[collapsed=true]\r\e[0KDocker Compose configuration"
-    - docker compose --profile develop config test
+    - docker compose config test
     - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
   script:
-    - docker compose --profile develop run --quiet-pull --name test-scim-consumer test
+    - docker compose run --quiet-pull --name test-scim-consumer test
   after_script:
     - docker logs ldap-server >& ldap-server.log
     - docker logs udm-rest-api >& udm-rest-api.log
@@ -179,7 +179,7 @@ test-scim-consumer:
     - docker cp test-scim-consumer:/tmp/scim-coverage.xml ./coverage-test-scim-consumer.xml
     - docker stop -t0 test-scim-consumer
     - docker rm test-scim-consumer
-    - docker compose -f scim-consumer/tests/docker-compose.yaml --profile develop down --volumes
+    - docker compose -f scim-consumer/tests/docker-compose.yaml down --volumes
   artifacts:
     paths:
       - ldap-server.log
@@ -215,10 +215,10 @@ test-scim-server-and-consumer-integration:
     - docker version
     - echo -e "\e[0Ksection_end:`date +%s`:docker_debug\r\e[0K"
     - echo -e "\e[0Ksection_start:`date +%s`:docker_compose_config[collapsed=true]\r\e[0KDocker Compose configuration"
-    - docker compose --profile integration config test-integration
+    - docker compose config test-integration
     - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
   script:
-    - docker compose --profile integration run --quiet-pull --name test-scim-services test-integration
+    - docker compose run --quiet-pull --name test-scim-services test-integration
   after_script:
     - docker logs ldap-server >& ldap-server.log
     - docker logs udm-rest-api >& udm-rest-api.log
@@ -226,7 +226,7 @@ test-scim-server-and-consumer-integration:
     - docker logs test-scim-services >& test-scim-services.log
     - docker stop -t0 test-scim-services
     - docker rm test-scim-services
-    - docker compose -f scim-consumer/tests/docker-compose.yaml --profile integration down --volumes
+    - docker compose -f scim-consumer/tests/docker-compose.yaml down --volumes
   artifacts:
     paths:
       - ldap-server.log

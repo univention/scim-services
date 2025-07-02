@@ -12,6 +12,7 @@ services:
     container_name: "scim-dev-server"
     profiles:
       - develop
+      - test
     ports:
       - 8888:8080
     networks:
@@ -24,7 +25,7 @@ services:
     container_name: "downstream-udm-rest-api"
     platform: "linux/amd64"
     profiles:
-      - integration
+      - test
     depends_on:
       downstream-ldap-server:
         condition: service_healthy
@@ -52,7 +53,7 @@ services:
     # image: artifacts.software-univention.de/nubus/images/ldap-server:0.43.0
     container_name: "downstream-ldap-server"
     profiles:
-      - integration
+      - test
     healthcheck:
       test: ["CMD-SHELL", "ldapsearch -H ldapi:/// -Y EXTERNAL -b \"cn=config\" -LLL \"(&(objectClass=mdb))\" dn"]
       start_period: 20s
@@ -78,7 +79,7 @@ services:
       target: final
     container_name: "scim-server"
     profiles:
-      - integration
+      - test
     environment:
       UDM_URL: http://downstream-udm-rest-api:9979/udm/
       UDM_USERNAME: cn=admin
@@ -110,7 +111,7 @@ services:
     restart: "on-failure"
     profiles:
       - develop
-      - integration
+      - test
     environment:
       LOG_LEVEL: "DEBUG"
       NATS_HOST: "nats"
@@ -144,7 +145,7 @@ services:
     container_name: nats
     profiles:
       - develop
-      - integration
+      - test
     environment:
       jetstream: "enabled"
     ports:
@@ -165,7 +166,7 @@ services:
     restart: "on-failure"
     profiles:
       - develop
-      - integration
+      - test
     environment:
       LOG_LEVEL: "DEBUG"
       NATS_HOST: "nats"
@@ -190,7 +191,7 @@ services:
     restart: "on-failure"
     profiles:
       - develop
-      - integration
+      - test
     environment:
       LOG_LEVEL: "DEBUG"
       NATS_HOST: "nats"
@@ -223,7 +224,7 @@ services:
     restart: "on-failure"
     profiles:
       - develop
-      - integration
+      - test
     environment:
       LOG_LEVEL: "DEBUG"
       NATS_HOST: "nats"
@@ -254,7 +255,7 @@ services:
     container_name: "udm-listener"
     profiles:
       - develop
-      - integration
+      - test
     environment:
       NATS_HOST: "nats"
       NATS_PORT: "4222"
@@ -289,7 +290,7 @@ services:
     container_name: "ldap-notifier"
     profiles:
       - develop
-      - integration
+      - test
     depends_on:
       ldap-server:
         condition: service_healthy
@@ -308,7 +309,7 @@ services:
     container_name: "ldap-server"
     profiles:
       - develop
-      - integration
+      - test
     healthcheck:
       test: ["CMD-SHELL", "ldapsearch -H ldapi:/// -Y EXTERNAL -b \"cn=config\" -LLL \"(&(objectClass=mdb))\" dn"]
       start_period: 20s
@@ -337,7 +338,7 @@ services:
     platform: "linux/amd64"
     profiles:
       - develop
-      - integration
+      - test
     depends_on:
       ldap-server:
         condition: service_started
@@ -363,7 +364,7 @@ services:
     container_name: keycloak
     profiles:
       - develop
-      - integration
+      - test
     command: start-dev --http-enabled=true --import-realm
     ports:
       - 5050:8080
@@ -385,7 +386,7 @@ services:
       context: ../../
       dockerfile: docker/scim-consumer/Dockerfile
       target: test
-    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-cunsumer-testrunner:${IMAGE_TAG:-latest}
+    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-consumer-testrunner:${IMAGE_TAG:-latest}
     depends_on:
       udm-rest-api:
         condition: service_started
@@ -435,7 +436,7 @@ services:
       context: ../../
       dockerfile: docker/scim-consumer/Dockerfile
       target: test
-    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-cunsumer-testrunner:${IMAGE_TAG:-latest}
+    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-consumer-testrunner:${IMAGE_TAG:-latest}
     depends_on:
       udm-rest-api:
         condition: service_started
@@ -483,11 +484,15 @@ services:
     networks:
       - scim
     command: >
-      /bin/bash -c "uv run pytest
-      --config-file=/app/scim-consumer/pyproject.toml
-      --cov-config=/app/scim-consumer/pyproject.toml
-      --cov-report=xml:/tmp/scim-coverage.xml
-      -p no:cacheprovider scim-consumer/tests"
+      /bin/bash -c "uv run
+      --no-cache
+      --no-sync
+      --package=scim-consumer
+      pytest
+        --config-file=/app/scim-consumer/pyproject.toml
+        --cov-config=/app/scim-consumer/pyproject.toml
+        --cov-report=xml:/tmp/scim-coverage.xml
+        -p no:cacheprovider scim-consumer/tests"
 
 volumes:
   ldap-shared-data:
