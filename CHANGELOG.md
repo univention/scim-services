@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.37.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.36.0...v0.37.0) (2025-07-02)
+
+
+### Features
+
+* **scim-consumer:** Added tests for extensions. ([f5aaf6b](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/f5aaf6b25ed91f8b4bace5afbb2345b66a1010bd)), closes [univention/dev/projects/scim/scim-services#4](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/issues/4)
+* **scim-consumer:** Fix pipelines. ([cb74ded](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/cb74ded1ccd543cb08e4bc3040efd87c6e3e5c01)), closes [univention/dev/projects/scim/scim-services#4](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/issues/4)
+* **scim-dev-server:** Added extensions to scim-dev-server ([6e647ad](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/6e647ad75afab2f7ba47b82970092ac1cbffc255)), closes [univention/dev/projects/scim/scim-services#4](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/issues/4)
+
+
+### Bug Fixes
+
+* **scim-consumer:** Fixed profile error in docker compose. ([fba41b6](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/fba41b6dabafbf02da635463c72e13d500fed878)), closes [univention/dev/projects/scim/scim-services#4](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/issues/4)
+* **sicm-consumer:** Fix docker-compose.yaml ([1639238](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/1639238a400b314dec46833480631b72e94d48de)), closes [univention/dev/projects/scim/scim-services#4](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/issues/4)
+
 ## [0.36.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.35.0...v0.36.0) (2025-07-01)
 
 
