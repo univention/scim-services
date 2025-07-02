@@ -20,12 +20,10 @@ ENV UV_LINK_MODE=copy \
 
 COPY scim-udm-transformer-lib /app/scim-udm-transformer-lib
 COPY scim-server /app/scim-server
-COPY udm-to-scim-sync /app/udm-to-scim-sync
 COPY pyproject.toml README.md /app/
 
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.cache uv build scim-udm-transformer-lib
-RUN --mount=type=cache,target=/root/.cache uv build udm-to-scim-sync
 RUN --mount=type=cache,target=/root/.cache uv build scim-server
 
 ##########################################################################

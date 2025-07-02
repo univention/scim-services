@@ -55,7 +55,7 @@ TODO
 - This project uses [pre-commit](https://pre-commit.com/) for managing and maintaining pre-commit hooks.
 - This project uses [uv](https://docs.astral.sh/uv/) as Python package and project manager.
   - This repository is a _uv workspace_, with [scim-server](scim-server),
-    [scim-udm-transformer-lib](scim-udm-transformer-lib), and  [udm-to-scim-sync](udm-to-scim-sync)
+    [scim-udm-transformer-lib](scim-udm-transformer-lib)
     as _workspace members_.
 - ...
 

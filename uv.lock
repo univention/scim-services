@@ -8,7 +8,6 @@ members = [
     "scim-server",
     "scim-services",
     "scim-udm-transformer-lib",
-    "udm-to-scim-sync",
 ]
 
 [[package]]
@@ -1748,17 +1747,6 @@ wheels = [
 async = [
     { name = "aiohttp" },
 ]
-
-[[package]]
-name = "udm-to-scim-sync"
-version = "0.1.0"
-source = { virtual = "udm-to-scim-sync" }
-dependencies = [
-    { name = "httpx" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "httpx", specifier = ">=0.28.1" }]
 
 [[package]]
 name = "uritemplate"
