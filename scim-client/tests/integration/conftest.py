@@ -192,10 +192,11 @@ def background_scim_client_prefilled(
             user_data={"univentionObjectIdentifier": udm_user.properties.get("univentionObjectIdentifier")},
         )
     for udm_user in udm_users:
-        wait_for_resource_deleted(scim_http_client, udm_user.properties.get("univentionObjectIdentifier"))
+        assert wait_for_resource_deleted(scim_http_client, udm_user.properties.get("univentionObjectIdentifier"))
     delete_udm_group(udm_client=udm_client, group_data=group_data)
-    wait_for_resource_deleted(
-        scim_http_client=scim_http_client, univention_object_identifier=group_data["univentionObjectIdentifier"]
+    assert wait_for_resource_deleted(
+        scim_http_client=scim_http_client,
+        univention_object_identifier=group_data["univentionObjectIdentifier"]
     )
 
     proc.terminate()

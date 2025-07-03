@@ -36,6 +36,7 @@ def test_user_crud(
     # Test create
     create_udm_user(udm_client=udm_client, user_data=user_data)
     user: User = wait_for_resource_exists(scim_http_client, user_data["univentionObjectIdentifier"])
+    assert user
     assert user.user_name == user_data.get("username")
 
     # Test update
@@ -46,12 +47,12 @@ def test_user_crud(
         condition_attr="display_name",
         condition_val=user_data_updated.get("displayName"),
     )
+    assert user
     assert user.display_name == user_data_updated.get("displayName")
 
     # Test delete
     delete_udm_user(udm_client=udm_client, user_data=user_data)
-    is_deleted = wait_for_resource_deleted(scim_http_client, user_data["univentionObjectIdentifier"])
-    assert is_deleted
+    assert wait_for_resource_deleted(scim_http_client, user_data["univentionObjectIdentifier"])
 
 
 @pytest.mark.skipif(
@@ -70,6 +71,7 @@ def test_user_with_extensions(
     user: User[EnterpriseUser | UniventionUser | Customer1User] = wait_for_resource_exists(
         scim_http_client, user_data_with_extensions["univentionObjectIdentifier"]
     )
+    assert user
     assert user.user_name == user_data_with_extensions.get("username")
     assert user.EnterpriseUser.employee_number == user_data_with_extensions.get("employeeNumber")
     assert user.UniventionUser.password_recovery_email == user_data_with_extensions.get("PasswordRecoveryEmail")
@@ -78,7 +80,7 @@ def test_user_with_extensions(
 
     # Cleanup
     delete_udm_user(udm_client=udm_client, user_data=user_data_with_extensions)
-    wait_for_resource_deleted(scim_http_client, user_data_with_extensions["univentionObjectIdentifier"])
+    assert wait_for_resource_deleted(scim_http_client, user_data_with_extensions["univentionObjectIdentifier"])
 
 
 def test_add_group_member(
@@ -95,7 +97,7 @@ def test_add_group_member(
     #
     create_udm_group(udm_client=udm_client, group_data=group_data)
     group: Group = wait_for_resource_exists(scim_http_client, group_data["univentionObjectIdentifier"])
-
+    assert group
     assert group.display_name == group_data.get("name")
 
     #
@@ -103,7 +105,7 @@ def test_add_group_member(
     #
     udm_user_ret = create_udm_user(udm_client=udm_client, user_data=user_data)
     user: User = wait_for_resource_exists(scim_http_client, user_data["univentionObjectIdentifier"])
-
+    assert user
     assert user.user_name == user_data.get("username")
 
     #
@@ -119,7 +121,7 @@ def test_add_group_member(
         condition_attr="display_name",
         condition_val=group_data.get("name"),
     )
-
+    assert group
     assert group.display_name == group_data.get("name")
     assert group.members[0].value == user.id
 
@@ -127,10 +129,10 @@ def test_add_group_member(
     # Cleanup
     #
     delete_udm_user(udm_client=udm_client, user_data=user_data)
-    wait_for_resource_deleted(scim_http_client, user_data["univentionObjectIdentifier"])
+    assert wait_for_resource_deleted(scim_http_client, user_data["univentionObjectIdentifier"])
 
     delete_udm_group(udm_client=udm_client, group_data=group_data)
-    wait_for_resource_deleted(scim_http_client, group_data["univentionObjectIdentifier"])
+    assert wait_for_resource_deleted(scim_http_client, group_data["univentionObjectIdentifier"])
 
 
 @pytest.mark.skip("No impact at the moment. Activate again when needed.")
@@ -147,14 +149,14 @@ def test_update_group_member_dn(
     # Create user
     #
     udm_user = create_udm_user(udm_client=udm_client, user_data=user_data)
-    wait_for_resource_exists(scim_http_client, user_data["univentionObjectIdentifier"])
+    assert wait_for_resource_exists(scim_http_client, user_data["univentionObjectIdentifier"])
 
     #
     # Create group with user as member
     #
     group_data["users"].append(udm_user.dn)
     create_udm_group(udm_client=udm_client, group_data=group_data)
-    wait_for_resource_exists(scim_http_client, group_data["univentionObjectIdentifier"])
+    assert wait_for_resource_exists(scim_http_client, group_data["univentionObjectIdentifier"])
 
     #
     # Update users dn
@@ -164,7 +166,7 @@ def test_update_group_member_dn(
 
     udm_user = update_udm_user(udm_client=udm_client, user_data=user_data)
 
-    wait_for_resource_updated(
+    assert wait_for_resource_updated(
         scim_http_client=scim_http_client,
         univention_object_identifier=user_data["univentionObjectIdentifier"],
         condition_attr="user_name",
@@ -181,10 +183,10 @@ def test_update_group_member_dn(
     # Cleanup
     #
     delete_udm_user(udm_client=udm_client, user_data=user_data)
-    wait_for_resource_deleted(scim_http_client, user_data["univentionObjectIdentifier"])
+    assert wait_for_resource_deleted(scim_http_client, user_data["univentionObjectIdentifier"])
 
     delete_udm_group(udm_client=udm_client, group_data=group_data)
-    wait_for_resource_deleted(scim_http_client, group_data["univentionObjectIdentifier"])
+    assert wait_for_resource_deleted(scim_http_client, group_data["univentionObjectIdentifier"])
 
 
 @pytest.mark.skip("Will be developed further in a future MR")
@@ -194,11 +196,13 @@ def test_prefilled_sync(background_scim_client_prefilled: ScimConsumer, scim_htt
     user_ids = []
     for udm_user in udm_users:
         user: User = wait_for_resource_exists(scim_http_client, udm_user.properties.get("univentionObjectIdentifier"))
+        assert user
         user_ids.append(user.id)
 
     assert len(udm_users) == len(user_ids)
 
     group: Group = wait_for_resource_exists(scim_http_client, udm_group.properties.get("univentionObjectIdentifier"))
+    assert group
     group_members = []
     for group_member in group.members:
         group_members.append(group_member.value)
