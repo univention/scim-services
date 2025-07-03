@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.37.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.37.0...v0.37.1) (2025-07-03)
+
+
+### Bug Fixes
+
+* **scim-server:** Used forked scim2-tester to correctly handle multiple extensions and creating reference objects ([947c240](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/947c2408d1ae11821dbf8cf845bdeda3b0287b0b)), closes [univention/dev/internal/team-nubus#1193](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1193)
+
 ## [0.37.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.36.0...v0.37.0) (2025-07-02)
 
 
