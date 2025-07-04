@@ -171,10 +171,10 @@
 | pwdChangeNextLogin                                 | optional | boolean                  | -                                          | -        | -                                              |          | (*1)         |    |      |
 | RegisteredThroughSelfService                       | optional | boolean                  | -                                          | -        | -                                              |          | (*1)         |    |      |
 | /                                                  | /        | /                        | roles                                      | optional | list of complex                                | 4.1.2    | (*19)        | 1  | -    |
-| -                                                  | -        | -                        | roles. value                               | optional | string                                         |          |              | 1  | -    |
-| -                                                  | -        | -                        | roles. display                             | optional | string                                         |          |              | 1  | -    |
-| -                                                  | -        | -                        | roles. type                                | optional | string ("guardian-direct", guardian-indirect") |          |              | 1  | -    |
-| -                                                  | -        | -                        | roles. primary                             | optional | boolean                                        |          |              | 1  | -    |
+| -                                                  | -        | -                        | roles. value                               | optional | string                                         |          | (*19)        | 1  | -    |
+| -                                                  | -        | -                        | roles. display                             | optional | string                                         |          | (*19)        | 1  | -    |
+| -                                                  | -        | -                        | roles. type                                | optional | string ("guardian-direct", guardian-indirect") |          | (*19)        | 1  | -    |
+| -                                                  | -        | -                        | roles. primary                             | optional | boolean                                        |          | (*19)        | 1  | -    |
 | roomNumber                                         | optional | list of string           | -                                          | -        | -                                              |          | (*1)         |    |      |
 | sambaLogonHours                                    | optional | list of int              | -                                          | -        | -                                              |          | (*1)         |    |      |
 | sambaPrivileges                                    | optional | list of string           | -                                          | -        | -                                              |          | (*1)         |    |      |
@@ -293,14 +293,15 @@
 - (*19) A list of roles for the user that collectively represent who the user is.
   No vocabulary, syntax, or canonical types are specified.
   - The SCIM `roles` field is a multi-value complex type with 4 sub-attributes: `value`, `display`, `type`, and `primary`.
-  - I suggest to use this to map the Guardian properties `guardianRoles` and `guardianInheritedRoles`.
-    - Values from both `guardianRoles` and `guardianInheritedRoles` are merged and stored in `roles.value`.
-    - The `roles.type` sub-field is set to `guardian-direct` for roles from `guardianRole` and
-      `guardian-indirect` for roles from `guardianInheritedRole`,
-      with `guardian-direct` having preference if the same role exists on the user and group.
+  - We'll map the Guardian properties `guardianRoles` and `guardianInheritedRoles`, but also allow arbitrary custom role strings.
+    - Values from `guardianRoles` and `guardianInheritedRoles` are listed separately.
+    - The `roles.type` sub-field is set to
+      `guardian-direct` for roles from `guardianRole` and
+      `guardian-indirect` for roles from `guardianInheritedRole`.
+    - If the same role exists in `guardianRoles` and `guardianInheritedRoles` then _both_ are listed.
     - The `guardian-` prefix exists, so `roles` can also be used for other purposes (e.g., legacy UCS@school roles, customer organizational roles).
-    - The set of entries with `type=guardian-direct` can be changed in update operations.
-    - The set of entries with `type=guardian-indirect` is read-only. Attempts to change them will be ignored.
+    - Entries with `type=guardian-direct` and without the `guardian-` type-prefix can be changed in update operations.
+    - Entries with `type=guardian-indirect` are read-only. Attempts to change them will be ignored.
 - (*20) See [Bug 53741](https://forge.univention.org/bugzilla/show_bug.cgi?id=53741) regarding the use of `secretary` in UDM.
 - (*21) Map the `gidNumber` (primary Group) to the entry in `User.groups` with `User.groups.primary=True`.
 - (*22) Create a new standard UDM property for `users/user` ([here](https://git.knut.univention.de/univention/dev/ucs/-/blob/5.2-1/management/univention-directory-manager-modules/modules/univention/admin/handlers/users/user.py?ref_type=heads#L99)).
