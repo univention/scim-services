@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.38.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.37.1...v0.38.0) (2025-07-04)
+
+
+### Features
+
+* Add performance tests for SCIM API (MS1) ([0db4e98](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/0db4e9888dc89c5a19583168c700d88ac827401f))
+
 ## [0.37.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.37.0...v0.37.1) (2025-07-03)
 
 
