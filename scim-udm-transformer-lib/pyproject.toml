@@ -6,13 +6,19 @@ dependencies = [
     "Jinja2>=3.1.6",
     "scim2-models>=0.3.2",
     "loguru>=0.7.2",
+    "scim-server"
 ]
+
+
 [project.urls]
 Homepage = "https://git.knut.univention.de/dtroeder/bugzilla2gitlab/gl-move"
 Documentation = "https://git.knut.univention.de/dtroeder/bugzilla2gitlab/gl-move/README.md"
 Repository = "https://git.knut.univention.de/dtroeder/bugzilla2gitlab.git"
 Issues = "https://git.knut.univention.de/dtroeder/bugzilla2gitlab/-/issues"
 Changelog = "https://git.knut.univention.de/dtroeder/bugzilla2gitlab/gl-move/CHANGELOG.md"
+
+[tool.uv.sources]
+scim-server = { workspace = true }
 
 [tool.uv]
 package = true

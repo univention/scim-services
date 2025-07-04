@@ -18,6 +18,9 @@ from scim2_models import (
     X509Certificate,
 )
 
+# FIXME: Use the models from the server for now because the original models are to strict
+#        For example with the email type.
+#        In the future the mapper should not operate on pydantic models but just dictionaries
 from univention.scim.server.models.user import Email, Name
 from univention.scim.transformation.id_cache import IdCache
 
@@ -380,7 +383,13 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
 
         user.roles = self._map_roles(props)
 
-        user.x509_certificates = self._map_certificates(props)
+        # FIXME: because of a bug when creating the pydantic model from a schema, the variable name may differ.
+        #        in the future the mapper should not operate on pydantic models but just dictionaries, so
+        #        for now work around it.
+        if hasattr(user, "x509_certificates"):
+            user.x509_certificates = self._map_certificates(props)
+        elif hasattr(user, "x_509_certificates"):
+            user.x_509_certificates = self._map_certificates(props)
 
         # TODO: Do not map groups for now, it will reduce performance because many LDAP queries are required
         # # Map groups if available
