@@ -5,15 +5,16 @@ requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.10.6",
     "udm-rest-api-client[async]>=0.0.2",
-    "scim-udm-transformer-lib>=0.1.0",
-    "scim-server>=0.1.0",
+    "scim-udm-transformer-lib",
     "nubus-provisioning-consumer>=0.53.0",
-    "scim2-client[httpx]>=0.5.1",
-    "scim2-tester>=0.1.14",
+    # Use forked scim client to fix bug with multiple extensions
+    "scim2-client[httpx]@git+https://github.com/J-Bu/scim2-client.git@c6009dac93df38617d7d7c6ed2e1ec63b8120c30",
+    "scim2-tester",
     "icecream>=2.1.4",
     "udm-rest-api-client>=0.0.2",
     "ldap3>=2.9.1",
     "httpx>=0.28.1",
+    "scim-server"
 ]
 
 [dependency-groups]

@@ -1471,8 +1471,8 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.10.6" },
     { name = "scim-server", editable = "scim-server" },
     { name = "scim-udm-transformer-lib", editable = "scim-udm-transformer-lib" },
-    { name = "scim2-client", extras = ["httpx"], specifier = ">=0.5.1" },
-    { name = "scim2-tester", specifier = ">=0.1.14" },
+    { name = "scim2-client", extras = ["httpx"], git = "https://github.com/J-Bu/scim2-client.git?rev=c6009dac93df38617d7d7c6ed2e1ec63b8120c30" },
+    { name = "scim2-tester" },
     { name = "udm-rest-api-client", specifier = ">=0.0.2" },
     { name = "udm-rest-api-client", extras = ["async"], specifier = ">=0.0.2" },
 ]
@@ -1512,6 +1512,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "faker" },
+    { name = "httpx" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
@@ -1521,6 +1522,7 @@ dev = [
     { name = "requests" },
     { name = "requests-mock" },
     { name = "respx" },
+    { name = "scim2-client", extra = ["httpx"] },
 ]
 
 [package.metadata]
@@ -1543,6 +1545,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "faker", specifier = ">=37.1.0" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "pytest-asyncio", specifier = ">=1.0.0" },
     { name = "pytest-cov", specifier = ">=6.1.1" },
@@ -1552,6 +1555,7 @@ dev = [
     { name = "requests", specifier = ">=2.32.3" },
     { name = "requests-mock", specifier = ">=1.12.1" },
     { name = "respx", specifier = ">=0.22.0" },
+    { name = "scim2-client", extras = ["httpx"], git = "https://github.com/J-Bu/scim2-client.git?rev=c6009dac93df38617d7d7c6ed2e1ec63b8120c30" },
 ]
 
 [[package]]
@@ -1588,6 +1592,7 @@ source = { editable = "scim-udm-transformer-lib" }
 dependencies = [
     { name = "jinja2" },
     { name = "loguru" },
+    { name = "scim-server" },
     { name = "scim2-models" },
 ]
 
@@ -1595,19 +1600,16 @@ dependencies = [
 requires-dist = [
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "loguru", specifier = ">=0.7.2" },
+    { name = "scim-server", editable = "scim-server" },
     { name = "scim2-models", specifier = ">=0.3.2" },
 ]
 
 [[package]]
 name = "scim2-client"
 version = "0.5.1"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/J-Bu/scim2-client.git?rev=c6009dac93df38617d7d7c6ed2e1ec63b8120c30#c6009dac93df38617d7d7c6ed2e1ec63b8120c30" }
 dependencies = [
     { name = "scim2-models" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/60/a0/208fb622495b174cfa11f9e856c19db73f2bbf3859519704cd35ff39dfce/scim2_client-0.5.1.tar.gz", hash = "sha256:836451f91baf8f0f3c7061dcc043e892d4e607c55c5803e779adc112b4bc2722", size = 85832, upload-time = "2024-12-08T17:14:23.979Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c8/9f/66b3c5a61b156856f1019538757063a96e9cdd11b9d4f812505148c66d29/scim2_client-0.5.1-py3-none-any.whl", hash = "sha256:bf5566da5704228d24eebc89cd8a2adb038b19099956996d1e450a1d40df2d14", size = 22507, upload-time = "2024-12-08T17:14:22.499Z" },
 ]
 
 [package.optional-dependencies]

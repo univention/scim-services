@@ -196,15 +196,22 @@ test-scim-client:
     reports:
       junit: pytest-junit-test-scim-client.xml
 
-test-scim-server-and-consumer-integration:
+test-scim-server-and-client-integration:
   stage: test
   extends: .dind
   image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
-      when: never
-    - if: '$AUTO_TRIGGER_TESTS == "yes"'
-      when: on_success
+      when: "never"
+    # Run pipeline only manual for what ever reason it takes very long when using the univention scim server.
+    #
+    # Timings when run locally:
+    # With scim2_server: 48 passed, 2 skipped, 2 warnings in 104.25s (0:01:44)
+    #
+    # With univention scim server: 47 passed, 3 skipped, 2 warnings in 1138.74s (0:18:58)
+    #
+    # When run in the pipeline it is even worse and the test will timeout.
+    # We need to figure out what the problem is
     - when: manual
   allow_failure: true
   before_script:
@@ -220,7 +227,7 @@ test-scim-server-and-consumer-integration:
     - docker compose config test-integration
     - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
   script:
-    - docker compose run --quiet-pull --name test-scim-services test-integration
+    - docker compose run --quiet-pull --name test-integration-scim-services test-integration
   after_script:
     - docker logs ldap-server >& ldap-server.log
     - docker logs udm-rest-api >& udm-rest-api.log
@@ -230,7 +237,7 @@ test-scim-server-and-consumer-integration:
     - docker logs test-scim-services >& test-scim-services.log
     - docker stop -t0 test-scim-services
     - docker rm test-scim-services
-    - docker compose -f scim-client/tests/docker-compose.yaml --profile test down --volumes
+    - docker compose -f scim-client/tests/docker-compose.yaml --profile test-integration down --volumes
   artifacts:
     paths:
       - ldap-server.log

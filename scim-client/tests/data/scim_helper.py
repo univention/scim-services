@@ -4,7 +4,7 @@
 import asyncio
 import os
 import time
-from typing import Any
+from typing import Any, Final
 
 from aiohttp import ClientResponseError
 from loguru import logger
@@ -19,11 +19,14 @@ from univention.scim.client.helper import cust_pformat
 from univention.scim.client.scim_http_client import ScimClient, ScimClientNoDataFoundException
 
 
+DEFAULT_MAX_ATTEMPTS: Final[int] = 48  # equals 6m every attempt sleeps for 5s
+
+
 def wait_for_resource_exists(
-    scim_http_client: ScimClient, univention_object_identifier: str, max_attemps: int = 100
+    scim_http_client: ScimClient, univention_object_identifier: str, max_attemps: int = DEFAULT_MAX_ATTEMPTS
 ) -> Resource | None:
     """ """
-    for i in range(1, max_attemps or 100):
+    for i in range(1, max_attemps):
         try:
             logger.debug("Try to get resource with uoi: {}. Attemp {}", univention_object_identifier, i)
             resource = scim_http_client.get_resource_by_external_id(univention_object_identifier)
@@ -42,27 +45,30 @@ def wait_for_resource_updated(
     univention_object_identifier: str,
     condition_attr: str,
     condition_val: Any,
-    max_attemps: int = 100,
+    condition_func: Any = None,
+    max_attemps: int = DEFAULT_MAX_ATTEMPTS,
 ) -> Resource | None:
     """ """
-    for i in range(1, max_attemps or 100):
+    for i in range(1, max_attemps):
         logger.debug("Try to get resource with uoi: {}. Attemp {}", univention_object_identifier, i)
         resource = scim_http_client.get_resource_by_external_id(univention_object_identifier)
-        if getattr(resource, condition_attr) == condition_val:
+        if condition_val and getattr(resource, condition_attr) == condition_val:
             logger.debug("Fetched resource data:\n{}", cust_pformat(resource))
             return resource
-        else:
-            time.sleep(5)
+        if condition_func and condition_func(resource):
+            return resource
+
+        time.sleep(5)
 
     return None
 
 
 def wait_for_resource_deleted(
-    scim_http_client: ScimClient, univention_object_identifier: str, max_attemps: int = 100
+    scim_http_client: ScimClient, univention_object_identifier: str, max_attemps: int = DEFAULT_MAX_ATTEMPTS
 ) -> bool:
     """ """
     try:
-        for i in range(1, max_attemps or 100):
+        for i in range(1, max_attemps):
             logger.info("Try to get user with uoi: {}. Attemp {}", univention_object_identifier, i)
             scim_http_client.get_resource_by_external_id(univention_object_identifier)
             time.sleep(5)

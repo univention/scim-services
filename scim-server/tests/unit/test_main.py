@@ -7,6 +7,7 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
+from scim2_client.engines.httpx import SyncSCIMClient
 
 from univention.scim.server.config import ApplicationSettings
 
@@ -51,3 +52,9 @@ def test_main_docu_disabled(client: TestClient) -> None:
 
     response = client.get("/redoc")
     assert response.status_code == 404
+
+
+def test_discovery_with_scim_client(client: TestClient, api_prefix: str) -> None:
+    client.base_url = client.base_url.copy_with(path=api_prefix)
+    scim = SyncSCIMClient(client=client)
+    scim.discover()

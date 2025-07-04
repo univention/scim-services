@@ -2,14 +2,18 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 from loguru import logger
-from scim2_models import Resource
+from scim2_models import EnterpriseUser, Group, Resource
 from univention.provisioning.models import Message
 
 from univention.scim.client.group_membership_resolver import GroupMembershipLdapResolver
 from univention.scim.client.helper import cust_pformat
 from univention.scim.client.scim_client_settings import ScimConsumerSettings
 from univention.scim.client.scim_http_client import ScimClient, ScimClientNoDataFoundException
-from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
+
+# FIXME: Use the models from the server for now because the original models are to strict
+#        For example with the email type.
+#        In the future the mapper should not operate on pydantic models but just dictionaries
+from univention.scim.server.models.user import User
 from univention.scim.transformation.udm2scim import UdmToScimMapper
 
 
@@ -72,15 +76,32 @@ class ScimConsumer:
         """
         mapper = UdmToScimMapper(
             cache=self.group_membership_resolver,
-            user_type=UserWithExtensions,
-            group_type=GroupWithExtensions,
+            # FIXME: We can`t use the discovered types here because the dynamically crated pydantic model has
+            #        some limitations.
+            #        Should be fixed if the mapper does not use pydantic types.anymore.
+            # user_type=self.scim_http_client.get_client().get_resource_model("User"),
+            # group_type=self.scim_http_client.get_client().get_resource_model("Group"),
+            user_type=User[EnterpriseUser],
+            group_type=Group,
             external_id_user_mapping=self.settings.external_id_user_mapping,
             external_id_group_mapping=self.settings.external_id_group_mapping,
         )
         if topic == "users/user":
             scim_resource = mapper.map_user(udm_user=udm_object)
+            # FIXME: The scim client validates the response of a message with the pydantic model given in the request.
+            #        Make sure to use the correct pydantic model required by the server
+            scim_resource = (
+                self.scim_http_client.get_client().get_resource_model("User").model_validate(scim_resource.model_dump())
+            )
         elif topic == "groups/group":
             scim_resource = mapper.map_group(udm_group=udm_object)
+            # FIXME: The scim client validates the response of a message with the pydantic model given in the request.
+            #        Make sure to use the correct pydantic model required by the server
+            scim_resource = (
+                self.scim_http_client.get_client()
+                .get_resource_model("Group")
+                .model_validate(scim_resource.model_dump())
+            )
         else:
             raise ValueError(f"Unsupported message topic {topic}")
 

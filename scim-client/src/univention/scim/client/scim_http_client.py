@@ -6,12 +6,11 @@ from httpx import Auth, Client
 from loguru import logger
 from scim2_client import SCIMResponseError
 from scim2_client.engines.httpx import SyncSCIMClient
-from scim2_models import Resource, ResourceType, SchemaExtension, SearchRequest
+from scim2_models import Resource, SearchRequest
 from scim2_tester import check_server
 
 from univention.scim.client.helper import cust_pformat
 from univention.scim.client.scim_client_settings import ScimConsumerSettings
-from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
 
 
 class ScimClientNoDataFoundException(Exception): ...
@@ -49,48 +48,14 @@ class ScimClient:
             base_url=self.settings.scim_server_base_url,
         )
 
-        scim = SyncSCIMClient(
-            client=client,
-            resource_models=[UserWithExtensions, GroupWithExtensions],
-            resource_types=[
-                ResourceType(
-                    id="User",
-                    name="User",
-                    schemas=[
-                        "urn:ietf:params:scim:schemas:core:2.0:ResourceType",
-                    ],
-                    schema_extensions=[
-                        SchemaExtension(_schema="urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"),
-                        SchemaExtension(_schema="urn:ietf:params:scim:schemas:extension:Univention:1.0:User"),
-                        SchemaExtension(_schema="urn:ietf:params:scim:schemas:extension:DapUser:2.0:User"),
-                    ],
-                    endpoint="/Users",
-                    description="User Account",
-                    schema="urn:ietf:params:scim:schemas:core:2.0:User",
-                ),
-                ResourceType(
-                    id="Group",
-                    name="Group",
-                    schemas=[
-                        "urn:ietf:params:scim:schemas:core:2.0:ResourceType",
-                    ],
-                    schema_extensions=[
-                        SchemaExtension(_schema="urn:ietf:params:scim:schemas:extension:Univention:1.0:Group"),
-                    ],
-                    endpoint="/Groups",
-                    description="User groups",
-                    schema="urn:ietf:params:scim:schemas:core:2.0:Group",
-                ),
-            ],
-        )
-
-        # TODO Ask SCIM team why this is not working
-        # Discover resources
-        # scim = SyncSCIMClient(client=client, resource_models=[User, Group])
-        # scim.discover(schemas=True, resource_types=True, service_provider_config=True)
-        #
-        # Result: At the moment, the Univention SCIM Server doesen't support the
-        # discover function. This topic has to be clearified ...
+        scim = SyncSCIMClient(client=client)
+        scim.discover()
+        if scim.get_resource_model("User") is None:
+            logger.error("Scim server does not support User resource")
+            raise RuntimeError("Scim server does not support User resource")
+        if scim.get_resource_model("Group") is None:
+            logger.error("Scim server does not support Group resource")
+            raise RuntimeError("Scim server does not support Group resource")
 
         return scim
 

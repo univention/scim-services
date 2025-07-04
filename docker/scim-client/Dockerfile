@@ -36,6 +36,12 @@ COPY ./scim-client/pyproject.toml /app/scim-client/
 #TODO: Currently in the PoC the scim-client uses pydantic models from the scim server so it is a requirement
 COPY ./scim-server/pyproject.toml /app/scim-server/
 
+# git is required to get fixed fork of scim-client, if fix is upstreamed it can be removed
+RUN apt-get update \
+    && apt-get --assume-yes --verbose-versions --no-install-recommends install \
+      git \
+      ca-certificates
+
 WORKDIR /app
 
 # copy source code

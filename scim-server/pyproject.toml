@@ -31,6 +31,9 @@ dev = [
     "requests>=2.32.3",
     "requests-mock>=1.12.1",
     "respx>=0.22.0",
+    # Use forked scim client to fix bug with multiple extensions
+    "scim2-client[httpx]@git+https://github.com/J-Bu/scim2-client.git@c6009dac93df38617d7d7c6ed2e1ec63b8120c30",
+    "httpx>=0.28.1",
 ]
 
 [tool.uv.sources]

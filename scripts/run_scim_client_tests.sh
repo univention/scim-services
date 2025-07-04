@@ -4,16 +4,24 @@
 
 set -e
 
-(
-  function cleanup {
-    docker compose --profile test down --volumes --remove-orphans
-  }
-  trap cleanup EXIT
+for profile in test test-integration; do
+  (
+    echo "Running ${profile} tests"
+    function cleanup {
+      docker compose --profile ${profile} down --volumes --remove-orphans
+    }
+    trap cleanup EXIT
 
-  cd scim-client/tests/
+    cd scim-client/tests/
 
-  docker compose --profile test pull
-  docker compose --profile test build scim-dev-server
-  docker compose build test
-  docker compose run --rm -ti test $@
-)
+    docker compose --profile ${profile} pull
+    if [ "${profile}" == "test" ]; then
+      docker compose --profile ${profile} build scim-dev-server
+    else
+      docker compose --profile ${profile} build scim-server
+    fi
+    docker compose build ${profile}
+    docker compose run --rm -ti ${profile} $@
+    cleanup
+  )
+done
