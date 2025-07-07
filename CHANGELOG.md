@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.38.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.38.0...v0.38.1) (2025-07-07)
+
+
+### Bug Fixes
+
+* **docker:** Make container builds reproducible and cleanup ([31c542d](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/31c542da2a75b62a321548a3c168fe365ee0943a)), closes [univention/dev/internal/team-nubus#1315](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1315)
+
 ## [0.38.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.37.1...v0.38.0) (2025-07-04)
 
 
