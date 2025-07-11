@@ -268,6 +268,9 @@ services:
       NATS_USER: ldif-producer
       NATS_PASSWORD: ldifpass
       NATS_MAX_RECONNECT_ATTEMPTS: 2
+      NATS_RETRY_DELAY: 10
+      NATS_MAX_RETRY_COUNT: 3
+      TERMINATE_LISTENER_ON_EXCEPTION: true
       LDAP_HOST: "ldap-server"
       LDAP_BASE_DN: "dc=univention-organization,dc=intranet"
       LDAP_HOST_DN: "cn=admin,dc=univention-organization,dc=intranet"
@@ -275,7 +278,7 @@ services:
       DEBUG_LEVEL: "3"
       TLS_MODE: "off"
       LDAP_PASSWORD: "univention"
-      LDAP_PASSWORD_FILE: "/var/secrets/ldap_secret"
+      LDAP_PASSWORD_FILE: "/var/secrets/ldap_password"
       LDAP_PORT: 389
     depends_on:
       nats:

@@ -171,6 +171,7 @@ test-scim-consumer:
   after_script:
     - docker logs ldap-server >& ldap-server.log
     - docker logs udm-rest-api >& udm-rest-api.log
+    - docker logs udm-listener >& udm-listener.log
     - docker logs keycloak >& keycloak.log
     - docker logs scim-dev-server >& scim-dev-server.log
     - docker logs test-scim-consumer >& test-scim-consumer.log
@@ -183,6 +184,8 @@ test-scim-consumer:
     paths:
       - ldap-server.log
       - udm-rest-api.log
+      - udm-listener.log
+      - keycloak.log
       - scim-dev-server.log
       - test-scim-consumer.log
       - coverage-test-scim-consumer.xml
@@ -221,6 +224,8 @@ test-scim-server-and-consumer-integration:
   after_script:
     - docker logs ldap-server >& ldap-server.log
     - docker logs udm-rest-api >& udm-rest-api.log
+    - docker logs udm-listener >& udm-listener.log
+    - docker logs keycloak >& keycloak.log
     - docker logs scim-server >& scim-server.log
     - docker logs test-scim-services >& test-scim-services.log
     - docker stop -t0 test-scim-services
@@ -230,6 +235,8 @@ test-scim-server-and-consumer-integration:
     paths:
       - ldap-server.log
       - udm-rest-api.log
+      - udm-listener.log
+      - keycloak.log
       - scim-server.log
       - test-scim-services.log
     expire_in: "1 day"
