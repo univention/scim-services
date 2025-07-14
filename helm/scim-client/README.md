@@ -1,6 +1,6 @@
-# scim-consumer
+# scim-client
 
-A Helm chart for the Nubus SCIM consumer
+A Helm chart for the Nubus SCIM client
 
 - **Version**: 0.0.1
 - **Type**: application
@@ -10,7 +10,7 @@ A Helm chart for the Nubus SCIM consumer
 ## TL;DR
 
 ```console
-helm upgrade --install scim-consumer oci://artifacts.software-univention.de/nubus/charts/scim-consumer
+helm upgrade --install scim-client oci://artifacts.software-univention.de/nubus/charts/scim-client
 ```
 
 ## Introduction
@@ -21,18 +21,18 @@ The service provides a way to provision downstream systems via the SCIM Protocol
 
 ## Installing
 
-To install the chart with the release name `scim-consumer`:
+To install the chart with the release name `scim-client`:
 
 ```console
-helm upgrade --install scim-consumer oci://artifacts.software-univention.de/nubus/charts/scim-consumer
+helm upgrade --install scim-client oci://artifacts.software-univention.de/nubus/charts/scim-client
 ```
 
 ## Uninstalling
 
-To uninstall the chart with the release name `scim-consumer`:
+To uninstall the chart with the release name `scim-client`:
 
 ```console
-helm uninstall scim-consumer
+helm uninstall scim-client
 ```
 
 ## Requirements
@@ -368,7 +368,7 @@ null
 null
 </pre>
 </td>
-			<td>Username of the nubus provisioning subscription / this consumer For a given nubus deployment, all provisioning subscription names must be unique.</td>
+			<td>Username of the nubus provisioning subscription / this client For a given nubus deployment, all provisioning subscription names must be unique.</td>
 		</tr>
 		<tr>
 			<td>provisioningApi.config.maxAcknowledgementRetries</td>
@@ -439,7 +439,7 @@ null
   "image": {
     "imagePullPolicy": "",
     "registry": "",
-    "repository": "nubus-dev/images/scim-consumer",
+    "repository": "nubus-dev/images/scim-client",
     "sha256": null,
     "tag": "latest"
   }
@@ -473,7 +473,7 @@ null
 true
 </pre>
 </td>
-			<td>Toggle prefill for the provisioning subscription If activated, the consumer will recieve a synthetic "create" event for all existing objets in the Domain before recieving live events.</td>
+			<td>Toggle prefill for the provisioning subscription If activated, the client will recieve a synthetic "create" event for all existing objets in the Domain before recieving live events.</td>
 		</tr>
 		<tr>
 			<td>scimConsumer.image.sha256</td>

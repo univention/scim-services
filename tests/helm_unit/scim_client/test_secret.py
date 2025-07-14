@@ -35,7 +35,7 @@ class TestLdap(TestScimServer):
 
 class TestNubusProvisioningSubscription(Annotations, Labels, Namespace):
     template_file = "templates/secret-provisioning.yaml"
-    manifest_name = "release-name-scim-consumer-provisioning"
+    manifest_name = "release-name-scim-client-provisioning"
     secret_key = "registration"
 
     def values(self, localpart: dict) -> dict:
@@ -74,14 +74,14 @@ class TestNubusProvisioningSubscription(Annotations, Labels, Namespace):
             chart=chart_path, template_file=self.template_file, release_name="openproject"
         )
         openproject_secret = openproject_manifest.get_resource(
-            kind="Secret", name="openproject-scim-consumer-provisioning"
+            kind="Secret", name="openproject-scim-client-provisioning"
         )
         openproject = json.loads(openproject_secret["stringData"]["registration"])
 
         nextcloud_manifest = helm.helm_template(
             chart=chart_path, values=nextcloud_values, template_file=self.template_file, release_name="nextcloud"
         )
-        nextcloud_secret = nextcloud_manifest.get_resource(kind="Secret", name="nextcloud-scim-consumer-provisioning")
+        nextcloud_secret = nextcloud_manifest.get_resource(kind="Secret", name="nextcloud-scim-client-provisioning")
         nextcloud = json.loads(nextcloud_secret["stringData"]["registration"])
 
         assert openproject["name"] != nextcloud["name"]

@@ -30,7 +30,7 @@ provisioningApi:
     # -- The base URL the provisioning API is reachable at. (e.g. "http://provisioning-api")
     url: null
   auth:
-    # -- Username of the nubus provisioning subscription / this consumer
+    # -- Username of the nubus provisioning subscription / this client
     # For a given nubus deployment, all provisioning subscription names must be unique.
     username: null
     # -- The password used to authenticate with the Provisioning API.
@@ -99,7 +99,7 @@ ldap:
 scimConsumer:
   image:
     registry: ""
-    repository: "nubus-dev/images/scim-consumer"
+    repository: "nubus-dev/images/scim-client"
     imagePullPolicy: ""
     tag: "latest"
     # -- Define image sha256 as an alternative to `tag`
@@ -107,7 +107,7 @@ scimConsumer:
   config:
     logLevel: "INFO"
     # -- Toggle prefill for the provisioning subscription
-    # If activated, the consumer will recieve a synthetic "create" event
+    # If activated, the client will recieve a synthetic "create" event
     # for all existing objets in the Domain before recieving live events.
     prefill: true
     groupSync: true

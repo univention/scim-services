@@ -14,10 +14,10 @@ def get_absolute_path(path: Path):
 @pytest.fixture()
 def helm_values():
     """Use "helm/directory-consumer/linter_values.yaml" as default values."""
-    return [get_absolute_path(Path("helm/scim-consumer/linter_values.yaml"))]
+    return [get_absolute_path(Path("helm/scim-client/linter_values.yaml"))]
 
 
 @pytest.fixture()
 def chart_path():
     """Path to the Helm chart which shall be tested."""
-    return get_absolute_path(Path("helm/scim-consumer"))
+    return get_absolute_path(Path("helm/scim-client"))

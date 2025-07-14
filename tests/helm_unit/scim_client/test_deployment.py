@@ -19,7 +19,7 @@ class TestDeployment(Deployment):
 )
 class TestMainContainer(ContainerEnvVarSecret):
     template_file = "templates/deployment.yaml"
-    container_name = "scim-consumer"
+    container_name = "scim-client"
 
 
 @pytest.mark.parametrize(
@@ -30,7 +30,7 @@ class TestMainContainer(ContainerEnvVarSecret):
 )
 class TestMainContainerLdapPassword(ContainerEnvVarSecret):
     template_file = "templates/deployment.yaml"
-    container_name = "scim-consumer"
+    container_name = "scim-client"
 
     @pytest.mark.skip("Not relevant for secrets with password generation")
     def test_auth_disabling_existing_secret(self, key, env_var): ...

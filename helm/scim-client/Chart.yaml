@@ -4,8 +4,8 @@
 ---
 
 apiVersion: "v2"
-name: "scim-consumer"
-description: "A Helm chart for the Nubus SCIM consumer"
+name: "scim-client"
+description: "A Helm chart for the Nubus SCIM client"
 home: "https://www.univention.de/"
 
 type: "application"

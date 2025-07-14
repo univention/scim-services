@@ -1,18 +1,18 @@
 load("ext://helm_resource", "helm_resource")
 
 helm_resource(
-    "scim-consumer",
-    chart="./helm/scim-consumer/",
+    "scim-client",
+    chart="./helm/scim-client/",
     deps=[
       "tilt-values.yaml",
-      "helm/scim-consumer/",
+      "helm/scim-client/",
     ],
     flags=[
       "--values", "tilt-values.yaml",
       "--set", "global.secrets.masterPassword=univention"
     ],
     image_deps=[
-      "artifacts.software-univention.de/nubus-dev/images/scim-consumer:latest",
+      "artifacts.software-univention.de/nubus-dev/images/scim-client:latest",
     ],
     image_keys=[
       ("scimConsumer.image.registry", "scimConsumer.image.repository", "scimConsumer.image.tag"),
@@ -20,9 +20,9 @@ helm_resource(
 )
 
 docker_build(
-    "artifacts.software-univention.de/nubus-dev/images/scim-consumer:latest",
+    "artifacts.software-univention.de/nubus-dev/images/scim-client:latest",
     "./",
-    dockerfile="./docker/scim-consumer/Dockerfile",
+    dockerfile="./docker/scim-client/Dockerfile",
 )
 
 helm_resource(

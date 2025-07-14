@@ -9,12 +9,12 @@ provisioningApi:
   connection:
     url: "http://provisioning-api"
   auth:
-    username: "scim-consumer"
+    username: "scim-client"
     password: "password"
     # existingSecret:
-    #   name: provisioning-register-consumers-json-secrets
+    #   name: provisioning-register-clients-json-secrets
     #   keyMapping:
-    #     password: "scim-consumer.json"
+    #     password: "scim-client.json"
 
 scimServer:
   connection:
