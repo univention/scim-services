@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 import httpx
 import pytest
 
-from univention.scim.consumer.authentication import Authenticator, AuthenticatorSettings, GetTokenError
+from univention.scim.client.authentication import Authenticator, AuthenticatorSettings, GetTokenError
 
 
 def _make_jwt(exp: float) -> str:

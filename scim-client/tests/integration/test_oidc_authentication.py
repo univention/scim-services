@@ -7,7 +7,7 @@ from collections.abc import Generator
 import pytest
 from keycloak import KeycloakAdmin, KeycloakOpenID, KeycloakPostError
 
-from univention.scim.consumer.authentication import Authenticator, AuthenticatorSettings, GetTokenError
+from univention.scim.client.authentication import Authenticator, AuthenticatorSettings, GetTokenError
 
 
 AUDIENCE = "nubus-scim"
@@ -22,7 +22,7 @@ def keycloak_base_url() -> str:
 @pytest.fixture(scope="session")
 def authenticator_settings(keycloak_base_url: str) -> AuthenticatorSettings:
     return AuthenticatorSettings(
-        scim_client_id="scim-consumer-test-client",
+        scim_client_id="scim-client-test-client",
         scim_client_secret="supersecret",
         scim_oidc_token_url=f"{keycloak_base_url}/realms/master/protocol/openid-connect/token",
     )
@@ -71,7 +71,7 @@ def audience_client_scope(keycloak_admin: KeycloakAdmin) -> Generator[str, None,
 
 
 @pytest.fixture(scope="session", autouse=True)
-def scim_client(
+def scim_http_client(
     keycloak_admin: KeycloakAdmin, authenticator_settings: AuthenticatorSettings, audience_client_scope: str
 ) -> Generator[None, None, None]:
     keycloak_client_id = "e0f7c5f0-1234-5678-90ab-cdef12345678"

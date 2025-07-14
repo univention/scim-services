@@ -13,11 +13,11 @@ import pytest
 from loguru import logger
 from univention.admin.rest.client import UDM, UnprocessableEntity
 
-from univention.scim.consumer.group_membership_resolver import GroupMembershipLdapResolver, LdapSettings
-from univention.scim.consumer.main import run as scim_client_run
-from univention.scim.consumer.scim_client import ScimClient
-from univention.scim.consumer.scim_consumer import ScimConsumer
-from univention.scim.consumer.scim_consumer_settings import ScimConsumerSettings
+from univention.scim.client.group_membership_resolver import GroupMembershipLdapResolver, LdapSettings
+from univention.scim.client.main import run as scim_client_run
+from univention.scim.client.scim_client import ScimConsumer
+from univention.scim.client.scim_client_settings import ScimConsumerSettings
+from univention.scim.client.scim_http_client import ScimClient
 
 from ..data.scim_helper import (
     create_provisioning_subscription,
@@ -53,7 +53,7 @@ def downstream_maildomain(downstream_udm_client: ScimClient) -> Generator[str | 
         yield None
 
     else:
-        name = "scim-consumer.unittests"
+        name = "scim-client.unittests"
         domains = downstream_udm_client.get("mail/domain")
         if maildomains := list(domains.search(f"name={name}")):
             maildomain = domains.get(maildomains[0].dn)
@@ -72,7 +72,7 @@ def downstream_maildomain(downstream_udm_client: ScimClient) -> Generator[str | 
 
 @pytest.fixture(scope="session")
 def maildomain(udm_client: UDM) -> Generator[str, None, None]:
-    name = "scim-consumer.unittests"
+    name = "scim-client.unittests"
     domains = udm_client.get("mail/domain")
     if maildomains := list(domains.search(f"name={name}")):
         maildomain = domains.get(maildomains[0].dn)
@@ -149,8 +149,8 @@ def udm_client() -> UDM:
 
 
 @pytest.fixture(scope="function")
-def background_scim_consumer() -> Generator[bool, None, None]:
-    logger.info("Fixture background_scim_consumer started.")
+def background_scim_client() -> Generator[bool, None, None]:
+    logger.info("Fixture background_scim_client started.")
 
     create_provisioning_subscription()
 
@@ -163,14 +163,14 @@ def background_scim_consumer() -> Generator[bool, None, None]:
 
     delete_provisioning_subscription()
 
-    logger.info("Fixture background_scim_consumer exited.")
+    logger.info("Fixture background_scim_client exited.")
 
 
 @pytest.fixture(scope="function")
-def background_scim_consumer_prefilled(
-    udm_client: UDM, scim_client: ScimClient, group_data: dict[str, Any], maildomain: str
+def background_scim_client_prefilled(
+    udm_client: UDM, scim_http_client: ScimClient, group_data: dict[str, Any], maildomain: str
 ) -> Generator[Any, None, None]:
-    logger.info("Fixture background_scim_consumer started.")
+    logger.info("Fixture background_scim_client started.")
 
     # Create UDM records
     udm_users = generate_udm_users(udm_client=udm_client, maildomain_name=maildomain, amount=10)
@@ -192,49 +192,49 @@ def background_scim_consumer_prefilled(
             user_data={"univentionObjectIdentifier": udm_user.properties.get("univentionObjectIdentifier")},
         )
     for udm_user in udm_users:
-        wait_for_resource_deleted(scim_client, udm_user.properties.get("univentionObjectIdentifier"))
+        wait_for_resource_deleted(scim_http_client, udm_user.properties.get("univentionObjectIdentifier"))
     delete_udm_group(udm_client=udm_client, group_data=group_data)
     wait_for_resource_deleted(
-        scim_client=scim_client, univention_object_identifier=group_data["univentionObjectIdentifier"]
+        scim_http_client=scim_http_client, univention_object_identifier=group_data["univentionObjectIdentifier"]
     )
 
     proc.terminate()
 
     delete_provisioning_subscription()
 
-    logger.info("Fixture background_scim_consumer_prefilled exited.")
+    logger.info("Fixture background_scim_client_prefilled exited.")
 
 
 @pytest.fixture(scope="function")
-def scim_consumer_settings() -> ScimConsumerSettings:
+def scim_client_settings() -> ScimConsumerSettings:
     """Settings are read from env to allow different configurations locally and in the testrunner container"""
     return ScimConsumerSettings()
 
 
 @pytest.fixture(scope="function")
-def scim_client(scim_consumer_settings: ScimConsumerSettings) -> Generator[ScimClient, None, None]:
-    logger.info("Fixture scim_client start")
-    scim_client = ScimClient(httpx.Auth(), scim_consumer_settings)
+def scim_http_client(scim_client_settings: ScimConsumerSettings) -> Generator[ScimClient, None, None]:
+    logger.info("Fixture scim_http_client start")
+    scim_http_client = ScimClient(httpx.Auth(), scim_client_settings)
 
-    yield scim_client
+    yield scim_http_client
 
-    del scim_client
-    logger.info("Fixture scim_client exit")
-
-
-@pytest.fixture
-def group_membership_resolver(scim_client: ScimClient) -> GroupMembershipLdapResolver:
-    return GroupMembershipLdapResolver(scim_client, LdapSettings())
+    del scim_http_client
+    logger.info("Fixture scim_http_client exit")
 
 
 @pytest.fixture
-def scim_consumer(
-    scim_consumer_settings: ScimConsumerSettings,
-    scim_client: ScimClient,
+def group_membership_resolver(scim_http_client: ScimClient) -> GroupMembershipLdapResolver:
+    return GroupMembershipLdapResolver(scim_http_client, LdapSettings())
+
+
+@pytest.fixture
+def scim_client(
+    scim_client_settings: ScimConsumerSettings,
+    scim_http_client: ScimClient,
     group_membership_resolver: GroupMembershipLdapResolver,
 ) -> ScimConsumer:
-    scim_consumer = ScimConsumer(scim_client, group_membership_resolver, scim_consumer_settings)
-    return scim_consumer
+    scim_client = ScimConsumer(scim_http_client, group_membership_resolver, scim_client_settings)
+    return scim_client
 
 
 @pytest.fixture(scope="session", autouse=True)

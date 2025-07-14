@@ -4,7 +4,7 @@ requires-python = ">=3.11"
 
 [manifest]
 members = [
-    "scim-consumer",
+    "scim-client",
     "scim-server",
     "scim-services",
     "scim-udm-transformer-lib",
@@ -1434,9 +1434,9 @@ wheels = [
 ]
 
 [[package]]
-name = "scim-consumer"
+name = "scim-client"
 version = "0.1.0"
-source = { editable = "scim-consumer" }
+source = { editable = "scim-client" }
 dependencies = [
     { name = "httpx" },
     { name = "icecream" },

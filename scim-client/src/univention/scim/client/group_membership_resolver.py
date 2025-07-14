@@ -5,8 +5,8 @@ from ldap3 import AUTO_BIND_NO_TLS, BASE, SAFE_SYNC, Connection, Server
 from loguru import logger
 from pydantic_settings import BaseSettings
 
-from univention.scim.consumer.helper import cust_pformat
-from univention.scim.consumer.scim_client import ScimClient, ScimClientNoDataFoundException
+from univention.scim.client.helper import cust_pformat
+from univention.scim.client.scim_http_client import ScimClient, ScimClientNoDataFoundException
 from univention.scim.transformation.id_cache import CacheItem, IdCache
 
 
@@ -17,9 +17,9 @@ class LdapSettings(BaseSettings):
 
 
 class GroupMembershipLdapResolver(IdCache):
-    def __init__(self, scim_client: ScimClient, ldap_settings: LdapSettings) -> None:
+    def __init__(self, scim_http_client: ScimClient, ldap_settings: LdapSettings) -> None:
         """ """
-        self.scim_client = scim_client
+        self.scim_http_client = scim_http_client
 
         self.ldap_client = self.connect_to_ldap(ldap_settings)
 
@@ -47,7 +47,7 @@ class GroupMembershipLdapResolver(IdCache):
             return None
 
         try:
-            scim_user = self.scim_client.get_resource_by_external_id(univention_object_identifier)
+            scim_user = self.scim_http_client.get_resource_by_external_id(univention_object_identifier)
             logger.debug("SCIM user:\n{}", cust_pformat(scim_user))
 
         except ScimClientNoDataFoundException:

@@ -10,11 +10,10 @@ from univention.provisioning.consumer.api import (
     ProvisioningConsumerClient,
 )
 
-from univention.scim.consumer.authentication import Authenticator, AuthenticatorSettings
-from univention.scim.consumer.group_membership_resolver import GroupMembershipLdapResolver, LdapSettings
-from univention.scim.consumer.scim_client import ScimClient
-from univention.scim.consumer.scim_consumer import ScimConsumer
-from univention.scim.consumer.scim_consumer_settings import ScimConsumerSettings
+from univention.scim.client.authentication import Authenticator, AuthenticatorSettings
+from univention.scim.client.group_membership_resolver import GroupMembershipLdapResolver, LdapSettings
+from univention.scim.client.scim_client import ScimClient, ScimConsumer
+from univention.scim.client.scim_client_settings import ScimConsumerSettings
 
 
 async def main() -> None:
@@ -22,10 +21,10 @@ async def main() -> None:
     auth = Authenticator(AuthenticatorSettings()) if settings.scim_oidc_authentication else httpx.Auth()
     scim_client = ScimClient(auth, settings)
     group_membership_resolver = GroupMembershipLdapResolver(scim_client, LdapSettings())
-    scim_consumer = ScimConsumer(scim_client, group_membership_resolver, settings)
+    scim_client = ScimConsumer(scim_client, group_membership_resolver, settings)
 
     async with ProvisioningConsumerClient() as client:
-        await MessageHandler(client, [scim_consumer.handle_udm_message], pop_after_handling=True).run()
+        await MessageHandler(client, [scim_client.handle_udm_message], pop_after_handling=True).run()
 
 
 def run() -> None:

@@ -5,10 +5,10 @@ from loguru import logger
 from scim2_models import Resource
 from univention.provisioning.models import Message
 
-from univention.scim.consumer.group_membership_resolver import GroupMembershipLdapResolver
-from univention.scim.consumer.helper import cust_pformat
-from univention.scim.consumer.scim_client import ScimClient, ScimClientNoDataFoundException
-from univention.scim.consumer.scim_consumer_settings import ScimConsumerSettings
+from univention.scim.client.group_membership_resolver import GroupMembershipLdapResolver
+from univention.scim.client.helper import cust_pformat
+from univention.scim.client.scim_client_settings import ScimConsumerSettings
+from univention.scim.client.scim_http_client import ScimClient, ScimClientNoDataFoundException
 from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
 from univention.scim.transformation.udm2scim import UdmToScimMapper
 
@@ -18,11 +18,11 @@ class ScimConsumer:
 
     def __init__(
         self,
-        scim_client: ScimClient,
+        scim_http_client: ScimClient,
         group_membership_resolver: GroupMembershipLdapResolver,
         settings: ScimConsumerSettings,
     ):
-        self.scim_client = scim_client
+        self.scim_http_client = scim_http_client
         self.group_membership_resolver = group_membership_resolver
         self.settings = settings
 
@@ -37,14 +37,14 @@ class ScimConsumer:
         if not scim_resource.external_id:
             raise ValueError("No external_id given!")
         try:
-            existing_scim_resource = self.scim_client.get_resource_by_external_id(scim_resource.external_id)
+            existing_scim_resource = self.scim_http_client.get_resource_by_external_id(scim_resource.external_id)
         except ScimClientNoDataFoundException:
-            self.scim_client.create_resource(scim_resource)
+            self.scim_http_client.create_resource(scim_resource)
             return
         scim_resource.id = existing_scim_resource.id
         scim_resource.meta = existing_scim_resource.meta
 
-        self.scim_client.update_resource(scim_resource)
+        self.scim_http_client.update_resource(scim_resource)
 
     def delete(self, udm_object: object, topic: str) -> None:
         """
@@ -58,10 +58,10 @@ class ScimConsumer:
             raise ValueError("No external_id given!")
 
         try:
-            existing_scim_resource = self.scim_client.get_resource_by_external_id(scim_resource.external_id)
+            existing_scim_resource = self.scim_http_client.get_resource_by_external_id(scim_resource.external_id)
         except ScimClientNoDataFoundException:
             return
-        self.scim_client.delete_resource(existing_scim_resource)
+        self.scim_http_client.delete_resource(existing_scim_resource)
 
     def prepare_data(self, udm_object: object, topic: str) -> Resource:
         """
@@ -90,7 +90,7 @@ class ScimConsumer:
 
     async def handle_udm_message(self, message: Message) -> None:
         """
-        Handles provisioning messages for a SCIM consumer.
+        Handles provisioning messages for a SCIM client.
         """
         logger.debug("Message:\n{}", cust_pformat(message))
 

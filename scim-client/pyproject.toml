@@ -1,5 +1,5 @@
 [project]
-name = "scim-consumer"
+name = "scim-client"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
@@ -41,14 +41,14 @@ url = "https://git.knut.univention.de/api/v4/projects/882/packages/pypi/simple"
 package = true
 
 [project.scripts]
-scim-consumer = "univention.scim.consumer.main:run"
+scim-client = "univention.scim.client.main:run"
 
 [tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "session"
 env = [
     "D:SCIM_SERVER_BASE_URL = http://localhost:8888/v2/",
     "D:PROVISIONING_API_BASE_URL = http://localhost:7777/",
-    "D:PROVISIONING_API_USERNAME = scim-consumer",
+    "D:PROVISIONING_API_USERNAME = scim-client",
     "D:PROVISIONING_API_PASSWORD = univention",
     "D:PROVISIONING_API_ADMIN_USERNAME = admin",
     "D:PROVISIONING_API_ADMIN_PASSWORD = provisioning",

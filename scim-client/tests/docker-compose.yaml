@@ -104,10 +104,10 @@ services:
     networks:
       - scim
 
-  events-and-consumer-api:
+  provisioning-api:
     image: gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-events-and-consumer-api:latest
     # image: artifacts.software-univention.de/nubus/images/provisioning-events-and-consumer-api:0.56.0
-    container_name: "events-and-consumer-api-dev"
+    container_name: "provisioning-api-dev"
     restart: "on-failure"
     profiles:
       - develop
@@ -177,12 +177,12 @@ services:
       NATS_USER: "dispatcher"
       NATS_PASSWORD: "dispatcherpass"
       NATS_MAX_RECONNECT_ATTEMPTS: 2
-      PROVISIONING_API_HOST: "events-and-consumer-api"
+      PROVISIONING_API_HOST: "provisioning-api"
       PROVISIONING_API_PORT: 7777
     depends_on:
       nats:
         condition: service_started
-      events-and-consumer-api:
+      provisioning-api:
         condition: service_started
     networks:
       - scim
@@ -203,7 +203,7 @@ services:
       NATS_USER: "udm-transformer"
       NATS_PASSWORD: "udm-transformerpass"
       LDAP_PUBLISHER_NAME: "udm-listener"
-      PROVISIONING_API_HOST: "events-and-consumer-api"
+      PROVISIONING_API_HOST: "provisioning-api"
       PROVISIONING_API_PORT: 7777
       EVENTS_USERNAME_UDM: "udm"
       EVENTS_PASSWORD_UDM: "udmpass"
@@ -216,7 +216,7 @@ services:
     depends_on:
       nats:
         condition: service_started
-      events-and-consumer-api:
+      provisioning-api:
         condition: service_started
     networks:
       - scim
@@ -234,7 +234,7 @@ services:
       LOG_LEVEL: "DEBUG"
       NATS_HOST: "nats"
       NATS_PORT: "4222"
-      PROVISIONING_API_HOST: "events-and-consumer-api"
+      PROVISIONING_API_HOST: "provisioning-api"
       PROVISIONING_API_PORT: 7777
       NATS_USER: "prefill"
       NATS_PASSWORD: "prefillpass"
@@ -249,7 +249,7 @@ services:
     depends_on:
       nats:
         condition: service_started
-      events-and-consumer-api:
+      provisioning-api:
         condition: service_started
     networks:
       - scim
@@ -394,9 +394,9 @@ services:
   test:
     build:
       context: ../../
-      dockerfile: docker/scim-consumer/Dockerfile
+      dockerfile: docker/scim-client/Dockerfile
       target: test
-    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-consumer-testrunner:${IMAGE_TAG:-latest}
+    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-client-testrunner:${IMAGE_TAG:-latest}
     profiles:
       - test
     depends_on:
@@ -416,8 +416,8 @@ services:
         condition: service_started
     environment:
       SCIM_SERVER_BASE_URL: http://scim-dev-server:8080/
-      PROVISIONING_API_BASE_URL: http://events-and-consumer-api:7777/
-      PROVISIONING_API_USERNAME: scim-consumer
+      PROVISIONING_API_BASE_URL: http://provisioning-api:7777/
+      PROVISIONING_API_USERNAME: scim-client
       PROVISIONING_API_PASSWORD: univention
       PROVISIONING_API_ADMIN_USERNAME: admin
       PROVISIONING_API_ADMIN_PASSWORD: provisioning
@@ -438,9 +438,9 @@ services:
   test-integration:
     build:
       context: ../../
-      dockerfile: docker/scim-consumer/Dockerfile
+      dockerfile: docker/scim-client/Dockerfile
       target: test
-    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-consumer-testrunner:${IMAGE_TAG:-latest}
+    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-client-testrunner:${IMAGE_TAG:-latest}
     profiles:
       - test-integration
     depends_on:
@@ -464,8 +464,8 @@ services:
         condition: service_started
     environment:
       SCIM_SERVER_BASE_URL: http://scim-server:8000/v2/
-      PROVISIONING_API_BASE_URL: http://events-and-consumer-api:7777/
-      PROVISIONING_API_USERNAME: scim-consumer
+      PROVISIONING_API_BASE_URL: http://provisioning-api:7777/
+      PROVISIONING_API_USERNAME: scim-client
       PROVISIONING_API_PASSWORD: univention
       PROVISIONING_API_ADMIN_USERNAME: admin
       PROVISIONING_API_ADMIN_PASSWORD: provisioning

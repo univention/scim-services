@@ -4,56 +4,56 @@
 
 import pytest
 
-from univention.scim.consumer.scim_client import ScimClient, ScimClientNoDataFoundException
-from univention.scim.consumer.scim_consumer import ScimConsumer
+from univention.scim.client.scim_client import ScimConsumer
+from univention.scim.client.scim_http_client import ScimClient, ScimClientNoDataFoundException
 
 from ..data.provisioning_message_factory import get_provisioning_message
 
 
 @pytest.mark.asyncio
-async def test_create_user(scim_client: ScimClient, scim_consumer: ScimConsumer) -> None:
+async def test_create_user(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
     # Create user
     pm = get_provisioning_message("user_create")
     pm.body.new["properties"]["isNextcloudUser"] = True
-    scim_consumer.settings.scim_user_filter_attribute = "isNextcloudUser"
+    scim_client.settings.scim_user_filter_attribute = "isNextcloudUser"
 
-    await scim_consumer.handle_udm_message(pm)
+    await scim_client.handle_udm_message(pm)
 
-    user = scim_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
+    user = scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
     assert user.user_name == pm.body.new["properties"].get("username")
 
     # Update user
     pm = get_provisioning_message("user_update")
     pm.body.new["properties"]["isNextcloudUser"] = True
 
-    await scim_consumer.handle_udm_message(pm)
+    await scim_client.handle_udm_message(pm)
 
-    user = scim_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
+    user = scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
     assert user.user_name == pm.body.new["properties"].get("username")
 
     # Delete user
     pm = get_provisioning_message("user_delete")
     pm.body.old["properties"]["isNextcloudUser"] = True
 
-    await scim_consumer.handle_udm_message(pm)
+    await scim_client.handle_udm_message(pm)
 
     with pytest.raises(ScimClientNoDataFoundException):
-        user = scim_client.get_resource_by_external_id(pm.body.old["properties"].get("univentionObjectIdentifier"))
+        user = scim_http_client.get_resource_by_external_id(pm.body.old["properties"].get("univentionObjectIdentifier"))
 
 
 @pytest.mark.asyncio
-async def test_create_user_with_update(scim_client: ScimClient, scim_consumer: ScimConsumer) -> None:
+async def test_create_user_with_update(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
     #
     # Create user, should not created in SCIM
     #
     pm = get_provisioning_message("user_create")
     pm.body.new["properties"]["isNextcloudUser"] = False
-    scim_consumer.settings.scim_user_filter_attribute = "isNextcloudUser"
+    scim_client.settings.scim_user_filter_attribute = "isNextcloudUser"
 
-    await scim_consumer.handle_udm_message(pm)
+    await scim_client.handle_udm_message(pm)
 
     with pytest.raises(ScimClientNoDataFoundException):
-        user = scim_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
+        user = scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
 
     #
     # Update user, should created in SCIM
@@ -62,9 +62,9 @@ async def test_create_user_with_update(scim_client: ScimClient, scim_consumer: S
     pm.body.old["properties"]["isNextcloudUser"] = False
     pm.body.new["properties"]["isNextcloudUser"] = True
 
-    await scim_consumer.handle_udm_message(pm)
+    await scim_client.handle_udm_message(pm)
 
-    user = scim_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
+    user = scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
 
     assert user.user_name == pm.body.new["properties"].get("username")
 
@@ -74,25 +74,25 @@ async def test_create_user_with_update(scim_client: ScimClient, scim_consumer: S
     pm = get_provisioning_message("user_update")
     pm.body.old["properties"]["isNextcloudUser"] = True
 
-    await scim_consumer.handle_udm_message(pm)
+    await scim_client.handle_udm_message(pm)
 
     with pytest.raises(ScimClientNoDataFoundException):
-        user = scim_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
+        user = scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
 
 
 @pytest.mark.asyncio
-async def test_not_create_user(scim_client: ScimClient, scim_consumer: ScimConsumer) -> None:
+async def test_not_create_user(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
     #
     # Create user, should not created in SCIM
     #
     pm = get_provisioning_message("user_create")
     pm.body.new["properties"]["isNextcloudUser"] = False
-    scim_consumer.settings.scim_user_filter_attribute = "isNextcloudUser"
+    scim_client.settings.scim_user_filter_attribute = "isNextcloudUser"
 
-    await scim_consumer.handle_udm_message(pm)
+    await scim_client.handle_udm_message(pm)
 
     with pytest.raises(ScimClientNoDataFoundException):
-        scim_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
+        scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
 
     #
     # Update user, should not created in SCIM
@@ -101,7 +101,7 @@ async def test_not_create_user(scim_client: ScimClient, scim_consumer: ScimConsu
     pm.body.old["properties"]["isNextcloudUser"] = False
     pm.body.new["properties"]["isNextcloudUser"] = False
 
-    await scim_consumer.handle_udm_message(pm)
+    await scim_client.handle_udm_message(pm)
 
     with pytest.raises(ScimClientNoDataFoundException):
-        scim_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
+        scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))

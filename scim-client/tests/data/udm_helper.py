@@ -9,7 +9,7 @@ from faker.providers import address, profile
 from loguru import logger
 from univention.admin.rest.client import UDM
 
-from univention.scim.consumer.helper import cust_pformat
+from univention.scim.client.helper import cust_pformat
 
 
 def generate_udm_users(udm_client: UDM, amount: int, maildomain_name: str) -> list[Any]:

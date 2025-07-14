@@ -9,8 +9,8 @@ from scim2_client.engines.httpx import SyncSCIMClient
 from scim2_models import Resource, ResourceType, SchemaExtension, SearchRequest
 from scim2_tester import check_server
 
-from univention.scim.consumer.helper import cust_pformat
-from univention.scim.consumer.scim_consumer_settings import ScimConsumerSettings
+from univention.scim.client.helper import cust_pformat
+from univention.scim.client.scim_client_settings import ScimConsumerSettings
 from univention.scim.server.models.types import GroupWithExtensions, UserWithExtensions
 
 

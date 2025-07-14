@@ -6,9 +6,9 @@ from typing import Any
 from pytest_mock import MockerFixture
 from univention.admin.rest.client import UDM
 
-from univention.scim.consumer.group_membership_resolver import GroupMembershipLdapResolver
-from univention.scim.consumer.scim_client import ScimClient
-from univention.scim.consumer.scim_consumer import ScimConsumer
+from univention.scim.client.group_membership_resolver import GroupMembershipLdapResolver
+from univention.scim.client.scim_client import ScimConsumer
+from univention.scim.client.scim_http_client import ScimClient
 
 from ..data.scim_helper import wait_for_resource_deleted, wait_for_resource_exists
 from ..data.udm_helper import create_udm_user, delete_udm_user
@@ -29,18 +29,19 @@ def test_get_univention_object_identifier_by_dn(
 
 
 def test_get_user(
-    background_scim_consumer: ScimConsumer,
-    scim_client: ScimClient,
+    background_scim_client: ScimConsumer,
+    scim_http_client: ScimClient,
     group_membership_resolver: GroupMembershipLdapResolver,
     udm_client: UDM,
     user_data: dict[str, Any],
     mocker: MockerFixture,
 ) -> None:
-    assert background_scim_consumer
+    assert background_scim_client
 
     udm_user = create_udm_user(udm_client=udm_client, user_data=user_data)
     wait_for_resource_exists(
-        scim_client=scim_client, univention_object_identifier=udm_user.properties.get("univentionObjectIdentifier")
+        scim_http_client=scim_http_client,
+        univention_object_identifier=udm_user.properties.get("univentionObjectIdentifier"),
     )
     mocker.patch.object(
         group_membership_resolver,
@@ -53,7 +54,7 @@ def test_get_user(
     print(scim_user)
     delete_udm_user(udm_client=udm_client, user_data=user_data)
     wait_for_resource_deleted(
-        scim_client=scim_client,
+        scim_http_client=scim_http_client,
         univention_object_identifier=udm_user.properties.get("univentionObjectIdentifier"),
         max_attemps=5,
     )

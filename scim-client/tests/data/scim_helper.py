@@ -15,18 +15,18 @@ from univention.provisioning.consumer.api import (
     RealmTopic,
 )
 
-from univention.scim.consumer.helper import cust_pformat
-from univention.scim.consumer.scim_client import ScimClient, ScimClientNoDataFoundException
+from univention.scim.client.helper import cust_pformat
+from univention.scim.client.scim_http_client import ScimClient, ScimClientNoDataFoundException
 
 
 def wait_for_resource_exists(
-    scim_client: ScimClient, univention_object_identifier: str, max_attemps: int = 100
+    scim_http_client: ScimClient, univention_object_identifier: str, max_attemps: int = 100
 ) -> Resource | None:
     """ """
     for i in range(1, max_attemps or 100):
         try:
             logger.debug("Try to get resource with uoi: {}. Attemp {}", univention_object_identifier, i)
-            resource = scim_client.get_resource_by_external_id(univention_object_identifier)
+            resource = scim_http_client.get_resource_by_external_id(univention_object_identifier)
         except Exception:
             time.sleep(5)
             continue
@@ -38,7 +38,7 @@ def wait_for_resource_exists(
 
 
 def wait_for_resource_updated(
-    scim_client: ScimClient,
+    scim_http_client: ScimClient,
     univention_object_identifier: str,
     condition_attr: str,
     condition_val: Any,
@@ -47,7 +47,7 @@ def wait_for_resource_updated(
     """ """
     for i in range(1, max_attemps or 100):
         logger.debug("Try to get resource with uoi: {}. Attemp {}", univention_object_identifier, i)
-        resource = scim_client.get_resource_by_external_id(univention_object_identifier)
+        resource = scim_http_client.get_resource_by_external_id(univention_object_identifier)
         if getattr(resource, condition_attr) == condition_val:
             logger.debug("Fetched resource data:\n{}", cust_pformat(resource))
             return resource
@@ -58,13 +58,13 @@ def wait_for_resource_updated(
 
 
 def wait_for_resource_deleted(
-    scim_client: ScimClient, univention_object_identifier: str, max_attemps: int = 100
+    scim_http_client: ScimClient, univention_object_identifier: str, max_attemps: int = 100
 ) -> bool:
     """ """
     try:
         for i in range(1, max_attemps or 100):
             logger.info("Try to get user with uoi: {}. Attemp {}", univention_object_identifier, i)
-            scim_client.get_resource_by_external_id(univention_object_identifier)
+            scim_http_client.get_resource_by_external_id(univention_object_identifier)
             time.sleep(5)
         return False
 

@@ -3,7 +3,7 @@
 
 import pytest
 
-from univention.scim.consumer.scim_consumer import should_exist_in_scim
+from univention.scim.client.scim_client import should_exist_in_scim
 
 from ..data.provisioning_message_factory import get_provisioning_message
 

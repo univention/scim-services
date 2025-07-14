@@ -11,7 +11,7 @@ license = "AGPL-3.0-only"
 [tool.uv.sources]
 scim-server = { workspace = true }
 scim-udm-transformer-lib = { workspace = true }
-scim-consumer = { workspace = true }
+scim-client = { workspace = true }
 lancelog = { index = "gitlab" }
 helm-test-harness = { index = "common-helm" }
 pytest-helm = { index = "common-helm" }
@@ -20,7 +20,7 @@ pytest-helm = { index = "common-helm" }
 members = [
     "scim-server",
     "scim-udm-transformer-lib",
-    "scim-consumer",
+    "scim-client",
 ]
 
 [[tool.uv.index]]
