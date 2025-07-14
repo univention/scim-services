@@ -23,7 +23,7 @@ Goals of this development stage:
     - This raises the maintenance effort. To counter that, refactorings with the goal of a common code base should be evaluated.
 - Changes done to SCIM are synchronized to the UDM DB asynchronously.
 - Changes done to UDM are synchronized to the SCIM DB asynchronously.
-- Errors encountered by either consumer are still logged,
+- Errors encountered by either client are still logged,
   but now also sent to the Provisioning with realm `sync-error` and topic `scim2udm` or `udm2scim`,
   encoded as SCIM errors (see [RFC 7644 section 3.12](https://datatracker.ietf.org/doc/html/rfc7644#section-3.12)).
 - Data in the SCIM and UDM databases is _eventually_ consistent.
@@ -99,7 +99,7 @@ e.g. a user or a group with the same name.
 - It is more likely to happen for groups than for users.
 - When a "simultaneous" creation happens, it can be detected.
   An automatic conflict resolution is possible, but may not be desirable.
-  My proposal (see "Sequence diagram: UDM 2 SCIM Consumer") is an "optimistic" resolution:
+  My proposal (see "Sequence diagram: UDM 2 SCIM Client") is an "optimistic" resolution:
   When the synchronization code detects an existing object, it updates it.
   Reasoning: Using the same identifier (name) for an object usually means it's the same object.
 - There is a corner case that cannot (and IMHO should not) be solved automatically:
@@ -109,7 +109,7 @@ e.g. a user or a group with the same name.
 ## Concurrent write conflict resolution using attribute-level comparisons
 
 Please see section of same name in [Milestone 2: Synchronous writes to UDM, reads from SQL](milestone2.md).
-The only difference in MS3 is, that this must now also happen in the _SCIM 2 UDM Consumer_.
+The only difference in MS3 is, that this must now also happen in the _SCIM 2 UDM Client_.
 
 ## Handling password (hashes)
 
@@ -153,13 +153,13 @@ Questions:
 
 ![Sequence diagram (milestone 3): Writing to UDM REST API](images/sequence-ms23-udm-write.png "Sequence diagram (milestone 3): Writing to UDM REST API")
 
-## Sequence diagram: UDM 2 SCIM Consumer
+## Sequence diagram: UDM 2 SCIM Client
 
-![Sequence diagram (milestone 3): UDM 2 SCIM Consumer](images/sequence-ms3-udm-2-scim-consumer.png "Sequence diagram (milestone 2): UDM 2 SCIM Consumer")
+![Sequence diagram (milestone 3): UDM 2 SCIM Client](images/sequence-ms3-udm-2-scim-client.png "Sequence diagram (milestone 2): UDM 2 SCIM Client")
 
-## Sequence diagram: SCIM 2 UDM Consumer
+## Sequence diagram: SCIM 2 UDM Client
 
-![Sequence diagram (milestone 3): SCIM 2 UDM Consumer](images/sequence-ms3-scim-2-udm-consumer.png "Sequence diagram (milestone 3): SCIM 2 UDM Consumer")
+![Sequence diagram (milestone 3): SCIM 2 UDM Client](images/sequence-ms3-scim-2-udm-client.png "Sequence diagram (milestone 3): SCIM 2 UDM Client")
 
 ## Authentication
 
@@ -176,11 +176,11 @@ Unchanged from MS2:
 - The user in the token must exist in the SCIM database.
 - The user must be member of a certain group in the SCIM DB.
   - The groups name is configurable through an environment variable and defaults to `scim-clients`.
-- The user should exist in UDM/LDAP and will be created in the SCIM DB by the UDM 2 SCIM Consumer.
+- The user should exist in UDM/LDAP and will be created in the SCIM DB by the UDM 2 SCIM Client.
 - The SCIM server's container offers a CLI to create-or-update users and groups in the SCIM database.
   - This can be used for testing without an associated user synchronized from UDM.
-  - This must be used to create the user that the UDM 2 SCIM Consumer uses.
-- The UDM 2 SCIM Consumer reads the SCIM REST API's connection settings from the environment.
+  - This must be used to create the user that the UDM 2 SCIM Client uses.
+- The UDM 2 SCIM Client reads the SCIM REST API's connection settings from the environment.
   Secrets (passwords, certificates etc.) are read from files whose paths are in environment variables.
 
 Changed from MS2:
@@ -189,7 +189,7 @@ Changed from MS2:
 
 New:
 
-- The SCIM 2 UDM Consumer reads the UDM REST API's connection settings from the environment.
+- The SCIM 2 UDM Client reads the UDM REST API's connection settings from the environment.
   Secrets (passwords, certificates etc.) are read from files whose paths are in environment variables.
   - The LDAP account (the "bind dn") is configurable.
   - As BSI base security expects the password to be rotated, the `cn=admin` account shouldn't be used.
@@ -205,7 +205,7 @@ Unchanged from MS1:
 Changed from MS2:
 
 - Restrictions in the UDM data model and business logic apply,
-  when changes are forwarded _asynchronously_ by the SCIM 2 UDM Consumer.
+  when changes are forwarded _asynchronously_ by the SCIM 2 UDM Client.
   - UDM REST API error messages are logged and sent to the Provisioning.
 
 New:

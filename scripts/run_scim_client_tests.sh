@@ -10,7 +10,7 @@ set -e
   }
   trap cleanup EXIT
 
-  cd scim-consumer/tests/
+  cd scim-client/tests/
 
   docker compose --profile test pull
   docker compose --profile test build scim-dev-server

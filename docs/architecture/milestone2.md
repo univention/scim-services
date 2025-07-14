@@ -53,7 +53,7 @@ Goals of this development stage:
   - UDM is the single source of truth.
 - Changes done to the UDM DB are synchronized to the SCIM DB asynchronously.
   - The SCIM server does not forward change requests started by UDM back to UDM, preventing a loop.
-- Errors encountered by the UDM 2 SCIM Consumer are logged.
+- Errors encountered by the UDM 2 SCIM Client are logged.
 - Synchronization conflict resolution happens on the attribute level.
   There are a few problematic scenarios (see section _Concurrent write conflict resolution using attribute-level comparisons_).
   Situations where a conflict on the attribute level is detected are logged at level `INFO` or `WARNING`.
@@ -115,9 +115,9 @@ on eventual consistency.
 
 ![Sequence diagram (milestone 2): Writing to UDM REST API](images/sequence-ms23-udm-write.png "Sequence diagram (milestone 2): Writing to UDM REST API")
 
-## Sequence diagram: UDM 2 SCIM Consumer
+## Sequence diagram: UDM 2 SCIM Client
 
-![Sequence diagram (milestone 2): UDM 2 SCIM Consumer](images/sequence-ms2-udm-2-scim-consumer.png "Sequence diagram (milestone 2): UDM 2 SCIM Consumer")
+![Sequence diagram (milestone 2): UDM 2 SCIM Client](images/sequence-ms2-udm-2-scim-client.png "Sequence diagram (milestone 2): UDM 2 SCIM Client")
 
 ## Authentication
 
@@ -140,11 +140,11 @@ New:
   - Must exist in the SCIM database.
   - Must be member of a certain group in the SCIM DB.
     - The groups name is configurable through an environment variable and defaults to `scim-clients`.
-- The user should exist in UDM/LDAP and will be created in the SCIM DB by the UDM 2 SCIM Consumer.
+- The user should exist in UDM/LDAP and will be created in the SCIM DB by the UDM 2 SCIM Client.
 - The SCIM server's container offers a CLI to create-or-update users and groups in the SCIM database.
   - This can be used for testing without an associated user synchronized from UDM.
-  - This must be used to create the user that the UDM 2 SCIM Consumer uses.
-- The UDM 2 SCIM Consumer reads the SCIM REST API's connection settings from the environment.
+  - This must be used to create the user that the UDM 2 SCIM Client uses.
+- The UDM 2 SCIM Client reads the SCIM REST API's connection settings from the environment.
   Secrets (passwords, certificates etc.) are read from files whose paths are in environment variables.
 
 ## Authorization

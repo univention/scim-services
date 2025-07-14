@@ -105,20 +105,20 @@ uv run pytest
 - To start integration tests:  TODO
 - To start end-to-end tests:  TODO
 
-### SCIM consumer
+### SCIM client
 
 #### Tilt setup
 
-To develop the scim-consumer helm chart and container image, you can run it in Tilt.
+To develop the scim-client helm chart and container image, you can run it in Tilt.
 
 You can deploy the dependencies via the normal dev-env:
 `tilt up keycloak ldap-server ldap-notifier udm-rest-api stack-data-ums provisioning provisioning-udm-listener`
 
 There is one step of "manual" configuration necessary.
-We need to register the Nubus Provisioning subscription for the SCIM consumer.
-For this purpose the scim-consumer helm chart creates a secret named `scim-consumer-provisioning-subscription`
+We need to register the Nubus Provisioning subscription for the SCIM client.
+For this purpose the scim-client helm chart creates a secret named `scim-client-provisioning-subscription`
 this Secret contains an embedded json file defines the subscription.
-We can use the `register-consumers` job of the `provisioning` helm chart
+We can use the `register-clients` job of the `provisioning` helm chart
 to create the subscription in the Provisioning API for us.
 
 All we need to do is configure the additional secret in the `custom-values.yaml`
@@ -129,9 +129,9 @@ of the `provisioning` chart.
 ```json
 registerConsumers:
   createUsers:
-    scimConsumer:
+    scimClient:
       existingSecret:
-        name: scim-consumer-provisioning
+        name: scim-client-provisioning
         keyMapping:
           password: "registration"
 ```

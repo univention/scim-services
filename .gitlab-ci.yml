@@ -32,13 +32,13 @@ lint-pre-commit:
     KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
     DOCKERFILE_PATH: "docker/scim-server/Dockerfile"
     KANIKO_ARGS: "--target=test"
-  - IMAGE_NAME: "scim-consumer-testrunner"
+  - IMAGE_NAME: "scim-client-testrunner"
     KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
-    DOCKERFILE_PATH: "docker/scim-consumer/Dockerfile"
+    DOCKERFILE_PATH: "docker/scim-client/Dockerfile"
     KANIKO_ARGS: "--target=test"
-  - IMAGE_NAME: "scim-consumer"
+  - IMAGE_NAME: "scim-client"
     KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
-    DOCKERFILE_PATH: "docker/scim-consumer/Dockerfile"
+    DOCKERFILE_PATH: "docker/scim-client/Dockerfile"
   - IMAGE_NAME: "scim-dev-server"
     KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR
     DOCKERFILE_PATH: "docker/scim-dev-server/Dockerfile"
@@ -48,7 +48,7 @@ lint-pre-commit:
 .publish-matrix: &publish-matrix
   - IMAGE_NAME:
       - "scim-server"
-      - "scim-consumer"
+      - "scim-client"
 
 container-build:
   parallel:
@@ -143,10 +143,10 @@ test-helm-charts:
   image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.21.0
   script:
     - helm dep build helm/scim-server
-    - helm dep build helm/scim-consumer
+    - helm dep build helm/scim-client
     - pytest tests/helm_unit
 
-test-scim-consumer:
+test-scim-client:
   stage: test
   extends: .dind
   image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7"
@@ -155,7 +155,7 @@ test-scim-consumer:
       when: "never"
     - when: "on_success"
   before_script:
-    - cd scim-consumer/tests
+    - cd scim-client/tests
     # Allow that the Docker API version is negotiated between client and server
     - unset DOCKER_API_VERSION
     - export IMAGE_TAG=${RELEASE_VERSION}
@@ -167,19 +167,19 @@ test-scim-consumer:
     - docker compose config test
     - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
   script:
-    - docker compose run --quiet-pull --name test-scim-consumer test
+    - docker compose run --quiet-pull --name test-scim-client test
   after_script:
     - docker logs ldap-server >& ldap-server.log
     - docker logs udm-rest-api >& udm-rest-api.log
     - docker logs udm-listener >& udm-listener.log
     - docker logs keycloak >& keycloak.log
     - docker logs scim-dev-server >& scim-dev-server.log
-    - docker logs test-scim-consumer >& test-scim-consumer.log
-    - docker cp test-scim-consumer:/tmp/pytest-junit.xml ./pytest-junit-test-scim-consumer.xml
-    - docker cp test-scim-consumer:/tmp/scim-coverage.xml ./coverage-test-scim-consumer.xml
-    - docker stop -t0 test-scim-consumer
-    - docker rm test-scim-consumer
-    - docker compose -f scim-consumer/tests/docker-compose.yaml --profile test down --volumes
+    - docker logs test-scim-client >& test-scim-client.log
+    - docker cp test-scim-client:/tmp/pytest-junit.xml ./pytest-junit-test-scim-client.xml
+    - docker cp test-scim-client:/tmp/scim-coverage.xml ./coverage-test-scim-client.xml
+    - docker stop -t0 test-scim-client
+    - docker rm test-scim-client
+    - docker compose -f scim-client/tests/docker-compose.yaml --profile test down --volumes
   artifacts:
     paths:
       - ldap-server.log
@@ -187,14 +187,14 @@ test-scim-consumer:
       - udm-listener.log
       - keycloak.log
       - scim-dev-server.log
-      - test-scim-consumer.log
-      - coverage-test-scim-consumer.xml
-      - pytest-junit-test-scim-consumer.xml
+      - test-scim-client.log
+      - coverage-test-scim-client.xml
+      - pytest-junit-test-scim-client.xml
     expire_in: "1 day"
     when: "always"
     expose_as: "docker compose server logs"
     reports:
-      junit: pytest-junit-test-scim-consumer.xml
+      junit: pytest-junit-test-scim-client.xml
 
 test-scim-server-and-consumer-integration:
   stage: test
@@ -208,7 +208,7 @@ test-scim-server-and-consumer-integration:
     - when: manual
   allow_failure: true
   before_script:
-    - cd scim-consumer/tests
+    - cd scim-client/tests
     # Allow that the Docker API version is negotiated between client and server
     - unset DOCKER_API_VERSION
     - export IMAGE_TAG=${RELEASE_VERSION}
@@ -230,7 +230,7 @@ test-scim-server-and-consumer-integration:
     - docker logs test-scim-services >& test-scim-services.log
     - docker stop -t0 test-scim-services
     - docker rm test-scim-services
-    - docker compose -f scim-consumer/tests/docker-compose.yaml --profile test down --volumes
+    - docker compose -f scim-client/tests/docker-compose.yaml --profile test down --volumes
   artifacts:
     paths:
       - ldap-server.log
@@ -247,7 +247,7 @@ sonarqube-scan:
   stage: test
   needs:
     - test-unit-and-integration
-    - test-scim-consumer
+    - test-scim-client
   when: always # Runs the job even if a earlier job in the stage fails.
   image:
       name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/sonarsource/sonar-scanner-cli:11
