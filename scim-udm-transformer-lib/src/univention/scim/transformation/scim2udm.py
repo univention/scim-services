@@ -204,18 +204,28 @@ class ScimToUdmMapper:
     def _map_user_enterprise_extension(self, obj: Any, props: dict[str, Any]) -> None:
         if obj.employee_number:
             props["employeeNumber"] = obj.employee_number
+        else:
+            props["employeeNumber"] = None
 
     def _map_user_univention_extension(self, obj: Any, props: dict[str, Any]) -> None:
         if obj.description:
             props["description"] = obj.description
+        else:
+            props["description"] = None
         if obj.password_recovery_email:
             props["PasswordRecoveryEmail"] = obj.password_recovery_email
+        else:
+            props["PasswordRecoveryEmail"] = None
 
     def _map_user_customer1_extension(self, obj: Any, props: dict[str, Any]) -> None:
         if obj.primary_org_unit:
             props["primaryOrgUnit"] = obj.primary_org_unit
+        else:
+            props["primaryOrgUnit"] = None
         if obj.secondary_org_units:
             props["secondaryOrgUnits"] = obj.secondary_org_units
+        else:
+            props["secondaryOrgUnits"] = None
 
     def map_group(self, group: Group) -> dict[str, Any]:
         """
