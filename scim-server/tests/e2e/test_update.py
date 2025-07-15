@@ -369,3 +369,168 @@ async def test_put_user_with_members_endpoint(
             break
 
     assert found_user, f"Added user {user_id} not found in groups's members"
+
+
+@pytest.mark.asyncio
+@pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
+async def test_put_user_unset_extended_attributes(
+    create_random_user: CreateUserFactory,
+    client: TestClient,
+    api_prefix: str,
+    auth_headers: dict[str, str],
+) -> None:
+    """Test unsetting extended attributes of a user through the REST API PUT endpoint."""
+    print("\n=== E2E Testing PUT User Unset Extended Attributes ===")
+
+    # First create a user
+    test_user = await create_random_user()
+    user_id = test_user.id
+    user_url = f"{api_prefix}/Users/{user_id}"
+
+    # Get the user to see current state
+    get_response = client.get(user_url, headers=auth_headers)
+    assert get_response.status_code == 200, f"Failed to get user: {get_response.text}"
+    original_user = get_response.json()
+
+    # Set the extended attribute 'primaryOrgUnit' first to have a defined state
+    update_data = original_user.copy()
+    if "meta" in update_data:
+        del update_data["meta"]
+    univention_user_schema = "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User"
+    if univention_user_schema not in update_data:
+        update_data[univention_user_schema] = {}
+    update_data[univention_user_schema]["primaryOrgUnit"] = "IT-Department"
+
+    put_response = client.put(user_url, json=update_data, headers=auth_headers)
+    assert put_response.status_code == 200, f"Failed to set primaryOrgUnit: {put_response.text}"
+
+    # Get the user to see current state and use this as the base for further modifications
+    get_response = client.get(user_url, headers=auth_headers)
+    assert get_response.status_code == 200, f"Failed to get user: {get_response.text}"
+    original_user = get_response.json()
+    assert "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User" in original_user
+    assert (
+        original_user["urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User"]["primaryOrgUnit"]
+        == "IT-Department"
+    )
+
+    # Prepare updates - remove meta section with etag that's causing problems
+    updated_user_data = original_user.copy()
+    if "meta" in updated_user_data:
+        del updated_user_data["meta"]
+
+    # Unset the extended attribute by setting it to an empty string
+    updated_user_data["urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User"]["primaryOrgUnit"] = ""
+
+    # Send PUT request
+    put_response = client.put(user_url, json=updated_user_data, headers=auth_headers)
+    assert put_response.status_code == 200, f"Failed to update user: {put_response.text}"
+
+    # Verify the response does not contain the extended attribute anymore
+    updated_user = put_response.json()
+    assert "primaryOrgUnit" not in updated_user.get(
+        "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User", {}
+    )
+
+    # Verify the user exists in the server by getting it again
+    get_updated_response = client.get(user_url, headers=auth_headers)
+    assert get_updated_response.status_code == 200
+    get_updated_user = get_updated_response.json()
+    assert "primaryOrgUnit" not in get_updated_user.get(
+        "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User", {}
+    )
+
+    # Now, let's test unsetting with null
+    updated_user_data["urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User"]["primaryOrgUnit"] = None
+
+    # Send PUT request
+    put_response = client.put(user_url, json=updated_user_data, headers=auth_headers)
+    assert put_response.status_code == 200, f"Failed to update user: {put_response.text}"
+
+    # Verify the response does not contain the extended attribute anymore
+    updated_user = put_response.json()
+    assert "primaryOrgUnit" not in updated_user.get(
+        "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User", {}
+    )
+
+    # Verify the user exists in the server by getting it again
+    get_updated_response = client.get(user_url, headers=auth_headers)
+    assert get_updated_response.status_code == 200
+    get_updated_user = get_updated_response.json()
+    assert "primaryOrgUnit" not in get_updated_user.get(
+        "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User", {}
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.skipif(skip_if_no_udm(), reason="UDM server not reachable or in unit tests only mode")
+async def test_patch_user_unset_extended_attributes(
+    create_random_user: CreateUserFactory,
+    client: TestClient,
+    api_prefix: str,
+    auth_headers: dict[str, str],
+) -> None:
+    """Test unsetting extended attributes of a user through the REST API PATCH endpoint."""
+    print("\n=== E2E Testing PATCH User Unset Extended Attributes ===")
+
+    # First create a user
+    test_user = await create_random_user()
+    user_id = test_user.id
+    user_url = f"{api_prefix}/Users/{user_id}"
+
+    # Get the user to see current state
+    get_response = client.get(user_url, headers=auth_headers)
+    assert get_response.status_code == 200, f"Failed to get user: {get_response.text}"
+    original_user = get_response.json()
+
+    # Set the extended attribute 'primaryOrgUnit' first to have a defined state
+    update_data = original_user.copy()
+    if "meta" in update_data:
+        del update_data["meta"]
+    univention_user_schema = "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User"
+    if univention_user_schema not in update_data:
+        update_data[univention_user_schema] = {}
+    update_data[univention_user_schema]["primaryOrgUnit"] = "IT-Department"
+
+    put_response = client.put(user_url, json=update_data, headers=auth_headers)
+    assert put_response.status_code == 200, f"Failed to set primaryOrgUnit: {put_response.text}"
+
+    # Get the user to see current state
+    get_response = client.get(user_url, headers=auth_headers)
+    assert get_response.status_code == 200, f"Failed to get user: {get_response.text}"
+    original_user = get_response.json()
+    assert "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User" in original_user
+    assert (
+        original_user["urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User"]["primaryOrgUnit"]
+        == "IT-Department"
+    )
+
+    # Prepare PATCH data to unset the extended attribute by removing it.
+    # This is equivalent to setting it to None or empty string for this implementation.
+    patch_data = {
+        "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+        "Operations": [
+            {
+                "op": "remove",
+                "path": "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User:primaryOrgUnit",
+            }
+        ],
+    }
+
+    # Send PATCH request
+    patch_response = client.patch(user_url, json=patch_data, headers=auth_headers)
+    assert patch_response.status_code == 200, f"Failed to update user: {patch_response.text}"
+
+    # Verify the response does not contain the extended attribute anymore
+    updated_user = patch_response.json()
+    assert "primaryOrgUnit" not in updated_user.get(
+        "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User", {}
+    )
+
+    # Verify the user exists in the server by getting it again
+    get_updated_response = client.get(user_url, headers=auth_headers)
+    assert get_updated_response.status_code == 200
+    get_updated_user = get_updated_response.json()
+    assert "primaryOrgUnit" not in get_updated_user.get(
+        "urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User", {}
+    )
