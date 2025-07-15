@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.39.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.39.0...v0.39.1) (2025-07-15)
+
+
+### Bug Fixes
+
+* **scim-server:** Fix unsetting 'secondaryOrgUnits' ([a04ae44](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/a04ae44b980bd88421027abad4624a2319d5a9fb)), closes [univention/dev/internal/team-nubus#1341](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1341)
+
 ## [0.39.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.38.2...v0.39.0) (2025-07-15)
 
 
