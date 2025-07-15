@@ -212,6 +212,7 @@ class ScimToUdmMapper:
             props["description"] = obj.description
         else:
             props["description"] = None
+
         if obj.password_recovery_email:
             props["PasswordRecoveryEmail"] = obj.password_recovery_email
         else:
@@ -222,10 +223,11 @@ class ScimToUdmMapper:
             props["primaryOrgUnit"] = obj.primary_org_unit
         else:
             props["primaryOrgUnit"] = None
+
         if obj.secondary_org_units:
             props["secondaryOrgUnits"] = obj.secondary_org_units
         else:
-            props["secondaryOrgUnits"] = None
+            props["secondaryOrgUnits"] = []
 
     def map_group(self, group: Group) -> dict[str, Any]:
         """
