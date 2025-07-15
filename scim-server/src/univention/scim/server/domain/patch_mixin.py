@@ -36,8 +36,9 @@ class PathParser:
     def parse(cls, path: str) -> dict[str, Any]:
         """Parse a SCIM path into components"""
         if not path:
-            return {"attribute": None, "filter": None, "subattr": None}
+            return {"schema": None, "attribute": None, "filter": None, "subattr": None}
 
+        schema = None
         # Handle schema-prefixed paths
         if ":" in path:
             schema, path = path.rsplit(":", 1)
@@ -47,6 +48,7 @@ class PathParser:
             raise ScimPatchError("invalidPath", f"Invalid path: {path}")
 
         result = match.groupdict()
+        result["schema"] = schema
 
         # Parse filter if present
         if result["filter"]:
@@ -187,6 +189,7 @@ class PatchMixin:
 
     def _navigate_and_apply(self, data: Any, parsed: Any, operation: str, value: Any) -> None:
         """Navigate to the target location and apply the operation"""
+        schema = parsed["schema"]
         attribute = parsed["attribute"]
         filter_expr = parsed["filter"]
         subattr = parsed["subattr"]
@@ -195,19 +198,22 @@ class PatchMixin:
         if attribute in self.READONLY_ATTRS and operation != "add":
             raise ScimPatchError("mutability", f"Cannot modify readonly attribute: {attribute}")
 
+        # Determine the target dictionary
+        target_data = data.get(schema) if schema else data
+
         # Get or create the attribute
-        if attribute not in data:
+        if attribute not in target_data:
             if operation == "remove":
                 return  # Nothing to remove
             elif operation in ["add", "replace"]:
                 if filter_expr:
-                    data[attribute] = []  # Create as array if filter present
+                    target_data[attribute] = []  # Create as array if filter present
                 elif subattr:
-                    data[attribute] = {}  # Create as dict if subattr present
+                    target_data[attribute] = {}  # Create as dict if subattr present
                 else:
-                    data[attribute] = None
+                    target_data[attribute] = None
 
-        current = data[attribute]
+        current = target_data[attribute]
 
         # Handle filters on multi-valued attributes
         if filter_expr and isinstance(current, list):
@@ -256,13 +262,13 @@ class PatchMixin:
                     else:
                         current.append(value)
                 else:
-                    data[attribute] = value
+                    target_data[attribute] = value
 
             elif operation == "replace":
-                data[attribute] = value
+                target_data[attribute] = value
 
             elif operation == "remove":
-                data.pop(attribute, None)
+                target_data.pop(attribute, None)
 
     def _apply_filter(self, items: list[Any], filter_expr: Any) -> list[Any]:
         """Apply filter expression to multi-valued attribute"""
