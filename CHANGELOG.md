@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.39.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.38.2...v0.39.0) (2025-07-15)
+
+
+### Features
+
+* support unset extended attributes ([4561027](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/456102707dd4eab60758311d403a3e0bc96cecec)), closes [univention/dev/internal/team-nubus#1341](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1341)
+
+
+### Bug Fixes
+
+* handle schema in SCIM patch operations ([74fb5fe](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/74fb5fef974c759ed69abe8b46003ccd38d65fc9))
+
 ## [0.38.2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.38.1...v0.38.2) (2025-07-15)
 
 
