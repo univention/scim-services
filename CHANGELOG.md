@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.38.2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.38.1...v0.38.2) (2025-07-15)
+
+
+### Bug Fixes
+
+* **scim-consumer:** Add additional udm-listener env vars required for latest version ([c865922](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/c8659225e0ae7e2ea76dae5c87cbacfbf465653b)), closes [univention/dev/internal/team-nubus#1327](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1327)
+* **scim-server:** Use correct URL to wait for keycloak ([8ab7483](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/8ab7483a7e9533889aee772e4cfa84a24e029278)), closes [univention/dev/internal/team-nubus#1327](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1327)
+
 ## [0.38.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.38.0...v0.38.1) (2025-07-07)
 
 
