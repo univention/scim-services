@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.40.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.39.1...v0.40.0) (2025-07-17)
+
+
+### Features
+
+* update ucs-base to 5.2.2-build.20250714 ([1afb46e](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/1afb46ebb5117786cad40ae627c27d89d4e11d01)), closes [univention/dev/internal/team-nubus#1320](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1320)
+
+
+### Bug Fixes
+
+* use ucs-base-python image ([834f5e0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/834f5e0eeec3029058d7d29547adc511841cc8b8)), closes [univention/dev/internal/team-nubus#1320](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1320)
+
 ## [0.39.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.39.0...v0.39.1) (2025-07-15)
 
 
