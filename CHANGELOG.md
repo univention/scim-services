@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.41.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.40.0...v0.41.0) (2025-07-17)
+
+
+### Features
+
+* update wait-for-dependency to 0.35.0 ([8a917ec](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/8a917ecd4c81b9292bc6050103ed5e8481949f69)), closes [univention/dev/internal/team-nubus#1320](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1320)
+
 ## [0.40.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.39.1...v0.40.0) (2025-07-17)
 
 
