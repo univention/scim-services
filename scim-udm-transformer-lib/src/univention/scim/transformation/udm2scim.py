@@ -286,10 +286,19 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
         }
         username = None
         if any(value for value in name_fields.values() if value):
+            formatted = None
+            if props.get("firstname"):
+                formatted = props.get("firstname")
+            if props.get("lastname"):
+                if formatted:
+                    formatted += f" {props.get('lastname')}"
+                else:
+                    formatted = props.get("lastname")
+
             username = Name(
                 given_name=props.get("firstname"),
                 family_name=props.get("lastname"),
-                formatted=f"{props.get('firstname', '')} {props.get('lastname', '')}".strip(),
+                formatted=formatted,
             )
         return username
 

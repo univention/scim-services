@@ -174,6 +174,43 @@ def test_get_user_mapping(udm_client: MockUdm, client: TestClient) -> None:
     assert expected_data == response.json()
 
 
+def test_get_user_no_firstname_mapping(udm_client: MockUdm, client: TestClient) -> None:
+    fake = Faker()
+
+    user = udm_client.add_raw_user(
+        {
+            **udm_properties,
+            "firstname": None,
+            "createTimestamp": int(time.time()),
+            "modifyTimestamp": int(time.time()),
+            "univentionObjectIdentifier": fake.uuid4(),
+            "testExternalId": fake.uuid4(),
+        }
+    )
+
+    create_date_time = datetime.fromtimestamp(user.properties["createTimestamp"], tz=UTC)
+    modify_date_time = datetime.fromtimestamp(user.properties["modifyTimestamp"], tz=UTC)
+    expected_data = {
+        **scim_schema,
+        "id": user.properties["univentionObjectIdentifier"],
+        "externalId": user.properties["testExternalId"],
+        "name": {"formatted": "Doe", "familyName": "Doe"},
+        "meta": {
+            "resourceType": "User",
+            "created": f"{create_date_time.replace(microsecond=0, tzinfo=None).isoformat()}Z",
+            "lastModified": f"{modify_date_time.replace(microsecond=0, tzinfo=None).isoformat()}Z",
+            "location": f"https://scim.unit.test/scim/v2/Users/{user.properties['univentionObjectIdentifier']}",
+            "version": "1.0",
+        },
+    }
+
+    # Get the user
+    response = client.get(f"/scim/v2/Users/{user.properties['univentionObjectIdentifier']}")
+
+    assert response.status_code == 200
+    assert expected_data == response.json()
+
+
 def test_create_user_mapping(udm_client: MockUdm, client: TestClient) -> None:
     fake = Faker()
 
