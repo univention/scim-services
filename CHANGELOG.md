@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.41.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.41.0...v0.41.1) (2025-07-21)
+
+
+### Bug Fixes
+
+* **scim-server:** Make sure pod is restarted on configmap change ([923f175](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/923f175fa19e94dc2ca7d3e24d6f3fc75256961d)), closes [univention/dev/internal/team-nubus#1345](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1345)
+
 ## [0.41.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.40.0...v0.41.0) (2025-07-17)
 
 
