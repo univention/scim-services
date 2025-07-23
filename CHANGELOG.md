@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.41.2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.41.1...v0.41.2) (2025-07-23)
+
+
+### Bug Fixes
+
+* **scim-udm-transformer-lib:** Correctly generated SCIM name.formatted ([4c0d0ad](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/4c0d0ad8fb6ab9d9d3f0ca3f9c000451237a4dc0)), closes [univention/dev/internal/team-nubus#1346](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1346)
+
 ## [0.41.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.41.0...v0.41.1) (2025-07-21)
 
 
