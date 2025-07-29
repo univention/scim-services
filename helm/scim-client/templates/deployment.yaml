@@ -58,8 +58,8 @@ spec:
           securityContext:
             {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
-          image: "{{ coalesce .Values.scimConsumer.image.registry .Values.global.imageRegistry }}/{{ .Values.scimConsumer.image.repository }}{{ if .Values.scimConsumer.image.sha256 }}@sha256:{{ .Values.scimConsumer.image.sha256 }}{{ else }}:{{ .Values.scimConsumer.image.tag }}{{ end }}"
-          imagePullPolicy: {{ coalesce .Values.scimConsumer.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
+          image: "{{ coalesce .Values.scimClient.image.registry .Values.global.imageRegistry }}/{{ .Values.scimClient.image.repository }}{{ if .Values.scimClient.image.sha256 }}@sha256:{{ .Values.scimClient.image.sha256 }}{{ else }}:{{ .Values.scimClient.image.tag }}{{ end }}"
+          imagePullPolicy: {{ coalesce .Values.scimClient.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
           envFrom:
             - configMapRef:
                 name: {{ $name }}

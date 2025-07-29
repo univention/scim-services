@@ -13,7 +13,7 @@ metadata:
   annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.additionalAnnotations "context" . ) | nindent 4 }}
   {{- end }}
 data:
-  LOG_LEVEL: {{ .Values.scimConsumer.config.logLevel | required ".Values.config.LogLevel is required" | quote }}
+  LOG_LEVEL: {{ .Values.scimClient.config.logLevel | required ".Values.config.LogLevel is required" | quote }}
   PROVISIONING_API_USERNAME: {{ default (include "common.names.fullname" .) .Values.provisioningApi.auth.username | quote }}
   PROVISIONING_API_BASE_URL: {{ required ".Values.provisioningApi.connection.url is required." .Values.provisioningApi.connection.url | quote }}
   MAX_ACKNOWLEDGEMENT_RETRIES: {{ required ".Values.provisioningApi.config.maxAcknowledgementRetries is required." .Values.provisioningApi.config.maxAcknowledgementRetries | quote }}
@@ -23,5 +23,5 @@ data:
   SCIM_OIDC_AUTHENTICATION: {{ required ".Values.scimServer.auth.enabled is required" .Values.scimServer.auth.enabled | quote }}
   SCIM_OIDC_TOKEN_URL: {{ required ".Values.scimServer.auth.oidcTokenUrl is required" .Values.scimServer.auth.oidcTokenUrl | quote }}
   SCIM_CLIENT_ID: {{ required ".Values.scimServer.auth.clientId is required" .Values.scimServer.auth.clientId | quote }}
-  EXTERNAL_ID_USER_MAPPING: {{ required ".Values.scimConsumer.config.externalIdUserMapping is required" .Values.scimConsumer.config.externalIdUserMapping | quote }}
-  EXTERNAL_ID_GROUP_MAPPING: {{ required ".Values.scimConsumer.config.externalIdUserMapping is required" .Values.scimConsumer.config.externalIdUserMapping | quote }}
+  EXTERNAL_ID_USER_MAPPING: {{ required ".Values.scimClient.config.externalIdUserMapping is required" .Values.scimClient.config.externalIdUserMapping | quote }}
+  EXTERNAL_ID_GROUP_MAPPING: {{ required ".Values.scimClient.config.externalIdUserMapping is required" .Values.scimClient.config.externalIdUserMapping | quote }}

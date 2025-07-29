@@ -425,7 +425,7 @@ null
 			<td></td>
 		</tr>
 		<tr>
-			<td>scimConsumer</td>
+			<td>scimClient</td>
 			<td>object</td>
 			<td><pre lang="json">
 {
@@ -449,7 +449,7 @@ null
 			<td>Container image configuration</td>
 		</tr>
 		<tr>
-			<td>scimConsumer.config.externalIdGroupMapping</td>
+			<td>scimClient.config.externalIdGroupMapping</td>
 			<td>string</td>
 			<td><pre lang="json">
 "univentionObjectIdentifier"
@@ -458,7 +458,7 @@ null
 			<td>Define external_id UDM attribute for groups</td>
 		</tr>
 		<tr>
-			<td>scimConsumer.config.externalIdUserMapping</td>
+			<td>scimClient.config.externalIdUserMapping</td>
 			<td>string</td>
 			<td><pre lang="json">
 "univentionObjectIdentifier"
@@ -467,7 +467,7 @@ null
 			<td>Define external_id UDM attribute for users</td>
 		</tr>
 		<tr>
-			<td>scimConsumer.config.prefill</td>
+			<td>scimClient.config.prefill</td>
 			<td>bool</td>
 			<td><pre lang="json">
 true
@@ -476,7 +476,7 @@ true
 			<td>Toggle prefill for the provisioning subscription If activated, the client will recieve a synthetic "create" event for all existing objets in the Domain before recieving live events.</td>
 		</tr>
 		<tr>
-			<td>scimConsumer.image.sha256</td>
+			<td>scimClient.image.sha256</td>
 			<td>string</td>
 			<td><pre lang="json">
 null

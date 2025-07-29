@@ -15,7 +15,7 @@ helm_resource(
       "artifacts.software-univention.de/nubus-dev/images/scim-client:latest",
     ],
     image_keys=[
-      ("scimConsumer.image.registry", "scimConsumer.image.repository", "scimConsumer.image.tag"),
+      ("scimClient.image.registry", "scimClient.image.repository", "scimClient.image.tag"),
     ],
 )
 

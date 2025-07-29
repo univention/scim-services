@@ -63,7 +63,7 @@ class TestNubusProvisioningSubscription(Annotations, Labels, Namespace):
 
     def test_can_be_deployed_multiple_times(self, helm, chart_path):
         nextcloud_values = load_yaml("""
-        scimConsumer:
+        scimClient:
             config:
                 prefill: false
                 groupSync: false

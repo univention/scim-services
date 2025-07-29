@@ -16,7 +16,7 @@ class TestConfigMap(ConfigMap):
 @pytest.mark.parametrize(
     "key, env_var",
     [
-        ("scimConsumer.config.logLevel", "LOG_LEVEL"),
+        ("scimClient.config.logLevel", "LOG_LEVEL"),
         ("provisioningApi.connection.url", "PROVISIONING_API_BASE_URL"),
         ("provisioningApi.config.maxAcknowledgementRetries", "MAX_ACKNOWLEDGEMENT_RETRIES"),
         ("scimServer.connection.url", "SCIM_SERVER_BASE_URL"),

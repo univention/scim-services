@@ -96,7 +96,7 @@ ldap:
         password: null
 
 # -- Container image configuration
-scimConsumer:
+scimClient:
   image:
     registry: ""
     repository: "nubus-dev/images/scim-client"
