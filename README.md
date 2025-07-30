@@ -25,6 +25,15 @@ when they use the same standardized interface that other IAM providers like Okta
 - Data schema: [RFC7643 - System for Cross-domain Identity Management: Core Schema](https://datatracker.ietf.org/doc/html/rfc7643).
 - REST interface: [RFC7644 - System for Cross-domain Identity Management: Protocol](https://datatracker.ietf.org/doc/html/rfc7644).
 
+## Components
+
+This repository contains the following components:
+
+- `scim-server`: A SCIM v2.0 compliant server that exposes Nubus UDM data.
+- `scim-client`: A client to provision users and groups to a SCIM-compliant service provider.
+- `scim-udm-transformer-lib`: A library for transforming data between SCIM and UDM formats.
+- `udm-to-scim-sync`: A tool for synchronizing data from UDM to a SCIM service.
+
 ## Installation /  Deployment
 
 ### Nubus for Kubernetes
@@ -58,52 +67,6 @@ TODO
     [scim-udm-transformer-lib](scim-udm-transformer-lib)
     as _workspace members_.
 - ...
-
-### Scim server
-
-**Move into server folder:**
-
-```bash
-cd scim-server
-```
-
-**Install dependencies:**
-
-```bash
-uv pip install --requirements pyproject.toml
-```
-
-or for dev dependencies also:
-
-```bash
-uv pip install --all-extras
-```
-
-**Run locally in dev mode:**
-
-```bash
-AUTH_ENABLED=false uv run uvicorn --reload src.univention.scim.server.main:app
-```
-
-**Run locally but use nubus deployment as backend:**
-- Add `http://127.0.0.1:8000/docs/oauth2-redirect` to the `Valid redirect URIs` of the keycloak client
-- Add `http://127.0.0.1:8000` to the `Web origins` of the keycloak client
-
-```bash
-./run_with_nubus.sh
-```
-
-**Run tests:**
-
-```bash
-uv run pytest
-```
-
-#### Tests
-
-- To start unit tests:  TODO
-- To start integration tests:  TODO
-- To start end-to-end tests:  TODO
 
 ### SCIM client
 
