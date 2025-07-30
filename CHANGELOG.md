@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.41.3](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.41.2...v0.41.3) (2025-07-30)
+
+
+### Bug Fixes
+
+* **scim-consumer:** Assert if tests run into timeout ([eaeac3a](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/eaeac3a130c41caa5111b5c58261b9be30064e88))
+* **scim-consumer:** Refactor scim-consumer to use less hardcoded stuff and make it more compatible with different scim-servers ([cfd562e](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/cfd562eec95bc7d61603c0b0625b8671c1f1cb3c)), closes [univention/dev/internal/team-nubus#1361](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1361)
+* **udm-transformer-lib:** Add support for pydantic models discovered via ScimClient ([e11a6e4](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/e11a6e47e6acfd07ed23ffe5ac103a4cbacccf2a))
+
 ## [0.41.2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.41.1...v0.41.2) (2025-07-23)
 
 
