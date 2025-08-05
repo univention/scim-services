@@ -38,7 +38,7 @@ provisioningApi:
     password: null
     existingSecret:
       # -- The name of an existing Secret to use for retrieving the password
-      # to authenticate with the Provisionig API.
+      # to authenticate with the Provisioning API.
       #
       # "provisioningApi.auth.password" will be ignored if this value is set.
       name: null
@@ -79,7 +79,7 @@ ldap:
     # -- LDAP Server hostname (e.g. "nubus-ldap-server")
     host: null
   auth:
-    # -- Bind destinguished name to authenticate with the LDAP Server.
+    # -- Bind distinguished name to authenticate with the LDAP Server.
     bindDn: null
     # -- The password used to authenticate with the LDAP Server.
     # Either this value or an existing Secret has to be specified.
@@ -105,10 +105,12 @@ scimClient:
     # -- Define image sha256 as an alternative to `tag`
     sha256: null
   config:
+    # -- The log level for the SCIM client.
+    # valid values are: ERROR WARNING, INFO, DEBUG
     logLevel: "INFO"
     # -- Toggle prefill for the provisioning subscription
-    # If activated, the client will recieve a synthetic "create" event
-    # for all existing objets in the Domain before recieving live events.
+    # If activated, the client will receive a synthetic "create" event
+    # for all existing objects in the Domain before receiving live events.
     prefill: true
     groupSync: true
     # -- Define external_id UDM attribute for users
@@ -154,7 +156,7 @@ containerSecurityContext:
   runAsUser: 1000
   # -- Process group id.
   runAsGroup: 1000
-  # -- Mounts the container's root filesystem as read-only.
+  # -- Mounts the container's root file system as read-only.
   readOnlyRootFilesystem: true
   # -- Run container as a user.
   runAsNonRoot: true
@@ -182,7 +184,7 @@ serviceAccount:
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # If not set and create is true, a name is generated using the full name template
   name: ""
   ## @param serviceAccount.automountServiceAccountToken Allows auto mount of ServiceAccountToken on the serviceAccount created
   ## Can be set to false if pods using this serviceAccount do not need to use K8s API

@@ -98,7 +98,7 @@ false
 true
 </pre>
 </td>
-			<td>Mounts the container's root filesystem as read-only.</td>
+			<td>Mounts the container's root file system as read-only.</td>
 		</tr>
 		<tr>
 			<td>containerSecurityContext.runAsGroup</td>
@@ -229,7 +229,7 @@ null
 null
 </pre>
 </td>
-			<td>Bind destinguished name to authenticate with the LDAP Server.</td>
+			<td>Bind distinguished name to authenticate with the LDAP Server.</td>
 		</tr>
 		<tr>
 			<td>ldap.auth.existingSecret.keyMapping.password</td>
@@ -350,7 +350,7 @@ null
 null
 </pre>
 </td>
-			<td>The name of an existing Secret to use for retrieving the password to authenticate with the Provisionig API.  "provisioningApi.auth.password" will be ignored if this value is set.</td>
+			<td>The name of an existing Secret to use for retrieving the password to authenticate with the Provisioning API.  "provisioningApi.auth.password" will be ignored if this value is set.</td>
 		</tr>
 		<tr>
 			<td>provisioningApi.auth.password</td>
@@ -467,13 +467,22 @@ null
 			<td>Define external_id UDM attribute for users</td>
 		</tr>
 		<tr>
+			<td>scimClient.config.logLevel</td>
+			<td>string</td>
+			<td><pre lang="json">
+"INFO"
+</pre>
+</td>
+			<td>The log level for the SCIM client. valid values are: ERROR WARNING, INFO, DEBUG</td>
+		</tr>
+		<tr>
 			<td>scimClient.config.prefill</td>
 			<td>bool</td>
 			<td><pre lang="json">
 true
 </pre>
 </td>
-			<td>Toggle prefill for the provisioning subscription If activated, the client will recieve a synthetic "create" event for all existing objets in the Domain before recieving live events.</td>
+			<td>Toggle prefill for the provisioning subscription If activated, the client will receive a synthetic "create" event for all existing objects in the Domain before receiving live events.</td>
 		</tr>
 		<tr>
 			<td>scimClient.image.sha256</td>
