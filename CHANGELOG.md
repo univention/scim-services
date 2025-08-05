@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.42.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.41.3...v0.42.0) (2025-08-05)
+
+
+### Features
+
+* Add SCIM client and server documentation ([5215c19](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/5215c194751d326b888dbe83115deccfda01c90f)), closes [univention/dev/internal/team-nubus#1190](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1190)
+
 ## [0.41.3](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.41.2...v0.41.3) (2025-07-30)
 
 
