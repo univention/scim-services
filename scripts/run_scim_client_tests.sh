@@ -8,6 +8,10 @@ for profile in test test-integration; do
   (
     echo "Running ${profile} tests"
     function cleanup {
+      docker compose logs scim-dev-server > ../../scim-server.logs
+      docker compose logs udm-rest-api > ../../udm-rest-api.logs
+      docker compose logs udm-listener > ../../udm-listener.logs
+      docker compose logs provisioning-api > ../../provisioning-api.logs
       docker compose --profile ${profile} down --volumes --remove-orphans
     }
     trap cleanup EXIT

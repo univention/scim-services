@@ -118,7 +118,7 @@ services:
       - scim
 
   provisioning-api:
-    image: gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-events-and-consumer-api:latest
+    image: gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-events-and-consumer-api:0.60.1
     # image: artifacts.software-univention.de/nubus/images/provisioning-events-and-consumer-api:0.56.0
     container_name: "provisioning-api-dev"
     restart: "on-failure"
@@ -175,7 +175,7 @@ services:
     command: --name nats --cluster_name JetStreamCluster --jetstream -m 8222 -p 4222 -config /etc/nats-config/nats.conf
 
   dispatcher:
-    image: gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-dispatcher:latest
+    image: gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-dispatcher:0.60.1
     # image: artifacts.software-univention.de/nubus/images/provisioning-dispatcher:0.56.0
     container_name: "provisioning-dispatcher"
     restart: "on-failure"
@@ -201,7 +201,7 @@ services:
       - scim
 
   udm-transformer:
-    image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-udm-transformer:latest"
+    image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-udm-transformer:0.60.1"
     # image: artifacts.software-univention.de/nubus/images/provisioning-udm-transformer:0.56.0
     container_name: "provisioning-udm-transformer"
     restart: "on-failure"
@@ -235,7 +235,7 @@ services:
       - scim
 
   prefill:
-    image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-prefill:latest"
+    image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-prefill:0.60.1"
     # image: artifacts.software-univention.de/nubus/images/provisioning-prefill:0.56.0
     container_name: "provisioning-prefill"
     restart: "on-failure"
@@ -268,7 +268,7 @@ services:
       - scim
 
   udm-listener:
-    image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-udm-listener:latest"
+    image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-udm-listener:0.60.1"
     # image: artifacts.software-univention.de/nubus/images/provisioning-udm-listener:0.56.0
     container_name: "udm-listener"
     profiles:

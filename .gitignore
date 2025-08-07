@@ -18,5 +18,9 @@ __pycache__/
 **/.kyverno/manifest.yaml
 **/*.egg-info/
 .venv/
+
+# logs from running tests locally
 /scim-server.logs
 /udm-rest-api.logs
+/provisioning-api.logs
+/udm-listener.logs
