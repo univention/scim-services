@@ -1471,7 +1471,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.10.6" },
     { name = "scim-server", editable = "scim-server" },
     { name = "scim-udm-transformer-lib", editable = "scim-udm-transformer-lib" },
-    { name = "scim2-client", extras = ["httpx"], git = "https://github.com/J-Bu/scim2-client.git?rev=c6009dac93df38617d7d7c6ed2e1ec63b8120c30" },
+    { name = "scim2-client", extras = ["httpx"], specifier = ">=0.6.1" },
     { name = "scim2-tester" },
     { name = "udm-rest-api-client", specifier = ">=0.0.2" },
     { name = "udm-rest-api-client", extras = ["async"], specifier = ">=0.0.2" },
@@ -1555,7 +1555,7 @@ dev = [
     { name = "requests", specifier = ">=2.32.3" },
     { name = "requests-mock", specifier = ">=1.12.1" },
     { name = "respx", specifier = ">=0.22.0" },
-    { name = "scim2-client", extras = ["httpx"], git = "https://github.com/J-Bu/scim2-client.git?rev=c6009dac93df38617d7d7c6ed2e1ec63b8120c30" },
+    { name = "scim2-client", extras = ["httpx"], specifier = ">=0.6.1" },
 ]
 
 [[package]]
@@ -1606,10 +1606,14 @@ requires-dist = [
 
 [[package]]
 name = "scim2-client"
-version = "0.5.1"
-source = { git = "https://github.com/J-Bu/scim2-client.git?rev=c6009dac93df38617d7d7c6ed2e1ec63b8120c30#c6009dac93df38617d7d7c6ed2e1ec63b8120c30" }
+version = "0.6.1"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "scim2-models" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ee/b8/fe6ca4b0b695835881b2f4de5cfc47f9a1e2c0a6e7009b6724647df79679/scim2_client-0.6.1.tar.gz", hash = "sha256:e5739438a7f4bd81e47b0636db1e4d41d84809709df847ed2a1b31b50bab8074", size = 100250, upload-time = "2025-08-01T13:16:44.571Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/70/96/dd0d70a873602c9b21bbc39865e2bc077f6dd99e2622f0fb4171dd08f78f/scim2_client-0.6.1-py3-none-any.whl", hash = "sha256:6ccf47424562a063d7678049d7ea2ada5492becc1cbc4959f2dbe2dabb48efa2", size = 23480, upload-time = "2025-08-01T13:16:43.086Z" },
 ]
 
 [package.optional-dependencies]
@@ -1619,14 +1623,14 @@ httpx = [
 
 [[package]]
 name = "scim2-models"
-version = "0.3.5"
+version = "0.4.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic", extra = ["email"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/06/d9/39774cf26ed3ae7f693033b7aa064bc3f8a4cacc07fe245def8fc05dd4fc/scim2_models-0.3.5.tar.gz", hash = "sha256:9ce2c2632c81ed28be29fc1d58cec30a40e8695123fdca1403ffd95b784a1ee0", size = 140607, upload-time = "2025-06-05T16:23:45.022Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a7/8e/1c779a9d58151f2f5d7f2a9e7d98d212bf9f9a28393cdd235a8b3b202cd9/scim2_models-0.4.2.tar.gz", hash = "sha256:08868cc1a31dfa0be4caf6423bd6684dcfa342ebb196e96f7b5ee77870a51503", size = 161253, upload-time = "2025-08-05T21:22:06Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0c/d1/8e62f0fcec8d37392daca0a627fb2baacdb824227a53983079e9e407d2b2/scim2_models-0.3.5-py3-none-any.whl", hash = "sha256:6c8431f9b6b7c7d6d96bf78ad419947cbb18593eb2263244e17e214e69cdd958", size = 40917, upload-time = "2025-06-05T16:23:43.638Z" },
+    { url = "https://files.pythonhosted.org/packages/65/bd/7b06a98dd648610a3169df379f0dec55df05b9c17c341bb30c089b789516/scim2_models-0.4.2-py3-none-any.whl", hash = "sha256:268a5e3be508fa3114d76c1b6b93d4cafef1bbf819d937c9b3bc149b5bc86d73", size = 51847, upload-time = "2025-08-05T21:22:04.464Z" },
 ]
 
 [[package]]

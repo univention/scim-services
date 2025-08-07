@@ -112,10 +112,10 @@ services:
     #image: python:3.11-slim
     image: python:3.11
     entrypoint: ""
-    # For now use a forked scim2-client with a fix for multiple extension until a new upstream release is available
+    # For now use a forked scim2-client with a fix for creating correct referenced objects like users.groups or group.members
     command: >
       bash -c "
-        pip install git+https://github.com/J-Bu/scim2-models.git git+https://github.com/J-Bu/scim2-client.git git+https://github.com/J-Bu/scim2-tester.git scim2-cli &&
+        pip install scim2-models>=0.4.2 scim2-client>=0.6.1 git+https://github.com/J-Bu/scim2-tester.git@b0ec73670811dfbb7845418a3b810be91ebb1b9d scim2-cli &&
         scim2 -u http://scim-server:8000/scim/v2/ test"
     depends_on:
       scim-server:

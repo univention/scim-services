@@ -62,12 +62,6 @@ RUN rm -fv /usr/lib/python*/EXTERNALLY-MANAGED && \
     groupadd -r ${USER} -g 1000 && \
     useradd -r -d /app -g ${USER} -N ${USER} -u 1000
 
-# git is required to get fixed fork of scim-client, if fix is upstreamed it can be removed
-RUN apt-get update \
-    && apt-get --assume-yes --verbose-versions --no-install-recommends install \
-      git \
-      ca-certificates
-
 RUN uv sync \
         --package=scim-server \
         --dev \

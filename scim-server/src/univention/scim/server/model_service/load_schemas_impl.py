@@ -31,7 +31,7 @@ class LoadSchemasImpl(LoadSchemas):
         logger.debug("Loading User schema")
         user_schema = User.to_schema()
 
-        # UDM requires a last name so adept our schema accordingly
+        # UDM requires a last name so adapt our schema accordingly
         name_attribute = next(x for x in user_schema.attributes if x.name == "name")
         name_attribute.required = True
         family_name_sub_attribute = next(x for x in name_attribute.sub_attributes if x.name == "familyName")
@@ -46,8 +46,15 @@ class LoadSchemasImpl(LoadSchemas):
 
     def _get_group_schema(self) -> Schema:
         """Get the Group schema."""
+        # scim2-models does not add parent members to schema so patch schema on our own
         logger.debug("Loading Group schema")
-        return Group.to_schema()
+        group_schema = Group.to_schema()
+
+        # UDM requires a name so adapt our schema accordingly
+        display_name_attribute = next(x for x in group_schema.attributes if x.name == "displayName")
+        display_name_attribute.required = True
+
+        return group_schema
 
     def _get_user_extension_schemas(self) -> list[Schema]:
         user_extensions = [EnterpriseUser.to_schema(), UniventionUser.to_schema(), Customer1User.to_schema()]

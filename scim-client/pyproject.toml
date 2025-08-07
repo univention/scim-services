@@ -7,8 +7,7 @@ dependencies = [
     "udm-rest-api-client[async]>=0.0.2",
     "scim-udm-transformer-lib",
     "nubus-provisioning-consumer>=0.53.0",
-    # Use forked scim client to fix bug with multiple extensions
-    "scim2-client[httpx]@git+https://github.com/J-Bu/scim2-client.git@c6009dac93df38617d7d7c6ed2e1ec63b8120c30",
+    "scim2-client[httpx]>=0.6.1",
     "scim2-tester",
     "icecream>=2.1.4",
     "udm-rest-api-client>=0.0.2",
