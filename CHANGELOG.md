@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.42.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.42.0...v0.42.1) (2025-08-08)
+
+
+### Bug Fixes
+
+* **python-scim:** Update to latest python-scim versions ([7a4201b](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/7a4201b728d3fb0c392c8231197666f4738e8b80)), closes [univention/dev/internal/team-nubus#1360](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1360)
+* **scim-client:** Pin provisioning version to 0.60.1 because no messages are received when using latest version 0.60.2 ([f7547c7](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/f7547c794d036b917fa433e70aff834745fc2ded)), closes [univention/dev/internal/team-nubus#1360](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1360)
+
 ## [0.42.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.41.3...v0.42.0) (2025-08-05)
 
 
