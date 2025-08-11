@@ -142,7 +142,7 @@ def udm_client() -> UDM:
     return udm
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def background_scim_client() -> Generator[bool, None, None]:
     logger.info("Fixture background_scim_client started.")
 
@@ -160,22 +160,19 @@ def background_scim_client() -> Generator[bool, None, None]:
     logger.info("Fixture background_scim_client exited.")
 
 
-@pytest.fixture(scope="function")
-def background_scim_client_prefilled(
-    udm_client: UDM, scim_http_client: ScimClient, group_data: dict[str, Any], maildomain: str
+@pytest.fixture
+def create_user_and_group(
+    background_scim_client: ScimConsumer,
+    udm_client: UDM,
+    scim_http_client: ScimClient,
+    group_data: dict[str, Any],
+    maildomain: str,
 ) -> Generator[Any, None, None]:
-    logger.info("Fixture background_scim_client started.")
-
     # Create UDM records
     udm_users = generate_udm_users(udm_client=udm_client, maildomain_name=maildomain, amount=10)
     for udm_user in udm_users:
         group_data["users"].append(udm_user.dn)
     udm_group = create_udm_group(udm_client=udm_client, group_data=group_data)
-
-    create_provisioning_subscription()
-
-    proc = multiprocessing.Process(target=scim_client_run)
-    proc.start()
 
     yield udm_users, udm_group
 
@@ -188,15 +185,7 @@ def background_scim_client_prefilled(
     for udm_user in udm_users:
         assert wait_for_resource_deleted(scim_http_client, udm_user.properties.get("univentionObjectIdentifier"))
     delete_udm_group(udm_client=udm_client, group_data=group_data)
-    assert wait_for_resource_deleted(
-        scim_http_client=scim_http_client, univention_object_identifier=group_data["univentionObjectIdentifier"]
-    )
-
-    proc.terminate()
-
-    delete_provisioning_subscription()
-
-    logger.info("Fixture background_scim_client_prefilled exited.")
+    assert wait_for_resource_deleted(scim_http_client, group_data["univentionObjectIdentifier"])
 
 
 @pytest.fixture(scope="function")

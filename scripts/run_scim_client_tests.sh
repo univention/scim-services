@@ -25,7 +25,7 @@ for profile in test test-integration; do
       docker compose --profile ${profile} build scim-server
     fi
     docker compose build ${profile}
-    docker compose run --rm -ti ${profile} $@
+    docker compose run --name scim-client-${profile} --rm -ti ${profile} $@
     cleanup
   )
 done

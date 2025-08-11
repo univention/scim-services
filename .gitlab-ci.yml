@@ -169,17 +169,18 @@ test-scim-client:
   script:
     - docker compose run --quiet-pull --name test-scim-client test
   after_script:
-    - docker logs ldap-server >& ldap-server.log
-    - docker logs udm-rest-api >& udm-rest-api.log
-    - docker logs udm-listener >& udm-listener.log
-    - docker logs keycloak >& keycloak.log
-    - docker logs scim-dev-server >& scim-dev-server.log
-    - docker logs test-scim-client >& test-scim-client.log
-    - docker cp test-scim-client:/tmp/pytest-junit.xml ./pytest-junit-test-scim-client.xml
-    - docker cp test-scim-client:/tmp/scim-coverage.xml ./coverage-test-scim-client.xml
+    - cd scim-client/tests
+    - docker cp test-scim-client:/tmp/pytest-junit.xml ../../pytest-junit-test-scim-client.xml
+    - docker cp test-scim-client:/tmp/scim-coverage.xml ../../coverage-test-scim-client.xml
+    - docker compose logs ldap-server >& ../../ldap-server.log
+    - docker compose logs udm-rest-api >& ../../udm-rest-api.log
+    - docker compose logs udm-listener >& ../../udm-listener.log
+    - docker compose logs keycloak >& ../../keycloak.log
+    - docker compose logs scim-dev-server >& ../../scim-dev-server.log
+    - docker logs test-scim-client >& ../../test-scim-client.log
     - docker stop -t0 test-scim-client
     - docker rm test-scim-client
-    - docker compose -f scim-client/tests/docker-compose.yaml --profile test down --volumes
+    - docker compose --profile test down --volumes
   artifacts:
     paths:
       - ldap-server.log
@@ -203,17 +204,7 @@ test-scim-server-and-client-integration:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
       when: "never"
-    # Run pipeline only manual for what ever reason it takes very long when using the univention scim server.
-    #
-    # Timings when run locally:
-    # With scim2_server: 48 passed, 2 skipped, 2 warnings in 104.25s (0:01:44)
-    #
-    # With univention scim server: 47 passed, 3 skipped, 2 warnings in 1138.74s (0:18:58)
-    #
-    # When run in the pipeline it is even worse and the test will timeout.
-    # We need to figure out what the problem is
-    - when: manual
-  allow_failure: true
+    - when: "on_success"
   before_script:
     - cd scim-client/tests
     # Allow that the Docker API version is negotiated between client and server
@@ -229,23 +220,28 @@ test-scim-server-and-client-integration:
   script:
     - docker compose run --quiet-pull --name test-integration-scim-services test-integration
   after_script:
-    - docker logs ldap-server >& ldap-server.log
-    - docker logs udm-rest-api >& udm-rest-api.log
-    - docker logs udm-listener >& udm-listener.log
-    - docker logs keycloak >& keycloak.log
-    - docker logs scim-server >& scim-server.log
-    - docker logs test-scim-services >& test-scim-services.log
-    - docker stop -t0 test-scim-services
-    - docker rm test-scim-services
-    - docker compose -f scim-client/tests/docker-compose.yaml --profile test-integration down --volumes
+    - cd scim-client/tests
+    - docker compose logs ldap-server >& ../../ldap-server.log
+    - docker compose logs udm-rest-api >& ../../udm-rest-api.log
+    - docker compose logs udm-listener >& ../../udm-listener.log
+    - docker compose logs keycloak >& ../../keycloak.log
+    - docker compose logs provisioning-api >& ../../provisioning-api.log
+    - docker compose logs scim-server >& ../../scim-server.log
+    - docker compose logs downstream-udm-rest-api >& ../../downstream-udm-rest-api.log
+    - docker logs test-integration-scim-services >& ../../test-integration-scim-services.log
+    - docker stop -t0 test-integration-scim-services
+    - docker rm test-integration-scim-services
+    - docker compose --profile test-integration down --volumes
   artifacts:
     paths:
       - ldap-server.log
       - udm-rest-api.log
       - udm-listener.log
       - keycloak.log
+      - provisioning-api.log
       - scim-server.log
-      - test-scim-services.log
+      - downstream-udm-rest-api.log
+      - test-integration-scim-services.log
     expire_in: "1 day"
     when: "always"
     expose_as: "docker compose server logs"

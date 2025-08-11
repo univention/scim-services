@@ -183,8 +183,8 @@ def test_update_group_member_dn(
 
 
 @pytest.mark.skip("Will be developed further in a future MR")
-def test_prefilled_sync(background_scim_client_prefilled: ScimConsumer, scim_http_client: ScimClient) -> None:
-    udm_users, udm_group = background_scim_client_prefilled
+def test_prefilled_sync(scim_http_client: ScimClient, create_user_and_group: Any) -> None:
+    udm_users, udm_group = create_user_and_group
 
     user_ids = []
     for udm_user in udm_users:

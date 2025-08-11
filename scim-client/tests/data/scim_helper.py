@@ -97,7 +97,9 @@ def create_provisioning_subscription() -> None:
                         RealmTopic(realm="udm", topic="users/user"),
                         RealmTopic(realm="udm", topic="groups/group"),
                     ],
-                    request_prefill=True,
+                    # do not request prefill to speed up tests, in the tests we are only interested
+                    # in the new users/groups created within the test not all the default users/groups
+                    request_prefill=False,
                 )
             except ClientResponseError as e:
                 logger.warning("%s, Client already exists", e)
