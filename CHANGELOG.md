@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.42.2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.42.1...v0.42.2) (2025-08-12)
+
+
+### Bug Fixes
+
+* **scim-client:** Fix unit tests with latest provisioning ([361f318](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/361f318172dba204e6f8e60b7d633b42d58350d5)), closes [univention/dev/internal/team-nubus#1360](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1360)
+* **scim-client:** Reenable scim-client/server integration tests ([f5f6fb4](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/f5f6fb41b1a691b39200e4068a846d7e551bd2ed)), closes [univention/dev/internal/team-nubus#1360](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1360)
+
 ## [0.42.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.42.0...v0.42.1) (2025-08-08)
 
 
