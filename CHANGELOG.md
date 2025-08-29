@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.42.3](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.42.2...v0.42.3) (2025-08-29)
+
+
+### Bug Fixes
+
+* Update base image to version 5.2.2-build.20250821 ([03f9da7](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/03f9da7f3ec61485d191cdbd8b7787f6b92fa7f8)), closes [univention/dev/internal/team-nubus#1385](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1385)
+
 ## [0.42.2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.42.1...v0.42.2) (2025-08-12)
 
 
