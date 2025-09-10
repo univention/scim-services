@@ -37,12 +37,12 @@ class Authenticator(httpx.Auth):
             payload_b64 = parts[1]
             payload_b64 += "=" * (-len(payload_b64) % 4)
             payload_bytes = base64.urlsafe_b64decode(payload_b64)
-            claims = json.loads(payload_bytes)
-            expiery_time = claims["exp"]
-        except (IndexError, binascii.Error, json.JSONDecodeError, KeyError) as error:
-            logger.warning("Could not parse the existing JWT AccessToken and evaluate the expiery time: %r", error)
+            claims = json.loads(payload_bytes.decode("utf-8"))
+            expiry_time = claims["exp"]
+        except (IndexError, binascii.Error, json.JSONDecodeError, KeyError, UnicodeDecodeError) as error:
+            logger.warning("Could not parse the existing JWT AccessToken and evaluate the expiry time: %r", error)
             return None
-        if time.time() >= expiery_time:
+        if time.time() >= expiry_time:
             logger.info("existing JWT is expired")
             return None
 
