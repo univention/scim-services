@@ -14,6 +14,7 @@ from univention.scim.server.config import ApplicationSettings, application_setti
 from univention.scim.server.configure_logging import configure_logging
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.fast_api_auth_adapter import FastAPIAuthAdapter
+from univention.scim.server.middlewares.content_type import add_content_type_middleware
 from univention.scim.server.middlewares.request_logging import setup_request_logging_middleware
 from univention.scim.server.middlewares.timing import add_timing_middleware
 from univention.scim.server.rest.error_handler import (
@@ -128,6 +129,9 @@ def make_app(settings: ApplicationSettings) -> FastAPI:
 
     # Add request logging middleware
     setup_request_logging_middleware(app)
+
+    # Add content type middleware (after request logging to not interfere with logs)
+    add_content_type_middleware(app)
 
     # Add CORS middleware
     app.add_middleware(

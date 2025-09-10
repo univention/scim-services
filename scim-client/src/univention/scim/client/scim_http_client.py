@@ -46,6 +46,10 @@ class ScimClient:
         client = Client(
             auth=self.auth,
             base_url=self.settings.scim_server_base_url,
+            headers={
+                "Accept": "application/scim+json",
+                "Content-Type": "application/scim+json",
+            },
         )
 
         scim = SyncSCIMClient(client=client)

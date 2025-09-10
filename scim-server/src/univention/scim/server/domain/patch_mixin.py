@@ -24,11 +24,7 @@ class PathParser:
     """Parse SCIM path expressions"""
 
     # Regex patterns for parsing SCIM paths
-    PATH_PATTERN = re.compile(
-        r"^(?P<attribute>[a-zA-Z_]\w*)"
-        r"(?:\[(?P<filter>.+?)\])?"
-        r"(?:\.(?P<subattr>.+))?$"
-    )
+    PATH_PATTERN = re.compile(r"^(?P<attribute>[a-zA-Z_]\w*)" r"(?:\[(?P<filter>.+?)\])?" r"(?:\.(?P<subattr>.+))?$")
 
     FILTER_PATTERN = re.compile(r'^(?P<attr>\w+)\s+(?P<op>eq|ne|co|sw|ew|gt|ge|lt|le|pr)\s+"?(?P<value>[^"]+)"?$')
 
