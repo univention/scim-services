@@ -119,7 +119,7 @@ def _make_jwt_with_invalid_json() -> str:
 
 
 def test_authenticator_jwt_without_exp_claim(authenticator: Authenticator) -> None:
-    """Test that JWT without 'exp' claim is handled gracefully."""
+    """Test that JWT without 'exp' claim is handled optimistically."""
     import base64
     import json
 
@@ -130,10 +130,10 @@ def test_authenticator_jwt_without_exp_claim(authenticator: Authenticator) -> No
 
     authenticator._access_token = jwt_without_exp
 
-    # Should get a new token when the existing one lacks 'exp' claim
+    # Should pass through the token optimistically when no 'exp' claim present
     token = authenticator.get_token()
-    assert token == "new-dummy-token"
-    authenticator._client.post.assert_called_once()
+    assert token == jwt_without_exp
+    authenticator._client.post.assert_not_called()
 
 
 def test_authenticator_plain_json_token(authenticator: Authenticator) -> None:
@@ -165,13 +165,57 @@ def test_authenticator_plain_json_expired_token(authenticator: Authenticator) ->
 
 
 def test_authenticator_plain_json_without_exp_claim(authenticator: Authenticator) -> None:
-    """Test that plain JSON tokens without 'exp' claim are handled gracefully."""
+    """Test that plain JSON tokens without 'exp' claim are handled optimistically."""
     # Create a plain JSON token without the 'exp' claim
     plain_json_token = json.dumps({"sub": "user123", "aud": "scim-api"})
 
     authenticator._access_token = plain_json_token
 
-    # Should get a new token when plain JSON lacks 'exp' claim
+    # Should pass through the token optimistically when no 'exp' claim present
     token = authenticator.get_token()
-    assert token == "new-dummy-token"
+    assert token == plain_json_token
+    authenticator._client.post.assert_not_called()
+
+
+def test_authenticator_string_exp_claims(authenticator: Authenticator) -> None:
+    """Test that string 'exp' claims are handled correctly (fixes TypeError issue)."""
+    import time
+
+    current_time = time.time()
+
+    # Test valid string exp claim (future)
+    valid_string_exp_token = json.dumps(
+        {
+            "exp": str(int(current_time + 3600)),  # String instead of number
+            "iat": int(current_time),
+            "client_id": "scim-client",
+        }
+    )
+
+    authenticator._access_token = valid_string_exp_token
+    token = authenticator.get_token()
+    assert token == valid_string_exp_token  # Should reuse valid token
+    authenticator._client.post.assert_not_called()
+
+    # Test expired string exp claim (past)
+    expired_string_exp_token = json.dumps(
+        {
+            "exp": str(int(current_time - 300)),  # Expired string exp
+            "iat": int(current_time - 360),
+            "client_id": "scim-client",
+        }
+    )
+
+    authenticator._access_token = expired_string_exp_token
+    token = authenticator.get_token()
+    assert token == "new-dummy-token"  # Should fetch new token
+    authenticator._client.post.assert_called_once()
+
+    # Test invalid exp format
+    authenticator._client.post.reset_mock()
+    invalid_exp_token = json.dumps({"exp": "invalid-date-format", "client_id": "scim-client"})
+
+    authenticator._access_token = invalid_exp_token
+    token = authenticator.get_token()
+    assert token == "new-dummy-token"  # Should fetch new token due to invalid exp
     authenticator._client.post.assert_called_once()

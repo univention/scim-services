@@ -60,15 +60,21 @@ class Authenticator(httpx.Auth):
             logger.warning("Could not extract claims from AccessToken")
             return None
 
-        try:
-            expiry_time = claims["exp"]
-        except KeyError:
-            logger.warning("AccessToken does not contain 'exp' claim")
-            return None
-
-        if time.time() >= expiry_time:
-            logger.info("existing AccessToken is expired")
-            return None
+        # Check expiry if present, but be optimistic if missing
+        expiry_time = claims.get("exp")
+        if expiry_time is not None:
+            try:
+                # Convert to float to handle both numeric and string exp claims
+                expiry_time = float(expiry_time)
+                if time.time() >= expiry_time:
+                    logger.info("existing AccessToken is expired")
+                    return None
+            except (ValueError, TypeError) as error:
+                logger.warning("AccessToken has invalid 'exp' claim format: %r", error)
+                return None
+        else:
+            # No exp claim - be optimistic and pass through the token
+            logger.debug("AccessToken does not contain 'exp' claim, passing through optimistically")
 
         return self._access_token
 
