@@ -134,3 +134,44 @@ def test_authenticator_jwt_without_exp_claim(authenticator: Authenticator) -> No
     token = authenticator.get_token()
     assert token == "new-dummy-token"
     authenticator._client.post.assert_called_once()
+
+
+def test_authenticator_plain_json_token(authenticator: Authenticator) -> None:
+    """Test that plain JSON tokens from Keycloak are handled correctly."""
+    # Create a plain JSON token (not encoded JWT format) with valid exp claim
+    future_exp = time.time() + 3600
+    plain_json_token = json.dumps({"exp": future_exp, "sub": "user123", "aud": "scim-api"})
+
+    authenticator._access_token = plain_json_token
+
+    # Should use existing token when it's valid plain JSON
+    token = authenticator.get_token()
+    assert token == plain_json_token
+    authenticator._client.post.assert_not_called()
+
+
+def test_authenticator_plain_json_expired_token(authenticator: Authenticator) -> None:
+    """Test that expired plain JSON tokens trigger token refresh."""
+    # Create a plain JSON token with expired exp claim
+    expired_exp = time.time() - 1
+    plain_json_token = json.dumps({"exp": expired_exp, "sub": "user123", "aud": "scim-api"})
+
+    authenticator._access_token = plain_json_token
+
+    # Should get a new token when plain JSON token is expired
+    token = authenticator.get_token()
+    assert token == "new-dummy-token"
+    authenticator._client.post.assert_called_once()
+
+
+def test_authenticator_plain_json_without_exp_claim(authenticator: Authenticator) -> None:
+    """Test that plain JSON tokens without 'exp' claim are handled gracefully."""
+    # Create a plain JSON token without the 'exp' claim
+    plain_json_token = json.dumps({"sub": "user123", "aud": "scim-api"})
+
+    authenticator._access_token = plain_json_token
+
+    # Should get a new token when plain JSON lacks 'exp' claim
+    token = authenticator.get_token()
+    assert token == "new-dummy-token"
+    authenticator._client.post.assert_called_once()

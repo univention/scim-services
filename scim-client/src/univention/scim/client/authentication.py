@@ -32,18 +32,42 @@ class Authenticator(httpx.Auth):
     def _valid_token(self) -> str | None:
         if not self._access_token:
             return None
+
+        claims = None
         try:
+            # First, try to parse as a JWT token (encoded format)
             parts = self._access_token.split(".")
-            payload_b64 = parts[1]
-            payload_b64 += "=" * (-len(payload_b64) % 4)
-            payload_bytes = base64.urlsafe_b64decode(payload_b64)
-            claims = json.loads(payload_bytes.decode("utf-8"))
-            expiry_time = claims["exp"]
-        except (IndexError, binascii.Error, json.JSONDecodeError, KeyError, UnicodeDecodeError) as error:
-            logger.warning("Could not parse the existing JWT AccessToken and evaluate the expiry time: %r", error)
+            if len(parts) == 3:  # Valid JWT should have 3 parts: header.payload.signature
+                payload_b64 = parts[1]
+                payload_b64 += "=" * (-len(payload_b64) % 4)  # Add padding if needed
+                payload_bytes = base64.urlsafe_b64decode(payload_b64)
+                claims = json.loads(payload_bytes.decode("utf-8"))
+            else:
+                # If not 3 parts, it might be plain JSON
+                claims = json.loads(self._access_token)
+        except (IndexError, binascii.Error, json.JSONDecodeError, UnicodeDecodeError) as error:
+            # If JWT parsing fails, try parsing as plain JSON
+            try:
+                claims = json.loads(self._access_token)
+            except json.JSONDecodeError:
+                logger.warning(
+                    "Could not parse the existing AccessToken as JWT or plain JSON and evaluate the expiry time: %r",
+                    error,
+                )
+                return None
+
+        if claims is None:
+            logger.warning("Could not extract claims from AccessToken")
             return None
+
+        try:
+            expiry_time = claims["exp"]
+        except KeyError:
+            logger.warning("AccessToken does not contain 'exp' claim")
+            return None
+
         if time.time() >= expiry_time:
-            logger.info("existing JWT is expired")
+            logger.info("existing AccessToken is expired")
             return None
 
         return self._access_token
