@@ -508,7 +508,8 @@ null
       "name": null
     },
     "oidcTokenUrl": null,
-    "password": null
+    "password": null,
+    "scopes": null
   },
   "connection": {
     "url": null
@@ -571,6 +572,15 @@ null
 </pre>
 </td>
 			<td>The password used to authenticate with the SCIM Server. Either this value or an existing Secret has to be specified.</td>
+		</tr>
+		<tr>
+			<td>scimServer.auth.scopes</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>List of additional scopes to send when requesting an OIDC authentication token. The scope `openid` will always be added even if the value is null.</td>
 		</tr>
 		<tr>
 			<td>scimServer.connection.url</td>

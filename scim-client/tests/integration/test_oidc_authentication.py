@@ -25,6 +25,7 @@ def authenticator_settings(keycloak_base_url: str) -> AuthenticatorSettings:
         scim_client_id="scim-client-test-client",
         scim_client_secret="supersecret",
         scim_oidc_token_url=f"{keycloak_base_url}/realms/master/protocol/openid-connect/token",
+        scim_scopes=[f"{AUDIENCE}-test-scope"],
     )
 
 
@@ -143,3 +144,22 @@ def test_token_has_audience(authenticator_settings: AuthenticatorSettings, keycl
 
     decoded_token = keycloak_openid.decode_token(token)
     assert "nubus-scim" in decoded_token["aud"]
+
+
+def test_token_has_scopes(authenticator_settings: AuthenticatorSettings, keycloak_base_url: str) -> None:
+    authenticator = Authenticator(authenticator_settings)
+
+    token = authenticator.get_token()
+    assert token
+
+    keycloak_openid = KeycloakOpenID(
+        server_url=keycloak_base_url,
+        client_id=authenticator_settings.scim_client_id,
+        client_secret_key=authenticator_settings.scim_client_secret,
+        realm_name=REALM,
+        verify=True,
+    )
+
+    decoded_token = keycloak_openid.decode_token(token)
+    assert "openid" in decoded_token["scope"]
+    assert f"{AUDIENCE}-test-scope" in decoded_token["scope"]

@@ -16,6 +16,9 @@ scimServer:
   auth:
     oidcTokenUrl: "foo"
     clientId: "stub-scim-api-username"
+    scopes:
+      - Test
+      - Test2
 
 ldap:
   connection:

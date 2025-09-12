@@ -57,6 +57,9 @@ scimServer:
     enabled: true
     # -- URL to obtain an OIDC access token from the Identity Provider using the client-credentials-flow.
     oidcTokenUrl: null
+    # -- List of additional scopes to send when requesting an OIDC authentication token.
+    # The scope `openid` will always be added even if the value is null.
+    scopes: null
     # -- Service account client ID (username)
     clientId: null
     # -- The password used to authenticate with the SCIM Server.

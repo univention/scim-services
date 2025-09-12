@@ -20,6 +20,7 @@ class AuthenticatorSettings(BaseSettings):
     scim_oidc_token_url: AnyHttpUrl
     scim_client_id: str
     scim_client_secret: str
+    scim_scopes: list[str] | None = None
 
 
 class Authenticator(httpx.Auth):
@@ -91,10 +92,17 @@ class Authenticator(httpx.Auth):
         return self._access_token
 
     def _authenticate(self) -> str:
+        # openid should always be send as scope see keycloak docu: https://openid.net/specs/openid-connect-core-1_0.html#AuthorizationEndpoint
+        # in addition also add user specified scopes
+        scopes = set(self._settings.scim_scopes) if self._settings.scim_scopes is not None else set()
+
+        scopes.add("openid")
+
         data = {
             "grant_type": "client_credentials",
             "client_id": self._settings.scim_client_id,
             "client_secret": self._settings.scim_client_secret,
+            "scope": " ".join(scopes),
         }
         try:
             response = self._client.post(
