@@ -108,6 +108,7 @@ containerSecurityContext:
 
 probes:
   readiness:
+    enabled: true
     failureThreshold: 10
     initialDelaySeconds: 15
     periodSeconds: 20
@@ -116,6 +117,7 @@ probes:
     tcpSocket:
       port: 80
   startup:
+    enabled: true
     initialDelaySeconds: 15
     failureThreshold: 10
     periodSeconds: 20
@@ -124,6 +126,7 @@ probes:
     tcpSocket:
       port: 80
   liveness:
+    enabled: true
     failureThreshold: 10
     initialDelaySeconds: 15
     periodSeconds: 20
