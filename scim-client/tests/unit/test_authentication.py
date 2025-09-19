@@ -19,6 +19,13 @@ def _make_jwt(exp: float) -> str:
     return f"header.{b64}.signature"
 
 
+def _make_jwt_with_invalid_json() -> str:
+    """Helper to craft a JWT with invalid JSON in the payload."""
+    invalid_json = b"invalid-json-payload"
+    b64 = base64.urlsafe_b64encode(invalid_json).rstrip(b"=").decode()
+    return f"header.{b64}.signature"
+
+
 @pytest.fixture
 def authenticator_settings() -> AuthenticatorSettings:
     return AuthenticatorSettings(
@@ -88,34 +95,23 @@ def test_authenticator_connection_error(authenticator: Authenticator) -> None:
     assert error.value.__cause__ == expected_error
 
 
-def test_authenticator_malformed_jwt_tokens(authenticator: Authenticator) -> None:
+@pytest.mark.parametrize(
+    "malformed_token",
+    [
+        pytest.param("not-a-jwt-token", id="no-dots"),
+        pytest.param("header.invalid-base64.signature", id="invalid-base64"),
+        pytest.param("header..signature", id="empty-payload"),
+        pytest.param("header.signature", id="missing-payload-section"),
+        pytest.param(_make_jwt_with_invalid_json(), id="invalid-json-payload"),
+    ],
+)
+def test_authenticator_malformed_jwt_tokens(authenticator: Authenticator, malformed_token: str) -> None:
     """Test that malformed JWT tokens are handled gracefully and result in token refresh."""
-    test_cases = [
-        "not-a-jwt-token",  # No dots
-        "header.invalid-base64.signature",  # Invalid base64 payload
-        _make_jwt_with_invalid_json(),  # Invalid JSON in payload
-        "header..signature",  # Empty payload
-        "header.signature",  # Missing payload section
-    ]
+    authenticator._access_token = malformed_token
 
-    for malformed_token in test_cases:
-        authenticator._access_token = malformed_token
-
-        # Should get a new token when the existing one is malformed
-        token = authenticator.get_token()
-        assert token == "new-dummy-token"
-
-        # Reset for next test
-        authenticator._client.post.reset_mock()
-
-
-def _make_jwt_with_invalid_json() -> str:
-    """Helper to craft a JWT with invalid JSON in the payload."""
-    import base64
-
-    invalid_json = b"invalid-json-payload"
-    b64 = base64.urlsafe_b64encode(invalid_json).rstrip(b"=").decode()
-    return f"header.{b64}.signature"
+    # Should get a new token when the existing one is malformed
+    token = authenticator.get_token()
+    assert token == "new-dummy-token"
 
 
 def test_authenticator_jwt_without_exp_claim(authenticator: Authenticator) -> None:

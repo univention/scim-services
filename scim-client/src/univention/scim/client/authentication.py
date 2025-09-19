@@ -29,35 +29,47 @@ class Authenticator(httpx.Auth):
         self._settings = settings
         self._client = http_client or httpx.Client()
 
+    def _parse_token_claims(self) -> dict | None:
+        """Parse claims from either JWT or plain JSON token format."""
+        if not self._access_token:
+            return None
+
+        # Try parsing as JWT first
+        claims = self._parse_jwt_claims()
+        if claims is not None:
+            return claims
+
+        # Fallback to plain JSON parsing
+        try:
+            return json.loads(self._access_token)
+        except json.JSONDecodeError as error:
+            logger.warning(
+                "Could not parse the existing AccessToken as JWT or plain JSON and evaluate the expiry time: %r",
+                error,
+            )
+            return None
+
+    def _parse_jwt_claims(self) -> dict | None:
+        """Parse claims from JWT token format."""
+        try:
+            parts = self._access_token.split(".")
+            if len(parts) != 3:  # Valid JWT should have 3 parts: header.payload.signature
+                return None
+
+            payload_b64 = parts[1]
+            # Restore base64 padding that may have been stripped during JWT encoding
+            payload_b64 += "=" * (-len(payload_b64) % 4)
+            payload_bytes = base64.urlsafe_b64decode(payload_b64)
+            return json.loads(payload_bytes.decode("utf-8"))
+        except (IndexError, binascii.Error, json.JSONDecodeError, UnicodeDecodeError):
+            return None
+
     def _valid_token(self) -> str | None:
         if not self._access_token:
             return None
 
-        claims = None
-        try:
-            # First, try to parse as a JWT token (encoded format)
-            parts = self._access_token.split(".")
-            if len(parts) == 3:  # Valid JWT should have 3 parts: header.payload.signature
-                payload_b64 = parts[1]
-                payload_b64 += "=" * (-len(payload_b64) % 4)  # Add padding if needed
-                payload_bytes = base64.urlsafe_b64decode(payload_b64)
-                claims = json.loads(payload_bytes.decode("utf-8"))
-            else:
-                # If not 3 parts, it might be plain JSON
-                claims = json.loads(self._access_token)
-        except (IndexError, binascii.Error, json.JSONDecodeError, UnicodeDecodeError) as error:
-            # If JWT parsing fails, try parsing as plain JSON
-            try:
-                claims = json.loads(self._access_token)
-            except json.JSONDecodeError:
-                logger.warning(
-                    "Could not parse the existing AccessToken as JWT or plain JSON and evaluate the expiry time: %r",
-                    error,
-                )
-                return None
-
+        claims = self._parse_token_claims()
         if claims is None:
-            logger.warning("Could not extract claims from AccessToken")
             return None
 
         # Check expiry if present, but be optimistic if missing
