@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.43.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.42.6...v0.43.0) (2025-09-22)
+
+
+### Features
+
+* Add content type negotiation middleware for SCIM server and client ([03233c5](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/03233c5de95d3b0a4287c57c80e56ec5cb2033ab)), closes [univention/dev/internal/team-nubus#1429](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1429)
+* Handle JWT and JSON tokens without 'exp' claim optimistically ([dac0772](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/dac0772358f66652104479894568512df43b40ec)), closes [univention/dev/internal/team-nubus#1430](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1430)
+
+
+### Bug Fixes
+
+* handle plain JSON tokens in addition to JWT in Authenticator ([4f77d88](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/4f77d887aef76942afc886cd1e3796937839313d)), closes [univention/dev/internal/team-nubus#1430](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1430)
+* JWT validation ([f35f433](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/f35f4333f373c43ac3813dfeb103cf63106cdc06)), closes [univention/dev/internal/team-nubus#1430](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1430)
+* QA suggestions ([1c05f8a](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/1c05f8a711b0b26f8555d25daac0d88f761c299a)), closes [univention/dev/internal/team-nubus#1430](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1430)
+
 ## [0.42.6](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.42.5...v0.42.6) (2025-09-12)
 
 
