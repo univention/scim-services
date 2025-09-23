@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2024 Univention GmbH
 
 ---
+
 global:
   # -- Container registry address.
   imageRegistry: "artifacts.software-univention.de"
@@ -121,6 +122,7 @@ scimClient:
     # -- Define external_id UDM attribute for groups
     externalIdGroupMapping: univentionObjectIdentifier
 
+
 resources:
   requests:
     memory: "512Mi"
@@ -195,3 +197,28 @@ serviceAccount:
   automountServiceAccountToken: false
   # -- Additional custom labels for the ServiceAccount.
   labels: {}
+
+# -- Probe configurations
+probes:
+  # -- Liveness probe configuration
+  liveness:
+    # -- Enable liveness probe
+    enabled: true
+    exec:
+      command:
+        - /bin/sh
+        - -c
+        - "pgrep -f scim-client"
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  # -- Readiness probe configuration
+  readiness:
+    # -- Enable readiness probe
+    enabled: true
+    exec:
+      command:
+        - /bin/sh
+        - -c
+        - "pgrep -f scim-client"
+    initialDelaySeconds: 5
+    periodSeconds: 5

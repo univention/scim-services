@@ -29,10 +29,31 @@ spec:
         - name: "{{ . }}"
         {{- end }}
       {{- end }}
+      serviceAccountName: {{ include "common.names.fullname" . }}
+      automountServiceAccountToken: false
       containers:
         - name: "scim-dev-server"
-          image: "{{ coalesce .Values.scimDevServer.image.registry .Values.global.imageRegistry }}/{{ .Values.scimDevServer.image.repository }}{{ if .Values.scimDevServer.image.sha256 }}@sha256:{{ .Values.scimDevServer.image.sha256 }}{{ else }}:{{ .Values.scimDevServer.image.tag }}{{ end }}"
+          image: "{{ coalesce .Values.scimDevServer.image.registry .Values.global.imageRegistry }}/{{ .Values.scimDevServer.image.repository }}:{{ .Values.scimDevServer.image.tag }}{{ if .Values.scimDevServer.image.sha256 }}@sha256:{{ .Values.scimDevServer.image.sha256 }}{{ end }}"
           imagePullPolicy: {{ coalesce .Values.scimDevServer.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
           env:
-            - name: {{ .Values.scimDevServer.config.hostname | required ".Values.scimDevServer.config.hostname is required" | quote }}
+            - name: "HOSTNAME"
+              value: {{ .Values.scimDevServer.config.hostname | required ".Values.scimDevServer.config.hostname is required" | quote }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            {{- omit .Values.livenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            {{- omit .Values.readinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext:
+            {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
 ...

@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2024 Univention GmbH
 
 ---
+
 global:
   # -- Container registry address.
   imageRegistry: "artifacts.software-univention.de"
@@ -32,3 +33,47 @@ scimDevServer:
   config:
     # -- Hostname of the SCIM server
     hostname: null
+
+# -- Resource limits and requests for the container
+resources:
+  limits:
+    memory: "256Mi"
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+
+# -- Security context for the container
+containerSecurityContext:
+  # -- Enable security context
+  enabled: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - "ALL"
+  privileged: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Liveness probe configuration
+livenessProbe:
+  # -- Enable liveness probe
+  enabled: true
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+# -- Readiness probe configuration
+readinessProbe:
+  # -- Enable readiness probe
+  enabled: true
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5

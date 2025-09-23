@@ -3,5 +3,4 @@
 
 scimDevServer:
   config:
-    # -- Hostname of the SCIM server
-    hostname: testhost
+    hostname: "scim-dev.example.com"

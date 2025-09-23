@@ -309,6 +309,98 @@ true
 			<td>Allow binding to ports below 1024 without root access.</td>
 		</tr>
 		<tr>
+			<td>probes</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "liveness": {
+    "enabled": true,
+    "exec": {
+      "command": [
+        "/bin/sh",
+        "-c",
+        "pgrep -f scim-client"
+      ]
+    },
+    "initialDelaySeconds": 30,
+    "periodSeconds": 10
+  },
+  "readiness": {
+    "enabled": true,
+    "exec": {
+      "command": [
+        "/bin/sh",
+        "-c",
+        "pgrep -f scim-client"
+      ]
+    },
+    "initialDelaySeconds": 5,
+    "periodSeconds": 5
+  }
+}
+</pre>
+</td>
+			<td>Probe configurations</td>
+		</tr>
+		<tr>
+			<td>probes.liveness</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "enabled": true,
+  "exec": {
+    "command": [
+      "/bin/sh",
+      "-c",
+      "pgrep -f scim-client"
+    ]
+  },
+  "initialDelaySeconds": 30,
+  "periodSeconds": 10
+}
+</pre>
+</td>
+			<td>Liveness probe configuration</td>
+		</tr>
+		<tr>
+			<td>probes.liveness.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td>Enable liveness probe</td>
+		</tr>
+		<tr>
+			<td>probes.readiness</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "enabled": true,
+  "exec": {
+    "command": [
+      "/bin/sh",
+      "-c",
+      "pgrep -f scim-client"
+    ]
+  },
+  "initialDelaySeconds": 5,
+  "periodSeconds": 5
+}
+</pre>
+</td>
+			<td>Readiness probe configuration</td>
+		</tr>
+		<tr>
+			<td>probes.readiness.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td>Enable readiness probe</td>
+		</tr>
+		<tr>
 			<td>provisioningApi</td>
 			<td>object</td>
 			<td><pre lang="json">
