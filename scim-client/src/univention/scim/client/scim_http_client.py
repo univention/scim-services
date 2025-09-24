@@ -7,7 +7,6 @@ from loguru import logger
 from scim2_client import SCIMResponseError
 from scim2_client.engines.httpx import SyncSCIMClient
 from scim2_models import Resource, SearchRequest
-from scim2_tester import check_server
 
 from univention.scim.client.helper import cust_pformat
 from univention.scim.client.scim_client_settings import ScimConsumerSettings
@@ -79,15 +78,20 @@ class ScimClient:
 
     def health_check(self) -> bool:
         """
-        Checks the state of the SCIM server.
+        Checks the state of the SCIM server by performing a simple ServiceProviderConfig request.
 
+        This performs a minimal health check without generating any test data.
         """
         try:
-            check_server(self._scim_client)
-        except Exception:
-            return False
-        else:
+            if not self._scim_client:
+                return False
+            # Perform a simple ServiceProviderConfig request to check if server is healthy
+            # This is a read-only operation that doesn't create any resources
+            self._scim_client.get_service_provider_config()
             return True
+        except Exception as e:
+            logger.debug("Health check failed: {}", e)
+            return False
 
     def create_resource(self, resource: Resource) -> None:
         """

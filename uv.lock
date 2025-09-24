@@ -1446,7 +1446,6 @@ dependencies = [
     { name = "scim-server" },
     { name = "scim-udm-transformer-lib" },
     { name = "scim2-client", extra = ["httpx"] },
-    { name = "scim2-tester" },
     { name = "udm-rest-api-client", extra = ["async"] },
 ]
 
@@ -1460,6 +1459,7 @@ dev = [
     { name = "pytest-mock" },
     { name = "python-keycloak" },
     { name = "requests" },
+    { name = "scim2-tester" },
 ]
 
 [package.metadata]
@@ -1472,7 +1472,6 @@ requires-dist = [
     { name = "scim-server", editable = "scim-server" },
     { name = "scim-udm-transformer-lib", editable = "scim-udm-transformer-lib" },
     { name = "scim2-client", extras = ["httpx"], specifier = ">=0.6.1" },
-    { name = "scim2-tester" },
     { name = "udm-rest-api-client", specifier = ">=0.0.2" },
     { name = "udm-rest-api-client", extras = ["async"], specifier = ">=0.0.2" },
 ]
@@ -1487,6 +1486,7 @@ dev = [
     { name = "pytest-mock", specifier = ">=3.14.1" },
     { name = "python-keycloak", specifier = ">=5.6.0" },
     { name = "requests", specifier = ">=2.32.3" },
+    { name = "scim2-tester" },
 ]
 
 [[package]]
