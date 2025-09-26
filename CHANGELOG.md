@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.44.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.43.0...v0.44.0) (2025-09-26)
+
+
+### Features
+
+* **scim-client:** Allow to configure additional scopes to send when requesting an OIDC auth token ([8c28536](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/8c2853670cf55b2c6f2c1742c4f128e461a1ab38)), closes [univention/dev/internal/team-nubus#1428](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1428)
+
 ## [0.43.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.42.6...v0.43.0) (2025-09-22)
 
 
