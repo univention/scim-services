@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.45.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.44.0...v0.45.0) (2025-09-29)
+
+
+### Features
+
+* template improvements for kyverno ([4c5ae65](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/4c5ae65d3126ef3d5aea5a516e797a1dd68c4cd1)), closes [univention/dev/internal/team-nubus#1426](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1426)
+
 ## [0.44.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.43.0...v0.44.0) (2025-09-26)
 
 
