@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.45.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.45.0...v0.45.1) (2025-10-02)
+
+
+### Bug Fixes
+
+* remove scim2-tester dependency from scim-client ([f785ea6](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/f785ea686f731e6889a61496f6e3f839ef3fc129)), closes [univention/dev/internal/team-nubus#1431](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1431)
+
 ## [0.45.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.44.0...v0.45.0) (2025-09-29)
 
 
