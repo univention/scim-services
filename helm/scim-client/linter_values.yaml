@@ -25,3 +25,6 @@ ldap:
     host: "stub-ldap-server"
   auth:
     bindDn: "uid=stub,cn=users,dc=univention-organization,dc=intranet"
+    password: "stub-ldap-password"
+    existingSecret:
+      name: null
