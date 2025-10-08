@@ -24,3 +24,4 @@ __pycache__/
 /udm-rest-api.logs
 /provisioning-api.logs
 /udm-listener.logs
+.vscode/

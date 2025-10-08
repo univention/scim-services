@@ -3,7 +3,7 @@
 
 services:
   test:
-    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.24.5@sha256:efa1b3300fca2367e67dec8525c71f5445d75d88ae1da20aa64083a411bc3337
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.27.0
     pull_policy: always
     command: |
       bash -c  "helm dependency build helm/scim-server/ &&
@@ -14,3 +14,19 @@ services:
     volumes:
       - "../helm/:/app/helm/"
       - "../tests/:/app/tests"
+
+  test-chart-scim-client:
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.27.0
+    pull_policy: "if_not_present"
+    command: "pytest tests/helm/chart"
+    volumes:
+      - "../helm/:/app/helm/"
+      - "../tests/helm_unit/scim_client:/app/tests/helm/chart"
+
+  test-chart-scim-server:
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.27.0
+    pull_policy: "if_not_present"
+    command: "pytest tests/helm/chart"
+    volumes:
+      - "../helm/:/app/helm/"
+      - "../tests/helm_unit/scim_server:/app/tests/helm/chart"
