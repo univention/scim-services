@@ -52,6 +52,24 @@ helm uninstall scim-client
 	</thead>
 	<tbody>
 		<tr>
+			<td>additionalAnnotations</td>
+			<td>object</td>
+			<td><pre lang="json">
+{}
+</pre>
+</td>
+			<td>Additional custom annotations to add to all deployed objects.</td>
+		</tr>
+		<tr>
+			<td>additionalLabels</td>
+			<td>object</td>
+			<td><pre lang="json">
+{}
+</pre>
+</td>
+			<td>Additional custom labels to add to all deployed objects.</td>
+		</tr>
+		<tr>
 			<td>containerSecurityContext.allowPrivilegeEscalation</td>
 			<td>bool</td>
 			<td><pre lang="json">
@@ -167,7 +185,7 @@ true
 			<td>global.imagePullPolicy</td>
 			<td>string</td>
 			<td><pre lang="json">
-"IfNotPresent"
+null
 </pre>
 </td>
 			<td>Define an ImagePullPolicy.  Ref.: https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy </td>
@@ -529,7 +547,7 @@ null
     "prefill": true
   },
   "image": {
-    "imagePullPolicy": "",
+    "pullPolicy": "",
     "registry": "",
     "repository": "nubus-dev/images/scim-client",
     "sha256": null,

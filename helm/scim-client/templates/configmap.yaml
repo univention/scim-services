@@ -8,10 +8,11 @@ metadata:
   name: {{ include "common.names.fullname" . | quote }}
   namespace: {{ include "common.names.namespace" . | quote }}
   labels:
-    {{- include "common.labels.standard" ( dict "customLabels" .Values.additionalLabels "context" $ ) | nindent 4 }}
-  {{- if .Values.additionalAnnotations }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.additionalAnnotations "context" . ) | nindent 4 }}
-  {{- end }}
+    {{- include "common.labels.standard" ( dict "customLabels" .Values.additionalLabels "context" . ) | nindent 4 }}
+  {{- include "nubus-common.annotations.render" ( dict
+    "values" ( list .Values.additionalAnnotations )
+    "context" . )
+    | nindent 2 }}
 data:
   LOG_LEVEL: {{ .Values.scimClient.config.logLevel | required ".Values.config.LogLevel is required" | quote }}
   PROVISIONING_API_USERNAME: {{ default (include "common.names.fullname" .) .Values.provisioningApi.auth.username | quote }}

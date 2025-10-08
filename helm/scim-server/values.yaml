@@ -163,6 +163,3 @@ serviceAccount:
   name: ""
   automountServiceAccountToken: false
   labels: {}
-
-additionalLabels: {}
-additionalAnnotations: {}
