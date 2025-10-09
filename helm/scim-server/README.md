@@ -61,6 +61,24 @@ helm uninstall scim-server
 			<td>Additional custom annotations to add to all deployed objects.</td>
 		</tr>
 		<tr>
+			<td>additionalAnnotations</td>
+			<td>object</td>
+			<td><pre lang="json">
+{}
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>additionalLabels</td>
+			<td>object</td>
+			<td><pre lang="json">
+{}
+</pre>
+</td>
+			<td>Additional custom labels to add to all deployed objects.</td>
+		</tr>
+		<tr>
 			<td>additionalLabels</td>
 			<td>object</td>
 			<td><pre lang="json">
@@ -355,10 +373,10 @@ false
 			<td>global.imagePullPolicy</td>
 			<td>string</td>
 			<td><pre lang="json">
-"IfNotPresent"
+null
 </pre>
 </td>
-			<td></td>
+			<td>Define an ImagePullPolicy.  Ref.: https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy </td>
 		</tr>
 		<tr>
 			<td>global.imagePullSecrets</td>
@@ -367,7 +385,7 @@ false
 []
 </pre>
 </td>
-			<td></td>
+			<td>Credentials to fetch images from private registry. Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/  imagePullSecrets:   - "docker-registry"</td>
 		</tr>
 		<tr>
 			<td>global.imageRegistry</td>
@@ -376,7 +394,7 @@ false
 "artifacts.software-univention.de"
 </pre>
 </td>
-			<td></td>
+			<td>Container registry address.</td>
 		</tr>
 		<tr>
 			<td>global.ingressClass</td>
@@ -392,6 +410,15 @@ false
 			<td>bool</td>
 			<td><pre lang="json">
 false
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>global.secrets.masterPassword</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
 </pre>
 </td>
 			<td></td>
@@ -757,7 +784,7 @@ true
 			<td></td>
 		</tr>
 		<tr>
-			<td>scimServer.image.imagePullPolicy</td>
+			<td>scimServer.image.pullPolicy</td>
 			<td>string</td>
 			<td><pre lang="json">
 ""
@@ -797,6 +824,15 @@ null
 			<td>string</td>
 			<td><pre lang="json">
 "latest"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>scimServer.waitForDependency.image.pullPolicy</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
 </pre>
 </td>
 			<td></td>

@@ -8,7 +8,11 @@ metadata:
   name: {{ $name }}
   namespace: {{ include "common.names.namespace" . | quote }}
   labels:
-    {{- include "common.labels.standard" ( dict "customLabels" .Values.additionalLabels "context" $ ) | nindent 4 }}
+    {{- include "common.labels.standard" ( dict "customLabels" .Values.additionalLabels "context" . ) | nindent 4 }}
+  {{- include "nubus-common.annotations.render" ( dict
+    "values" ( list .Values.additionalAnnotations )
+    "context" . )
+    | nindent 2 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -44,7 +48,7 @@ spec:
       securityContext:
         {{- omit .Values.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}
-      {{- $imagePullSecrets := coalesce .Values.global.imagePullSecrets }}
+      {{- $imagePullSecrets := coalesce .Values.imagePullSecrets .Values.global.imagePullSecrets }}
       {{- if $imagePullSecrets }}
       imagePullSecrets:
         {{- range $imagePullSecrets }}
@@ -58,7 +62,7 @@ spec:
             {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
           image: "{{ coalesce .Values.scimServer.waitForDependency.image.registry .Values.global.imageRegistry }}/{{ .Values.scimServer.waitForDependency.image.repository }}{{ if .Values.scimServer.waitForDependency.image.sha256 }}@sha256:{{ .Values.scimServer.waitForDependency.image.sha256 }}{{ else }}:{{ .Values.scimServer.waitForDependency.image.tag }}{{ end }}"
-          imagePullPolicy: {{ coalesce .Values.scimServer.waitForDependency.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
+          imagePullPolicy: {{ coalesce .Values.scimServer.waitForDependency.image.pullPolicy .Values.global.imagePullPolicy | quote }}
           envFrom:
             - configMapRef:
                 name: {{ printf "%s-init" (include "common.names.fullname" .) }}
@@ -74,7 +78,7 @@ spec:
             {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
           image: "{{ coalesce .Values.scimServer.waitForDependency.image.registry .Values.global.imageRegistry }}/{{ .Values.scimServer.waitForDependency.image.repository }}{{ if .Values.scimServer.waitForDependency.image.sha256 }}@sha256:{{ .Values.scimServer.waitForDependency.image.sha256 }}{{ else }}:{{ .Values.scimServer.waitForDependency.image.tag }}{{ end }}"
-          imagePullPolicy: {{ coalesce .Values.scimServer.waitForDependency.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
+          imagePullPolicy: {{ coalesce .Values.scimServer.waitForDependency.image.pullPolicy .Values.global.imagePullPolicy | quote }}
           envFrom:
             - configMapRef:
                 name: {{ printf "%s-init" (include "common.names.fullname" .) }}
@@ -99,7 +103,7 @@ spec:
             {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
           image: "{{ coalesce .Values.scimServer.image.registry .Values.global.imageRegistry }}/{{ .Values.scimServer.image.repository }}{{ if .Values.scimServer.image.sha256 }}@sha256:{{ .Values.scimServer.image.sha256 }}{{ else }}:{{ .Values.scimServer.image.tag }}{{ end }}"
-          imagePullPolicy: {{ coalesce .Values.scimServer.image.imagePullPolicy .Values.global.imagePullPolicy | quote }}
+          imagePullPolicy: {{ coalesce .Values.scimServer.image.pullPolicy .Values.global.imagePullPolicy | quote }}
           envFrom:
             - configMapRef:
                 name: {{ printf "%s-env" (include "common.names.fullname" .) }}
