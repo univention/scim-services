@@ -23,7 +23,7 @@ data:
   LDAP_BIND_DN: {{ tpl (required ".Values.ldap.auth.bindDn as username is required" .Values.ldap.auth.bindDn ) . | quote }}
   SCIM_OIDC_AUTHENTICATION: {{ required ".Values.scimServer.auth.enabled is required" .Values.scimServer.auth.enabled | quote }}
   SCIM_OIDC_TOKEN_URL: {{ required ".Values.scimServer.auth.oidcTokenUrl is required" .Values.scimServer.auth.oidcTokenUrl | quote }}
-  SCIM_CLIENT_ID: {{ required ".Values.scimServer.auth.clientId is required" .Values.scimServer.auth.clientId | quote }}
+  SCIM_CLIENT_ID: {{ tpl (required ".Values.scimServer.auth.clientId as username is required" .Values.scimServer.auth.clientId) . | quote }}
   SCIM_SCOPES: {{ toJson .Values.scimServer.auth.scopes | squote }}
   EXTERNAL_ID_USER_MAPPING: {{ required ".Values.scimClient.config.externalIdUserMapping is required" .Values.scimClient.config.externalIdUserMapping | quote }}
   EXTERNAL_ID_GROUP_MAPPING: {{ required ".Values.scimClient.config.externalIdUserMapping is required" .Values.scimClient.config.externalIdUserMapping | quote }}

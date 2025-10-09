@@ -71,7 +71,7 @@ spec:
             - name: SCIM_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.scimServer.auth.existingSecret "defaultNameSuffix" "scim-server" "context" .) | quote }}
+                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.scimServer.auth.existingSecret "defaultNameSuffix" "scim-server" "context" .) }}
                   key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.scimServer.auth.existingSecret "key" "password") | quote }}
             - name: PROVISIONING_API_PASSWORD
               valueFrom:

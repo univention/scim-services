@@ -67,6 +67,9 @@ class TestNubusProvisioningSubscription(Annotations, Labels, Namespace):
             config:
                 prefill: false
                 groupSync: false
+        provisioningApi:
+            auth:
+                password: ""
         """)
 
         # Disable groups/group topic for one of the subscriptions
