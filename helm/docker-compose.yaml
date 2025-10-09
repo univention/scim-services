@@ -3,12 +3,15 @@
 
 services:
   test:
-    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.27.0
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.28.0-pre-dpapoutsis-nubus-common-templated-keymapping
     pull_policy: always
     command: |
-      bash -c  "helm dependency build helm/scim-server/ &&
-      helm dependency build helm/scim-server/ &&
-      pytest tests/helm_unit"
+      bash -c "
+      helm dependency build helm/scim-server/ && \
+      helm dependency build helm/scim-client/ && \
+      pytest tests/helm_unit/scim_server && \
+      pytest tests/helm_unit/scim_client
+      "
     profiles:
       - test
     volumes:
@@ -16,7 +19,7 @@ services:
       - "../tests/:/app/tests"
 
   test-chart-scim-client:
-    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.27.0
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.28.0-pre-dpapoutsis-nubus-common-templated-keymapping
     pull_policy: "if_not_present"
     command: "pytest tests/helm/chart"
     volumes:
@@ -24,7 +27,7 @@ services:
       - "../tests/helm_unit/scim_client:/app/tests/helm/chart"
 
   test-chart-scim-server:
-    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.27.0
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.28.0-pre-dpapoutsis-nubus-common-templated-keymapping
     pull_policy: "if_not_present"
     command: "pytest tests/helm/chart"
     volumes:

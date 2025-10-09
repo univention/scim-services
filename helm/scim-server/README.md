@@ -37,9 +37,9 @@ helm uninstall scim-server
 
 ## Requirements
 
-| Repository                                          | Name         | Version |
-| --------------------------------------------------- | ------------ | ------- |
-| oci://artifacts.software-univention.de/nubus/charts | nubus-common | ^0.21.x |
+| Repository | Name | Version |
+|------------|------|---------|
+| oci://artifacts.software-univention.de/nubus-dev/charts | nubus-common | 0.28.0-pre-dpapoutsis-nubus-common-templated-keymapping |
 
 ## Values
 
@@ -59,24 +59,6 @@ helm uninstall scim-server
 </pre>
 </td>
 			<td>Additional custom annotations to add to all deployed objects.</td>
-		</tr>
-		<tr>
-			<td>additionalAnnotations</td>
-			<td>object</td>
-			<td><pre lang="json">
-{}
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td>additionalLabels</td>
-			<td>object</td>
-			<td><pre lang="json">
-{}
-</pre>
-</td>
-			<td>Additional custom labels to add to all deployed objects.</td>
 		</tr>
 		<tr>
 			<td>additionalLabels</td>

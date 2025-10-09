@@ -140,11 +140,12 @@ test-scim2-compliance:
 
 test-helm-charts:
   stage: test
-  image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.27.0
+  image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.28.0-pre-dpapoutsis-nubus-common-templated-keymapping
   script:
     - helm dep build helm/scim-server
     - helm dep build helm/scim-client
-    - pytest tests/helm_unit
+    - pytest tests/helm_unit/scim_server
+    - pytest tests/helm_unit/scim_client
 
 test-scim-client:
   stage: test
