@@ -15,7 +15,7 @@ metadata:
     | nindent 2 }}
 data:
   LOG_LEVEL: {{ .Values.scimClient.config.logLevel | required ".Values.config.LogLevel is required" | quote }}
-  PROVISIONING_API_USERNAME: {{ default (include "common.names.fullname" .) .Values.provisioningApi.auth.username | quote }}
+  PROVISIONING_API_USERNAME: {{ tpl (default (include "common.names.fullname" .) .Values.provisioningApi.auth.username) . | quote }}
   PROVISIONING_API_BASE_URL: {{ required ".Values.provisioningApi.connection.url is required." .Values.provisioningApi.connection.url | quote }}
   MAX_ACKNOWLEDGEMENT_RETRIES: {{ required ".Values.provisioningApi.config.maxAcknowledgementRetries is required." .Values.provisioningApi.config.maxAcknowledgementRetries | quote }}
   SCIM_SERVER_BASE_URL: {{ required ".Values.scimServer.connection.url is required" .Values.scimServer.connection.url | quote }}

@@ -9,6 +9,11 @@ global:
 provisioningApi:
   connection:
     url: "http://stub-nubus-provisioning-api"
+  auth:
+    password: "stub-provisioning-password"
+    existingSecret:
+      name: null
+
 
 scimServer:
   connection:
