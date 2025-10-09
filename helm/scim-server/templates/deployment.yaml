@@ -80,11 +80,11 @@ spec:
                 name: {{ printf "%s-init" (include "common.names.fullname" .) }}
           env:
             - name: UDM_API_USERNAME
-              value: {{ required "is required" .Values.udm.auth.username | quote }}
+              value: {{ tpl (required "UDM username is required" .Values.udm.auth.username) . | quote }}
             - name: UDM_API_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.udm.auth.existingSecret "defaultNameSuffix" "udm-secret" "context" .) | quote }}
+                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.udm.auth.existingSecret "defaultNameSuffix" "udm-secret" "context" .) }}
                   key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.udm.auth.existingSecret "key" "password") | quote }}
           command: ["/bin/sh", "-c"]
           args:
@@ -93,7 +93,7 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       containers:
-        - name: "scim-server"
+        - name: "main"
           {{- if .Values.containerSecurityContext.enabled }}
           securityContext:
             {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
@@ -105,11 +105,11 @@ spec:
                 name: {{ printf "%s-env" (include "common.names.fullname" .) }}
           env:
             - name: UDM_USERNAME
-              value: {{ required "is required" .Values.udm.auth.username | quote }}
+              value: {{ tpl (required "UDM username is required" .Values.udm.auth.username) . | quote }}
             - name: UDM_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.udm.auth.existingSecret "defaultNameSuffix" "udm-secret" "context" .) | quote }}
+                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.udm.auth.existingSecret "defaultNameSuffix" "udm-secret" "context" .) }}
                   key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.udm.auth.existingSecret "key" "password") | quote }}
             {{- with .Values.extraEnvVars }}
               {{- . | toYaml | nindent 14 }}
