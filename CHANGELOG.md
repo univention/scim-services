@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.46.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.45.1...v0.46.0) (2025-10-17)
+
+
+### Features
+
+* **secrets:** allow templated keymappings ([7e14551](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/7e14551bdeff839304f6666bd4624a672c703fa2)), closes [univention/dev/internal/team-nubus#1441](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1441)
+
+
+### Bug Fixes
+
+* **scim-client:** conform to helm tests for common behavior ([35be6fb](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/35be6fbef23be2c561ba93d37652653ea07879cb)), closes [univention/dev/internal/team-nubus#1441](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1441)
+* **scim-server:** conform to helm tests for common behavior ([c3b9a47](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/c3b9a4719f6a61cc517f23053df2a43478461ae3)), closes [univention/dev/internal/team-nubus#1441](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1441)
+
 ## [0.45.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.45.0...v0.45.1) (2025-10-02)
 
 
