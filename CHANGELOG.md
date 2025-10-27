@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.46.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.46.0...v0.46.1) (2025-10-27)
+
+
+### Bug Fixes
+
+* **deps:** Update gitregistry.knut.univention.de/univention/dev/projects/ucs-base-image/ucs-base-python Docker tag to v5.2.3-build.20251024 ([885ea5a](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/885ea5ac38cb53f3fbac2ea42d63efe49a4c7562)), closes [#0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/issues/0)
+
 ## [0.46.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.45.1...v0.46.0) (2025-10-17)
 
 
