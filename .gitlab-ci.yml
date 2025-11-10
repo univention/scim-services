@@ -14,6 +14,11 @@ include:
       - "jobs/package-and-publish-helm-charts-external.yaml"
       - "jobs/check-debian-updates.yaml"
 
+  - component: "$CI_SERVER_FQDN/univention/dev/nubus-for-k8s/common-ci/vul-man@v1.50.0"
+    inputs:
+      helm_chart_name: "scim-client"
+      helm_values: "--helm-values ${CI_PROJECT_DIR}/helm/scim-client/linter_values.yaml"
+
   - project: "univention/infrastructure/docker-services"
     ref: "master"
     file:
@@ -252,7 +257,7 @@ test-scim-server-and-client-integration:
     expose_as: "docker compose server logs"
 
 sonarqube-scan:
-  stage: test
+  stage: analysis
   needs:
     - test-unit-and-integration
     #- test-scim-client
