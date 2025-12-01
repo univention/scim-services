@@ -5,6 +5,7 @@
 import asyncio
 
 import httpx
+from loguru import logger
 from univention.provisioning.consumer.api import (
     MessageHandler,
     ProvisioningConsumerClient,
@@ -24,6 +25,7 @@ async def main() -> None:
     scim_client = ScimConsumer(scim_client, group_membership_resolver, settings)
 
     async with ProvisioningConsumerClient() as client:
+        logger.debug("Start listening for provisioning messages")
         await MessageHandler(client, [scim_client.handle_udm_message], pop_after_handling=True).run()
 
 

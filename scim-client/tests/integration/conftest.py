@@ -157,7 +157,7 @@ def background_scim_client() -> Generator[bool, None, None]:
 
     delete_provisioning_subscription()
 
-    logger.info("Fixture background_scim_client exited.")
+    logger.info("Fixture background_scim_client exited.", exitcode=proc.exitcode)
 
 
 @pytest.fixture

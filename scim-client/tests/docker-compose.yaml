@@ -118,8 +118,7 @@ services:
       - scim
 
   provisioning-api:
-    image: gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-events-and-consumer-api:latest
-    # image: artifacts.software-univention.de/nubus/images/provisioning-events-and-consumer-api:0.56.0
+    image: gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-api:latest
     container_name: "provisioning-api-dev"
     restart: "on-failure"
     profiles:
@@ -176,7 +175,6 @@ services:
 
   dispatcher:
     image: gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-dispatcher:latest
-    # image: artifacts.software-univention.de/nubus/images/provisioning-dispatcher:0.56.0
     container_name: "provisioning-dispatcher"
     restart: "on-failure"
     profiles:
@@ -192,6 +190,7 @@ services:
       NATS_MAX_RECONNECT_ATTEMPTS: 2
       PROVISIONING_API_HOST: "provisioning-api"
       PROVISIONING_API_PORT: 7777
+      NATS_CONSUMER_NAME: "incoming"
     depends_on:
       nats:
         condition: service_started
@@ -202,7 +201,6 @@ services:
 
   udm-transformer:
     image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-udm-transformer:latest"
-    # image: artifacts.software-univention.de/nubus/images/provisioning-udm-transformer:0.56.0
     container_name: "provisioning-udm-transformer"
     restart: "on-failure"
     profiles:
@@ -236,7 +234,6 @@ services:
 
   prefill:
     image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-prefill:latest"
-    # image: artifacts.software-univention.de/nubus/images/provisioning-prefill:0.56.0
     container_name: "provisioning-prefill"
     restart: "on-failure"
     profiles:
@@ -252,6 +249,8 @@ services:
       NATS_USER: "prefill"
       NATS_PASSWORD: "prefillpass"
       NATS_MAX_RECONNECT_ATTEMPTS: 2
+      UDM_PROTOCOL: "http"
+      UDM_URL_PATH_PREFIX: ""
       UDM_HOST: "udm-rest-api"
       UDM_PORT: 9979
       UDM_USERNAME: "cn=admin"
@@ -272,7 +271,6 @@ services:
 
   udm-listener:
     image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-udm-listener:latest"
-    # image: artifacts.software-univention.de/nubus/images/provisioning-udm-listener:0.56.0
     container_name: "udm-listener"
     profiles:
       - develop
