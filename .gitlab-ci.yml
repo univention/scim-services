@@ -84,7 +84,7 @@ check-debian-updates:
 test-unit-and-integration:
   stage: test
   extends: .dind
-  image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7"
+  image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
       when: "never"
@@ -126,7 +126,7 @@ test-unit-and-integration:
 test-scim2-compliance:
   stage: test
   extends: .dind
-  image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7"
+  image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
       when: "never"
@@ -159,7 +159,7 @@ test-helm-charts:
 test-scim-client:
   stage: test
   extends: .dind
-  image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7"
+  image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
       when: "never"
@@ -210,7 +210,7 @@ test-scim-client:
 test-scim-server-and-client-integration:
   stage: test
   extends: .dind
-  image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7"
+  image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
       when: "never"

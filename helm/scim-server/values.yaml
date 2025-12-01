@@ -42,9 +42,9 @@ scimServer:
   waitForDependency:
     image:
       registry: ""
-      repository: "nubus-dev/images/wait-for-dependency"
+      repository: "nubus/images/wait-for-dependency"
       pullPolicy: ""
-      tag: "0.35.32-pre-jtorres-bump-version-errata298"
+      tag: "0.35.33@sha256:0570b6e8f57d27fe3c856d53c324b2e0457ad83ead442d54a3af806ea0f6a626"
       sha256: null
 
 replicaCount: 1

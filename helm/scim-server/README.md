@@ -832,7 +832,7 @@ null
 			<td>scimServer.waitForDependency.image.repository</td>
 			<td>string</td>
 			<td><pre lang="json">
-"nubus-dev/images/wait-for-dependency"
+"nubus/images/wait-for-dependency"
 </pre>
 </td>
 			<td></td>
@@ -850,7 +850,7 @@ null
 			<td>scimServer.waitForDependency.image.tag</td>
 			<td>string</td>
 			<td><pre lang="json">
-"0.35.32-pre-jtorres-bump-version-errata298"
+"0.35.33@sha256:0570b6e8f57d27fe3c856d53c324b2e0457ad83ead442d54a3af806ea0f6a626"
 </pre>
 </td>
 			<td></td>
