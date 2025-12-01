@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.47.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.46.2...v0.47.0) (2025-12-01)
+
+
+### Features
+
+* use prod Dependency-Track URLs ([860b93f](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/860b93f9d2893fd1dc67e12f27ff2f5537d49aa7)), closes [univention/dev/internal/team-nubus#1512](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1512)
+
+
+### Bug Fixes
+
+* Add vulnerability scanning pipeline jobs to the Gitlab CI ([6c9d2d9](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/6c9d2d91611df62a4f7361a34ffb18521e7ea92e)), closes [univention/dev/internal/team-nubus#1470](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1470)
+* ci: vul-man SBOM upload cleans tag before uploading new SBOMs for a tag ([75ea05a](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/75ea05a38c592e09c9275ee7d55d579960e1f219)), closes [univention/dev/internal/team-nubus#1529](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1529)
+* **ci:** Bump common-ci ([cec44c8](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/cec44c804e7f44da49c833769b88a17f0c35c93c)), closes [univention/dev/internal/team-nubus#1532](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1532)
+* **scim-client:** Fix health check ([4bbf1b4](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/4bbf1b41803969333cf63cf091adce4cfef89e85))
+* **scim-client:** Use correct provisioning-api docker image ([9d5e91b](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/9d5e91b366f32e8d517c2584f32281e5b4ad6c3f))
+
 ## [0.46.2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.46.1...v0.46.2) (2025-11-04)
 
 
