@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.47.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.47.0...v0.47.1) (2025-12-03)
+
+
+### Bug Fixes
+
+* bump image to errata 298 ([10ffd47](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/10ffd47eee2e88e42ea5adc939f09fd6044840b7)), closes [univention/dev/internal/team-nubus#1543](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1543)
+
 ## [0.47.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.46.2...v0.47.0) (2025-12-01)
 
 
