@@ -546,6 +546,7 @@ null
     "logLevel": "INFO",
     "prefill": true
   },
+  "extraEnvVars": [],
   "image": {
     "pullPolicy": "",
     "registry": "",
@@ -593,6 +594,15 @@ true
 </pre>
 </td>
 			<td>Toggle prefill for the provisioning subscription If activated, the client will receive a synthetic "create" event for all existing objects in the Domain before receiving live events.</td>
+		</tr>
+		<tr>
+			<td>scimClient.extraEnvVars</td>
+			<td>list</td>
+			<td><pre lang="json">
+[]
+</pre>
+</td>
+			<td>Array with extra environment variables to add to containers.  extraEnvVars:   - name: FOO     value: "bar"</td>
 		</tr>
 		<tr>
 			<td>scimClient.image.sha256</td>

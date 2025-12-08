@@ -33,6 +33,12 @@ scimDevServer:
   config:
     # -- Hostname of the SCIM server
     hostname: null
+  # -- Array with extra environment variables to add to containers.
+  #
+  # extraEnvVars:
+  #   - name: FOO
+  #     value: "bar"
+  extraEnvVars: []
 
 # -- Resource limits and requests for the container
 resources:

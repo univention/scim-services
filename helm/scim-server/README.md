@@ -307,15 +307,6 @@ false
 			<td>If enabled swagger UI will be availble at the /docs and /redoc endpoint</td>
 		</tr>
 		<tr>
-			<td>extraEnvVars</td>
-			<td>list</td>
-			<td><pre lang="json">
-[]
-</pre>
-</td>
-			<td></td>
-		</tr>
-		<tr>
 			<td>extraVolumeMounts</td>
 			<td>list</td>
 			<td><pre lang="json">
@@ -764,6 +755,15 @@ true
 </pre>
 </td>
 			<td></td>
+		</tr>
+		<tr>
+			<td>scimServer.extraEnvVars</td>
+			<td>list</td>
+			<td><pre lang="json">
+[]
+</pre>
+</td>
+			<td>Array with extra environment variables to add to containers.  extraEnvVars:   - name: FOO     value: "bar"</td>
 		</tr>
 		<tr>
 			<td>scimServer.image.pullPolicy</td>

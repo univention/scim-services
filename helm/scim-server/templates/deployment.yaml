@@ -67,6 +67,10 @@ spec:
             - configMapRef:
                 name: {{ printf "%s-init" (include "common.names.fullname" .) }}
           command: ["/bin/sh", "-c"]
+          {{- with .Values.scimServer.extraEnvVars }}
+          env:
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
           args:
           - >
             wait-for-keycloak.py
@@ -90,6 +94,9 @@ spec:
                 secretKeyRef:
                   name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.udm.auth.existingSecret "defaultNameSuffix" "udm-secret" "context" .) }}
                   key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.udm.auth.existingSecret "key" "password" "context" .) }}
+          {{- with .Values.scimServer.extraEnvVars }}
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
           command: ["/bin/sh", "-c"]
           args:
           - >
@@ -115,9 +122,9 @@ spec:
                 secretKeyRef:
                   name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.udm.auth.existingSecret "defaultNameSuffix" "udm-secret" "context" .) }}
                   key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.udm.auth.existingSecret "key" "password" "context" .) }}
-            {{- with .Values.extraEnvVars }}
-              {{- . | toYaml | nindent 14 }}
-            {{- end }}
+          {{- with .Values.scimServer.extraEnvVars }}
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- if .Values.probes.liveness.enabled }}

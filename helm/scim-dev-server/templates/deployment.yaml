@@ -38,6 +38,9 @@ spec:
           env:
             - name: "HOSTNAME"
               value: {{ .Values.scimDevServer.config.hostname | required ".Values.scimDevServer.config.hostname is required" | quote }}
+          {{- with .Values.scimDevServer.extraEnvVars }}
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
               containerPort: 8000

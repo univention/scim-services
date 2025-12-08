@@ -128,6 +128,12 @@ scimClient:
     # -- Define external_id UDM attribute for groups
     externalIdGroupMapping: univentionObjectIdentifier
 
+  # -- Array with extra environment variables to add to containers.
+  #
+  # extraEnvVars:
+  #   - name: FOO
+  #     value: "bar"
+  extraEnvVars: []
 
 resources:
   requests:

@@ -172,6 +172,15 @@ null
 			<td>Hostname of the SCIM server</td>
 		</tr>
 		<tr>
+			<td>scimDevServer.extraEnvVars</td>
+			<td>list</td>
+			<td><pre lang="json">
+[]
+</pre>
+</td>
+			<td>Array with extra environment variables to add to containers.  extraEnvVars:   - name: FOO     value: "bar"</td>
+		</tr>
+		<tr>
 			<td>scimDevServer.image.imagePullPolicy</td>
 			<td>string</td>
 			<td><pre lang="json">

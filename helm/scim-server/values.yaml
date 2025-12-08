@@ -47,6 +47,12 @@ scimServer:
       tag: "0.35.33@sha256:0570b6e8f57d27fe3c856d53c324b2e0457ad83ead442d54a3af806ea0f6a626"
       sha256: null
 
+  # -- Array with extra environment variables to add to containers.
+  #
+  # extraEnvVars:
+  #   - name: FOO
+  #     value: "bar"
+  extraEnvVars: []
 replicaCount: 1
 
 config:
@@ -159,7 +165,6 @@ probes:
       port: 80
 
 tolerations: []
-extraEnvVars: []
 extraVolumes: []
 extraVolumeMounts: []
 

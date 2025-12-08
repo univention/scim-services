@@ -83,7 +83,7 @@ spec:
                 secretKeyRef:
                   name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.ldap.auth.existingSecret "defaultNameSuffix" "ldap" "context" .) }}
                   key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.ldap.auth.existingSecret "key" "password" "context" .) }}
-          {{- with .Values.extraEnvVars }}
+          {{- with .Values.scimClient.extraEnvVars }}
             {{- . | toYaml | nindent 12 }}
           {{- end }}
           {{- if .Values.probes.liveness.enabled }}

@@ -3,7 +3,7 @@
 
 services:
   test:
-    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.28.0
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.29.0
     pull_policy: always
     command: |
       bash -c "
@@ -19,7 +19,7 @@ services:
       - "../tests/:/app/tests"
 
   test-chart-scim-client:
-    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.28.0
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.29.0
     pull_policy: "if_not_present"
     command: "pytest tests/helm/chart"
     volumes:
@@ -27,7 +27,7 @@ services:
       - "../tests/helm_unit/scim_client:/app/tests/helm/chart"
 
   test-chart-scim-server:
-    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.28.0
+    image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.29.0
     pull_policy: "if_not_present"
     command: "pytest tests/helm/chart"
     volumes:
