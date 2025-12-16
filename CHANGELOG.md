@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.48.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.47.1...v0.48.0) (2025-12-16)
+
+
+### Features
+
+* **helm:** Add component-specific extraEnvVars support ([3ffe0d8](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/3ffe0d886c5075fc853d56ca74ac05b6408a2ddb)), closes [univention/dev/internal/team-nubus#977](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/977)
+
+
+### Bug Fixes
+
+* **deps:** Update dependency univention/dev/nubus-for-k8s/common-ci to v1.54.0 ([cf91347](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/cf91347d0b524a7b237b4667067c200500b4ace1)), closes [#0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/issues/0)
+
 ## [0.47.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.47.0...v0.47.1) (2025-12-03)
 
 
