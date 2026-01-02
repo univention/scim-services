@@ -3,12 +3,14 @@
 
 import multiprocessing
 import os
+import random
 import uuid
 from collections.abc import Generator
 from typing import Any
 
 import httpx
 import pytest
+from faker import Faker
 from loguru import logger
 from univention.admin.rest.client import UDM
 
@@ -24,6 +26,18 @@ from ..data.scim_helper import (
     wait_for_resource_deleted,
 )
 from ..data.udm_helper import create_udm_group, delete_udm_group, delete_udm_user, generate_udm_users
+
+
+@pytest.fixture(scope="session")
+def fake(pytestconfig) -> Faker:
+    """Initialize Faker with a reproducible seed."""
+    seed = pytestconfig.getoption("--randomly-seed")
+    if not seed:
+        seed = random.randint(1000, 9999)
+    seed = int(seed)
+    Faker.seed(seed)
+    logger.info(f"Faker seed: {seed} (use --randomly-seed={seed} to reproduce)")
+    return Faker()
 
 
 @pytest.fixture(scope="session")
@@ -89,25 +103,26 @@ def maildomain(udm_client: UDM) -> Generator[str, None, None]:
 
 
 @pytest.fixture(scope="function")
-def group_data() -> dict[str, Any]:
+def group_data(fake: Faker) -> dict[str, Any]:
     return {
-        "name": "Test Group",
+        "name": f"Test Group {fake.unique.random_int()}",
         "univentionObjectIdentifier": str(uuid.uuid4()),
         "users": [],
     }
 
 
 @pytest.fixture(scope="function")
-def user_data(maildomain: str) -> dict[str, Any]:
+def user_data(fake: Faker, maildomain: str) -> dict[str, Any]:
+    username = fake.unique.user_name()
     return {
-        "username": "testuser",
+        "username": username,
         "firstname": "Test",
         "lastname": "User",
         "univentionObjectIdentifier": str(uuid.uuid4()),
         "password": "univention",
         "displayName": "Test User",
-        "mailPrimaryAddress": f"testuser@{maildomain}",
-        "mailAlternativeAddress": [f"testuser.2@{maildomain}", f"testuser.3@{maildomain}"],
+        "mailPrimaryAddress": f"{username}@{maildomain}",
+        "mailAlternativeAddress": [f"{username}.2@{maildomain}", f"{username}.3@{maildomain}"],
     }
 
 

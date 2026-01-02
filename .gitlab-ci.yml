@@ -157,7 +157,6 @@ test-helm-charts:
     - pytest tests/helm_unit/scim_client
 
 test-scim-client:
-  allow_failure: true
   stage: test
   extends: .dind
   image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
@@ -209,7 +208,6 @@ test-scim-client:
       junit: pytest-junit-test-scim-client.xml
 
 test-scim-server-and-client-integration:
-  allow_failure: true
   stage: test
   extends: .dind
   image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"

@@ -272,6 +272,7 @@ services:
   udm-listener:
     image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-udm-listener:latest"
     container_name: "udm-listener"
+    restart: "on-failure"
     profiles:
       - develop
       - test

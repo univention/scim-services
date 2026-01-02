@@ -20,7 +20,7 @@ def test_get_univention_object_identifier_by_dn(
     udm_user = create_udm_user(udm_client=udm_client, user_data=user_data)
 
     univention_object_identifier = group_membership_resolver.get_univention_object_identifier_by_dn(
-        "uid=testuser,cn=users,dc=univention-organization,dc=intranet"
+        f"uid={user_data['username']},cn=users,dc=univention-organization,dc=intranet"
     )
 
     assert univention_object_identifier == udm_user.properties.get("univentionObjectIdentifier")
