@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.48.1](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.48.0...v0.48.1) (2026-01-07)
+
+
+### Bug Fixes
+
+* **tests:** Use unique usernames in integration tests to prevent conflicts ([82d2dc9](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/82d2dc9cbe68683c04c7c365604a17eedda2b8f5)), closes [univention/dev/internal/team-nubus#1575](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1575)
+
 ## [0.48.0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.47.1...v0.48.0) (2025-12-16)
 
 
