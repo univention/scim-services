@@ -53,8 +53,8 @@ services:
       test: ["CMD", "python3", "-c", "import sys, requests; sys.exit(0) if requests.get('http://localhost:9979/udm').status_code == 401 else sys.exit(1)"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 5s
+      retries: 5
+      start_period: 15s
     networks:
       - scim
 
@@ -224,11 +224,17 @@ services:
       LDAP_BASE_DN: "dc=univention-organization,dc=intranet"
       LDAP_BIND_DN: "cn=admin,dc=univention-organization,dc=intranet"
       LDAP_BIND_PW: "univention"
+      UDM_URL: "http://udm-rest-api:9979/udm"
+      UDM_USERNAME: "cn=admin"
+      UDM_PASSWORD: "univention"
+      UDM_NEEDS_RELOAD: "false"
     depends_on:
       nats:
         condition: service_started
       provisioning-api:
         condition: service_started
+      udm-rest-api:
+        condition: service_healthy
     networks:
       - scim
 
@@ -368,7 +374,7 @@ services:
       - test-integration
     depends_on:
       ldap-server:
-        condition: service_started
+        condition: service_healthy
     ports:
       - 9979:9979
     volumes:
@@ -383,12 +389,13 @@ services:
       TLS_MODE: "off"
       MACHINE_SECRET: univention
       LDAP_CN_ADMIN_PW: univention
+      DEBUG_LEVEL: 99
     healthcheck:
       test: ["CMD", "python3", "-c", "import sys, requests; sys.exit(0) if requests.get('http://localhost:9979/udm').status_code == 401 else sys.exit(1)"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 5s
+      retries: 5
+      start_period: 15s
     networks:
       - scim
 
