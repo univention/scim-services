@@ -19,7 +19,7 @@ data:
   PORT: {{ .Values.config.port | quote }}
   CORS_ORIGINS: {{ .Values.config.corsOrigins | quote }}
   AUTH_ENABLED: {{ .Values.config.auth.enabled | quote }}
-  UDM_URL: {{ required ".Values.udm.connection.url is required" (tpl .Values.udm.connection.url .) | quote }}
+  UDM_URL: {{ tpl ( required "The UDM Rest API connection has to be configured, see udm.connection.url." ( coalesce .Values.udm.connection.url ((.Values.global.udm).connection).url )) . | quote }}
   AUTHENTICATOR_ALLOWED_CLIENT_ID: {{ .Values.config.auth.allowedClientId | quote }}
   AUTHENTICATOR_ALLOWED_AUDIENCE: {{ .Values.config.auth.allowedAudience | quote }}
   HOST: {{ tpl .Values.config.host . | quote }}
