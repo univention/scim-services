@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-# SPDX-FileCopyrightText: 2025 Univention GmbH
+# SPDX-FileCopyrightText: 2025-2026 Univention GmbH
 
 version: "3"
 
@@ -112,10 +112,9 @@ services:
     #image: python:3.11-slim
     image: python:3.11
     entrypoint: ""
-    # For now use a forked scim2-client with a fix for creating correct referenced objects like users.groups or group.members
     command: >
       bash -c "
-        pip install scim2-models>=0.4.2 scim2-client>=0.6.1 git+https://github.com/J-Bu/scim2-tester.git@b0ec73670811dfbb7845418a3b810be91ebb1b9d scim2-cli &&
+        pip install scim2-models==0.4.2 scim2-client==0.6.1 git+https://github.com/J-Bu/scim2-tester.git@b0ec73670811dfbb7845418a3b810be91ebb1b9d scim2-cli &&
         scim2 -u http://scim-server:8000/scim/v2/ test"
     depends_on:
       scim-server:
