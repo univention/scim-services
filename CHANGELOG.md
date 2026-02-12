@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.48.3](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.48.2...v0.48.3) (2026-02-12)
+
+
+### Bug Fixes
+
+* Use udm global configuration ([85a4971](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/85a497132706cf80c9d47b718bc3aa46feb3af73)), closes [univention/dev/internal/team-nubus#1553](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1553)
+
 ## [0.48.2](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.48.1...v0.48.2) (2026-01-13)
 
 
