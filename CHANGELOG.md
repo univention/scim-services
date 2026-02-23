@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.48.4](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.48.3...v0.48.4) (2026-02-23)
+
+
+### Bug Fixes
+
+* **deps:** Update gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner Docker tag to v0.29.10 ([06782e6](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/06782e656f69bcf18f45bc1c6f43fd19e7681b83)), closes [#0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/issues/0)
+
 ## [0.48.3](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.48.2...v0.48.3) (2026-02-12)
 
 
