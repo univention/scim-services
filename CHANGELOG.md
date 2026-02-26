@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.48.6](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.48.5...v0.48.6) (2026-02-26)
+
+
+### Bug Fixes
+
+* bump wait-for-dependency ([0d256ff](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/0d256ffec45fb03f77e9c584f10a2c7735652e73)), closes [univention/dev/internal/team-horizon#6](https://git.knut.univention.de/univention/dev/internal/team-horizon/issues/6)
+
 ## [0.48.5](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.48.4...v0.48.5) (2026-02-25)
 
 
