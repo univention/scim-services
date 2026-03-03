@@ -108,8 +108,6 @@ services:
     command: uvicorn univention.scim.server.main:app --host 0.0.0.0 --port 8000
 
   scim2-tester:
-    # slim image has no git installed
-    #image: python:3.11-slim
     image: python:3.11
     entrypoint: ""
     command: >
