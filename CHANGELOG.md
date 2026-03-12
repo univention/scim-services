@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.48.7](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.48.6...v0.48.7) (2026-03-12)
+
+
+### Bug Fixes
+
+* Dependency updates ([bd647f5](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/bd647f515b95742cfd21253f1696206fe8557ec7)), closes [univention/dev/internal/team-nubus#1477](https://git.knut.univention.de/univention/dev/internal/team-nubus/issues/1477)
+
 ## [0.48.6](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.48.5...v0.48.6) (2026-02-26)
 
 
