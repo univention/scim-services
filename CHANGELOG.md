@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.48.9](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.48.8...v0.48.9) (2026-03-27)
+
+
+### Bug Fixes
+
+* **deps:** Update Base Image ([49e3231](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/commit/49e323166204aa73c31d5e56fa3f9e4a9ce62124)), closes [#0](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/issues/0)
+
 ## [0.48.8](https://git.knut.univention.de/univention/dev/projects/scim/scim-services/compare/v0.48.7...v0.48.8) (2026-03-26)
 
 
