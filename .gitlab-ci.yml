@@ -24,6 +24,9 @@ include:
     file:
       - "dind.yml"
 
+variables:
+  RENOVATE_USER_ID: "1393"
+
 lint-pre-commit:
   before_script:
     # Compose lint would fail without the referenced env files
@@ -85,10 +88,13 @@ test-unit-and-integration:
   stage: test
   extends: .dind
   image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
-  rules:
+  rules: &rules_dind
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
       when: "never"
+    - if: '$GITLAB_USER_ID == $RENOVATE_USER_ID && $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_LABELS !~ /Renovate run dind/'
+      when: "manual"
     - when: "on_success"
+
   before_script:
     - cd scim-server/tests
     # Allow that the Docker API version is negotiated between client and server
@@ -127,10 +133,7 @@ test-scim2-compliance:
   stage: test
   extends: .dind
   image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
-      when: "never"
-    - when: "on_success"
+  rules: *rules_dind
   before_script:
     - cd scim-server/tests
     - unset DOCKER_API_VERSION
@@ -160,10 +163,7 @@ test-scim-client:
   stage: test
   extends: .dind
   image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
-      when: "never"
-    - when: "on_success"
+  rules: *rules_dind
   before_script:
     - cd scim-client/tests
     # Allow that the Docker API version is negotiated between client and server
@@ -211,10 +211,7 @@ test-scim-server-and-client-integration:
   stage: test
   extends: .dind
   image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
-      when: "never"
-    - when: "on_success"
+  rules: *rules_dind
   before_script:
     - cd scim-client/tests
     # Allow that the Docker API version is negotiated between client and server
