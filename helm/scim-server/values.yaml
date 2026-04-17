@@ -44,7 +44,7 @@ scimServer:
       registry: ""
       repository: "nubus/images/wait-for-dependency"
       pullPolicy: ""
-      tag: "0.36.8@sha256:59d24e468825d577d854a4abfc2803d4591ff876e37a0144a2592e1a0b56178a"
+      tag: "0.36.9@sha256:6f1c6ff90e295773b5af0ba64db2223f1f9b52d08e39d611ca061315ec5ce079"
       sha256: null
 
   # -- Array with extra environment variables to add to containers.
