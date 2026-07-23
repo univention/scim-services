@@ -6,7 +6,7 @@ name = "scim-services"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
-    "lancelog>=0.1.0",
+    "lancelog>=0.3.4",
 ]
 authors = [{ name = "Univention GmbH", email = "packages@univention.de" }]
 license = "AGPL-3.0-only"
@@ -71,8 +71,8 @@ known-first-party = ["helpers", "univention.scim"]
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3.5",
-    "pytest-asyncio>=1.0.0",
-    "helm-test-harness>=0.21.0",
-    "pytest-helm>=0.21.0"
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "helm-test-harness>=0.29.17",
+    "pytest-helm>=0.29.17"
 ]

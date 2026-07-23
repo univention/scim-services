@@ -6,12 +6,12 @@ name = "scim-client"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
-    "pydantic>=2.10.6",
+    "pydantic>=2.10.6,<2.13",
     "udm-rest-api-client[async]>=0.0.2",
     "scim-udm-transformer-lib",
-    "nubus-provisioning-consumer>=0.53.0",
+    "nubus-provisioning-consumer>=0.54.0",
     "scim2-client[httpx]>=0.6.1",
-    "icecream>=2.1.4",
+    "icecream>=2.2.0",
     "udm-rest-api-client>=0.0.2",
     "ldap3>=2.9.1",
     "httpx>=0.28.1",
@@ -20,14 +20,14 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3.5",
-    "pytest-asyncio>=1.0.0",
-    "pytest-cov>=6.1.1",
-    "pytest-env>=1.1.5",
-    "pytest-mock>=3.14.1",
-    "requests>=2.32.3",
-    "faker>=37.3.0",
-    "python-keycloak>=5.6.0",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+    "pytest-env>=1.7.0",
+    "pytest-mock>=3.15.1",
+    "requests>=2.34.2",
+    "faker>=40.35.0",
+    "python-keycloak>=7.1.1",
     "scim2-tester",
 ]
 
