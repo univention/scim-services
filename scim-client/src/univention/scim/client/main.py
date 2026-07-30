@@ -11,7 +11,13 @@ from univention.provisioning.consumer.api import (
     ProvisioningConsumerClient,
 )
 
-from univention.scim.client.authentication import Authenticator, AuthenticatorSettings
+from univention.scim.client.authentication import (
+    Authenticator,
+    AuthenticatorSettings,
+    BasicAuthSettings,
+    BearerAuth,
+    BearerAuthSettings,
+)
 from univention.scim.client.group_membership_resolver import GroupMembershipLdapResolver, LdapSettings
 from univention.scim.client.scim_client import ScimClient, ScimConsumer
 from univention.scim.client.scim_client_settings import ScimConsumerSettings
@@ -19,7 +25,18 @@ from univention.scim.client.scim_client_settings import ScimConsumerSettings
 
 async def main() -> None:
     settings = ScimConsumerSettings()
-    auth = Authenticator(AuthenticatorSettings()) if settings.scim_oidc_authentication else httpx.Auth()
+
+    match settings.scim_auth_method:
+        case "oidc":
+            auth = Authenticator(AuthenticatorSettings())
+        case "basic":
+            basic_settings = BasicAuthSettings()
+            auth = httpx.BasicAuth(basic_settings.scim_basic_auth_username, basic_settings.scim_basic_auth_password)
+        case "bearer":
+            auth = BearerAuth(BearerAuthSettings())
+        case _:
+            auth = None
+
     scim_client = ScimClient(auth, settings)
     group_membership_resolver = GroupMembershipLdapResolver(scim_client, LdapSettings())
     scim_client = ScimConsumer(scim_client, group_membership_resolver, settings)

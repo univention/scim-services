@@ -24,7 +24,7 @@ class TestConfigMap(ConfigMap):
         ("ldap.auth.bindDn", "LDAP_BIND_DN"),
         ("scimServer.auth.clientId", "SCIM_CLIENT_ID"),
         ("scimServer.auth.oidcTokenUrl", "SCIM_OIDC_TOKEN_URL"),
-        ("scimServer.auth.enabled", "SCIM_OIDC_AUTHENTICATION"),
+        ("scimServer.auth.method", "SCIM_AUTH_METHOD"),
     ],
 )
 class TestRequiredConfigMapEnv(RequiredEnvVariables):

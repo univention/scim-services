@@ -21,9 +21,13 @@ data:
   SCIM_SERVER_BASE_URL: {{ required ".Values.scimServer.connection.url is required" .Values.scimServer.connection.url | quote }}
   LDAP_HOST: {{ required ".Values.ldap.connection.host is required" .Values.ldap.connection.host | quote }}
   LDAP_BIND_DN: {{ tpl (required ".Values.ldap.auth.bindDn as username is required" .Values.ldap.auth.bindDn ) . | quote }}
-  SCIM_OIDC_AUTHENTICATION: {{ required ".Values.scimServer.auth.enabled is required" .Values.scimServer.auth.enabled | quote }}
+  SCIM_AUTH_METHOD: {{ required ".Values.scimServer.auth.method is required" .Values.scimServer.auth.method | quote }}
+  {{- if eq .Values.scimServer.auth.method "oidc" }}
   SCIM_OIDC_TOKEN_URL: {{ required ".Values.scimServer.auth.oidcTokenUrl is required" .Values.scimServer.auth.oidcTokenUrl | quote }}
   SCIM_CLIENT_ID: {{ tpl (required ".Values.scimServer.auth.clientId as username is required" .Values.scimServer.auth.clientId) . | quote }}
   SCIM_SCOPES: {{ toJson .Values.scimServer.auth.scopes | squote }}
+  {{- else if eq .Values.scimServer.auth.method "basic" }}
+  SCIM_BASIC_AUTH_USERNAME: {{ tpl (required ".Values.scimServer.auth.basicAuth.username is required" .Values.scimServer.auth.basicAuth.username) . | quote }}
+  {{- end }}
   EXTERNAL_ID_USER_MAPPING: {{ required ".Values.scimClient.config.externalIdUserMapping is required" .Values.scimClient.config.externalIdUserMapping | quote }}
   EXTERNAL_ID_GROUP_MAPPING: {{ required ".Values.scimClient.config.externalIdUserMapping is required" .Values.scimClient.config.externalIdUserMapping | quote }}

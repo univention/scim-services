@@ -9,7 +9,13 @@ from unittest.mock import MagicMock
 import httpx
 import pytest
 
-from univention.scim.client.authentication import Authenticator, AuthenticatorSettings, GetTokenError
+from univention.scim.client.authentication import (
+    Authenticator,
+    AuthenticatorSettings,
+    BearerAuth,
+    BearerAuthSettings,
+    GetTokenError,
+)
 
 
 def _make_jwt(exp: float) -> str:
@@ -215,3 +221,30 @@ def test_authenticator_string_exp_claims(authenticator: Authenticator) -> None:
     token = authenticator.get_token()
     assert token == "new-dummy-token"  # Should fetch new token due to invalid exp
     authenticator._client.post.assert_called_once()
+
+
+def test_bearer_auth_sets_static_authorization_header() -> None:
+    """Test that BearerAuth sets a fixed Authorization header with no token endpoint involved."""
+    settings = BearerAuthSettings(scim_bearer_token="static-token-value")
+    auth = BearerAuth(settings)
+
+    request = httpx.Request("GET", "https://example.com/scim/v2/Users")
+    flow = auth.auth_flow(request)
+
+    outgoing_request = next(flow)
+    assert outgoing_request.headers["Authorization"] == "Bearer static-token-value"
+
+    with pytest.raises(StopIteration):
+        flow.send(MagicMock(httpx.Response))
+
+
+def test_bearer_auth_uses_same_token_across_multiple_requests() -> None:
+    """Test that BearerAuth does not refresh or rotate the token between requests."""
+    settings = BearerAuthSettings(scim_bearer_token="static-token-value")
+    auth = BearerAuth(settings)
+
+    for _ in range(3):
+        request = httpx.Request("GET", "https://example.com/scim/v2/Users")
+        flow = auth.auth_flow(request)
+        outgoing_request = next(flow)
+        assert outgoing_request.headers["Authorization"] == "Bearer static-token-value"

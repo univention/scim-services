@@ -6,6 +6,7 @@ import os
 import time
 from typing import Any, Final
 
+import httpx
 from aiohttp import ClientResponseError
 from loguru import logger
 from scim2_models import Resource
@@ -124,3 +125,22 @@ def delete_provisioning_subscription() -> None:
             logger.info("Subscription {} deleted.", os.environ["PROVISIONING_API_USERNAME"])
 
     asyncio.run(delete_provisioning_subscription_async())
+
+
+def capture_authorization_header(scim_server_base_url: str, auth: httpx.Auth | None) -> str | None:
+    """
+    Sends a real request to the live scim-dev-server and captures the
+    Authorization header that was actually put on the wire, proving a given
+    auth object (or the lack of one) is wired correctly end-to-end rather than
+    only unit-tested in isolation.
+    """
+    captured: dict[str, str | None] = {}
+
+    def capture(request: httpx.Request) -> None:
+        captured["authorization"] = request.headers.get("Authorization")
+
+    with httpx.Client(base_url=scim_server_base_url, auth=auth, event_hooks={"request": [capture]}) as client:
+        response = client.get("/ServiceProviderConfig")
+
+    assert response.status_code == 200
+    return captured.get("authorization")

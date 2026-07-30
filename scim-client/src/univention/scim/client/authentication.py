@@ -23,6 +23,32 @@ class AuthenticatorSettings(BaseSettings):
     scim_scopes: list[str] | None = None
 
 
+class BasicAuthSettings(BaseSettings):
+    scim_basic_auth_username: str
+    scim_basic_auth_password: str
+
+
+class BearerAuthSettings(BaseSettings):
+    scim_bearer_token: str
+
+
+class BearerAuth(httpx.Auth):
+    """
+    Static Bearer token authentication.
+
+    Unlike Authenticator (OIDC), the token is a fixed secret configured
+    out-of-band, not fetched from a token endpoint, so there is no refresh
+    or expiry handling.
+    """
+
+    def __init__(self, settings: BearerAuthSettings) -> None:
+        self._token = settings.scim_bearer_token
+
+    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
+        request.headers["Authorization"] = f"Bearer {self._token}"
+        yield request
+
+
 class Authenticator(httpx.Auth):
     _access_token: str | None = None
 

@@ -158,6 +158,16 @@ def udm_client() -> UDM:
 
 
 @pytest.fixture(scope="session")
+def scim_server_base_url() -> str:
+    return os.environ["SCIM_SERVER_BASE_URL"]
+
+
+@pytest.fixture(scope="session")
+def keycloak_base_url() -> str:
+    return os.environ["KEYCLOAK_BASE_URL"]
+
+
+@pytest.fixture(scope="session")
 def background_scim_client() -> Generator[bool, None, None]:
     logger.info("Fixture background_scim_client started.")
 

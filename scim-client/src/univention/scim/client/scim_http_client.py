@@ -26,14 +26,9 @@ class ScimClient:
         auth: Auth | None,
         settings: ScimConsumerSettings,
     ):
-        self.auth = auth
         self.settings = settings
-        if self.settings.scim_oidc_authentication:
-            logger.info("OIDC authentication enabled. SCIM API requests will be authenticated.")
-            self.auth = auth
-        else:
-            logger.info("OIDC authentication disabled. SCIM API requests will be unauthenticated.")
-            self.auth = None
+        self.auth = auth
+        logger.info("SCIM API authentication method: {}", settings.scim_auth_method)
 
     def _create_client(self) -> SyncSCIMClient:
         """

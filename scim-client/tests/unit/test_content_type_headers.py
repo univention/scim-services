@@ -15,7 +15,7 @@ def settings() -> ScimConsumerSettings:
     """Create test settings."""
     return ScimConsumerSettings(
         scim_server_base_url="https://example.com/scim/v2",
-        scim_oidc_authentication=False,
+        scim_auth_method="none",
         health_check_enabled=False,
     )
 
@@ -49,11 +49,18 @@ def test_scim_client_uses_correct_content_type_headers(settings: ScimConsumerSet
             assert headers["Content-Type"] == "application/scim+json"
 
 
-def test_scim_client_with_auth_enabled() -> None:
-    """Test that SCIM client preserves auth when OIDC is enabled."""
+@pytest.mark.parametrize("auth_method", ["oidc", "basic", "bearer"])
+def test_scim_client_preserves_auth_for_any_configured_method(auth_method: str) -> None:
+    """Test that SCIM client passes through whatever auth object it is given, regardless of method.
+
+    Regression test: ScimClient used to re-derive whether to use auth from
+    settings.scim_oidc_authentication and would silently null out any auth
+    object it was given if that flag was false. The auth object passed in by
+    the caller (main.py) must now always be preserved unmodified.
+    """
     settings_with_auth = ScimConsumerSettings(
         scim_server_base_url="https://example.com/scim/v2",
-        scim_oidc_authentication=True,  # Enable auth
+        scim_auth_method=auth_method,
         health_check_enabled=False,
     )
     mock_auth = MagicMock()
@@ -67,11 +74,9 @@ def test_scim_client_with_auth_enabled() -> None:
             mock_client_instance = MagicMock()
             mock_client.return_value = mock_client_instance
 
-            # Create the SCIM client with auth enabled
             scim_client = ScimClient(auth=mock_auth, settings=settings_with_auth)
             scim_client._create_client()
 
-            # Verify all parameters are passed correctly when auth is enabled
             mock_client.assert_called_once()
             call_kwargs: dict[str, Any] = mock_client.call_args[1]
 
@@ -81,10 +86,8 @@ def test_scim_client_with_auth_enabled() -> None:
             assert call_kwargs["headers"]["Content-Type"] == "application/scim+json"
 
 
-def test_scim_client_disables_auth_when_configured(settings: ScimConsumerSettings) -> None:
-    """Test that SCIM client disables auth when OIDC is disabled."""
-    mock_auth = MagicMock()
-
+def test_scim_client_no_auth_when_method_is_none(settings: ScimConsumerSettings) -> None:
+    """Test that SCIM client makes unauthenticated requests when no auth object is passed in."""
     with patch("univention.scim.client.scim_http_client.SyncSCIMClient") as mock_scim_client:
         mock_instance = MagicMock()
         mock_instance.get_resource_model.return_value = MagicMock()
@@ -94,15 +97,14 @@ def test_scim_client_disables_auth_when_configured(settings: ScimConsumerSetting
             mock_client_instance = MagicMock()
             mock_client.return_value = mock_client_instance
 
-            # Create the SCIM client with auth disabled (default from settings fixture)
-            scim_client = ScimClient(auth=mock_auth, settings=settings)
+            # main.py passes auth=None when scim_auth_method is "none" (see settings fixture)
+            scim_client = ScimClient(auth=None, settings=settings)
             scim_client._create_client()
 
-            # Verify auth is set to None when OIDC is disabled
             mock_client.assert_called_once()
             call_kwargs: dict[str, Any] = mock_client.call_args[1]
 
-            assert call_kwargs["auth"] is None  # Should be None when disabled
+            assert call_kwargs["auth"] is None
             assert str(call_kwargs["base_url"]) == settings.scim_server_base_url
             assert call_kwargs["headers"]["Accept"] == "application/scim+json"
             assert call_kwargs["headers"]["Content-Type"] == "application/scim+json"

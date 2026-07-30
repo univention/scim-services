@@ -68,11 +68,25 @@ spec:
             - configMapRef:
                 name: {{ $name }}
           env:
+            {{- if eq .Values.scimServer.auth.method "oidc" }}
             - name: SCIM_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.scimServer.auth.existingSecret "defaultNameSuffix" "scim-server" "context" .) }}
                   key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.scimServer.auth.existingSecret "key" "password" "context" .) }}
+            {{- else if eq .Values.scimServer.auth.method "basic" }}
+            - name: SCIM_BASIC_AUTH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.scimServer.auth.basicAuth.existingSecret "defaultNameSuffix" "scim-server" "context" .) }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.scimServer.auth.basicAuth.existingSecret "key" "password" "context" .) }}
+            {{- else if eq .Values.scimServer.auth.method "bearer" }}
+            - name: SCIM_BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nubus-common.secrets.name" (dict "existingSecret" .Values.scimServer.auth.bearerAuth.existingSecret "defaultNameSuffix" "scim-server" "context" .) }}
+                  key: {{ include "nubus-common.secrets.key" (dict "existingSecret" .Values.scimServer.auth.bearerAuth.existingSecret "key" "token" "context" .) }}
+            {{- end }}
             - name: PROVISIONING_API_PASSWORD
               valueFrom:
                 secretKeyRef:

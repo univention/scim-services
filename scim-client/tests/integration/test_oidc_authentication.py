@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-import os
 from collections.abc import Generator
 
 import pytest
@@ -9,14 +8,11 @@ from keycloak import KeycloakAdmin, KeycloakOpenID, KeycloakPostError
 
 from univention.scim.client.authentication import Authenticator, AuthenticatorSettings, GetTokenError
 
+from ..data.scim_helper import capture_authorization_header
+
 
 AUDIENCE = "nubus-scim"
 REALM = "master"
-
-
-@pytest.fixture(scope="session")
-def keycloak_base_url() -> str:
-    return os.environ["KEYCLOAK_BASE_URL"]
 
 
 @pytest.fixture(scope="session")
@@ -163,3 +159,21 @@ def test_token_has_scopes(authenticator_settings: AuthenticatorSettings, keycloa
     decoded_token = keycloak_openid.decode_token(token)
     assert "openid" in decoded_token["scope"]
     assert f"{AUDIENCE}-test-scope" in decoded_token["scope"]
+
+
+def test_oidc_token_header_reaches_scim_server(
+    authenticator_settings: AuthenticatorSettings, scim_server_base_url: str
+) -> None:
+    """
+    Proves a real OIDC access token (fetched from a real Keycloak) is put on
+    the wire as a Bearer Authorization header when scim-client talks to the
+    downstream SCIM server, analogous to the Basic/Bearer header checks in
+    test_auth_methods_header.py.
+    """
+    authenticator = Authenticator(authenticator_settings)
+
+    authorization_header = capture_authorization_header(scim_server_base_url, authenticator)
+
+    assert authorization_header is not None
+    assert authorization_header.startswith("Bearer ")
+    assert authorization_header.removeprefix("Bearer ") == authenticator.get_token()
