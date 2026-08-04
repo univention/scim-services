@@ -6,7 +6,7 @@ from collections.abc import Generator
 import pytest
 from keycloak import KeycloakAdmin, KeycloakOpenID, KeycloakPostError
 
-from univention.scim.client.authentication import Authenticator, AuthenticatorSettings, GetTokenError
+from univention.scim.client.authentication import GetTokenError, OidcAuth, OidcAuthSettings
 
 from ..data.scim_helper import capture_authorization_header
 
@@ -16,8 +16,8 @@ REALM = "master"
 
 
 @pytest.fixture(scope="session")
-def authenticator_settings(keycloak_base_url: str) -> AuthenticatorSettings:
-    return AuthenticatorSettings(
+def authenticator_settings(keycloak_base_url: str) -> OidcAuthSettings:
+    return OidcAuthSettings(
         scim_client_id="scim-client-test-client",
         scim_client_secret="supersecret",
         scim_oidc_token_url=f"{keycloak_base_url}/realms/master/protocol/openid-connect/token",
@@ -69,7 +69,7 @@ def audience_client_scope(keycloak_admin: KeycloakAdmin) -> Generator[str, None,
 
 @pytest.fixture(scope="session", autouse=True)
 def scim_http_client(
-    keycloak_admin: KeycloakAdmin, authenticator_settings: AuthenticatorSettings, audience_client_scope: str
+    keycloak_admin: KeycloakAdmin, authenticator_settings: OidcAuthSettings, audience_client_scope: str
 ) -> Generator[None, None, None]:
     keycloak_client_id = "e0f7c5f0-1234-5678-90ab-cdef12345678"
     client_representation = {
@@ -98,8 +98,8 @@ def scim_http_client(
     keycloak_admin.delete_client(keycloak_client_id)
 
 
-def test_authentication(authenticator_settings: AuthenticatorSettings) -> None:
-    authenticator = Authenticator(authenticator_settings)
+def test_authentication(authenticator_settings: OidcAuthSettings) -> None:
+    authenticator = OidcAuth(authenticator_settings)
 
     token = authenticator.get_token()
 
@@ -114,18 +114,18 @@ def test_authentication(authenticator_settings: AuthenticatorSettings) -> None:
         {"scim_oidc_token_url": "https://wrong-url.xyz"},
     ],
 )
-def test_failed_authentication(customization: dict[str, str], authenticator_settings: AuthenticatorSettings) -> None:
+def test_failed_authentication(customization: dict[str, str], authenticator_settings: OidcAuthSettings) -> None:
     customized_settings = authenticator_settings.model_copy(update=customization)
     print(customized_settings)
 
-    authenticator = Authenticator(customized_settings)
+    authenticator = OidcAuth(customized_settings)
 
     with pytest.raises(GetTokenError):
         authenticator.get_token()
 
 
-def test_token_has_audience(authenticator_settings: AuthenticatorSettings, keycloak_base_url: str) -> None:
-    authenticator = Authenticator(authenticator_settings)
+def test_token_has_audience(authenticator_settings: OidcAuthSettings, keycloak_base_url: str) -> None:
+    authenticator = OidcAuth(authenticator_settings)
 
     token = authenticator.get_token()
     assert token
@@ -142,8 +142,8 @@ def test_token_has_audience(authenticator_settings: AuthenticatorSettings, keycl
     assert "nubus-scim" in decoded_token["aud"]
 
 
-def test_token_has_scopes(authenticator_settings: AuthenticatorSettings, keycloak_base_url: str) -> None:
-    authenticator = Authenticator(authenticator_settings)
+def test_token_has_scopes(authenticator_settings: OidcAuthSettings, keycloak_base_url: str) -> None:
+    authenticator = OidcAuth(authenticator_settings)
 
     token = authenticator.get_token()
     assert token
@@ -162,15 +162,13 @@ def test_token_has_scopes(authenticator_settings: AuthenticatorSettings, keycloa
 
 
 def test_oidc_token_header_reaches_scim_server(
-    authenticator_settings: AuthenticatorSettings, scim_server_base_url: str
+    authenticator_settings: OidcAuthSettings, scim_server_base_url: str
 ) -> None:
     """
-    Proves a real OIDC access token (fetched from a real Keycloak) is put on
-    the wire as a Bearer Authorization header when scim-client talks to the
-    downstream SCIM server, analogous to the Basic/Bearer header checks in
-    test_auth_methods_header.py.
+    Test OIDC access token (fetched from Keycloak) is sent as a Bearer Authorization header when scim-client talks
+    to the downstream SCIM server.
     """
-    authenticator = Authenticator(authenticator_settings)
+    authenticator = OidcAuth(authenticator_settings)
 
     authorization_header = capture_authorization_header(scim_server_base_url, authenticator)
 

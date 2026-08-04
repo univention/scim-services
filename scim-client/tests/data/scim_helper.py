@@ -128,12 +128,6 @@ def delete_provisioning_subscription() -> None:
 
 
 def capture_authorization_header(scim_server_base_url: str, auth: httpx.Auth | None) -> str | None:
-    """
-    Sends a real request to the live scim-dev-server and captures the
-    Authorization header that was actually put on the wire, proving a given
-    auth object (or the lack of one) is wired correctly end-to-end rather than
-    only unit-tested in isolation.
-    """
     captured: dict[str, str | None] = {}
 
     def capture(request: httpx.Request) -> None:

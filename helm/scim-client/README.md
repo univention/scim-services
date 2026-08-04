@@ -619,36 +619,22 @@ null
 			<td><pre lang="json">
 {
   "auth": {
-    "basicAuth": {
-      "existingSecret": {
-        "keyMapping": {
-          "password": null
-        },
-        "name": null
-      },
-      "password": null,
+    "basic": {
       "username": null
     },
-    "bearerAuth": {
-      "existingSecret": {
-        "keyMapping": {
-          "token": null
-        },
-        "name": null
-      },
-      "token": null
-    },
-    "clientId": null,
     "existingSecret": {
       "keyMapping": {
         "password": null
       },
       "name": null
     },
-    "method": "oidc",
-    "oidcTokenUrl": null,
-    "password": null,
-    "scopes": null
+    "method": null,
+    "oidc": {
+      "clientId": null,
+      "oidcTokenUrl": null,
+      "scopes": null
+    },
+    "password": null
   },
   "connection": {
     "url": null
@@ -659,76 +645,13 @@ null
 			<td>Downstream SCIM Service connection configuration</td>
 		</tr>
 		<tr>
-			<td>scimServer.auth.basicAuth.existingSecret.keyMapping.password</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The key to retrieve the password from. Setting this value allows to use a key with a different name.</td>
-		</tr>
-		<tr>
-			<td>scimServer.auth.basicAuth.existingSecret.name</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The name of an existing Secret to use for retrieving the password to authenticate with the SCIM Server via HTTP Basic Auth.  "scimServer.auth.basicAuth.password" will be ignored if this value is set.</td>
-		</tr>
-		<tr>
-			<td>scimServer.auth.basicAuth.password</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The password used to authenticate with the SCIM Server via HTTP Basic Auth. Either this value or an existing Secret has to be specified. Only used when "scimServer.auth.method" is "basic".</td>
-		</tr>
-		<tr>
-			<td>scimServer.auth.basicAuth.username</td>
+			<td>scimServer.auth.basic.username</td>
 			<td>string</td>
 			<td><pre lang="json">
 null
 </pre>
 </td>
 			<td>The username used to authenticate with the SCIM Server via HTTP Basic Auth. Only used when "scimServer.auth.method" is "basic".</td>
-		</tr>
-		<tr>
-			<td>scimServer.auth.bearerAuth.existingSecret.keyMapping.token</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The key to retrieve the token from. Setting this value allows to use a key with a different name.</td>
-		</tr>
-		<tr>
-			<td>scimServer.auth.bearerAuth.existingSecret.name</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The name of an existing Secret to use for retrieving the token to authenticate with the SCIM Server via static Bearer auth.  "scimServer.auth.bearerAuth.token" will be ignored if this value is set.</td>
-		</tr>
-		<tr>
-			<td>scimServer.auth.bearerAuth.token</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>A static Bearer token used to authenticate with the SCIM Server. Either this value or an existing Secret has to be specified. Only used when "scimServer.auth.method" is "bearer".</td>
-		</tr>
-		<tr>
-			<td>scimServer.auth.clientId</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>Service account client ID (username). Only used when "scimServer.auth.method" is "oidc".</td>
 		</tr>
 		<tr>
 			<td>scimServer.auth.existingSecret.keyMapping.password</td>
@@ -752,13 +675,22 @@ null
 			<td>scimServer.auth.method</td>
 			<td>string</td>
 			<td><pre lang="json">
-"oidc"
+null
 </pre>
 </td>
 			<td>Authentication method to use against the downstream SCIM server. One of: "none", "oidc", "basic", "bearer".</td>
 		</tr>
 		<tr>
-			<td>scimServer.auth.oidcTokenUrl</td>
+			<td>scimServer.auth.oidc.clientId</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>Service account client ID (username). Only used when "scimServer.auth.method" is "oidc".</td>
+		</tr>
+		<tr>
+			<td>scimServer.auth.oidc.oidcTokenUrl</td>
 			<td>string</td>
 			<td><pre lang="json">
 null
@@ -767,22 +699,22 @@ null
 			<td>URL to obtain an OIDC access token from the Identity Provider using the client-credentials-flow. Only used when "scimServer.auth.method" is "oidc".</td>
 		</tr>
 		<tr>
-			<td>scimServer.auth.password</td>
-			<td>string</td>
-			<td><pre lang="json">
-null
-</pre>
-</td>
-			<td>The password used to authenticate with the SCIM Server via OIDC. Either this value or an existing Secret has to be specified. Only used when "scimServer.auth.method" is "oidc".</td>
-		</tr>
-		<tr>
-			<td>scimServer.auth.scopes</td>
+			<td>scimServer.auth.oidc.scopes</td>
 			<td>string</td>
 			<td><pre lang="json">
 null
 </pre>
 </td>
 			<td>List of additional scopes to send when requesting an OIDC authentication token. The scope `openid` will always be added even if the value is null. Only used when "scimServer.auth.method" is "oidc".</td>
+		</tr>
+		<tr>
+			<td>scimServer.auth.password</td>
+			<td>string</td>
+			<td><pre lang="json">
+null
+</pre>
+</td>
+			<td>The secret used to authenticate with the SCIM Server: the OIDC client secret when method is "oidc", the password when method is "basic", or the static token when method is "bearer". Not used when method is "none". Either this value or an existing Secret has to be specified.</td>
 		</tr>
 		<tr>
 			<td>scimServer.connection.url</td>

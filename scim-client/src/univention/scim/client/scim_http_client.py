@@ -28,7 +28,6 @@ class ScimClient:
     ):
         self.settings = settings
         self.auth = auth
-        logger.info("SCIM API authentication method: {}", settings.scim_auth_method)
 
     def _create_client(self) -> SyncSCIMClient:
         """

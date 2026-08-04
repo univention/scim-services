@@ -51,13 +51,7 @@ def test_scim_client_uses_correct_content_type_headers(settings: ScimConsumerSet
 
 @pytest.mark.parametrize("auth_method", ["oidc", "basic", "bearer"])
 def test_scim_client_preserves_auth_for_any_configured_method(auth_method: str) -> None:
-    """Test that SCIM client passes through whatever auth object it is given, regardless of method.
-
-    Regression test: ScimClient used to re-derive whether to use auth from
-    settings.scim_oidc_authentication and would silently null out any auth
-    object it was given if that flag was false. The auth object passed in by
-    the caller (main.py) must now always be preserved unmodified.
-    """
+    """Test that SCIM client passes through whatever auth object it is given, regardless of method."""
     settings_with_auth = ScimConsumerSettings(
         scim_server_base_url="https://example.com/scim/v2",
         scim_auth_method=auth_method,
@@ -97,7 +91,6 @@ def test_scim_client_no_auth_when_method_is_none(settings: ScimConsumerSettings)
             mock_client_instance = MagicMock()
             mock_client.return_value = mock_client_instance
 
-            # main.py passes auth=None when scim_auth_method is "none" (see settings fixture)
             scim_client = ScimClient(auth=None, settings=settings)
             scim_client._create_client()
 

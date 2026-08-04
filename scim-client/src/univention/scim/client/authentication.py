@@ -6,6 +6,7 @@ import binascii
 import json
 import time
 from collections.abc import Generator
+from enum import StrEnum
 
 import httpx
 from loguru import logger
@@ -13,10 +14,31 @@ from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings
 
 
+class AuthMethod(StrEnum):
+    NONE = "none"
+    OIDC = "oidc"
+    BASIC = "basic"
+    BEARER = "bearer"
+
+
+def get_auth(auth_method: AuthMethod) -> httpx.Auth | None:
+    logger.info("Using authentication method: {}", auth_method)
+    match auth_method:
+        case AuthMethod.OIDC:
+            return OidcAuth(OidcAuthSettings())
+        case AuthMethod.BASIC:
+            basic_settings = BasicAuthSettings()
+            return httpx.BasicAuth(basic_settings.scim_basic_auth_username, basic_settings.scim_basic_auth_password)
+        case AuthMethod.BEARER:
+            return BearerAuth(BearerAuthSettings())
+        case _:
+            return None
+
+
 class GetTokenError(Exception): ...
 
 
-class AuthenticatorSettings(BaseSettings):
+class OidcAuthSettings(BaseSettings):
     scim_oidc_token_url: AnyHttpUrl
     scim_client_id: str
     scim_client_secret: str
@@ -33,13 +55,7 @@ class BearerAuthSettings(BaseSettings):
 
 
 class BearerAuth(httpx.Auth):
-    """
-    Static Bearer token authentication.
-
-    Unlike Authenticator (OIDC), the token is a fixed secret configured
-    out-of-band, not fetched from a token endpoint, so there is no refresh
-    or expiry handling.
-    """
+    """Static Bearer token authentication."""
 
     def __init__(self, settings: BearerAuthSettings) -> None:
         self._token = settings.scim_bearer_token
@@ -49,10 +65,10 @@ class BearerAuth(httpx.Auth):
         yield request
 
 
-class Authenticator(httpx.Auth):
+class OidcAuth(httpx.Auth):
     _access_token: str | None = None
 
-    def __init__(self, settings: AuthenticatorSettings, http_client: httpx.Client | None = None) -> None:
+    def __init__(self, settings: OidcAuthSettings, http_client: httpx.Client | None = None) -> None:
         self._settings = settings
         self._client = http_client or httpx.Client()
 

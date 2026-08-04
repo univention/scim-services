@@ -9,7 +9,7 @@ from univention.testing.helm.auth_flavors.username import AuthUsernameViaConfigM
 class SettingsTestScimServerSecret:
     secret_name = "release-name-scim-client-scim-server"
     prefix_mapping = {
-        "auth.clientId": "auth.username",
+        "auth.oidc.clientId": "auth.username",
         "scimServer.auth": "auth",
     }
 
