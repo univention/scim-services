@@ -17,6 +17,7 @@ class ScimConsumerSettings(BaseSettings):
     scim_user_filter_attribute: str | None = None
     external_id_user_mapping: str | None = None
     external_id_group_mapping: str | None = None
+    modules: list[str] = ["users/user", "groups/group"]
     _auth: httpx.Auth | None = PrivateAttr(default=None)
 
     @property

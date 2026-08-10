@@ -138,7 +138,6 @@ scimClient:
     externalIdUserMapping: univentionObjectIdentifier
     # -- Define external_id UDM attribute for groups
     externalIdGroupMapping: univentionObjectIdentifier
-
   # -- Array with extra environment variables to add to containers.
   #
   # extraEnvVars:

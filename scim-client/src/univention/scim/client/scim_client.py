@@ -121,6 +121,10 @@ class ScimConsumer:
         if not message.body.new and not message.body.old:
             raise ValueError("Invalid message state.")
 
+        if message.topic not in self.settings.modules:
+            logger.debug("Skipping message for topic {}, not in allowed modules", message.topic)
+            return
+
         if should_exist_in_scim(message, self.settings.scim_user_filter_attribute):
             udm_object = type("Obj", (object,), {k: v for k, v in message.body.new.items()})()
             self.write_udm_object(udm_object, message.topic)
