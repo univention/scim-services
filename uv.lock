@@ -1362,6 +1362,18 @@ wheels = [
 ]
 
 [[package]]
+name = "pyasn1-modules"
+version = "0.4.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyasn1" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e9/e6/78ebbb10a8c8e4b61a59249394a4a594c1a7af95593dc933a349c8d00964/pyasn1_modules-0.4.2.tar.gz", hash = "sha256:677091de870a80aae844b1ca6134f54652fa2c8c5a52aa396440ac3106e941e6", size = 307892, upload-time = "2025-03-28T02:41:22.17Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/47/8d/d529b5d697919ba8c11ad626e835d4039be708a35b0d22de83a269a6682c/pyasn1_modules-0.4.2-py3-none-any.whl", hash = "sha256:29253a9207ce32b64c3ac6600edc75368f98473906e8fd1043bd6b5b1de2c14a", size = 181259, upload-time = "2025-03-28T02:41:19.028Z" },
+]
+
+[[package]]
 name = "pycparser"
 version = "3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1666,6 +1678,16 @@ wheels = [
 ]
 
 [[package]]
+name = "python-ldap"
+version = "3.4.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyasn1" },
+    { name = "pyasn1-modules" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b2/f4/60edeb794bbc9ed0ff2149bbaeec605f3ed331766459d195832ecbd0ba2d/python_ldap-3.4.7.tar.gz", hash = "sha256:bacd9fb680d20263d8570ade1cf234d90d281149a8beb4f079dd8f33f7613dc8", size = 387477, upload-time = "2026-05-20T13:41:04.358Z" }
+
+[[package]]
 name = "pyyaml"
 version = "6.0.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1807,6 +1829,7 @@ dev = [
     { name = "python-keycloak" },
     { name = "requests" },
     { name = "scim2-tester" },
+    { name = "udm-rest-api-client", extra = ["cli"] },
 ]
 
 [package.metadata]
@@ -1834,6 +1857,7 @@ dev = [
     { name = "python-keycloak", specifier = ">=7.1.1" },
     { name = "requests", specifier = ">=2.34.2" },
     { name = "scim2-tester" },
+    { name = "udm-rest-api-client", extras = ["cli"], specifier = ">=0.0.2" },
 ]
 
 [[package]]
@@ -2110,6 +2134,10 @@ wheels = [
 [package.optional-dependencies]
 async = [
     { name = "aiohttp" },
+]
+cli = [
+    { name = "python-ldap" },
+    { name = "requests" },
 ]
 
 [[package]]

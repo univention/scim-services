@@ -51,6 +51,61 @@ UNIVENTION_SCIM_SERVER=true uv run pytest -v -s ./
 docker compose --profile test-integration down --volumes
 ```
 
+## How to rum scim-client against a dedicated scim-server
+
+### wire.com
+
+Create a `.env` file for the configuration
+
+```bash
+export SCIM_SERVER_BASE_URL="https://prod-nginz-https.wire.com/scim/v2"
+export PROVISIONING_API_BASE_URL="http://localhost:7777/"
+export PROVISIONING_API_USERNAME="scim-client"
+export PROVISIONING_API_PASSWORD="univention"
+export PROVISIONING_API_ADMIN_USERNAME="admin"
+export PROVISIONING_API_ADMIN_PASSWORD="provisioning"
+export LOG_LEVEL="DEBUG"
+export MAX_ACKNOWLEDGEMENT_RETRIES="10"
+export UDM_BASE_URL="http://localhost:9979/udm/"
+export UDM_USERNAME="cn=admin"
+export UDM_PASSWORD="univention"
+export LDAP_HOST="localhost"
+export LDAP_BIND_DN="cn=admin,dc=univention-organization,dc=intranet"
+export LDAP_BIND_PASSWORD="univention"
+export EXTERNAL_ID_USER_MAPPING="univentionObjectIdentifier"
+export EXTERNAL_ID_GROUP_MAPPING="univentionObjectIdentifier"
+export MODULES='["users/user"]'
+export KEYCLOAK_BASE_URL="http://localhost:5050"
+export SCIM_AUTH_METHOD="bearer"
+export SCIM_BEARER_TOKEN="<wire.com scim token>"
+```
+
+Create the subscription
+
+```bash
+cd scim-client
+docker compose -f tests/docker-compose.yaml --profile develop up --build --remove-orphans -d
+(source .env && uv run /bin/bash)
+python3 -c "import tests.data.scim_helper as scim_helper; scim_helper.create_provisioning_subscription()"
+```
+
+Run the scim client and do your tests
+
+```bash
+(source .env && uv run scim-client)
+```
+
+```bash
+(source .env && uv run /bin/bash)
+udm --uri "http://localhost:9979/udm/" --username "cn=admin" --bindpwd "univention" users/user create --set username="jbu12345" --set lastname="Burgmeier" --set password="Test1234" --set e-mail="jbu@scim-client.unittests"
+```
+
+Cleanup
+
+```bash
+docker compose -f tests/docker-compose.yaml --profile develop down --volumes
+```
+
 ## Interfaces
 
 The SCIM client interacts with the following systems:

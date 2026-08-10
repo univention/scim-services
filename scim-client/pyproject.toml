@@ -29,6 +29,8 @@ dev = [
     "faker>=40.35.0",
     "python-keycloak>=7.1.1",
     "scim2-tester",
+    # get udm cli to manually test aginst third-party servers like wire.com
+    "udm-rest-api-client[cli]>=0.0.2",
 ]
 
 [tool.uv.sources]

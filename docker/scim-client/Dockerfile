@@ -56,6 +56,13 @@ RUN uv sync \
 FROM build AS test
 SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
 
+# required for udm-rest-api[cli]
+RUN apt-get update \
+    && apt-get --assume-yes --verbose-versions --no-install-recommends install \
+      gcc \
+      python3-dev \
+      libldap-dev \
+      libsasl2-dev
 ENV PYTHONUNBUFFERED=1 \
     PATH=/app/.venv/bin:$PATH
 
