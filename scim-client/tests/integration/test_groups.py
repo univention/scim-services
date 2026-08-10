@@ -7,9 +7,10 @@ import pytest
 from pytest_mock import MockerFixture
 
 from univention.scim.client.scim_client import ScimConsumer
-from univention.scim.client.scim_http_client import ScimClient, ScimClientNoDataFoundException
+from univention.scim.client.scim_http_client import ScimClient
 
 from ..data.provisioning_message_factory import get_provisioning_message
+from ..data.scim_helper import wait_for_resource_deleted
 
 
 @pytest.mark.asyncio
@@ -21,12 +22,14 @@ async def test_create_group(scim_http_client: ScimClient, scim_client: ScimConsu
 
     await scim_client.handle_udm_message(pm)
 
-    group = scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
+    group = scim_http_client.get_group(pm.body.new["properties"]["univentionObjectIdentifier"])
 
-    assert group.display_name == pm.body.new["properties"].get("name")
+    assert group["displayName"] == pm.body.new["properties"].get("name")
 
     # Cleaning up
-    scim_http_client.delete_resource(group)
+    pm = get_provisioning_message("group_delete")
+    await scim_client.handle_udm_message(pm)
+    wait_for_resource_deleted(scim_http_client, pm.body.old)
 
 
 @pytest.mark.asyncio
@@ -43,12 +46,14 @@ async def test_update_group(scim_http_client: ScimClient, scim_client: ScimConsu
     pm = get_provisioning_message("group_update")
     await scim_client.handle_udm_message(pm)
 
-    group = scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
+    group = scim_http_client.get_group(pm.body.new["properties"]["univentionObjectIdentifier"])
 
-    assert group.display_name == pm.body.new["properties"].get("name")
+    assert group["displayName"] == pm.body.new["properties"].get("name")
 
     # Cleaning up
-    scim_http_client.delete_resource(group)
+    pm = get_provisioning_message("group_delete")
+    await scim_client.handle_udm_message(pm)
+    wait_for_resource_deleted(scim_http_client, pm.body.old)
 
 
 @pytest.mark.asyncio
@@ -65,8 +70,7 @@ async def test_delete_group(scim_http_client: ScimClient, scim_client: ScimConsu
     pm = get_provisioning_message("group_delete")
     await scim_client.handle_udm_message(pm)
 
-    with pytest.raises(ScimClientNoDataFoundException):
-        scim_http_client.get_resource_by_external_id(pm.body.old["properties"].get("univentionObjectIdentifier"))
+    wait_for_resource_deleted(scim_http_client, pm.body.old)
 
 
 @pytest.mark.asyncio
@@ -76,9 +80,7 @@ async def test_add_group_member(scim_http_client: ScimClient, scim_client: ScimC
     #
     pm_user = get_provisioning_message("user_create")
     await scim_client.handle_udm_message(pm_user)
-    user = scim_http_client.get_resource_by_external_id(
-        pm_user.body.new["properties"].get("univentionObjectIdentifier")
-    )
+    user = scim_http_client.get_user(pm_user.body.new["properties"]["univentionObjectIdentifier"])
 
     #
     # Create Group
@@ -102,18 +104,21 @@ async def test_add_group_member(scim_http_client: ScimClient, scim_client: ScimC
     ]
     await scim_client.handle_udm_message(pm_group)
 
-    group = scim_http_client.get_resource_by_external_id(
-        pm_group.body.new["properties"].get("univentionObjectIdentifier")
-    )
+    group = scim_http_client.get_group(pm_group.body.new["properties"]["univentionObjectIdentifier"])
 
-    assert group.display_name == pm_group.body.new["properties"].get("name")
-    assert group.members[0].value == user.id
+    assert group["displayName"] == pm_group.body.new["properties"].get("name")
+    assert group["members"][0]["value"] == user["id"]
 
     #
     # Cleaning up
     #
-    scim_http_client.delete_resource(group)
-    scim_http_client.delete_resource(user)
+    pm = get_provisioning_message("group_delete")
+    await scim_client.handle_udm_message(pm)
+    wait_for_resource_deleted(scim_http_client, pm.body.old)
+
+    pm = get_provisioning_message("user_delete")
+    await scim_client.handle_udm_message(pm)
+    wait_for_resource_deleted(scim_http_client, pm.body.old)
 
 
 @pytest.mark.skipif(
@@ -128,9 +133,7 @@ async def test_remove_group_member(
     #
     pm_user = get_provisioning_message("user_create")
     await scim_client.handle_udm_message(pm_user)
-    user = scim_http_client.get_resource_by_external_id(
-        pm_user.body.new["properties"].get("univentionObjectIdentifier")
-    )
+    scim_http_client.get_user(pm_user.body.new["properties"]["univentionObjectIdentifier"])
 
     #
     # Create Group
@@ -163,15 +166,18 @@ async def test_remove_group_member(
     ]
     await scim_client.handle_udm_message(pm_group)
 
-    group = scim_http_client.get_resource_by_external_id(
-        pm_group.body.new["properties"].get("univentionObjectIdentifier")
-    )
+    group = scim_http_client.get_group(pm_group.body.new["properties"]["univentionObjectIdentifier"])
 
-    assert group.display_name == pm_group.body.new["properties"].get("name")
-    assert len(group.members) == 0
+    assert group["displayName"] == pm_group.body.new["properties"].get("name")
+    assert len(group["members"]) == 0
 
     #
     # Cleaning up
     #
-    scim_http_client.delete_resource(group)
-    scim_http_client.delete_resource(user)
+    pm = get_provisioning_message("group_delete")
+    await scim_client.handle_udm_message(pm)
+    wait_for_resource_deleted(scim_http_client, pm.body.old)
+
+    pm = get_provisioning_message("user_delete")
+    await scim_client.handle_udm_message(pm)
+    wait_for_resource_deleted(scim_http_client, pm.body.old)

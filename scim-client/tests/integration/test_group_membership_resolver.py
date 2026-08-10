@@ -41,7 +41,7 @@ def test_get_user(
     udm_user = create_udm_user(udm_client=udm_client, user_data=user_data)
     assert wait_for_resource_exists(
         scim_http_client=scim_http_client,
-        univention_object_identifier=udm_user.properties.get("univentionObjectIdentifier"),
+        udm_object=udm_user,
     )
     mocker.patch.object(
         group_membership_resolver,
@@ -54,7 +54,7 @@ def test_get_user(
     delete_udm_user(udm_client=udm_client, user_data=user_data)
     assert wait_for_resource_deleted(
         scim_http_client=scim_http_client,
-        univention_object_identifier=udm_user.properties.get("univentionObjectIdentifier"),
+        udm_object=udm_user,
     )
 
 

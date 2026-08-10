@@ -41,12 +41,12 @@ class ScimConsumer:
         if not scim_resource.external_id:
             raise ValueError("No external_id given!")
         try:
-            existing_scim_resource = self.scim_http_client.get_resource_by_external_id(scim_resource.external_id)
+            existing = self.scim_http_client.get_resource(scim_resource.external_id, topic)
+            scim_resource.id = existing["id"]
+            scim_resource.meta = existing.get("meta")
         except ScimClientNoDataFoundException:
             self.scim_http_client.create_resource(scim_resource)
             return
-        scim_resource.id = existing_scim_resource.id
-        scim_resource.meta = existing_scim_resource.meta
 
         self.scim_http_client.update_resource(scim_resource)
 
@@ -55,17 +55,22 @@ class ScimConsumer:
         Deletes the record in the SCIM server.
 
         raises:
-            ValueError: If no external_id is given.
+            ValueError: If no univentionObjectIdentifier is given.
         """
-        scim_resource = self.prepare_data(udm_object, topic)
-        if not scim_resource.external_id:
-            raise ValueError("No external_id given!")
+        print(udm_object.properties)
+        if not hasattr(udm_object, "properties") or "univentionObjectIdentifier" not in udm_object.properties:
+            raise ValueError("No univentionObjectIdentifier given!")
 
         try:
-            existing_scim_resource = self.scim_http_client.get_resource_by_external_id(scim_resource.external_id)
+            existing = self.scim_http_client.get_resource(udm_object.properties["univentionObjectIdentifier"], topic)
         except ScimClientNoDataFoundException:
             return
-        self.scim_http_client.delete_resource(existing_scim_resource)
+
+        logger.info(
+            "Delete SCIM resource {} ({}).", existing["id"], udm_object.properties["univentionObjectIdentifier"]
+        )
+
+        self.scim_http_client.delete_resource(existing["id"], topic)
 
     def prepare_data(self, udm_object: object, topic: str) -> Resource:
         """

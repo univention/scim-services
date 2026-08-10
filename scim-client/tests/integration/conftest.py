@@ -203,14 +203,13 @@ def create_user_and_group(
 
     # Cleanup
     for udm_user in udm_users:
-        delete_udm_user(
+        udm_user_del = delete_udm_user(
             udm_client=udm_client,
             user_data={"univentionObjectIdentifier": udm_user.properties.get("univentionObjectIdentifier")},
         )
-    for udm_user in udm_users:
-        assert wait_for_resource_deleted(scim_http_client, udm_user.properties.get("univentionObjectIdentifier"))
-    delete_udm_group(udm_client=udm_client, group_data=group_data)
-    assert wait_for_resource_deleted(scim_http_client, group_data["univentionObjectIdentifier"])
+        assert wait_for_resource_deleted(scim_http_client, udm_user_del)
+    udm_group_del = delete_udm_group(udm_client=udm_client, group_data=group_data)
+    assert wait_for_resource_deleted(scim_http_client, udm_group_del)
 
 
 @pytest.fixture(scope="function")

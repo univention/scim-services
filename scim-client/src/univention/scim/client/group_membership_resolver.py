@@ -47,7 +47,7 @@ class GroupMembershipLdapResolver(IdCache):
             return None
 
         try:
-            scim_user = self.scim_http_client.get_resource_by_external_id(univention_object_identifier)
+            scim_user = self.scim_http_client.get_user(univention_object_identifier)
             logger.debug("SCIM user:\n{}", cust_pformat(scim_user))
 
         except ScimClientNoDataFoundException:
@@ -59,8 +59,8 @@ class GroupMembershipLdapResolver(IdCache):
 
         cache_item = CacheItem(
             dn=key,
-            uuid=scim_user.id,
-            display_name=scim_user.display_name,
+            uuid=scim_user["id"],
+            display_name=scim_user["displayName"],
             univention_object_identifier=univention_object_identifier,
         )
 

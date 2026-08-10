@@ -9,7 +9,6 @@ from typing import Any, Final
 import httpx
 from aiohttp import ClientResponseError
 from loguru import logger
-from scim2_models import Resource
 from univention.provisioning.consumer.api import (
     ProvisioningConsumerClient,
     ProvisioningConsumerClientSettings,
@@ -23,14 +22,24 @@ from univention.scim.client.scim_http_client import ScimClient, ScimClientNoData
 DEFAULT_MAX_ATTEMPTS: Final[int] = 48  # equals 6m every attempt sleeps for 5s
 
 
+def _get_module_and_external_id(udm_object: object) -> str:
+    if type(udm_object) is dict:
+        return udm_object["objectType"], udm_object["properties"]["univentionObjectIdentifier"]
+    else:
+        return udm_object.object_type, udm_object.properties["univentionObjectIdentifier"]
+
+
 def wait_for_resource_exists(
-    scim_http_client: ScimClient, univention_object_identifier: str, max_attemps: int = DEFAULT_MAX_ATTEMPTS
-) -> Resource | None:
+    scim_http_client: ScimClient,
+    udm_object: object,
+    max_attempts: int = DEFAULT_MAX_ATTEMPTS,
+) -> dict | None:
     """ """
-    for i in range(1, max_attemps):
+    udm_module, external_id = _get_module_and_external_id(udm_object)
+    for i in range(1, max_attempts):
         try:
-            logger.debug("Try to get resource with uoi: {}. Attemp {}", univention_object_identifier, i)
-            resource = scim_http_client.get_resource_by_external_id(univention_object_identifier)
+            logger.debug("Try to get resource with uoi: {}. Attemp {}", external_id, i)
+            resource = scim_http_client.get_resource(external_id, udm_module)
         except Exception:
             time.sleep(5)
             continue
@@ -43,17 +52,18 @@ def wait_for_resource_exists(
 
 def wait_for_resource_updated(
     scim_http_client: ScimClient,
-    univention_object_identifier: str,
+    udm_object: object,
     condition_attr: str,
     condition_val: Any,
     condition_func: Any = None,
-    max_attemps: int = DEFAULT_MAX_ATTEMPTS,
-) -> Resource | None:
+    max_attempts: int = DEFAULT_MAX_ATTEMPTS,
+) -> dict | None:
     """ """
-    for i in range(1, max_attemps):
-        logger.debug("Try to get resource with uoi: {}. Attemp {}", univention_object_identifier, i)
-        resource = scim_http_client.get_resource_by_external_id(univention_object_identifier)
-        if condition_val and getattr(resource, condition_attr) == condition_val:
+    udm_module, external_id = _get_module_and_external_id(udm_object)
+    for i in range(1, max_attempts):
+        logger.debug("Try to get resource with uoi: {}. Attemp {}", external_id, i)
+        resource = scim_http_client.get_resource(external_id, udm_module)
+        if condition_val and resource.get(condition_attr) == condition_val:
             logger.debug("Fetched resource data:\n{}", cust_pformat(resource))
             return resource
         if condition_func and condition_func(resource):
@@ -65,13 +75,16 @@ def wait_for_resource_updated(
 
 
 def wait_for_resource_deleted(
-    scim_http_client: ScimClient, univention_object_identifier: str, max_attemps: int = DEFAULT_MAX_ATTEMPTS
+    scim_http_client: ScimClient,
+    udm_object: object,
+    max_attempts: int = DEFAULT_MAX_ATTEMPTS,
 ) -> bool:
     """ """
+    udm_module, external_id = _get_module_and_external_id(udm_object)
     try:
-        for i in range(1, max_attemps):
-            logger.info("Try to get user with uoi: {}. Attemp {}", univention_object_identifier, i)
-            scim_http_client.get_resource_by_external_id(univention_object_identifier)
+        for i in range(1, max_attempts):
+            logger.info("Try to get user with uoi: {}. Attemp {}", external_id, i)
+            scim_http_client.get_resource(external_id, udm_module)
             time.sleep(5)
         return False
 

@@ -8,6 +8,11 @@ from univention.scim.client.scim_client import ScimConsumer
 from univention.scim.client.scim_http_client import ScimClient, ScimClientNoDataFoundException
 
 from ..data.provisioning_message_factory import get_provisioning_message
+from ..data.scim_helper import wait_for_resource_deleted
+
+
+def _uoi(udm_props: dict) -> str:
+    return udm_props["univentionObjectIdentifier"]
 
 
 @pytest.mark.asyncio
@@ -19,8 +24,8 @@ async def test_create_user(scim_http_client: ScimClient, scim_client: ScimConsum
 
     await scim_client.handle_udm_message(pm)
 
-    user = scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
-    assert user.user_name == pm.body.new["properties"].get("username")
+    user = scim_http_client.get_user(_uoi(pm.body.new["properties"]))
+    assert user["userName"] == pm.body.new["properties"].get("username")
 
     # Update user
     pm = get_provisioning_message("user_update")
@@ -28,17 +33,15 @@ async def test_create_user(scim_http_client: ScimClient, scim_client: ScimConsum
 
     await scim_client.handle_udm_message(pm)
 
-    user = scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
-    assert user.user_name == pm.body.new["properties"].get("username")
+    user = scim_http_client.get_user(_uoi(pm.body.new["properties"]))
+    assert user["userName"] == pm.body.new["properties"].get("username")
 
     # Delete user
     pm = get_provisioning_message("user_delete")
     pm.body.old["properties"]["isNextcloudUser"] = True
 
     await scim_client.handle_udm_message(pm)
-
-    with pytest.raises(ScimClientNoDataFoundException):
-        user = scim_http_client.get_resource_by_external_id(pm.body.old["properties"].get("univentionObjectIdentifier"))
+    wait_for_resource_deleted(scim_http_client, pm.body.old)
 
 
 @pytest.mark.asyncio
@@ -53,7 +56,7 @@ async def test_create_user_with_update(scim_http_client: ScimClient, scim_client
     await scim_client.handle_udm_message(pm)
 
     with pytest.raises(ScimClientNoDataFoundException):
-        user = scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
+        scim_http_client.get_user(_uoi(pm.body.new["properties"]))
 
     #
     # Update user, should created in SCIM
@@ -64,20 +67,19 @@ async def test_create_user_with_update(scim_http_client: ScimClient, scim_client
 
     await scim_client.handle_udm_message(pm)
 
-    user = scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
+    user = scim_http_client.get_user(_uoi(pm.body.new["properties"]))
 
-    assert user.user_name == pm.body.new["properties"].get("username")
+    assert user["userName"] == pm.body.new["properties"].get("username")
 
     #
     # Update user, should be deleted in SCIM
     #
     pm = get_provisioning_message("user_update")
-    pm.body.old["properties"]["isNextcloudUser"] = True
+    pm.body.old["properties"]["isNextcloudUser"] = False
 
     await scim_client.handle_udm_message(pm)
 
-    with pytest.raises(ScimClientNoDataFoundException):
-        user = scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
+    wait_for_resource_deleted(scim_http_client, pm.body.old)
 
 
 @pytest.mark.asyncio
@@ -92,7 +94,7 @@ async def test_not_create_user(scim_http_client: ScimClient, scim_client: ScimCo
     await scim_client.handle_udm_message(pm)
 
     with pytest.raises(ScimClientNoDataFoundException):
-        scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
+        scim_http_client.get_user(_uoi(pm.body.new["properties"]))
 
     #
     # Update user, should not created in SCIM
@@ -104,4 +106,4 @@ async def test_not_create_user(scim_http_client: ScimClient, scim_client: ScimCo
     await scim_client.handle_udm_message(pm)
 
     with pytest.raises(ScimClientNoDataFoundException):
-        scim_http_client.get_resource_by_external_id(pm.body.new["properties"].get("univentionObjectIdentifier"))
+        scim_http_client.get_user(_uoi(pm.body.new["properties"]))
