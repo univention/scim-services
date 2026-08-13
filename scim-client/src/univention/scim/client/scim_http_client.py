@@ -70,7 +70,7 @@ class ScimClient:
         scim = SyncSCIMClient(client=client, check_response_content_type=False)
         scim.discover(schemas=True, service_provider_config=False, resource_types=True)
         if scim.get_resource_model("ServiceProviderConfig") is not None:
-            scim.discover(schemas=False, service_provider_config=True, resource_type=False)
+            scim.discover(schemas=False, service_provider_config=True, resource_types=False)
             self.supports_service_provider_config = True
         else:
             logger.warning("Scim server does not support ServiceProviderConfig")

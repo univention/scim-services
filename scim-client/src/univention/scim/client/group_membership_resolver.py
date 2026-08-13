@@ -60,7 +60,7 @@ class GroupMembershipLdapResolver(IdCache):
         cache_item = CacheItem(
             dn=key,
             uuid=scim_user["id"],
-            display_name=scim_user["displayName"],
+            display_name=scim_user.get("displayName", ""),
             univention_object_identifier=univention_object_identifier,
         )
 

@@ -55,20 +55,20 @@ class ScimConsumer:
         Deletes the record in the SCIM server.
 
         raises:
-            ValueError: If no univentionObjectIdentifier is given.
+            ValueError: If property defined in 'external_id_user_mapping' is not given.
         """
-        print(udm_object.properties)
-        if not hasattr(udm_object, "properties") or "univentionObjectIdentifier" not in udm_object.properties:
-            raise ValueError("No univentionObjectIdentifier given!")
+
+        if not hasattr(udm_object, "properties") or self.settings.external_id_user_mapping not in udm_object.properties:
+            raise ValueError(f"No {self.settings.external_id_user_mapping} given!")
 
         try:
-            existing = self.scim_http_client.get_resource(udm_object.properties["univentionObjectIdentifier"], topic)
+            existing = self.scim_http_client.get_resource(
+                udm_object.properties[self.settings.external_id_user_mapping], topic
+            )
         except ScimClientNoDataFoundException:
             return
 
-        logger.info(
-            "Delete SCIM resource {} ({}).", existing["id"], udm_object.properties["univentionObjectIdentifier"]
-        )
+        logger.info("Delete SCIM resource {} ({}).", existing["id"], existing["externalId"])
 
         self.scim_http_client.delete_resource(existing["id"], topic)
 
