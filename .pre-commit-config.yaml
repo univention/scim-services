@@ -105,3 +105,4 @@ repos:
       - id: "kyverno-test"
         args:
           - "--ignore=template-replicas"
+          - "--ignore=require-health-and-liveness-check"

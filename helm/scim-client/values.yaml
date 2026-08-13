@@ -219,28 +219,3 @@ serviceAccount:
   automountServiceAccountToken: false
   # -- Additional custom labels for the ServiceAccount.
   labels: {}
-
-# -- Probe configurations
-probes:
-  # -- Liveness probe configuration
-  liveness:
-    # -- Enable liveness probe
-    enabled: true
-    exec:
-      command:
-        - /bin/sh
-        - -c
-        - "pgrep -f scim-client"
-    initialDelaySeconds: 30
-    periodSeconds: 10
-  # -- Readiness probe configuration
-  readiness:
-    # -- Enable readiness probe
-    enabled: true
-    exec:
-      command:
-        - /bin/sh
-        - -c
-        - "pgrep -f scim-client"
-    initialDelaySeconds: 5
-    periodSeconds: 5
