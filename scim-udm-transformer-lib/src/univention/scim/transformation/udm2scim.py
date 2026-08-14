@@ -43,6 +43,7 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
         group_type: type[GroupType] = Group,
         external_id_user_mapping: str | None = None,
         external_id_group_mapping: str | None = None,
+        username_mapping: str | None = None,
         roles_user_mapping: str | None = None,
     ):
         """
@@ -53,6 +54,7 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
             group_type: Pydantic model to return when mapping a group
             external_id_user_mapping: UDM property to map to SCIM User externalId
             external_id_group_mapping: UDM property to map to SCIM Group externalId
+            username_mapping: UDM property to map to SCIM User userName (overrides default 'username')
             roles_user_mapping: UDM property to map to SCIM User roles
         """
         self.cache = cache
@@ -60,6 +62,7 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
         self.group_type = group_type
         self.external_id_user_mapping = external_id_user_mapping
         self.external_id_group_mapping = external_id_group_mapping
+        self.username_mapping = username_mapping
         self.roles_user_mapping = roles_user_mapping
 
     def _get_external_id(self, obj: Any, resource_type: str) -> str | None:
@@ -336,9 +339,10 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
             raise ValueError("univentionObjectIdentifier is required")
 
         # Create User object with basic properties
+        username_udm_prop = self.username_mapping or "username"
         user = self.user_type(
             id=user_id,
-            user_name=props.get("username"),
+            user_name=props.get(username_udm_prop),
             active=not props.get("disabled", False),
             meta=self._get_meta(base_url, udm_user, "User"),
             display_name=props.get("displayName"),

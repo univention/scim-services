@@ -138,6 +138,8 @@ scimClient:
     externalIdUserMapping: univentionObjectIdentifier
     # -- Define external_id UDM attribute for groups
     externalIdGroupMapping: univentionObjectIdentifier
+    # -- Define UDM attribute to use as SCIM userName (overrides default 'username')
+    usernameMapping: username
   # -- Array with extra environment variables to add to containers.
   #
   # extraEnvVars:

@@ -90,6 +90,7 @@ class ScimConsumer:
             group_type=Group,
             external_id_user_mapping=self.settings.external_id_user_mapping,
             external_id_group_mapping=self.settings.external_id_group_mapping,
+            username_mapping=self.settings.username_mapping,
         )
         if topic == "users/user":
             scim_resource = mapper.map_user(udm_user=udm_object)

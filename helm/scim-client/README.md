@@ -452,7 +452,8 @@ null
     "externalIdUserMapping": "univentionObjectIdentifier",
     "groupSync": true,
     "logLevel": "INFO",
-    "prefill": true
+    "prefill": true,
+    "usernameMapping": "username"
   },
   "extraEnvVars": [],
   "image": {
@@ -502,6 +503,15 @@ true
 </pre>
 </td>
 			<td>Toggle prefill for the provisioning subscription If activated, the client will receive a synthetic "create" event for all existing objects in the Domain before receiving live events.</td>
+		</tr>
+		<tr>
+			<td>scimClient.config.usernameMapping</td>
+			<td>string</td>
+			<td><pre lang="json">
+"username"
+</pre>
+</td>
+			<td>Define UDM attribute to use as SCIM userName (overrides default 'username')</td>
 		</tr>
 		<tr>
 			<td>scimClient.extraEnvVars</td>
