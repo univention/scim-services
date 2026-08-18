@@ -107,3 +107,96 @@ async def test_not_create_user(scim_http_client: ScimClient, scim_client: ScimCo
 
     with pytest.raises(ScimClientNoDataFoundException):
         scim_http_client.get_user(_uoi(pm.body.new["properties"]))
+
+
+@pytest.mark.asyncio
+async def test_create_group(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
+    # Create group
+    pm = get_provisioning_message("group_create")
+    pm.body.new["properties"]["isKMGroup"] = True
+    scim_client.settings.scim_group_filter_attribute = "isKMGroup"
+
+    await scim_client.handle_udm_message(pm)
+
+    group = scim_http_client.get_group(_uoi(pm.body.new["properties"]))
+    assert group["displayName"] == pm.body.new["properties"].get("name")
+
+    # Update group
+    pm = get_provisioning_message("group_update")
+    pm.body.new["properties"]["isKMGroup"] = True
+
+    await scim_client.handle_udm_message(pm)
+
+    group = scim_http_client.get_group(_uoi(pm.body.new["properties"]))
+    assert group["displayName"] == pm.body.new["properties"].get("name")
+
+    # Delete group
+    pm = get_provisioning_message("group_delete")
+    pm.body.old["properties"]["isKMGroup"] = True
+
+    await scim_client.handle_udm_message(pm)
+    wait_for_resource_deleted(scim_http_client, pm.body.old)
+
+
+@pytest.mark.asyncio
+async def test_create_group_with_update(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
+    #
+    # Create group, should not be created in SCIM
+    #
+    pm = get_provisioning_message("group_create")
+    pm.body.new["properties"]["isKMGroup"] = False
+    scim_client.settings.scim_group_filter_attribute = "isKMGroup"
+
+    await scim_client.handle_udm_message(pm)
+
+    with pytest.raises(ScimClientNoDataFoundException):
+        scim_http_client.get_group(_uoi(pm.body.new["properties"]))
+
+    #
+    # Update group, should be created in SCIM
+    #
+    pm = get_provisioning_message("group_update")
+    pm.body.old["properties"]["isKMGroup"] = False
+    pm.body.new["properties"]["isKMGroup"] = True
+
+    await scim_client.handle_udm_message(pm)
+
+    group = scim_http_client.get_group(_uoi(pm.body.new["properties"]))
+    assert group["displayName"] == pm.body.new["properties"].get("name")
+
+    #
+    # Update group, should be deleted from SCIM
+    #
+    pm = get_provisioning_message("group_update")
+    pm.body.old["properties"]["isKMGroup"] = False
+
+    await scim_client.handle_udm_message(pm)
+
+    wait_for_resource_deleted(scim_http_client, pm.body.old)
+
+
+@pytest.mark.asyncio
+async def test_not_create_group(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
+    #
+    # Create group, should not be created in SCIM
+    #
+    pm = get_provisioning_message("group_create")
+    pm.body.new["properties"]["isKMGroup"] = False
+    scim_client.settings.scim_group_filter_attribute = "isKMGroup"
+
+    await scim_client.handle_udm_message(pm)
+
+    with pytest.raises(ScimClientNoDataFoundException):
+        scim_http_client.get_group(_uoi(pm.body.new["properties"]))
+
+    #
+    # Update group, should not be created in SCIM
+    #
+    pm = get_provisioning_message("group_update")
+    pm.body.old["properties"]["isKMGroup"] = False
+    pm.body.new["properties"]["isKMGroup"] = False
+
+    await scim_client.handle_udm_message(pm)
+
+    with pytest.raises(ScimClientNoDataFoundException):
+        scim_http_client.get_group(_uoi(pm.body.new["properties"]))

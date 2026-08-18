@@ -12,9 +12,10 @@ class ScimConsumerSettings(BaseSettings):
     scim_server_base_url: str
     scim_auth_method: AuthMethod
     health_check_enabled: bool = True
-    # Attribute in the UDM user object that controls replication to the SCIM API.
+    # Attributes in the UDM objects that controls replication to the SCIM API.
     # If it is truthy , the object will be transfered to SCIM.
     scim_user_filter_attribute: str | None = None
+    scim_group_filter_attribute: str | None = None
     external_id_user_mapping: str | None = None
     external_id_group_mapping: str | None = None
     username_mapping: str | None = None

@@ -131,7 +131,9 @@ class ScimConsumer:
             logger.debug("Skipping message for topic {}, not in allowed modules", message.topic)
             return
 
-        if should_exist_in_scim(message, self.settings.scim_user_filter_attribute):
+        if should_exist_in_scim(
+            message, self.settings.scim_user_filter_attribute, self.settings.scim_group_filter_attribute
+        ):
             udm_object = type("Obj", (object,), {k: v for k, v in message.body.new.items()})()
             self.write_udm_object(udm_object, message.topic)
         else:
@@ -145,17 +147,22 @@ class ScimConsumer:
             self.delete(udm_object, message.topic)
 
 
-def should_exist_in_scim(message: Message, user_filter_attribute: str | None) -> bool:
+def should_exist_in_scim(
+    message: Message, user_filter_attribute: str | None, group_filter_attribute: str | None = None
+) -> bool:
     """
     Returns the expected state in SCIM after processing the message.
     """
-    should_exist_in_scim = bool((not message.body.old) or message.body.new)
-    logger.debug("should_exist_in_scim: {} - By message body", should_exist_in_scim)
-
     if user_filter_attribute and message.topic == "users/user":
-        should_exist_in_scim = (
-            bool(message.body.new["properties"].get(user_filter_attribute)) if message.body.new else False
-        )
-        logger.debug("should_exist_in_scim: {} - By user filter attribute", should_exist_in_scim)
+        result = bool(message.body.new["properties"].get(user_filter_attribute)) if message.body.new else False
+        logger.debug("should_exist_in_scim: {} - By user filter attribute", result)
+        return result
 
-    return should_exist_in_scim
+    if group_filter_attribute and message.topic == "groups/group":
+        result = bool(message.body.new["properties"].get(group_filter_attribute)) if message.body.new else False
+        logger.debug("should_exist_in_scim: {} - By group filter attribute", result)
+        return result
+
+    result = bool((not message.body.old) or message.body.new)
+    logger.debug("should_exist_in_scim: {} - By message body", result)
+    return result

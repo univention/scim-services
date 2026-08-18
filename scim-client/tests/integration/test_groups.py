@@ -33,6 +33,27 @@ async def test_create_group(scim_http_client: ScimClient, scim_client: ScimConsu
 
 
 @pytest.mark.asyncio
+async def test_create_group_is_idempotent_on_rerun(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
+    pm = get_provisioning_message("group_create")
+
+    # Creates the group.
+    await scim_client.handle_udm_message(pm)
+    group = scim_http_client.get_group(pm.body.new["properties"]["univentionObjectIdentifier"])
+    assert group["displayName"] == pm.body.new["properties"].get("name")
+    first_id = group["id"]
+
+    # Rerun the same provisioning message. It should not create a new group but update the existing one.
+    await scim_client.handle_udm_message(pm)
+    group = scim_http_client.get_group(pm.body.new["properties"]["univentionObjectIdentifier"])
+    assert group["displayName"] == pm.body.new["properties"].get("name")
+    assert group["id"] == first_id
+
+    pm = get_provisioning_message("group_delete")
+    await scim_client.handle_udm_message(pm)
+    wait_for_resource_deleted(scim_http_client, pm.body.old)
+
+
+@pytest.mark.asyncio
 async def test_update_group(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
     #
     # Create Group
