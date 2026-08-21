@@ -3,7 +3,7 @@
 
 from typing import Any
 
-from scim2_models import Address, PhoneNumber, Role, X509Certificate
+from scim2_models import Address, PhoneNumber, Photo, Role, X509Certificate
 
 from univention.scim.server.models.user import Email, Name
 from univention.scim.transformation.udm2scim import UdmToScimMapper
@@ -210,3 +210,20 @@ def test_map_certificates_none(udm2scim_mapper: UdmToScimMapper) -> None:
     certificates = udm2scim_mapper._map_certificates(props)
 
     assert certificates is None
+
+
+def test_map_photos(udm2scim_mapper: UdmToScimMapper) -> None:
+    props = {"jpegPhoto": "base64encodedimagedata"}
+    expected_photos = [Photo(value="data:image/jpeg;base64,base64encodedimagedata", type="photo")]
+
+    photos = udm2scim_mapper._map_photos(props)
+
+    assert photos == expected_photos
+
+
+def test_map_photos_none(udm2scim_mapper: UdmToScimMapper) -> None:
+    props: dict[str, Any] = {"jpegPhoto": None}
+
+    photos = udm2scim_mapper._map_photos(props)
+
+    assert photos is None

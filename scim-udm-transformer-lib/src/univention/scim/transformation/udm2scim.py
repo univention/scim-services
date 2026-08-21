@@ -12,6 +12,7 @@ from scim2_models import (
     GroupMember,
     Meta,
     PhoneNumber,
+    Photo,
     Resource,
     Role,
     User,
@@ -319,6 +320,16 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
 
         return certificates
 
+    def _map_photos(self, props: dict[str, Any]) -> list[Photo] | None:
+        photos = None
+        # UDM's jpegPhoto is base64-encoded and is passed through as-is, just
+        # wrapped in a data: URI so it's syntactically a valid URI (Photo.value is a URL reference
+        # per RFC 7643)
+        if props.get("jpegPhoto"):
+            photos = [Photo(value=f"data:image/jpeg;base64,{props['jpegPhoto']}", type="photo")]
+
+        return photos
+
     def map_user(self, udm_user: Any, base_url: str = "") -> UserType:
         """
         Map UDM user properties to a SCIM User.
@@ -386,6 +397,8 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
         user.addresses = self._map_addresses(props)
 
         user.roles = self._map_roles(props)
+
+        user.photos = self._map_photos(props)
 
         # FIXME: because of a bug when creating the pydantic model from a schema, the variable name may differ.
         #        in the future the mapper should not operate on pydantic models but just dictionaries, so
