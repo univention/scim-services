@@ -1,8 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+import functools
+import operator
+
 from loguru import logger
-from scim2_models import EnterpriseUser, Group, Resource
+from pydantic import ValidationError
+from scim2_models import EnterpriseUser, Extension, Group, Resource
 from univention.provisioning.models import Message
 
 from univention.scim.client.group_membership_resolver import GroupMembershipLdapResolver
@@ -13,8 +17,36 @@ from univention.scim.client.scim_http_client import ScimClient, ScimClientNoData
 # FIXME: Use the models from the server for now because the original models are to strict
 #        For example with the email type.
 #        In the future the mapper should not operate on pydantic models but just dictionaries
+from univention.scim.server.models.extensions.customer1_user import Customer1User
+from univention.scim.server.models.extensions.univention_user import UniventionUser
 from univention.scim.server.models.user import User
 from univention.scim.transformation.udm2scim import UdmToScimMapper
+
+
+_USER_EXTENSIONS: tuple[type[Extension], ...] = (EnterpriseUser, UniventionUser, Customer1User)
+
+
+def _drop_unadvertised_attributes(
+    resource: Resource, resource_type: type[Resource], discovered_model: type[Resource]
+) -> None:
+    """
+    Null out any attribute of `resource` (an instance of `resource_type`) that the server's
+    discovered schema doesn't declare thus will be dropped.
+
+    Matched by SCIM attribute name (each field's `serialization_alias`, e.g. "x509Certificates"),
+    not by Python field name -- dynamically built models (via Resource.from_schema()) can pick a
+    different Python identifier for the same SCIM attribute than our static classes do (e.g.
+    x509_certificates vs. x_509_certificates)
+    """
+    supported_attribute_names = {field.serialization_alias for field in discovered_model.model_fields.values()}
+    for name, field in resource_type.model_fields.items():
+        if field.serialization_alias not in supported_attribute_names:
+            try:
+                setattr(resource, name, None)
+            except ValidationError:
+                logger.debug(
+                    "Cannot unset non-optional attribute {} not advertised by server", field.serialization_alias
+                )
 
 
 class ScimConsumer:
@@ -79,14 +111,18 @@ class ScimConsumer:
         raises:
             ValueError: If topic is not users/user or groups/group
         """
+        user_model = self.scim_http_client.get_client().get_resource_model("User")
+        user_extensions = user_model.get_extension_models()
+        supported_extension_types = [
+            extension for extension in _USER_EXTENSIONS if extension.to_schema().id in user_extensions
+        ]
+        user_type = (
+            User[functools.reduce(operator.or_, supported_extension_types)] if supported_extension_types else User
+        )
+
         mapper = UdmToScimMapper(
             cache=self.group_membership_resolver,
-            # FIXME: We can`t use the discovered types here because the dynamically crated pydantic model has
-            #        some limitations.
-            #        Should be fixed if the mapper does not use pydantic types.anymore.
-            # user_type=self.scim_http_client.get_client().get_resource_model("User"),
-            # group_type=self.scim_http_client.get_client().get_resource_model("Group"),
-            user_type=User[EnterpriseUser],
+            user_type=user_type,
             group_type=Group,
             external_id_user_mapping=self.settings.external_id_user_mapping,
             external_id_group_mapping=self.settings.external_id_group_mapping,
@@ -94,20 +130,13 @@ class ScimConsumer:
         )
         if topic == "users/user":
             scim_resource = mapper.map_user(udm_user=udm_object)
-            # FIXME: The scim client validates the response of a message with the pydantic model given in the request.
-            #        Make sure to use the correct pydantic model required by the server
-            scim_resource = (
-                self.scim_http_client.get_client().get_resource_model("User").model_validate(scim_resource.model_dump())
-            )
+            scim_resource = user_type.model_validate(scim_resource.model_dump())
+            _drop_unadvertised_attributes(scim_resource, user_type, user_model)
         elif topic == "groups/group":
+            group_model = self.scim_http_client.get_client().get_resource_model("Group")
             scim_resource = mapper.map_group(udm_group=udm_object)
-            # FIXME: The scim client validates the response of a message with the pydantic model given in the request.
-            #        Make sure to use the correct pydantic model required by the server
-            scim_resource = (
-                self.scim_http_client.get_client()
-                .get_resource_model("Group")
-                .model_validate(scim_resource.model_dump())
-            )
+            scim_resource = Group.model_validate(scim_resource.model_dump())
+            _drop_unadvertised_attributes(scim_resource, Group, group_model)
         else:
             raise ValueError(f"Unsupported message topic {topic}")
 
