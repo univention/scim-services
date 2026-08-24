@@ -1,52 +1,17 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-import functools
-import operator
+from typing import cast
 
 from loguru import logger
-from pydantic import ValidationError
-from scim2_models import EnterpriseUser, Extension, Group, Resource
+from scim2_models import Resource
 from univention.provisioning.models import Message
 
 from univention.scim.client.group_membership_resolver import GroupMembershipLdapResolver
 from univention.scim.client.helper import cust_pformat
 from univention.scim.client.scim_client_settings import ScimConsumerSettings
 from univention.scim.client.scim_http_client import ScimClient, ScimClientNoDataFoundException
-
-# FIXME: Use the models from the server for now because the original models are to strict
-#        For example with the email type.
-#        In the future the mapper should not operate on pydantic models but just dictionaries
-from univention.scim.server.models.extensions.customer1_user import Customer1User
-from univention.scim.server.models.extensions.univention_user import UniventionUser
-from univention.scim.server.models.user import User
-from univention.scim.transformation.udm2scim import UdmToScimMapper
-
-
-_USER_EXTENSIONS: tuple[type[Extension], ...] = (EnterpriseUser, UniventionUser, Customer1User)
-
-
-def _drop_unadvertised_attributes(
-    resource: Resource, resource_type: type[Resource], discovered_model: type[Resource]
-) -> None:
-    """
-    Null out any attribute of `resource` (an instance of `resource_type`) that the server's
-    discovered schema doesn't declare thus will be dropped.
-
-    Matched by SCIM attribute name (each field's `serialization_alias`, e.g. "x509Certificates"),
-    not by Python field name -- dynamically built models (via Resource.from_schema()) can pick a
-    different Python identifier for the same SCIM attribute than our static classes do (e.g.
-    x509_certificates vs. x_509_certificates)
-    """
-    supported_attribute_names = {field.serialization_alias for field in discovered_model.model_fields.values()}
-    for name, field in resource_type.model_fields.items():
-        if field.serialization_alias not in supported_attribute_names:
-            try:
-                setattr(resource, name, None)
-            except ValidationError:
-                logger.debug(
-                    "Cannot unset non-optional attribute {} not advertised by server", field.serialization_alias
-                )
+from univention.scim.transformation.udm2scim import UdmToScimMapper, supported_attribute_names
 
 
 class ScimConsumer:
@@ -62,6 +27,13 @@ class ScimConsumer:
         self.group_membership_resolver = group_membership_resolver
         self.settings = settings
 
+    def _external_id_mapping_for_topic(self, topic: str) -> str | None:
+        if topic == "users/user":
+            return cast(str | None, self.settings.external_id_user_mapping)
+        if topic == "groups/group":
+            return cast(str | None, self.settings.external_id_group_mapping)
+        return None
+
     def write_udm_object(self, udm_object: object, topic: str) -> None:
         """
         Writes the record to the SCIM server.
@@ -69,18 +41,26 @@ class ScimConsumer:
         raises:
             ValueError: If no external_id is given.
         """
-        scim_resource = self.prepare_data(udm_object, topic)
-        if not scim_resource.external_id:
+        resource_model = self.scim_http_client.get_resource_model_for_topic(topic)
+
+        external_id_mapping = self._external_id_mapping_for_topic(topic)
+        external_id = getattr(udm_object, "properties", {}).get(external_id_mapping) if external_id_mapping else None
+        if not external_id:
             raise ValueError("No external_id given!")
+
         try:
-            existing = self.scim_http_client.get_resource(scim_resource.external_id, topic)
+            existing = self.scim_http_client.get_resource(external_id, resource_model)
+            scim_resource = self.prepare_data(udm_object, topic, resource_model, exclude_immutable=True)
             scim_resource.id = existing["id"]
             scim_resource.meta = existing.get("meta")
+            self.scim_http_client.update_resource(scim_resource)
         except ScimClientNoDataFoundException:
+            scim_resource = self.prepare_data(udm_object, topic, resource_model, exclude_immutable=False)
+            # id and meta are assigned by the service provider (RFC 7644 SS3.3) and must
+            # not be sent on create.
+            scim_resource.id = None
+            scim_resource.meta = None
             self.scim_http_client.create_resource(scim_resource)
-            return
-
-        self.scim_http_client.update_resource(scim_resource)
 
     def delete(self, udm_object: object, topic: str) -> None:
         """
@@ -93,56 +73,58 @@ class ScimConsumer:
         if not hasattr(udm_object, "properties") or self.settings.external_id_user_mapping not in udm_object.properties:
             raise ValueError(f"No {self.settings.external_id_user_mapping} given!")
 
+        resource_model = self.scim_http_client.get_resource_model_for_topic(topic)
+
         try:
             existing = self.scim_http_client.get_resource(
-                udm_object.properties[self.settings.external_id_user_mapping], topic
+                udm_object.properties[self.settings.external_id_user_mapping], resource_model
             )
         except ScimClientNoDataFoundException:
             return
 
         logger.info("Delete SCIM resource {} ({}).", existing["id"], existing["externalId"])
 
-        self.scim_http_client.delete_resource(existing["id"], topic)
+        self.scim_http_client.delete_resource(existing["id"], resource_model)
 
-    def prepare_data(self, udm_object: object, topic: str) -> Resource:
+    def prepare_data(
+        self, udm_object: object, topic: str, resource_model: type[Resource], *, exclude_immutable: bool = False
+    ) -> Resource:
         """
         Maps the data from UDM to SCIM
+
+        `exclude_immutable`: pass `True` when the resource is being built for an update
+        (PUT) rather than a create -- immutable attributes may only be set at creation
+        (RFC 7643 SS7).
 
         raises:
             ValueError: If topic is not users/user or groups/group
         """
-        user_model = self.scim_http_client.get_client().get_resource_model("User")
-        user_extensions = user_model.get_extension_models()
-        supported_extension_types = [
-            extension for extension in _USER_EXTENSIONS if extension.to_schema().id in user_extensions
-        ]
-        user_type = (
-            User[functools.reduce(operator.or_, supported_extension_types)] if supported_extension_types else User
-        )
+        mapper_kwargs = {
+            "cache": self.group_membership_resolver,
+            "external_id_user_mapping": self.settings.external_id_user_mapping,
+            "external_id_group_mapping": self.settings.external_id_group_mapping,
+            "username_mapping": self.settings.username_mapping,
+        }
 
-        mapper = UdmToScimMapper(
-            cache=self.group_membership_resolver,
-            user_type=user_type,
-            group_type=Group,
-            external_id_user_mapping=self.settings.external_id_user_mapping,
-            external_id_group_mapping=self.settings.external_id_group_mapping,
-            username_mapping=self.settings.username_mapping,
-        )
+        supported_attributes = supported_attribute_names(resource_model, exclude_immutable=exclude_immutable)
+
         if topic == "users/user":
+            mapper = UdmToScimMapper(
+                user_type=resource_model, supported_attributes=supported_attributes, **mapper_kwargs
+            )
             scim_resource = mapper.map_user(udm_user=udm_object)
-            scim_resource = user_type.model_validate(scim_resource.model_dump())
-            _drop_unadvertised_attributes(scim_resource, user_type, user_model)
-        elif topic == "groups/group":
-            group_model = self.scim_http_client.get_client().get_resource_model("Group")
+            logger.debug("Mapped resource:\n{}", cust_pformat(scim_resource))
+            return scim_resource
+
+        if topic == "groups/group":
+            mapper = UdmToScimMapper(
+                group_type=resource_model, supported_attributes=supported_attributes, **mapper_kwargs
+            )
             scim_resource = mapper.map_group(udm_group=udm_object)
-            scim_resource = Group.model_validate(scim_resource.model_dump())
-            _drop_unadvertised_attributes(scim_resource, Group, group_model)
-        else:
-            raise ValueError(f"Unsupported message topic {topic}")
+            logger.debug("Mapped resource:\n{}", cust_pformat(scim_resource))
+            return scim_resource
 
-        logger.debug("Mapped resource:\n{}", cust_pformat(scim_resource))
-
-        return scim_resource
+        raise ValueError(f"Unsupported message topic {topic}")
 
     async def handle_udm_message(self, message: Message) -> None:
         """

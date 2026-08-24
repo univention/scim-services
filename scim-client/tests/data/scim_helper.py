@@ -39,7 +39,8 @@ def wait_for_resource_exists(
     for i in range(1, max_attempts):
         try:
             logger.debug("Try to get resource with uoi: {}. Attemp {}", external_id, i)
-            resource = scim_http_client.get_resource(external_id, udm_module)
+            resource_model = scim_http_client.get_resource_model_for_topic(udm_module)
+            resource = scim_http_client.get_resource(external_id, resource_model)
         except Exception:
             time.sleep(5)
             continue
@@ -60,9 +61,10 @@ def wait_for_resource_updated(
 ) -> dict | None:
     """ """
     udm_module, external_id = _get_module_and_external_id(udm_object)
+    resource_model = scim_http_client.get_resource_model_for_topic(udm_module)
     for i in range(1, max_attempts):
         logger.debug("Try to get resource with uoi: {}. Attemp {}", external_id, i)
-        resource = scim_http_client.get_resource(external_id, udm_module)
+        resource = scim_http_client.get_resource(external_id, resource_model)
         if condition_val and resource.get(condition_attr) == condition_val:
             logger.debug("Fetched resource data:\n{}", cust_pformat(resource))
             return resource
@@ -81,10 +83,11 @@ def wait_for_resource_deleted(
 ) -> bool:
     """ """
     udm_module, external_id = _get_module_and_external_id(udm_object)
+    resource_model = scim_http_client.get_resource_model_for_topic(udm_module)
     try:
         for i in range(1, max_attempts):
             logger.info("Try to get user with uoi: {}. Attemp {}", external_id, i)
-            scim_http_client.get_resource(external_id, udm_module)
+            scim_http_client.get_resource(external_id, resource_model)
             time.sleep(5)
         return False
 

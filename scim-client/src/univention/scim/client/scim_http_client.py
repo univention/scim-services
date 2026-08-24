@@ -98,11 +98,11 @@ class ScimClient:
 
         return self._scim_client
 
-    def _topic_to_resource_model(self, topic: str) -> type[Resource]:
+    def get_resource_model_for_topic(self, topic: str) -> type[Resource]:
         scim_type_name = _TOPIC_TO_SCIM_TYPE.get(topic)
         if scim_type_name is None:
             raise ValueError(f"Unknown UDM topic '{topic}', cannot determine SCIM resource type")
-        resource_model = self._scim_client.get_resource_model(scim_type_name)
+        resource_model = self.get_client().get_resource_model(scim_type_name)
         if resource_model is None:
             raise RuntimeError(f"SCIM server does not support {scim_type_name} resource")
         return resource_model
@@ -160,22 +160,15 @@ class ScimClient:
 
         logger.debug("Response:\n{}", cust_pformat(response))
 
-    def delete_resource(self, id: str, udm_module: str) -> None:
+    def delete_resource(self, id: str, resource_model: type[Resource]) -> None:
         """
-        Deletes a SCIM resource by id and UDM module.
+        Deletes a SCIM resource by id.
         """
-        scim_type_name = _TOPIC_TO_SCIM_TYPE.get(udm_module)
-        if scim_type_name is None:
-            raise ValueError(f"Unknown UDM module '{udm_module}', must be 'users/user' or 'groups/group'")
-        resource_model = self.get_client().get_resource_model(scim_type_name)
-        if resource_model is None:
-            raise RuntimeError(f"SCIM server does not support {scim_type_name} resource")
-
         response = self.get_client().delete(resource_model=resource_model, id=id, check_response_payload=False)
 
         logger.debug("Delete response:\n{}", cust_pformat(response))
 
-    def get_resource(self, external_id: str, udm_module: str) -> dict:
+    def get_resource(self, external_id: str, resource_model: type[Resource]) -> dict:
         """
         Returns the SCIM resource data as a dict for the given external_id.
 
@@ -183,8 +176,7 @@ class ScimClient:
         ----------
         external_id : str
             The external identifier (e.g. univentionObjectIdentifier).
-        udm_module : str
-            The UDM module/topic: "users/user" or "groups/group".
+        resource_model : type[Resource]
 
         Raises
         ------
@@ -193,12 +185,6 @@ class ScimClient:
         ScimClientTooManyResultsException
             If more than one record with the given external_id is found.
         """
-        scim_type_name = _TOPIC_TO_SCIM_TYPE.get(udm_module)
-        if scim_type_name is None:
-            raise ValueError(f"Unknown UDM module '{udm_module}', must be 'users/user' or 'groups/group'")
-        resource_model = self.get_client().get_resource_model(scim_type_name)
-        if resource_model is None:
-            raise RuntimeError(f"SCIM server does not support {scim_type_name} resource")
         search_request = SearchRequest(filter=f'externalId eq "{external_id}"')
         response = self.get_client().query(
             search_request=search_request,
@@ -221,10 +207,10 @@ class ScimClient:
         """
         Returns the SCIM user data as a dict for the given external_id.
         """
-        return self.get_resource(external_id, "users/user")
+        return self.get_resource(external_id, self.get_resource_model_for_topic("users/user"))
 
     def get_group(self, external_id: str) -> dict:
         """
         Returns the SCIM group data as a dict for the given external_id.
         """
-        return self.get_resource(external_id, "groups/group")
+        return self.get_resource(external_id, self.get_resource_model_for_topic("groups/group"))
