@@ -11,6 +11,11 @@ dependencies = [
 authors = [{ name = "Univention GmbH", email = "packages@univention.de" }]
 license = "AGPL-3.0-only"
 
+[tool.uv]
+constraint-dependencies = [
+    "cryptography>=50.0.0",
+]
+
 [tool.uv.sources]
 scim-server = { workspace = true }
 scim-udm-transformer-lib = { workspace = true }
