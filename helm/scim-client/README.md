@@ -448,6 +448,7 @@ null
 			<td><pre lang="json">
 {
   "config": {
+    "dbConnectionString": "",
     "externalIdGroupMapping": "univentionObjectIdentifier",
     "externalIdUserMapping": "univentionObjectIdentifier",
     "groupSync": false,
@@ -467,6 +468,15 @@ null
 </pre>
 </td>
 			<td>Container image configuration</td>
+		</tr>
+		<tr>
+			<td>scimClient.config.dbConnectionString</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td>SQLAlchemy connection string for the SQL bookkeeping database.</td>
 		</tr>
 		<tr>
 			<td>scimClient.config.externalIdGroupMapping</td>

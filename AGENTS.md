@@ -4,11 +4,12 @@ This file provides guidance to AI agents when working with code in this reposito
 
 ## Repository overview
 
-This is a `uv` workspace monorepo with three Python projects:
+This is a `uv` workspace monorepo with four Python projects:
 
 - **`scim-server`** — FastAPI-based SCIM v2 REST server. In Milestone 1 (current) it is a synchronous adapter: every SCIM request is translated into a UDM REST API call.
 - **`scim-client`** — Experimental listener that subscribes to Nubus Provisioning API events and provisions changes to an external SCIM service provider.
 - **`scim-udm-transformer-lib`** — Shared library for bidirectional UDM↔SCIM object transformation. Used by both `scim-server` and `scim-client`.
+- **`error-handling`** (nested in `scim-client/error-handling`) — Separate Python module, only used by `scim-client`. SQL bookkeeping database (task queue, `old` state, `morgue` for failed tasks, relations) used to persist and retry provisioning work. Copied from the OX connector's `db.py`.
 
 Only **Milestone 1** is implemented. Milestones 2, 2.1, and 3 (SQL database, async writes, provisioning events) are not yet built.
 

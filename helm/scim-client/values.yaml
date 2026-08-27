@@ -129,6 +129,8 @@ scimClient:
     # -- The log level for the SCIM client.
     # valid values are: ERROR WARNING, INFO, DEBUG
     logLevel: "INFO"
+    # -- SQLAlchemy connection string for the SQL bookkeeping database.
+    dbConnectionString: ""
     # -- Toggle prefill for the provisioning subscription
     # If activated, the client will receive a synthetic "create" event
     # for all existing objects in the Domain before receiving live events.

@@ -14,6 +14,9 @@ provisioningApi:
     existingSecret:
       name: null
 
+scimClient:
+  config:
+    dbConnectionString: "sqlite:////tmp/scim-client.db"
 
 scimServer:
   connection:

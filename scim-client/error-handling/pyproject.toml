@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2026 Univention GmbH
+
+[project]
+name = "error-handling"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "lancelog>=0.3.4",
+    "sqlalchemy>=2.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/univention"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv.sources]
+lancelog = { index = "gitlab" }
+
+[[tool.uv.index]]
+name = "gitlab"
+url = "https://git.knut.univention.de/api/v4/projects/1449/packages/pypi/simple"
+explicit = true
+default = false
+
+[tool.uv]
+package = true

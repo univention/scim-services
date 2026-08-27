@@ -20,6 +20,7 @@ constraint-dependencies = [
 scim-server = { workspace = true }
 scim-udm-transformer-lib = { workspace = true }
 scim-client = { workspace = true }
+error-handling = { workspace = true }
 lancelog = { index = "gitlab" }
 helm-test-harness = { index = "common-helm" }
 pytest-helm = { index = "common-helm" }
@@ -29,6 +30,7 @@ members = [
     "scim-server",
     "scim-udm-transformer-lib",
     "scim-client",
+    "scim-client/error-handling",
 ]
 
 [[tool.uv.index]]
@@ -72,7 +74,7 @@ select = [
 case-sensitive = true
 combine-as-imports = true
 lines-after-imports = 2
-known-first-party = ["helpers", "univention.scim"]
+known-first-party = ["helpers", "univention.provisioning.error_handling", "univention.scim"]
 
 [dependency-groups]
 dev = [

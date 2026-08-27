@@ -446,6 +446,7 @@ services:
         condition: service_healthy
     environment:
       SCIM_SERVER_BASE_URL: http://scim-dev-server:8080/
+      PROVISIONING_DB: sqlite:////tmp/scim-client.db
       PROVISIONING_API_BASE_URL: http://provisioning-api:7777/
       PROVISIONING_API_USERNAME: scim-client
       PROVISIONING_API_PASSWORD: univention
@@ -491,6 +492,7 @@ services:
         condition: service_started
     environment:
       SCIM_SERVER_BASE_URL: http://scim-server:8000/v2/
+      PROVISIONING_DB: sqlite:////tmp/scim-client.db
       PROVISIONING_API_BASE_URL: http://provisioning-api:7777/
       PROVISIONING_API_USERNAME: scim-client
       PROVISIONING_API_PASSWORD: univention

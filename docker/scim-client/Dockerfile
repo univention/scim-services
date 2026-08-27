@@ -40,6 +40,7 @@ WORKDIR /app
 
 # copy source code
 COPY ./scim-client/src /app/scim-client/src
+COPY ./scim-client/error-handling /app/scim-client/error-handling
 COPY ./scim-udm-transformer-lib/src /app/scim-udm-transformer-lib/src
 
 #TODO: Currently in the PoC the scim-client uses pydantic models from the scim server so it is a requirement
@@ -109,8 +110,3 @@ COPY --from=build --chown=${USER}:${USER} /app/.venv /app/.venv
 USER ${USER}
 
 CMD ["scim-client"]
-
-RUN \
-  python3.13 -V && \
-  python3.13 -m site && \
-  python3.13 -c 'import univention.scim.client.main'

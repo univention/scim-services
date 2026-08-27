@@ -1,12 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+import json
+import traceback
 from typing import cast
 
 from loguru import logger
 from scim2_models import Resource
 from univention.provisioning.models import Message
 
+from univention.provisioning.error_handling.db import DBSession, normalized_dn
 from univention.scim.client.group_membership_resolver import GroupMembershipLdapResolver
 from univention.scim.client.helper import cust_pformat
 from univention.scim.client.scim_client_settings import ScimConsumerSettings
@@ -133,6 +136,12 @@ class ScimConsumer:
     async def handle_udm_message(self, message: Message) -> None:
         """
         Handles provisioning messages for a SCIM client.
+
+        The message is enqueued in the SQL task queue and all pending tasks
+        are processed. If this method returns, the message will be acknowledged
+        and this function will be called with the next message.
+        If this method throws an exception, the message won't be acknowledged
+        and the same message will be redelivered.
         """
         logger.debug("Message:\n{}", cust_pformat(message))
 
@@ -142,24 +151,130 @@ class ScimConsumer:
         if not message.body.new and not message.body.old:
             raise ValueError("Invalid message state.")
 
+        if message.topic not in ("users/user", "groups/group"):
+            return
+
         if message.topic == "groups/group" and not self.settings.group_sync_enabled:
             logger.debug("Skipping group message, group sync is disabled")
             return
 
-        if should_exist_in_scim(
-            message, self.settings.scim_user_filter_attribute, self.settings.scim_group_filter_attribute
-        ):
-            udm_object = type("Obj", (object,), {k: v for k, v in message.body.new.items()})()
-            self.write_udm_object(udm_object, message.topic)
+        # We ignore body.old because it is read from the DB when processing the task
+        # having attributes None in case of delete is required for task to behave correctly
+        obj_attrs = None
+        if message.body.new:
+            obj_id = message.body.new["properties"]["univentionObjectIdentifier"]
+            obj_dn = normalized_dn(message.body.new.get("dn"))
+            obj_attrs = message.body.new.get("properties")
         else:
-            if message.body.old:
-                udm_object = type("Obj", (object,), {k: v for k, v in message.body.old.items()})()
-            else:
-                # Happens when a create message with falsy user filter attribute is comming.
-                # We check anyway if the record may exist in SCIM.
-                udm_object = type("Obj", (object,), {k: v for k, v in message.body.new.items()})()
+            obj_id = message.body.old["properties"]["univentionObjectIdentifier"]
+            obj_dn = normalized_dn(message.body.old.get("dn"))
 
-            self.delete(udm_object, message.topic)
+        # Use single session for enqueuing and processing
+        with DBSession() as db:
+            logger.info("Enqueuing task", obj=obj_id, module=message.topic)
+            db.enqueue_task(
+                obj_id=obj_id,
+                udm_module=message.topic,
+                dn=obj_dn,
+                attrs=obj_attrs,
+            )
+
+            # commit new task so we can process it
+            db.commit()
+
+            # task processing can insert new tasks, make sure to handle them all
+            while db.contain_tasks():
+                self._process_all_tasks_with_db(db)
+                # manual commit here, so new tasks are created
+                db.commit()
+
+    def _process_all_tasks_with_db(self, db: DBSession) -> None:
+        """
+        Process all pending tasks from the queue using the provided DBSession.
+
+        Failed tasks are moved to the morgue and processing continues.
+        """
+        for udm_module in ("users/user", "groups/group"):
+            if udm_module == "groups/group" and not self.settings.group_sync_enabled:
+                continue
+            for task in db.get_tasks(udm_module, None):
+                try:
+                    logger.info("Processing Task", task=task)
+                    udm_object = self._obj_from_task(task, db)
+                    if should_exist(
+                        task.udm_module,
+                        json.loads(task.attrs) if task.attrs else None,
+                        self.settings.scim_user_filter_attribute,
+                        self.settings.scim_group_filter_attribute,
+                    ):
+                        self.write_udm_object(udm_object, task.udm_module)
+                    else:
+                        self.delete(udm_object, task.udm_module)
+                except Exception as exc:
+                    db.increment_error_count(task.id)
+                    logger.error("Error while handling", task=task)
+                    logger.exception(exc)
+                    db.move_task_to_morgue(task.id, traceback.format_exc())
+                    # Continue to next task after morgue
+                    continue
+                else:
+                    if task.attrs is None:
+                        db.delete_old(dn=udm_object.old_distinguished_name)
+                        db.remove_task(task.id)
+                    else:
+                        db.move_task_to_old(task.id, json.loads(task.attrs))
+
+    def _obj_from_task(self, task, db: DBSession) -> object:
+        """
+        Create a UDM-like object from a DB task row.
+
+        For delete tasks (attrs is None) the properties fall back to the last
+        successfully synced state from the old table.
+        """
+        attrs = json.loads(task.attrs) if task.attrs else None
+        old = db.get_old(None, task.obj_id)
+        old_attrs = json.loads(old.attrs) if old and old.attrs else None
+
+        if attrs is not None:
+            properties = attrs
+        elif old_attrs:
+            properties = old_attrs
+        elif external_id_mapping := self._external_id_mapping_for_topic(task.udm_module):
+            properties = {external_id_mapping: task.obj_id}
+        else:
+            properties = None
+
+        udm_object = type(
+            "Obj",
+            (object,),
+            {"properties": properties, "dn": task.dn, "objectType": task.udm_module},
+        )()
+        udm_object.old_distinguished_name = old.dn if old else task.dn
+        return udm_object
+
+
+def should_exist(
+    udm_module: str,
+    properties: dict | None,
+    user_filter_attribute: str | None,
+    group_filter_attribute: str | None = None,
+) -> bool:
+    """
+    Returns the expected state in SCIM after processing the given UDM state.
+    """
+    if user_filter_attribute and udm_module == "users/user":
+        result = bool(properties and properties.get(user_filter_attribute))
+        logger.debug("should_exist: {} - By user filter attribute", result)
+        return result
+
+    if group_filter_attribute and udm_module == "groups/group":
+        result = bool(properties and properties.get(group_filter_attribute))
+        logger.debug("should_exist: {} - By group filter attribute", result)
+        return result
+
+    result = bool(properties)
+    logger.debug("should_exist: {} - By message body", result)
+    return result
 
 
 def should_exist_in_scim(
@@ -168,16 +283,9 @@ def should_exist_in_scim(
     """
     Returns the expected state in SCIM after processing the message.
     """
-    if user_filter_attribute and message.topic == "users/user":
-        result = bool(message.body.new["properties"].get(user_filter_attribute)) if message.body.new else False
-        logger.debug("should_exist_in_scim: {} - By user filter attribute", result)
-        return result
-
-    if group_filter_attribute and message.topic == "groups/group":
-        result = bool(message.body.new["properties"].get(group_filter_attribute)) if message.body.new else False
-        logger.debug("should_exist_in_scim: {} - By group filter attribute", result)
-        return result
-
-    result = bool((not message.body.old) or message.body.new)
-    logger.debug("should_exist_in_scim: {} - By message body", result)
-    return result
+    return should_exist(
+        message.topic,
+        message.body.new.get("properties") if message.body.new else None,
+        user_filter_attribute,
+        group_filter_attribute,
+    )

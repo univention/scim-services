@@ -9,6 +9,7 @@ dependencies = [
     "pydantic>=2.10.6,<2.13",
     "udm-rest-api-client[async]>=0.0.2",
     "scim-udm-transformer-lib",
+    "error-handling",
     "nubus-provisioning-consumer>=0.54.0",
     "scim2-client[httpx]>=0.6.1",
     "icecream>=2.2.0",
@@ -37,6 +38,7 @@ dev = [
 nubus-provisioning-consumer = { index = "univention" }
 scim-udm-transformer-lib = { workspace = true }
 scim-server = { workspace = true }
+error-handling = { workspace = true }
 
 [[tool.uv.index]]
 name = "univention"
@@ -52,6 +54,7 @@ scim-client = "univention.scim.client.main:run"
 asyncio_default_fixture_loop_scope = "session"
 env = [
     "D:SCIM_SERVER_BASE_URL = http://localhost:8888/v2/",
+    "D:PROVISIONING_DB = sqlite:////tmp/scim-client.db",
     "D:PROVISIONING_API_BASE_URL = http://localhost:7777/",
     "D:PROVISIONING_API_USERNAME = scim-client",
     "D:PROVISIONING_API_PASSWORD = univention",
