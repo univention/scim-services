@@ -18,7 +18,11 @@ from univention.scim.client.scim_client_settings import get_scim_consumer_settin
 async def main() -> None:
     settings = get_scim_consumer_settings()
     scim_client = ScimClient(settings.auth, settings)
-    group_membership_resolver = GroupMembershipLdapResolver(scim_client, LdapSettings())
+
+    group_membership_resolver = None
+    if settings.group_sync_enabled:
+        logger.warning("Group provisioning support is enabled. This feature is experimental.")
+        group_membership_resolver = GroupMembershipLdapResolver(scim_client, LdapSettings())
     scim_client = ScimConsumer(scim_client, group_membership_resolver, settings)
 
     async with ProvisioningConsumerClient() as client:

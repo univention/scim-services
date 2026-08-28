@@ -35,6 +35,7 @@ class TestRequiredConfigMapEnv(RequiredEnvVariables):
     "key, env_var",
     [
         ("provisioningApi.auth.username", "PROVISIONING_API_USERNAME"),
+        ("scimClient.config.groupSync", "GROUP_SYNC_ENABLED"),
     ],
 )
 class TestDefaultEnvVariables(DefaultEnvVariables):

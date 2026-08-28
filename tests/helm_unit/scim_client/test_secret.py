@@ -66,13 +66,13 @@ class TestNubusProvisioningSubscription(Annotations, Labels, Namespace):
         scimClient:
             config:
                 prefill: false
-                groupSync: false
+                groupSync: true
         provisioningApi:
             auth:
                 password: ""
         """)
 
-        # Disable groups/group topic for one of the subscriptions
+        # groupSync defaults to false, so the default subscription has no groups/group topic.
         openproject_manifest = helm.helm_template(
             chart=chart_path, template_file=self.template_file, release_name="openproject"
         )
@@ -90,7 +90,7 @@ class TestNubusProvisioningSubscription(Annotations, Labels, Namespace):
         assert openproject["name"] != nextcloud["name"]
         assert openproject["password"] != nextcloud["password"]
         assert openproject["request_prefill"] != nextcloud["request_prefill"]
-        # Disable groups/group topic for one of the subscriptions
+        # Enable the groups/group topic for one of the subscriptions
         assert openproject["realms_topics"] != nextcloud["realms_topics"]
 
     def test_auth_plain_values_generate_secret(self, helm, chart_path):

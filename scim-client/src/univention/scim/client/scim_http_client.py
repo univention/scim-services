@@ -78,7 +78,7 @@ class ScimClient:
         if scim.get_resource_model("User") is None:
             logger.error("Scim server does not support User resource")
             raise RuntimeError("Scim server does not support User resource")
-        if scim.get_resource_model("Group") is None:
+        if self.settings.group_sync_enabled and scim.get_resource_model("Group") is None:
             logger.error("Scim server does not support Group resource")
             raise RuntimeError("Scim server does not support Group resource")
 

@@ -12,7 +12,9 @@ class ScimConsumerSettings(BaseSettings):
     scim_server_base_url: str
     scim_auth_method: AuthMethod
     health_check_enabled: bool = True
-    # Attributes in the UDM objects that controls replication to the SCIM API.
+    # Group provisioning support is experimental and disabled by default.
+    group_sync_enabled: bool = False
+    # Attribute in the UDM user object that controls replication to the SCIM API.
     # If it is truthy , the object will be transfered to SCIM.
     scim_user_filter_attribute: str | None = None
     scim_group_filter_attribute: str | None = None

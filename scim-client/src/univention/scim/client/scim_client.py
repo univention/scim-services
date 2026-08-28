@@ -20,7 +20,7 @@ class ScimConsumer:
     def __init__(
         self,
         scim_http_client: ScimClient,
-        group_membership_resolver: GroupMembershipLdapResolver,
+        group_membership_resolver: GroupMembershipLdapResolver | None,
         settings: ScimConsumerSettings,
     ):
         self.scim_http_client = scim_http_client
@@ -144,6 +144,10 @@ class ScimConsumer:
 
         if message.topic not in self.settings.modules:
             logger.debug("Skipping message for topic {}, not in allowed modules", message.topic)
+            return
+
+        if message.topic == "groups/group" and not self.settings.group_sync_enabled:
+            logger.debug("Skipping group message, group sync is disabled")
             return
 
         if should_exist_in_scim(

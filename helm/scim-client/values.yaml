@@ -133,7 +133,8 @@ scimClient:
     # If activated, the client will receive a synthetic "create" event
     # for all existing objects in the Domain before receiving live events.
     prefill: true
-    groupSync: true
+    # -- Toggle experimental group provisioning support.
+    groupSync: false
     # -- Define external_id UDM attribute for users
     externalIdUserMapping: univentionObjectIdentifier
     # -- Define external_id UDM attribute for groups

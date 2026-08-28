@@ -450,7 +450,7 @@ null
   "config": {
     "externalIdGroupMapping": "univentionObjectIdentifier",
     "externalIdUserMapping": "univentionObjectIdentifier",
-    "groupSync": true,
+    "groupSync": false,
     "logLevel": "INFO",
     "prefill": true,
     "usernameMapping": "username"
@@ -485,6 +485,15 @@ null
 </pre>
 </td>
 			<td>Define external_id UDM attribute for users</td>
+		</tr>
+		<tr>
+			<td>scimClient.config.groupSync</td>
+			<td>bool</td>
+			<td><pre lang="json">
+false
+</pre>
+</td>
+			<td>Toggle experimental group provisioning support.</td>
 		</tr>
 		<tr>
 			<td>scimClient.config.logLevel</td>

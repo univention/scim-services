@@ -32,3 +32,4 @@ data:
   EXTERNAL_ID_USER_MAPPING: {{ required ".Values.scimClient.config.externalIdUserMapping is required" .Values.scimClient.config.externalIdUserMapping | quote }}
   EXTERNAL_ID_GROUP_MAPPING: {{ required ".Values.scimClient.config.externalIdUserMapping is required" .Values.scimClient.config.externalIdUserMapping | quote }}
   USERNAME_MAPPING: {{ required ".Values.scimClient.config.usernameMapping is required" .Values.scimClient.config.usernameMapping | quote }}
+  GROUP_SYNC_ENABLED: {{ .Values.scimClient.config.groupSync | default false | quote }}
