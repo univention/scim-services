@@ -34,6 +34,13 @@ class ScimConsumer:
             return cast(str | None, self.settings.external_id_group_mapping)
         return None
 
+    def _external_id_for(self, udm_object: object, topic: str) -> str | None:
+        """Value of the UDM property that maps to SCIM externalId for `topic`."""
+        mapping = self._external_id_mapping_for_topic(topic)
+        if not mapping:
+            return None
+        return getattr(udm_object, "properties", {}).get(mapping)
+
     def write_udm_object(self, udm_object: object, topic: str) -> None:
         """
         Writes the record to the SCIM server.
@@ -43,8 +50,7 @@ class ScimConsumer:
         """
         resource_model = self.scim_http_client.get_resource_model_for_topic(topic)
 
-        external_id_mapping = self._external_id_mapping_for_topic(topic)
-        external_id = getattr(udm_object, "properties", {}).get(external_id_mapping) if external_id_mapping else None
+        external_id = self._external_id_for(udm_object, topic)
         if not external_id:
             raise ValueError("No external_id given!")
 
@@ -67,18 +73,16 @@ class ScimConsumer:
         Deletes the record in the SCIM server.
 
         raises:
-            ValueError: If property defined in 'external_id_user_mapping' is not given.
+            ValueError: If the UDM property mapped to externalId for `topic` is not given.
         """
-
-        if not hasattr(udm_object, "properties") or self.settings.external_id_user_mapping not in udm_object.properties:
-            raise ValueError(f"No {self.settings.external_id_user_mapping} given!")
+        external_id = self._external_id_for(udm_object, topic)
+        if not external_id:
+            raise ValueError(f"No {self._external_id_mapping_for_topic(topic)} given!")
 
         resource_model = self.scim_http_client.get_resource_model_for_topic(topic)
 
         try:
-            existing = self.scim_http_client.get_resource(
-                udm_object.properties[self.settings.external_id_user_mapping], resource_model
-            )
+            existing = self.scim_http_client.get_resource(external_id, resource_model)
         except ScimClientNoDataFoundException:
             return
 
