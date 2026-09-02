@@ -18,6 +18,7 @@ from univention.scim.client.scim_client_settings import get_scim_consumer_settin
 async def main() -> None:
     settings = get_scim_consumer_settings()
     scim_client = ScimClient(settings.auth, settings)
+    scim_client.get_client()  # eager connect + capability verification
 
     group_membership_resolver = None
     if settings.group_sync_enabled:

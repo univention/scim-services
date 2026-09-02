@@ -5,9 +5,23 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from scim2_models import AuthenticationScheme, Filter, ServiceProviderConfig
 
 from univention.scim.client.scim_client_settings import ScimConsumerSettings
 from univention.scim.client.scim_http_client import ScimClient
+
+
+def _valid_service_provider_config() -> ServiceProviderConfig:
+    """A ServiceProviderConfig satisfying every capability ScimClient requires."""
+    return ServiceProviderConfig(
+        filter=Filter(supported=True),
+        authentication_schemes=[
+            AuthenticationScheme(
+                type=AuthenticationScheme.Type.oauthbearertoken, name="Bearer", description="Bearer token"
+            ),
+            AuthenticationScheme(type=AuthenticationScheme.Type.httpbasic, name="Basic", description="HTTP Basic"),
+        ],
+    )
 
 
 @pytest.fixture
@@ -26,6 +40,7 @@ def test_scim_client_uses_correct_content_type_headers(settings: ScimConsumerSet
     with patch("univention.scim.client.scim_http_client.SyncSCIMClient") as mock_scim_client:
         mock_instance = MagicMock()
         mock_instance.get_resource_model.return_value = MagicMock()  # Mock User and Group models
+        mock_instance.service_provider_config = _valid_service_provider_config()
         mock_scim_client.return_value = mock_instance
 
         # Mock the httpx.Client
@@ -62,6 +77,7 @@ def test_scim_client_preserves_auth_for_any_configured_method(auth_method: str) 
     with patch("univention.scim.client.scim_http_client.SyncSCIMClient") as mock_scim_client:
         mock_instance = MagicMock()
         mock_instance.get_resource_model.return_value = MagicMock()
+        mock_instance.service_provider_config = _valid_service_provider_config()
         mock_scim_client.return_value = mock_instance
 
         with patch("univention.scim.client.scim_http_client.Client") as mock_client:
@@ -85,6 +101,7 @@ def test_scim_client_no_auth_when_method_is_none(settings: ScimConsumerSettings)
     with patch("univention.scim.client.scim_http_client.SyncSCIMClient") as mock_scim_client:
         mock_instance = MagicMock()
         mock_instance.get_resource_model.return_value = MagicMock()
+        mock_instance.service_provider_config = _valid_service_provider_config()
         mock_scim_client.return_value = mock_instance
 
         with patch("univention.scim.client.scim_http_client.Client") as mock_client:
