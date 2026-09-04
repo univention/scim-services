@@ -10,12 +10,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from univention.provisioning.error_handling.db import DBSession
 from univention.scim.client.scim_client import ScimConsumer
 from univention.scim.client.scim_client_settings import ScimConsumerSettings
 
 
 @pytest.fixture
-def consumer() -> tuple[ScimConsumer, MagicMock]:
+def consumer(database: DBSession) -> tuple[ScimConsumer, MagicMock]:
     settings = ScimConsumerSettings(
         scim_server_base_url="https://example.org/scim/v2",
         scim_auth_method="none",
@@ -24,7 +25,7 @@ def consumer() -> tuple[ScimConsumer, MagicMock]:
         external_id_group_mapping="groupObjectId",
     )
     scim_http_client = MagicMock()
-    return ScimConsumer(scim_http_client, MagicMock(), settings), scim_http_client
+    return ScimConsumer(scim_http_client, MagicMock(), settings, database), scim_http_client
 
 
 @pytest.mark.parametrize(

@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+import asyncio
 import json
 import traceback
 from typing import cast
 
 from loguru import logger
+from scim2_client import RequestNetworkError
 from scim2_models import Resource
 from univention.provisioning.models import Message
 
@@ -25,10 +27,12 @@ class ScimConsumer:
         scim_http_client: ScimClient,
         group_membership_resolver: GroupMembershipLdapResolver | None,
         settings: ScimConsumerSettings,
+        database: DBSession,
     ):
         self.scim_http_client = scim_http_client
         self.group_membership_resolver = group_membership_resolver
         self.settings = settings
+        self.database = database
 
     def _external_id_mapping_for_topic(self, topic: str) -> str | None:
         if topic == "users/user":
@@ -137,9 +141,9 @@ class ScimConsumer:
         """
         Handles provisioning messages for a SCIM client.
 
-        The message is enqueued in the SQL task queue and all pending tasks
-        are processed. If this method returns, the message will be acknowledged
-        and this function will be called with the next message.
+        The message is enqueued in the SQL task queue and all pending tasks are
+        processed. If this method returns, the message will be acknowledged and
+        this function will be called with the next message.
         If this method throws an exception, the message won't be acknowledged
         and the same message will be redelivered.
         """
@@ -169,8 +173,8 @@ class ScimConsumer:
             obj_id = message.body.old["properties"]["univentionObjectIdentifier"]
             obj_dn = normalized_dn(message.body.old.get("dn"))
 
-        # Use single session for enqueuing and processing
-        with DBSession() as db:
+        # The context manager commits the task before it is processed.
+        with self.database as db:
             logger.info("Enqueuing task", obj=obj_id, module=message.topic)
             db.enqueue_task(
                 obj_id=obj_id,
@@ -179,20 +183,26 @@ class ScimConsumer:
                 attrs=obj_attrs,
             )
 
-            # commit new task so we can process it
-            db.commit()
+        await self.process_pending_tasks()
 
-            # task processing can insert new tasks, make sure to handle them all
-            while db.contain_tasks():
-                self._process_all_tasks_with_db(db)
-                # manual commit here, so new tasks are created
-                db.commit()
+    async def process_pending_tasks(self) -> None:
+        """Process queued tasks, retrying network failures after a delay."""
+        while True:
+            with self.database as db:
+                retry_delay = self._process_all_tasks_with_db(db)
 
-    def _process_all_tasks_with_db(self, db: DBSession) -> None:
+            if retry_delay is None:
+                return
+
+            await asyncio.sleep(retry_delay)
+
+    def _process_all_tasks_with_db(self, db: DBSession) -> int | None:
         """
         Process all pending tasks from the queue using the provided DBSession.
 
-        Failed tasks are moved to the morgue and processing continues.
+        Network failures leave the task pending and stop this processing run
+        until the returned delay has elapsed. Other failed tasks are moved to
+        the morgue and processing continues.
         """
         for udm_module in ("users/user", "groups/group"):
             if udm_module == "groups/group" and not self.settings.group_sync_enabled:
@@ -210,6 +220,17 @@ class ScimConsumer:
                         self.write_udm_object(udm_object, task.udm_module)
                     else:
                         self.delete(udm_object, task.udm_module)
+                except RequestNetworkError as exc:
+                    logger.error("Error while handling", task=task)
+                    num_errors = db.increment_error_count(task.id)
+                    logger.exception(exc)
+                    retry_delay = min(num_errors * 5, 20 * 60)
+                    logger.info(
+                        "Waiting for {} seconds before retrying task",
+                        retry_delay,
+                        task=task,
+                    )
+                    return retry_delay
                 except Exception as exc:
                     db.increment_error_count(task.id)
                     logger.error("Error while handling", task=task)
@@ -223,6 +244,11 @@ class ScimConsumer:
                         db.remove_task(task.id)
                     else:
                         db.move_task_to_old(task.id, json.loads(task.attrs))
+
+            # Persist progress before processing the next module.
+            db.commit()
+
+        return None
 
     def _obj_from_task(self, task, db: DBSession) -> object:
         """

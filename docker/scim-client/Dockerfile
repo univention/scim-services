@@ -25,6 +25,13 @@ SHELL ["/bin/bash", "-uxo", "pipefail", "-c"]
 
 COPY --from=tools /usr/local/bin/uv /usr/local/bin/
 
+RUN apt-get update \
+    && apt-get --assume-yes --verbose-versions --no-install-recommends install \
+      gcc \
+      python3-dev \
+      libpq-dev \
+    && rm -fr /var/lib/apt/lists/* /var/cache/apt/archives/*
+
 ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=never \
@@ -100,13 +107,22 @@ ENV PYTHONUNBUFFERED=1 \
     PATH=/app/.venv/bin:$PATH
 
 ARG USER=scim-client
-RUN rm -fv /usr/lib/python*/EXTERNALLY-MANAGED && \
-    rm -fr /var/lib/apt/lists/* /var/cache/apt/archives/* && \
-    groupadd -r ${USER} -g 1000 && \
-    useradd -r -d /app -g ${USER} -N ${USER} -u 1000
+RUN apt-get update \
+    && apt-get --assume-yes --verbose-versions --no-install-recommends install \
+      libpq5 \
+    && rm -fv /usr/lib/python*/EXTERNALLY-MANAGED \
+    && rm -fr /var/lib/apt/lists/* /var/cache/apt/archives/* \
+    && groupadd -r ${USER} -g 1000 \
+    && useradd -r -d /app -g ${USER} -N ${USER} -u 1000
 
 COPY --from=build --chown=${USER}:${USER} /app/.venv /app/.venv
 
 USER ${USER}
 
 CMD ["scim-client"]
+
+# Verify the installed entry point and PostgreSQL driver in the final image.
+RUN \
+  python3.13 -V && \
+  python3.13 -m site && \
+  python3.13 -c 'import psycopg2; import univention.scim.client.main'

@@ -11,6 +11,7 @@ from univention.scim.client.authentication import AuthMethod, get_auth
 class ScimConsumerSettings(BaseSettings):
     scim_server_base_url: str
     scim_auth_method: AuthMethod
+    provisioning_db: str
     # Disabled by default: get_client() runs the check on every access, which adds
     # a /ResourceTypes round trip to each of the three get_client() calls a single
     # provisioning message makes. A stale client surfaces as a failed message that

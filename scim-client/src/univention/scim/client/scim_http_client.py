@@ -4,7 +4,7 @@
 
 from httpx import Auth, Client, HTTPStatusError
 from loguru import logger
-from scim2_client import SCIMClientError, SCIMResponseError
+from scim2_client import SCIMClientError
 from scim2_client.engines.httpx import SyncSCIMClient
 from scim2_models import Resource, ResourceType, SearchRequest, ServiceProviderConfig
 
@@ -192,15 +192,12 @@ class ScimClient:
         logger.info("Create SCIM resource {}", resource.external_id)
         logger.debug("Resource data:\n{}", cust_pformat(resource.model_dump()))
 
-        try:
-            response = self.get_client().create(resource, check_response_payload=False)
-            logger.debug("Response:\n{}", cust_pformat(response))
-
-        # Happens when the object exists, but without externalId
-        # e.g. group "Domain Users" when the SCIM server is an
-        # Univention SCIM server.
-        except SCIMResponseError as e:
-            logger.warning(e)
+        response = self.get_client().create(
+            resource,
+            check_response_payload=False,
+            expected_status_codes=[201],
+        )
+        logger.debug("Response:\n{}", cust_pformat(response))
 
     def update_resource(self, resource: Resource) -> None:
         """
@@ -212,7 +209,11 @@ class ScimClient:
         logger.info("Update SCIM resource {}", resource.external_id)
         logger.debug("Resource data:\n{}", cust_pformat(resource.model_dump()))
 
-        response = self.get_client().replace(resource, check_response_payload=False)
+        response = self.get_client().replace(
+            resource,
+            check_response_payload=False,
+            expected_status_codes=[200],
+        )
 
         logger.debug("Response:\n{}", cust_pformat(response))
 
@@ -220,7 +221,12 @@ class ScimClient:
         """
         Deletes a SCIM resource by id.
         """
-        response = self.get_client().delete(resource_model=resource_model, id=id, check_response_payload=False)
+        response = self.get_client().delete(
+            resource_model=resource_model,
+            id=id,
+            check_response_payload=False,
+            expected_status_codes=[204],
+        )
 
         logger.debug("Delete response:\n{}", cust_pformat(response))
 
@@ -246,6 +252,7 @@ class ScimClient:
             search_request=search_request,
             resource_model=resource_model,
             check_response_payload=False,
+            expected_status_codes=[200],
         )
         logger.debug("SCIM query response:\n{}", response)
 

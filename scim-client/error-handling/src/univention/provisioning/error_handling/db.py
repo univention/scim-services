@@ -37,7 +37,6 @@ import datetime
 import json
 import os
 from copy import deepcopy
-from itertools import chain
 from pathlib import Path
 
 from lancelog import logger
@@ -50,24 +49,12 @@ from sqlalchemy import (
     create_engine,
     inspect as sa_inspect,
 )
+from sqlalchemy.engine import Engine
 from sqlalchemy.engine.url import make_url
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from sqlalchemy.orm import Session, declarative_base, relationship, sessionmaker
 
 
 Base = declarative_base()
-
-
-def get_db_url():
-    db_connection_string = os.environ.get("PROVISIONING_DB")
-
-    if db_connection_string is None:
-        raise ValueError("PROVISIONING_DB environment variable must be set")
-
-    return make_url(db_connection_string)
-
-
-DB_URL = get_db_url()
-engine = create_engine(DB_URL)
 
 
 def normalized_dn(dn: str) -> str | None:
@@ -168,44 +155,52 @@ class Task(Base):
 class DBSession:
     """Context-aware database session with explicit commit control.
 
+    Create one instance per database and reuse it for sequential transactions:
+
+        database = DBSession("sqlite:////tmp/provisioning.db")
+
     Usage as context manager (auto-commit on success, rollback on exception):
-        with DBSession() as db:
+        with database as db:
             db.store_old(obj_id, module, dn, attrs)
             db.add_relation(...)
         # commit happens automatically here
 
     Usage with manual commit:
-        with DBSession() as db:
+        with database as db:
             db.store_old(obj_id, module, dn, attrs)
             db.commit()  # explicit commit
-
-        db = DBSession()
-        try:
-            db.store_old(obj_id, module, dn, attrs)
-            db.commit()
-        except Exception:
-            db.rollback()
-            raise
-        finally:
-            db.close()
     """
 
-    def __init__(self):
-        self.session = sessionmaker(
+    def __init__(self, db_connection_string: str):
+        self.db_url = make_url(db_connection_string)
+        self.engine: Engine = create_engine(self.db_url)
+        self._session_factory = sessionmaker(
             autocommit=False,
             autoflush=False,
-            bind=engine,
-        )()
+            bind=self.engine,
+        )
+        self._session: Session | None = None
+
+    @property
+    def session(self) -> Session:
+        if self._session is None:
+            raise RuntimeError("DBSession must be used as a context manager")
+        return self._session
 
     def __enter__(self):
+        if self._session is not None:
+            raise RuntimeError("DBSession is already active")
+        self._session = self._session_factory()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is None:
-            self.commit()
-        else:
-            self.rollback()
-        self.close()
+        try:
+            if exc_type is None:
+                self.commit()
+            else:
+                self.rollback()
+        finally:
+            self.close()
         return False
 
     def commit(self):
@@ -218,7 +213,9 @@ class DBSession:
 
     def close(self):
         """Close the session."""
-        self.session.close()
+        if self._session is not None:
+            self._session.close()
+            self._session = None
 
     def add(self, obj):
         """Add an object to the session."""
@@ -612,31 +609,6 @@ class DBSession:
         if output_format == "json":
             print(json.dumps(json_output, sort_keys=True, indent=2))
 
-    def resync_item(self, obj_id):
-        """Resync an item using the latest data saved in UDM."""
-        for item in chain(
-            self.get_errors(obj_id=obj_id),
-            self.get_all_old_objects(obj_id=obj_id),
-        ):
-            attrs = {
-                "entry_uuid": item.obj_id,
-                "dn": item.dn,
-                "object_type": item.udm_module,
-                "command": "m",
-            }
-            timestamp = datetime.datetime.now().strftime(
-                "%Y-%m-%d-%H-%M-%S-%f",
-            )
-            filename = f"/var/lib/univention-appcenter/listener/ox-connector/{timestamp}.json"
-            with open(filename, "w") as fd:
-                json.dump(attrs, fd, sort_keys=True, indent=4)
-            logger.info("Resynced item", item=item)
-            return
-        logger.warning(
-            "No error for object ID found in database, resync not possible",
-            obj_id=obj_id,
-        )
-
     def create_task_from_old(self, obj_id):
         """Create a retry task from an old object."""
         old = self.session.query(Old).filter_by(obj_id=obj_id).first()
@@ -682,22 +654,28 @@ class DBSession:
 
 
 def initialize_db(
+    database: DBSession,
     set_permissions: bool = False,
     create_parent_directory: bool = False,
 ):
     """Initialize the database: create all tables and validate schema."""
     try:
-        if create_parent_directory and DB_URL.drivername == "sqlite":
-            Path(DB_URL.database).parent.mkdir(parents=True, exist_ok=True)
+        db_path = database.db_url.database
+        if create_parent_directory and database.db_url.drivername == "sqlite":
+            if db_path is None:
+                raise ValueError("SQLite database path must be set")
+            Path(db_path).parent.mkdir(parents=True, exist_ok=True)
 
-        Base.metadata.create_all(engine)
-        if set_permissions and DB_URL.drivername == "sqlite":
-            os.chown(DB_URL.database, 0, 0)
-            os.chmod(DB_URL.database, 0o640)
+        Base.metadata.create_all(database.engine)
+        if set_permissions and database.db_url.drivername == "sqlite":
+            if db_path is None:
+                raise ValueError("SQLite database path must be set")
+            os.chown(db_path, 0, 0)
+            os.chmod(db_path, 0o640)
 
         logger.info("Database schema verified/created successfully")
 
-        inspector = sa_inspect(engine)
+        inspector = sa_inspect(database.engine)
         expected_tables = {"tasks", "old", "morgue", "relations"}
         existing_tables = set(inspector.get_table_names())
         missing = expected_tables - existing_tables

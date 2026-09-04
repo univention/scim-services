@@ -10,7 +10,7 @@ from univention.provisioning.consumer.api import (
     ProvisioningConsumerClient,
 )
 
-from univention.provisioning.error_handling.db import DB_URL, DBSession, initialize_db
+from univention.provisioning.error_handling.db import DBSession, initialize_db
 from univention.scim.client.group_membership_resolver import GroupMembershipLdapResolver, LdapSettings
 from univention.scim.client.scim_client import ScimClient, ScimConsumer
 from univention.scim.client.scim_client_settings import get_scim_consumer_settings
@@ -19,10 +19,13 @@ from univention.scim.client.scim_client_settings import get_scim_consumer_settin
 async def main() -> None:
     settings = get_scim_consumer_settings()
 
-    # Initialize the SQL database
-    logger.info("Initializing SQL database", url=DB_URL)
     try:
-        initialize_db()
+        database = DBSession(settings.provisioning_db)
+        logger.info(
+            "Initializing SQL database",
+            url=database.db_url.render_as_string(hide_password=True),
+        )
+        initialize_db(database)
     except Exception:
         logger.error("Failed to initialize database. Shutting down.")
         raise
@@ -34,11 +37,10 @@ async def main() -> None:
     if settings.group_sync_enabled:
         logger.warning("Group provisioning support is enabled. This feature is experimental.")
         group_membership_resolver = GroupMembershipLdapResolver(scim_client, LdapSettings())
-    scim_consumer = ScimConsumer(scim_client, group_membership_resolver, settings)
+    scim_consumer = ScimConsumer(scim_client, group_membership_resolver, settings, database)
 
     # Drain all pending tasks, e.g. from a previous run
-    with DBSession() as db:
-        scim_consumer._process_all_tasks_with_db(db)
+    await scim_consumer.process_pending_tasks()
 
     async with ProvisioningConsumerClient() as client:
         logger.debug("Start listening for provisioning messages")

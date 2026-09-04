@@ -14,6 +14,7 @@ from faker import Faker
 from loguru import logger
 from univention.admin.rest.client import UDM
 
+from univention.provisioning.error_handling.db import DBSession
 from univention.scim.client.group_membership_resolver import GroupMembershipLdapResolver, LdapSettings
 from univention.scim.client.main import run as scim_client_run
 from univention.scim.client.scim_client import ScimConsumer
@@ -239,6 +240,7 @@ def scim_client(
     scim_client_settings: ScimConsumerSettings,
     scim_http_client: ScimClient,
     group_membership_resolver: GroupMembershipLdapResolver,
+    database: DBSession,
 ) -> ScimConsumer:
-    scim_client = ScimConsumer(scim_http_client, group_membership_resolver, scim_client_settings)
+    scim_client = ScimConsumer(scim_http_client, group_membership_resolver, scim_client_settings, database)
     return scim_client
