@@ -49,6 +49,7 @@ package = true
 
 [project.scripts]
 scim-client = "univention.scim.client.main:run"
+univention-scim-connector-task-management = "univention.scim.client.task_management:run"
 
 [tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "session"
