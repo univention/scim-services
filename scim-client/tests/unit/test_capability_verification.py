@@ -17,7 +17,6 @@ def _settings(**overrides: object) -> ScimConsumerSettings:
     defaults: dict[str, object] = {
         "scim_server_base_url": "https://example.com/scim/v2",
         "scim_auth_method": "none",
-        "health_check_enabled": False,
         "group_sync_enabled": False,
     }
     defaults.update(overrides)
@@ -114,6 +113,28 @@ def test_health_check_queries_resource_type_not_service_provider_config() -> Non
         assert scim_client.health_check() is True
 
         scim_client._scim_client.query.assert_called_once_with(ResourceType)
+
+
+def test_health_check_disabled_by_default() -> None:
+    settings = ScimConsumerSettings(  # type: ignore[call-arg]
+        scim_server_base_url="https://example.com/scim/v2",
+        scim_auth_method="none",  # type: ignore[arg-type]
+    )
+
+    assert settings.health_check_enabled is False
+
+
+def test_get_client_issues_no_health_requests_by_default() -> None:
+    # With the health check off, repeated get_client() calls must reuse the cached
+    # client without touching the network: one provisioning message calls
+    # get_client() three times.
+    with _scim_client(_settings()) as scim_client:
+        scim_client.get_client()
+        scim_client.get_client()
+        scim_client.get_client()
+
+        assert scim_client._scim_client.discover.call_count == 2
+        scim_client._scim_client.query.assert_not_called()
 
 
 def test_get_client_does_not_rediscover_when_healthy() -> None:

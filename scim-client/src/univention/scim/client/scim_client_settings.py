@@ -11,7 +11,11 @@ from univention.scim.client.authentication import AuthMethod, get_auth
 class ScimConsumerSettings(BaseSettings):
     scim_server_base_url: str
     scim_auth_method: AuthMethod
-    health_check_enabled: bool = True
+    # Disabled by default: get_client() runs the check on every access, which adds
+    # a /ResourceTypes round trip to each of the three get_client() calls a single
+    # provisioning message makes. A stale client surfaces as a failed message that
+    # the provisioning consumer retries anyway.
+    health_check_enabled: bool = False
     # Group provisioning support is experimental and disabled by default.
     group_sync_enabled: bool = False
     # Attribute in the UDM user object that controls replication to the SCIM API.
