@@ -142,10 +142,6 @@ class ScimConsumer:
         if not message.body.new and not message.body.old:
             raise ValueError("Invalid message state.")
 
-        if message.topic not in self.settings.modules:
-            logger.debug("Skipping message for topic {}, not in allowed modules", message.topic)
-            return
-
         if message.topic == "groups/group" and not self.settings.group_sync_enabled:
             logger.debug("Skipping group message, group sync is disabled")
             return

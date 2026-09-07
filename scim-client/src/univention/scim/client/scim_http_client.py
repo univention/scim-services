@@ -4,11 +4,11 @@
 
 from httpx import Auth, Client, HTTPStatusError
 from loguru import logger
-from scim2_client import SCIMResponseError
+from scim2_client import SCIMClientError, SCIMResponseError
 from scim2_client.engines.httpx import SyncSCIMClient
-from scim2_models import AuthenticationScheme, Resource, ResourceType, SearchRequest, ServiceProviderConfig
+from scim2_models import Resource, ResourceType, SearchRequest, ServiceProviderConfig
 
-from univention.scim.client.authentication import AuthMethod
+from univention.scim.client.authentication import required_scim_scheme_types
 from univention.scim.client.helper import cust_pformat
 from univention.scim.client.scim_client_settings import ScimConsumerSettings
 
@@ -17,14 +17,6 @@ from univention.scim.client.scim_client_settings import ScimConsumerSettings
 _TOPIC_TO_SCIM_TYPE: dict[str, str] = {
     "users/user": "User",
     "groups/group": "Group",
-}
-
-# SCIM authenticationSchemes.type values that satisfy each configured AuthMethod.
-# AuthMethod.NONE has no entry: nothing is configured, so there's nothing to verify.
-_AUTH_METHOD_TO_SCHEME_TYPES: dict[AuthMethod, tuple[AuthenticationScheme.Type, ...]] = {
-    AuthMethod.OIDC: (AuthenticationScheme.Type.oauthbearertoken,),
-    AuthMethod.BEARER: (AuthenticationScheme.Type.oauthbearertoken,),
-    AuthMethod.BASIC: (AuthenticationScheme.Type.httpbasic,),
 }
 
 
@@ -44,15 +36,14 @@ class ScimClient:
     ):
         self.settings = settings
         self.auth = auth
-        self.service_provider_config: ServiceProviderConfig | None = None
 
     def _create_client(self) -> SyncSCIMClient:
         """
         Returns a connected SyncSCIMClient instance.
 
-        Verifies discovery (/ResourceTypes, /Schemas, /ServiceProviderConfig),
-        filter search, the configured auth scheme, and the User (and, if group
-        sync is enabled, Group) resource type.
+        Checks discovery (/ResourceTypes, /Schemas, /ServiceProviderConfig), filter
+        search, the configured auth scheme, and the User (and, if group sync is
+        enabled, Group) resource type.
         """
         logger.info("Connect to SCIM server ({}).", self.settings.scim_server_base_url)
 
@@ -83,76 +74,76 @@ class ScimClient:
 
         try:
             scim.discover(schemas=True, service_provider_config=False, resource_types=True)
-        except Exception as e:
-            logger.error(
+        except SCIMClientError as e:
+            logger.warning(
                 "Scim server does not support ResourceType/Schema discovery.",
                 capability="discovery",
                 error=str(e),
             )
-            raise RuntimeError("Scim server does not support ResourceType/Schema discovery") from e
 
         try:
             scim.discover(schemas=False, service_provider_config=True, resource_types=False)
-        except Exception as e:
-            logger.error(
+        except SCIMClientError as e:
+            logger.warning(
                 "Scim server does not support ServiceProviderConfig discovery.",
                 capability="service_provider_config",
                 error=str(e),
             )
-            raise RuntimeError("Scim server does not support ServiceProviderConfig discovery") from e
 
         service_provider_config = scim.service_provider_config
+
         if service_provider_config is None:
-            logger.error(
+            logger.warning(
                 "Scim server did not return a ServiceProviderConfig.",
                 capability="service_provider_config",
             )
-            raise RuntimeError("Scim server did not return a ServiceProviderConfig")
-        self.service_provider_config = service_provider_config
-
-        if not (service_provider_config.filter and service_provider_config.filter.supported):
-            logger.error(
+        elif not (service_provider_config.filter and service_provider_config.filter.supported):
+            logger.warning(
                 "Scim server does not support attribute filtering, required for externalId lookups.",
                 capability="filter",
             )
-            raise RuntimeError("Scim server does not support attribute filtering")
 
         self._verify_auth_scheme(service_provider_config)
 
         if scim.get_resource_model("User") is None:
-            logger.error("Scim server does not support User resource.", capability="User resource type")
-            raise RuntimeError("Scim server does not support User resource")
+            logger.warning("Scim server does not support User resource.", capability="User resource type")
 
         if scim.get_resource_model("Group") is None:
             if self.settings.group_sync_enabled:
-                logger.error("Scim server does not support Group resource.", capability="Group resource type")
-                raise RuntimeError("Scim server does not support Group resource")
-            logger.info("Scim server does not support Group resource. Continuing in users-only mode.")
+                logger.warning("Scim server does not support Group resource.", capability="Group resource type")
+            else:
+                logger.info("Scim server does not support Group resource. Continuing in users-only mode.")
 
         return scim
 
-    def _verify_auth_scheme(self, service_provider_config: ServiceProviderConfig) -> None:
+    def _verify_auth_scheme(self, service_provider_config: ServiceProviderConfig | None) -> None:
         """
-        Verifies the configured auth method is among the server's advertised
-        authenticationSchemes.
+        Checks the configured auth method is among the server's advertised
+        authenticationSchemes. Only logs a warning when it isn't, or can't be checked.
         """
-        required_scheme_types = _AUTH_METHOD_TO_SCHEME_TYPES.get(self.settings.scim_auth_method)
+        required_scheme_types = required_scim_scheme_types(self.settings.scim_auth_method)
         if not required_scheme_types:
+            return
+
+        if service_provider_config is None:
+            logger.warning(
+                "Scim server did not return a ServiceProviderConfig; "
+                "cannot verify it supports the configured authentication method.",
+                capability="authentication_schemes",
+                configured_auth_method=self.settings.scim_auth_method,
+            )
             return
 
         advertised_scheme_types = {
             scheme.type for scheme in (service_provider_config.authentication_schemes or []) if scheme.type
         }
         if advertised_scheme_types.isdisjoint(required_scheme_types):
-            logger.error(
+            logger.warning(
                 "Scim server does not advertise an authentication scheme for the configured auth method.",
                 capability="authentication_schemes",
                 configured_auth_method=self.settings.scim_auth_method,
                 required_scheme_types=[scheme_type.value for scheme_type in required_scheme_types],
                 advertised_scheme_types=sorted(scheme_type.value for scheme_type in advertised_scheme_types),
-            )
-            raise RuntimeError(
-                f"Scim server does not advertise an authentication scheme for '{self.settings.scim_auth_method}'"
             )
 
     def get_client(self) -> SyncSCIMClient:

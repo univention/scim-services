@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 import pytest
+from scim2_client import SCIMResponseError
 from scim2_models import AuthenticationScheme, Filter, ResourceType, ServiceProviderConfig
 
 from univention.scim.client.scim_client_settings import ScimConsumerSettings
@@ -54,6 +55,8 @@ def _scim_client(
         service_provider_config = _service_provider_config()
 
     def get_resource_model(name: str) -> MagicMock | None:
+        if resource_type_discovery_fails:
+            return None
         if name == "User":
             return MagicMock() if user_resource_type else None
         if name == "Group":
@@ -62,55 +65,20 @@ def _scim_client(
 
     def discover(*, schemas: bool = True, resource_types: bool = True, service_provider_config: bool = True) -> None:
         if (schemas or resource_types) and resource_type_discovery_fails:
-            raise RuntimeError("simulated: server does not implement /ResourceTypes or /Schemas")
+            raise SCIMResponseError("simulated: server does not implement /ResourceTypes or /Schemas")
         if service_provider_config and service_provider_config_discovery_fails:
-            raise RuntimeError("simulated: server does not implement /ServiceProviderConfig")
+            raise SCIMResponseError("simulated: server does not implement /ServiceProviderConfig")
 
     mock_instance = MagicMock()
     mock_instance.get_resource_model.side_effect = get_resource_model
     mock_instance.discover.side_effect = discover
-    mock_instance.service_provider_config = service_provider_config
+    mock_instance.service_provider_config = None if service_provider_config_discovery_fails else service_provider_config
 
     with (
         patch("univention.scim.client.scim_http_client.SyncSCIMClient", return_value=mock_instance),
         patch("univention.scim.client.scim_http_client.Client"),
     ):
         yield ScimClient(auth=None, settings=settings)
-
-
-def test_resource_type_discovery_failure_raises() -> None:
-    with (
-        _scim_client(_settings(), resource_type_discovery_fails=True) as scim_client,
-        pytest.raises(RuntimeError, match="ResourceType"),
-    ):
-        scim_client._create_client()
-
-
-def test_service_provider_config_discovery_failure_raises() -> None:
-    with (
-        _scim_client(_settings(), service_provider_config_discovery_fails=True) as scim_client,
-        pytest.raises(RuntimeError, match="ServiceProviderConfig"),
-    ):
-        scim_client._create_client()
-
-
-def test_missing_service_provider_config_payload_raises() -> None:
-    # discover() succeeds (no exception), but scim.service_provider_config never got
-    # populated (e.g. a malformed/empty response).
-    with (
-        _scim_client(_settings(), service_provider_config=None) as scim_client,
-        pytest.raises(RuntimeError, match="ServiceProviderConfig"),
-    ):
-        scim_client._create_client()
-
-
-def test_filter_not_supported_raises() -> None:
-    spc = _service_provider_config(filter_supported=False)
-    with (
-        _scim_client(_settings(), service_provider_config=spc) as scim_client,
-        pytest.raises(RuntimeError, match="filter"),
-    ):
-        scim_client._create_client()
 
 
 @pytest.mark.parametrize(
@@ -127,50 +95,15 @@ def test_auth_scheme_present_succeeds(auth_method: str, required_scheme_type: Au
         scim_client._create_client()
 
 
-@pytest.mark.parametrize("auth_method", ["oidc", "bearer", "basic"])
-def test_auth_scheme_missing_raises(auth_method: str) -> None:
-    # Advertise a scheme type that never satisfies any configured auth method.
-    spc = _service_provider_config(scheme_types=[AuthenticationScheme.Type.httpdigest])
-    with (
-        _scim_client(_settings(scim_auth_method=auth_method), service_provider_config=spc) as scim_client,
-        pytest.raises(RuntimeError, match="authentication scheme"),
-    ):
-        scim_client._create_client()
-
-
 def test_auth_method_none_skips_scheme_check() -> None:
     spc = _service_provider_config(scheme_types=[])
     with _scim_client(_settings(scim_auth_method="none"), service_provider_config=spc) as scim_client:
         scim_client._create_client()
 
 
-def test_missing_user_resource_type_raises() -> None:
-    with (
-        _scim_client(_settings(), user_resource_type=False) as scim_client,
-        pytest.raises(RuntimeError, match="User resource"),
-    ):
-        scim_client._create_client()
-
-
 def test_missing_group_resource_type_with_group_sync_disabled_succeeds() -> None:
     with _scim_client(_settings(group_sync_enabled=False), group_resource_type=False) as scim_client:
         scim_client._create_client()
-
-
-def test_missing_group_resource_type_with_group_sync_enabled_raises() -> None:
-    with (
-        _scim_client(_settings(group_sync_enabled=True), group_resource_type=False) as scim_client,
-        pytest.raises(RuntimeError, match="Group resource"),
-    ):
-        scim_client._create_client()
-
-
-def test_service_provider_config_cached_on_successful_connect() -> None:
-    spc = _service_provider_config()
-    with _scim_client(_settings(), service_provider_config=spc) as scim_client:
-        scim_client._create_client()
-
-        assert scim_client.service_provider_config is spc
 
 
 def test_health_check_queries_resource_type_not_service_provider_config() -> None:

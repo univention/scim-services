@@ -74,7 +74,7 @@ export LDAP_BIND_DN="cn=admin,dc=univention-organization,dc=intranet"
 export LDAP_BIND_PASSWORD="univention"
 export EXTERNAL_ID_USER_MAPPING="univentionObjectIdentifier"
 export EXTERNAL_ID_GROUP_MAPPING="univentionObjectIdentifier"
-export MODULES='["users/user"]'
+export GROUP_SYNC_ENABLED="false"
 export KEYCLOAK_BASE_URL="http://localhost:5050"
 export SCIM_AUTH_METHOD="bearer"
 export SCIM_BEARER_TOKEN="<wire.com scim token>"

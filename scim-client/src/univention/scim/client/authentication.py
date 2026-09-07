@@ -12,6 +12,7 @@ import httpx
 from loguru import logger
 from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings
+from scim2_models import AuthenticationScheme
 
 
 class AuthMethod(StrEnum):
@@ -19,6 +20,23 @@ class AuthMethod(StrEnum):
     OIDC = "oidc"
     BASIC = "basic"
     BEARER = "bearer"
+
+
+_SCIM_SCHEME_TYPES_FOR_AUTH_METHOD: dict[AuthMethod, tuple[AuthenticationScheme.Type, ...]] = {
+    AuthMethod.OIDC: (AuthenticationScheme.Type.oauthbearertoken,),
+    AuthMethod.BEARER: (AuthenticationScheme.Type.oauthbearertoken,),
+    AuthMethod.BASIC: (AuthenticationScheme.Type.httpbasic,),
+}
+
+
+def required_scim_scheme_types(auth_method: AuthMethod) -> tuple[AuthenticationScheme.Type, ...]:
+    """
+    Returns the SCIM authenticationSchemes.type values that satisfy `auth_method`.
+
+    An empty tuple means `auth_method` doesn't correspond to any SCIM-advertised scheme
+    (only `AuthMethod.NONE`).
+    """
+    return _SCIM_SCHEME_TYPES_FOR_AUTH_METHOD.get(auth_method, ())
 
 
 def get_auth(auth_method: AuthMethod) -> httpx.Auth | None:
