@@ -39,5 +39,7 @@ class ScimConsumerSettings(BaseSettings):
 
 def get_scim_consumer_settings() -> ScimConsumerSettings:
     settings = ScimConsumerSettings()
+    if not settings.provisioning_db:
+        raise ValueError("PROVISIONING_DB environment variable must be set")
     settings.auth = get_auth(settings.scim_auth_method)
     return settings
