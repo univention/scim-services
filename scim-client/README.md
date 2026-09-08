@@ -19,7 +19,15 @@ There are no known issues at this time.
 
 ## How to Execute
 
-To run the SCIM client, you need to deploy it using the provided Helm chart. See the installation guide for more details.
+To run the SCIM client, deploy it using the provided Helm chart. See the [SCIM Client chapter in the Nubus Operation Manual](https://docs.software-univention.de/nubus-kubernetes-operation/latest/en/connect-external-iam/scim-client.html) for installation and configuration.
+
+For Kubernetes deployments, provide a separate PostgreSQL database for each SCIM Client and set `scimClient.config.dbConnectionString` in the Helm values. The chart passes it to the client as `PROVISIONING_DB`.
+
+## Error handling
+
+The client stores provisioning tasks in a database and automatically retries network errors. Other failed tasks are kept in the Morgue for inspection, while processing continues.
+
+Run `univention-scim-connector-task-management --help` inside the client container to see the available commands for inspecting and managing tasks.
 
 ## How to Execute Tests
 

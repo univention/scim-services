@@ -105,8 +105,9 @@ def retry_from_morgue(db: DBSession, obj_id: str) -> None:
     """Requeue all matching failed changes using their stored attributes.
 
     Stored attributes may overwrite newer state; check before retrying.
-    Requeuing keeps the Morgue entries. Processing resumes
-    on the next message, client startup or active network-retry iteration.
+    Requeuing keeps the Morgue entries. After a successful create or update,
+    the client removes all Morgue entries for that object.
+    Processing resumes on the next message, client startup or active network-retry iteration.
     Restart an idle client to process the queued tasks without a new message.
     """
     db.retry_from_morgue(obj_id)
