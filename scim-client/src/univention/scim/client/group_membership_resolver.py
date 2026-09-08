@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 from ldap3 import AUTO_BIND_NO_TLS, BASE, SAFE_SYNC, Connection, Server
+from ldap3.core.exceptions import LDAPSessionTerminatedByServerError
 from loguru import logger
 from pydantic_settings import BaseSettings
 
@@ -20,6 +21,7 @@ class GroupMembershipLdapResolver(IdCache):
     def __init__(self, scim_http_client: ScimClient, ldap_settings: LdapSettings) -> None:
         """ """
         self.scim_http_client = scim_http_client
+        self.ldap_settings = ldap_settings
 
         self.ldap_client = self.connect_to_ldap(ldap_settings)
 
@@ -70,15 +72,26 @@ class GroupMembershipLdapResolver(IdCache):
         """ """
         logger.debug("Try to get LDAP record for DN {}", dn)
 
-        response = self.ldap_client.extend.standard.paged_search(
-            search_base=dn,
-            search_filter="(objectClass=univentionObject)",
-            search_scope=BASE,
-            attributes=["univentionObjectIdentifier"],
-            paged_size=1,
-        )
+        # LDAP servers may close idle connections. Reconnect once and retry the
+        # lookup instead of failing the group update on the stale connection.
+        for attempt in range(2):
+            try:
+                response = self.ldap_client.extend.standard.paged_search(
+                    search_base=dn,
+                    search_filter="(objectClass=univentionObject)",
+                    search_scope=BASE,
+                    attributes=["univentionObjectIdentifier"],
+                    paged_size=1,
+                )
+                entry = next(response, None)
+                break
+            except LDAPSessionTerminatedByServerError:
+                if attempt == 1:
+                    raise
+                logger.info("LDAP connection closed; reconnecting and retrying lookup")
+                self.ldap_client = self.connect_to_ldap(self.ldap_settings)
 
-        if (entry := next(response, None)) is None:
+        if entry is None:
             logger.warning("Could not resolve group member DN to SCIM ID. LDAP user with DN {dn} not found!", dn=dn)
             return None
 
