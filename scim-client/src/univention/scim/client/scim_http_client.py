@@ -60,6 +60,11 @@ class ScimClient:
                     logger.warning("Rewrite response to be SCIM RFC compliant")
                     e.response._content = json_payload["message"].encode()
 
+                # Keep the server error detail in the traceback stored in the Morgue.
+                if isinstance(json_payload, dict) and json_payload.get("detail"):
+                    e.add_note(f"SCIM server error: {json_payload['detail']}")
+                    raise
+
         client = Client(
             auth=self.auth,
             base_url=self.settings.scim_server_base_url,
