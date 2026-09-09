@@ -2,9 +2,11 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 import asyncio
+from unittest.mock import AsyncMock, Mock, call
 
 import httpx
 import pytest
+from scim2_client import RequestNetworkError
 
 from univention.provisioning.error_handling.db import DBSession
 from univention.scim.client.authentication import AuthMethod
@@ -102,6 +104,27 @@ def test_handle_udm_message_http_error_moves_task_to_morgue(monkeypatch, databas
         errors = list(db.get_errors("ffffffff-ffff-ffff-ffff-ffffffffffff"))
         assert len(errors) == 1
         assert "connection refused" in errors[0].error_msg
+
+
+def test_handle_udm_message_retries_network_errors_until_success(monkeypatch, database: DBSession):
+    # Simulate two network failures followed by success and verify the retry delays
+    # and final database state without actually waiting.
+    consumer, _ = get_consumer(monkeypatch, database)
+    write_udm_object = Mock(side_effect=[RequestNetworkError(), RequestNetworkError(), None])
+    sleep = AsyncMock()
+    monkeypatch.setattr(consumer, "write_udm_object", write_udm_object)
+    monkeypatch.setattr("univention.scim.client.scim_client.asyncio.sleep", sleep)
+
+    asyncio.run(consumer.handle_udm_message(get_provisioning_message("user_create")))
+
+    assert write_udm_object.call_count == 3
+    assert sleep.await_args_list == [call(5), call(10)]
+    with database as db:
+        assert not db.contain_tasks()
+        assert not list(db.get_errors("ffffffff-ffff-ffff-ffff-ffffffffffff"))
+        old = db.get_old(None, "ffffffff-ffff-ffff-ffff-ffffffffffff")
+        assert old is not None
+        assert old.dn == "uid=testuser,cn=users,dc=univention-organization,dc=intranet"
 
 
 def test_handle_udm_message_invalid_realm_raises(monkeypatch, database: DBSession):
