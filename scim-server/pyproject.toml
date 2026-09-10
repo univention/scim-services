@@ -7,7 +7,6 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.139.2",
-    "httpx>=0.28.1",
     "pydantic-settings>=2.14.2",
     "uvicorn>=0.51.0",
     "lancelog>=0.3.4",
@@ -19,7 +18,6 @@ dependencies = [
     "udm-rest-api-client[async]==0.0.4",
     "aiohttp>=3.14.3",
     "scim-udm-transformer-lib",
-    "requests>=2.34.2",
     "asgi-correlation-id>=5.0.1",
     "urllib3>=2.7.0",
 ]
@@ -35,7 +33,6 @@ dev = [
     "pytestarch>=4.0.1",
     "requests>=2.34.2",
     "requests-mock>=1.12.1",
-    "respx>=0.23.1",
     "scim2-client[httpx]>=0.6.1",
     "httpx>=0.28.1",
 ]
