@@ -80,7 +80,8 @@ services:
     ports:
       - 3389:389
     volumes:
-      - ./conf/base-scim-server.conf:/etc/univention/base-defaults.conf:ro
+      # Mounted as base.conf, not base-defaults.conf, so the image's own defaults layer still applies.
+      - ./conf/base-scim-server.conf:/etc/univention/base.conf:ro
     networks:
       - scim
 
@@ -359,7 +360,8 @@ services:
     volumes:
       - ldap-shared-data:/var/lib/univention-ldap/:rw
       - ldap-shared-run:/var/run/slapd/:rw
-      - ./conf/base-defaults.conf:/etc/univention/base-defaults.conf:ro
+      # Mounted as base.conf, not base-defaults.conf, so the image's own defaults layer still applies.
+      - ./conf/base-defaults.conf:/etc/univention/base.conf:ro
     networks:
       - scim
 
