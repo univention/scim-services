@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, call
 
 import httpx
 import pytest
-from scim2_client import RequestNetworkError
+from scim2_client import RequestNetworkException
 
 from univention.provisioning.error_handling.db import DBSession
 from univention.scim.client.authentication import AuthMethod
@@ -110,7 +110,7 @@ def test_handle_udm_message_retries_network_errors_until_success(monkeypatch, da
     # Simulate two network failures followed by success and verify the retry delays
     # and final database state without actually waiting.
     consumer, _ = get_consumer(monkeypatch, database)
-    write_udm_object = Mock(side_effect=[RequestNetworkError(), RequestNetworkError(), None])
+    write_udm_object = Mock(side_effect=[RequestNetworkException(), RequestNetworkException(), None])
     sleep = AsyncMock()
     monkeypatch.setattr(consumer, "write_udm_object", write_udm_object)
     monkeypatch.setattr("univention.scim.client.scim_client.asyncio.sleep", sleep)

@@ -4,8 +4,8 @@
 
 from httpx import Auth, Client, HTTPStatusError
 from loguru import logger
-from scim2_client import RequestNetworkError, SCIMClientError
-from scim2_client.engines.httpx import SyncSCIMClient
+from scim2_client import RequestNetworkException, SCIMClientException
+from scim2_client.engines.httpx2 import SyncSCIMClient
 from scim2_models import Resource, ResourceType, SearchRequest, ServiceProviderConfig
 
 from univention.scim.client.authentication import required_scim_scheme_types
@@ -79,11 +79,11 @@ class ScimClient:
 
         try:
             scim.discover(schemas=True, service_provider_config=False, resource_types=True)
-        except RequestNetworkError:
+        except RequestNetworkException:
             # Let task processing retry instead of caching incomplete capabilities.
             client.close()
             raise
-        except SCIMClientError as e:
+        except SCIMClientException as e:
             logger.warning(
                 "Scim server does not support ResourceType/Schema discovery.",
                 capability="discovery",
@@ -92,10 +92,10 @@ class ScimClient:
 
         try:
             scim.discover(schemas=False, service_provider_config=True, resource_types=False)
-        except RequestNetworkError:
+        except RequestNetworkException:
             client.close()
             raise
-        except SCIMClientError as e:
+        except SCIMClientException as e:
             logger.warning(
                 "Scim server does not support ServiceProviderConfig discovery.",
                 capability="service_provider_config",

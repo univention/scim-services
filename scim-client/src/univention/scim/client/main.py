@@ -5,7 +5,7 @@
 import asyncio
 
 from loguru import logger
-from scim2_client import RequestNetworkError
+from scim2_client import RequestNetworkException
 from univention.provisioning.consumer.api import (
     MessageHandler,
     ProvisioningConsumerClient,
@@ -34,7 +34,7 @@ async def main() -> None:
     scim_client = ScimClient(settings.auth, settings)
     try:
         scim_client.get_client()  # eager connect + capability verification
-    except RequestNetworkError as exc:
+    except RequestNetworkException as exc:
         logger.warning(
             "SCIM server unavailable at startup; discovery will be retried when processing tasks.",
             error=str(exc),

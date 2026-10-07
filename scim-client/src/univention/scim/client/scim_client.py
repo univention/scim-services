@@ -7,7 +7,7 @@ import traceback
 from typing import cast
 
 from loguru import logger
-from scim2_client import RequestNetworkError
+from scim2_client import RequestNetworkException
 from scim2_models import Resource
 from univention.provisioning.models import Message
 
@@ -220,7 +220,7 @@ class ScimConsumer:
                         self.write_udm_object(udm_object, task.udm_module)
                     else:
                         self.delete(udm_object, task.udm_module)
-                except RequestNetworkError as exc:
+                except RequestNetworkException as exc:
                     logger.error("Error while handling", task=task)
                     num_errors = db.increment_error_count(task.id)
                     logger.exception(exc)

@@ -11,7 +11,7 @@ dependencies = [
     "scim-udm-transformer-lib",
     "error-handling",
     "nubus-provisioning-consumer>=0.54.0",
-    "scim2-client[httpx]>=0.6.1",
+    "scim2-client[httpx2]>=0.12.0,<0.13.0",
     "icecream>=2.2.0",
     "udm-rest-api-client>=0.0.2",
     "ldap3>=2.9.1",
