@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
-from scim2_client.engines.httpx import SyncSCIMClient
+from scim2_client.engines.httpx2 import SyncSCIMClient
 
 from univention.scim.server.config import ApplicationSettings
 
