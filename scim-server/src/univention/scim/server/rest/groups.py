@@ -6,7 +6,13 @@ from typing import Annotated, Any
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response, status
 from loguru import logger
-from scim2_models import ListResponse
+from scim2_models import (
+    CreationResponseContext,
+    ListResponse,
+    PatchResponseContext,
+    QueryResponseContext,
+    ReplacementResponseContext,
+)
 
 from univention.scim.server.config import application_settings
 from univention.scim.server.container import ApplicationContainer
@@ -18,7 +24,7 @@ from univention.scim.transformation.exceptions import MappingError
 router = APIRouter()
 
 
-@router.get("", response_model=ListResponse[GroupWithExtensions])
+@router.get("", response_model=QueryResponseContext[ListResponse[GroupWithExtensions]])
 @inject
 async def list_groups(
     group_service: Annotated[GroupService, Depends(Provide[ApplicationContainer.group_service])],
@@ -27,7 +33,7 @@ async def list_groups(
     count: int | None = Query(None, ge=0, description="Maximum number of results"),
     attributes: str | None = Query(None, description="Comma-separated list of attributes to include"),
     excluded_attributes: str | None = Query(None, description="Comma-separated list of attributes to exclude"),
-) -> ListResponse[GroupWithExtensions]:
+) -> QueryResponseContext[ListResponse[GroupWithExtensions]]:
     """
     List groups with optional filtering and pagination.
 
@@ -42,14 +48,14 @@ async def list_groups(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
 
-@router.get("/{group_id}", response_model=GroupWithExtensions)
+@router.get("/{group_id}", response_model=QueryResponseContext[GroupWithExtensions])
 @inject
 async def get_group(
     group_service: Annotated[GroupService, Depends(Provide[ApplicationContainer.group_service])],
     group_id: str = Path(..., description="Group ID"),
     attributes: str | None = Query(None, description="Comma-separated list of attributes to include"),
     excluded_attributes: str | None = Query(None, description="Comma-separated list of attributes to exclude"),
-) -> GroupWithExtensions:
+) -> QueryResponseContext[GroupWithExtensions]:
     """
     Get a specific group by ID.
 
@@ -67,13 +73,13 @@ async def get_group(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
 
-@router.post("", response_model=GroupWithExtensions, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=CreationResponseContext[GroupWithExtensions], status_code=status.HTTP_201_CREATED)
 @inject
 async def create_group(
     group: GroupWithExtensions,
     response: Response,
     group_service: Annotated[GroupService, Depends(Provide[ApplicationContainer.group_service])],
-) -> GroupWithExtensions:
+) -> CreationResponseContext[GroupWithExtensions]:
     """
     Create a new group.
 
@@ -95,13 +101,13 @@ async def create_group(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
 
-@router.put("/{group_id}", response_model=GroupWithExtensions)
+@router.put("/{group_id}", response_model=ReplacementResponseContext[GroupWithExtensions])
 @inject
 async def update_group(
     group_service: Annotated[GroupService, Depends(Provide[ApplicationContainer.group_service])],
     group_id: str = Path(..., description="Group ID"),
     group: GroupWithExtensions = ...,
-) -> GroupWithExtensions:
+) -> ReplacementResponseContext[GroupWithExtensions]:
     """
     Replace a group.
 
@@ -123,13 +129,13 @@ async def update_group(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
 
-@router.patch("/{group_id}", response_model=GroupWithExtensions)
+@router.patch("/{group_id}", response_model=PatchResponseContext[GroupWithExtensions])
 @inject
 async def patch_group(
     group_service: Annotated[GroupService, Depends(Provide[ApplicationContainer.group_service])],
     group_id: Annotated[str, Path(..., description="Group ID")],
     patch_request: Annotated[dict[str, Any], Body(..., description="Raw SCIM-compliant patch request body")],
-) -> GroupWithExtensions:
+) -> PatchResponseContext[GroupWithExtensions]:
     """
     Patch a group using a raw SCIM JSON patch body.
     The request must contain an 'Operations' list, and may optionally contain a 'schemas' field.

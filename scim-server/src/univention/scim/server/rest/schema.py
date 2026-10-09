@@ -6,7 +6,7 @@ from typing import Annotated
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path, status
 from loguru import logger
-from scim2_models import Error, ListResponse, Schema
+from scim2_models import Error, ListResponse, QueryResponseContext, Schema
 
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.model_service.load_schemas import LoadSchemas
@@ -31,11 +31,11 @@ def _get_schema_by_id(schema_loader: LoadSchemas, schema_id: str) -> Schema:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error.model_dump())
 
 
-@router.get("", response_model=ListResponse[Schema], response_model_exclude_none=True)
+@router.get("", response_model=QueryResponseContext[ListResponse[Schema]], response_model_exclude_none=True)
 @inject
 async def get_schemas(
     schema_loader: Annotated[LoadSchemas, Depends(Provide[ApplicationContainer.schema_loader])],
-) -> ListResponse[Schema]:
+) -> QueryResponseContext[ListResponse[Schema]]:
     """
     Get the list of schemas supported by the SCIM service.
 
@@ -54,12 +54,12 @@ async def get_schemas(
     )
 
 
-@router.get("/{schema_id}", response_model=Schema, response_model_exclude_none=True)
+@router.get("/{schema_id}", response_model=QueryResponseContext[Schema], response_model_exclude_none=True)
 @inject
 async def get_schema_by_id(
     schema_loader: Annotated[LoadSchemas, Depends(Provide[ApplicationContainer.schema_loader])],
     schema_id: str = Path(..., description="Schema ID"),
-) -> Schema:
+) -> QueryResponseContext[Schema]:
     """
     Get a specific schema by ID.
 

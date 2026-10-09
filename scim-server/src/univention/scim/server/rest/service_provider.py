@@ -1,11 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-from typing import Any
 
 from fastapi import APIRouter
 from loguru import logger
-from scim2_models import ServiceProviderConfig
+from scim2_models import QueryResponseContext, ServiceProviderConfig
 
 from univention.scim.server.config import application_settings
 
@@ -13,8 +12,8 @@ from univention.scim.server.config import application_settings
 router = APIRouter()
 
 
-@router.get("", response_model=ServiceProviderConfig)
-async def get_service_provider_config() -> Any:
+@router.get("", response_model=QueryResponseContext[ServiceProviderConfig])
+async def get_service_provider_config() -> QueryResponseContext[ServiceProviderConfig]:
     """
     Get the service provider configuration.
 
