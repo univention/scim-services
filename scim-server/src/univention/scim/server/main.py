@@ -3,6 +3,7 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+import scim2_models
 import uvicorn
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI, HTTPException, Security
@@ -86,12 +87,22 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Shutting down SCIM server")
 
 
+def work_around_dropped_empty_values() -> None:
+    # Since 0.11.0, scim2-models omits empty attributes (e.g. empty lists) from serialization. This is equivalent as per
+    # RFC 7643 §2.5, but we want to explicitly include them anyway.
+    # TODO We're reaching into the library to set a private contextvar. That is unfortunately the only way to accomplish
+    # this at the moment.
+    scim2_models.base._KEEP_EMPTY_VALUES.set(True)
+
+
 # Use a function to create the app, this allows the tests to always use a new app object
 # reusing the same global app object seems to sporadically break the tests with very wired
 # FastAPI errors
 def make_app(settings: ApplicationSettings) -> FastAPI:
     # Configure logging
     configure_logging(settings.log_level)
+
+    work_around_dropped_empty_values()
 
     docs_url = None
     redoc_url = None
