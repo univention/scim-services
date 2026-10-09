@@ -235,4 +235,8 @@ def test_create_user_mapping(udm_client: MockUdm, client: TestClient) -> None:
     # password is auto generated so just check if it is there
     assert "password" in created_user.properties
     del created_user.properties["password"]
+    # scimRoles is a json string rather than a dict, so load it in case dict keys changed order.
+    expected_scim_roles = json.loads(expected_properties.pop("scimRoles"))
+    actual_scim_roles = json.loads(created_user.properties.pop("scimRoles"))
+    assert expected_scim_roles == actual_scim_roles
     assert expected_properties == created_user.properties
