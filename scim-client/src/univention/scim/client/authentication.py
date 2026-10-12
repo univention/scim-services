@@ -8,7 +8,7 @@ import time
 from collections.abc import Generator
 from enum import StrEnum
 
-import httpx
+import httpx2
 from loguru import logger
 from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings
@@ -39,14 +39,14 @@ def required_scim_scheme_types(auth_method: AuthMethod) -> tuple[AuthenticationS
     return _SCIM_SCHEME_TYPES_FOR_AUTH_METHOD.get(auth_method, ())
 
 
-def get_auth(auth_method: AuthMethod) -> httpx.Auth | None:
+def get_auth(auth_method: AuthMethod) -> httpx2.Auth | None:
     logger.info("Using authentication method: {}", auth_method)
     match auth_method:
         case AuthMethod.OIDC:
             return OidcAuth(OidcAuthSettings())
         case AuthMethod.BASIC:
             basic_settings = BasicAuthSettings()
-            return httpx.BasicAuth(basic_settings.scim_basic_auth_username, basic_settings.scim_basic_auth_password)
+            return httpx2.BasicAuth(basic_settings.scim_basic_auth_username, basic_settings.scim_basic_auth_password)
         case AuthMethod.BEARER:
             return BearerAuth(BearerAuthSettings())
         case _:
@@ -72,23 +72,23 @@ class BearerAuthSettings(BaseSettings):
     scim_bearer_token: str
 
 
-class BearerAuth(httpx.Auth):
+class BearerAuth(httpx2.Auth):
     """Static Bearer token authentication."""
 
     def __init__(self, settings: BearerAuthSettings) -> None:
         self._token = settings.scim_bearer_token
 
-    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
+    def auth_flow(self, request: httpx2.Request) -> Generator[httpx2.Request, httpx2.Response, None]:
         request.headers["Authorization"] = f"Bearer {self._token}"
         yield request
 
 
-class OidcAuth(httpx.Auth):
+class OidcAuth(httpx2.Auth):
     _access_token: str | None = None
 
-    def __init__(self, settings: OidcAuthSettings, http_client: httpx.Client | None = None) -> None:
+    def __init__(self, settings: OidcAuthSettings, http_client: httpx2.Client | None = None) -> None:
         self._settings = settings
-        self._client = http_client or httpx.Client()
+        self._client = http_client or httpx2.Client()
 
     def _parse_token_claims(self) -> dict | None:
         """Parse claims from either JWT or plain JSON token format."""
@@ -171,7 +171,7 @@ class OidcAuth(httpx.Auth):
                 headers={"Accept": "application/json"},
             )
             response.raise_for_status()
-        except (httpx.RequestError, httpx.HTTPStatusError) as error:
+        except (httpx2.RequestError, httpx2.HTTPStatusError) as error:
             raise GetTokenError("Getting the access token from the IDP failed") from error
 
         try:
@@ -192,9 +192,9 @@ class OidcAuth(httpx.Auth):
             return token
         return self._authenticate()
 
-    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
+    def auth_flow(self, request: httpx2.Request) -> Generator[httpx2.Request, httpx2.Response, None]:
         """
-        Generator plugin for the httpx.Client class
+        Generator plugin for the httpx2.Client class
 
         Ensures that the request is executed with a valid token.
         If the request returns a 401 Unauthorized,

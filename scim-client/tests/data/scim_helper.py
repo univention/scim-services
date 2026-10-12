@@ -6,7 +6,7 @@ import os
 import time
 from typing import Any, Final
 
-import httpx
+import httpx2
 from aiohttp import ClientResponseError
 from loguru import logger
 from univention.provisioning.consumer.api import (
@@ -143,13 +143,13 @@ def delete_provisioning_subscription() -> None:
     asyncio.run(delete_provisioning_subscription_async())
 
 
-def capture_authorization_header(scim_server_base_url: str, auth: httpx.Auth | None) -> str | None:
+def capture_authorization_header(scim_server_base_url: str, auth: httpx2.Auth | None) -> str | None:
     captured: dict[str, str | None] = {}
 
-    def capture(request: httpx.Request) -> None:
+    def capture(request: httpx2.Request) -> None:
         captured["authorization"] = request.headers.get("Authorization")
 
-    with httpx.Client(base_url=scim_server_base_url, auth=auth, event_hooks={"request": [capture]}) as client:
+    with httpx2.Client(base_url=scim_server_base_url, auth=auth, event_hooks={"request": [capture]}) as client:
         response = client.get("/ServiceProviderConfig")
 
     assert response.status_code == 200

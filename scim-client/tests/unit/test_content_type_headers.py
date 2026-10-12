@@ -43,7 +43,7 @@ def test_scim_client_uses_correct_content_type_headers(settings: ScimConsumerSet
         mock_instance.service_provider_config = _valid_service_provider_config()
         mock_scim_client.return_value = mock_instance
 
-        # Mock the httpx.Client
+        # Mock the httpx2.Client
         with patch("univention.scim.client.scim_http_client.Client") as mock_client:
             mock_client_instance = MagicMock()
             mock_client.return_value = mock_client_instance
@@ -54,7 +54,7 @@ def test_scim_client_uses_correct_content_type_headers(settings: ScimConsumerSet
             # Trigger client creation
             scim_client._create_client()
 
-            # Verify that the httpx.Client was created with proper headers
+            # Verify that the httpx2.Client was created with proper headers
             mock_client.assert_called_once()
             call_kwargs: dict[str, Any] = mock_client.call_args[1]
 

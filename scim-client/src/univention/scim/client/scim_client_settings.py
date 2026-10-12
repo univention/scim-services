@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-import httpx
+import httpx2
 from pydantic import PrivateAttr
 from pydantic_settings import BaseSettings
 
@@ -26,14 +26,14 @@ class ScimConsumerSettings(BaseSettings):
     external_id_user_mapping: str | None = None
     external_id_group_mapping: str | None = None
     username_mapping: str | None = None
-    _auth: httpx.Auth | None = PrivateAttr(default=None)
+    _auth: httpx2.Auth | None = PrivateAttr(default=None)
 
     @property
-    def auth(self) -> httpx.Auth | None:
+    def auth(self) -> httpx2.Auth | None:
         return self._auth
 
     @auth.setter
-    def auth(self, value: httpx.Auth | None) -> None:
+    def auth(self, value: httpx2.Auth | None) -> None:
         self._auth = value
 
 

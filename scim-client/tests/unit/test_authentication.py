@@ -6,7 +6,7 @@ import json
 import time
 from unittest.mock import MagicMock
 
-import httpx
+import httpx2
 import pytest
 
 from univention.scim.client.authentication import (
@@ -43,16 +43,16 @@ def authenticator_settings() -> OidcAuthSettings:
 
 
 @pytest.fixture
-def mock_response() -> httpx.Response:
-    mock_response = MagicMock(httpx.Response)
+def mock_response() -> httpx2.Response:
+    mock_response = MagicMock(httpx2.Response)
     mock_response.raise_for_status.return_value = None
     mock_response.json.return_value = {"access_token": "new-dummy-token"}
     return mock_response
 
 
 @pytest.fixture
-def authenticator(authenticator_settings: OidcAuthSettings, mock_response: httpx.Response) -> OidcAuth:
-    mock_client: httpx.Client = MagicMock(httpx.Client)
+def authenticator(authenticator_settings: OidcAuthSettings, mock_response: httpx2.Response) -> OidcAuth:
+    mock_client: httpx2.Client = MagicMock(httpx2.Client)
     mock_client.post.return_value = mock_response  # type: ignore
 
     authenticator = OidcAuth(authenticator_settings, http_client=mock_client)
@@ -83,8 +83,8 @@ def test_authenticator_expired_token(authenticator: OidcAuth) -> None:
     authenticator._client.post.assert_called_once()
 
 
-def test_authenticator_error_response(authenticator: OidcAuth, mock_response: httpx.Response) -> None:
-    error = httpx.HTTPStatusError("500 internal-test-error", request=None, response=None)  # type: ignore
+def test_authenticator_error_response(authenticator: OidcAuth, mock_response: httpx2.Response) -> None:
+    error = httpx2.HTTPStatusError("500 internal-test-error", request=None, response=None)  # type: ignore
     mock_response.raise_for_status.side_effect = error  # type: ignore
 
     with pytest.raises(GetTokenError) as excinfo:
@@ -93,7 +93,7 @@ def test_authenticator_error_response(authenticator: OidcAuth, mock_response: ht
 
 
 def test_authenticator_connection_error(authenticator: OidcAuth) -> None:
-    expected_error = httpx.RequestError("test-connection-error", request=None)
+    expected_error = httpx2.RequestError("test-connection-error", request=None)
     authenticator._client.post.side_effect = expected_error
 
     with pytest.raises(GetTokenError) as error:
@@ -234,7 +234,7 @@ def test_get_auth_returns_basic_auth_for_basic_method(monkeypatch: pytest.Monkey
 
     auth = get_auth("basic")
 
-    assert isinstance(auth, httpx.BasicAuth)
+    assert isinstance(auth, httpx2.BasicAuth)
 
 
 def test_get_auth_returns_bearer_auth_for_bearer_method(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -260,14 +260,14 @@ def test_bearer_auth_sets_static_authorization_header() -> None:
     settings = BearerAuthSettings(scim_bearer_token="static-token-value")
     auth = BearerAuth(settings)
 
-    request = httpx.Request("GET", "https://example.com/scim/v2/Users")
+    request = httpx2.Request("GET", "https://example.com/scim/v2/Users")
     flow = auth.auth_flow(request)
 
     outgoing_request = next(flow)
     assert outgoing_request.headers["Authorization"] == "Bearer static-token-value"
 
     with pytest.raises(StopIteration):
-        flow.send(MagicMock(httpx.Response))
+        flow.send(MagicMock(httpx2.Response))
 
 
 def test_bearer_auth_uses_same_token_across_multiple_requests() -> None:
@@ -276,7 +276,7 @@ def test_bearer_auth_uses_same_token_across_multiple_requests() -> None:
     auth = BearerAuth(settings)
 
     for _ in range(3):
-        request = httpx.Request("GET", "https://example.com/scim/v2/Users")
+        request = httpx2.Request("GET", "https://example.com/scim/v2/Users")
         flow = auth.auth_flow(request)
         outgoing_request = next(flow)
         assert outgoing_request.headers["Authorization"] == "Bearer static-token-value"

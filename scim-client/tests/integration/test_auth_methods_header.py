@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-import httpx
+import httpx2
 
 from univention.scim.client.authentication import BearerAuth, BearerAuthSettings
 
@@ -15,7 +15,7 @@ def test_none_auth_sends_no_authorization_header(scim_server_base_url: str) -> N
 
 
 def test_basic_auth_header_reaches_scim_server(scim_server_base_url: str) -> None:
-    auth = httpx.BasicAuth("integration-test-user", "integration-test-password")
+    auth = httpx2.BasicAuth("integration-test-user", "integration-test-password")
 
     authorization_header = capture_authorization_header(scim_server_base_url, auth)
 

@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
 
-from httpx import Auth, Client, HTTPStatusError
+from httpx2 import Auth, Client, HTTPStatusError
 from loguru import logger
 from scim2_client import RequestNetworkException, SCIMClientException
 from scim2_client.engines.httpx2 import SyncSCIMClient
@@ -205,7 +205,7 @@ class ScimClient:
         logger.debug("Resource data:\n{}", cust_pformat(resource.model_dump()))
 
         response = self.get_client().create(
-            resource,
+            target=resource,
             check_response_payload=False,
             expected_status_codes=[201],
         )
@@ -222,7 +222,7 @@ class ScimClient:
         logger.debug("Resource data:\n{}", cust_pformat(resource.model_dump()))
 
         response = self.get_client().replace(
-            resource,
+            target=resource,
             check_response_payload=False,
             expected_status_codes=[200],
         )
@@ -234,7 +234,7 @@ class ScimClient:
         Deletes a SCIM resource by id.
         """
         response = self.get_client().delete(
-            resource_model=resource_model,
+            target=resource_model,
             id=id,
             check_response_payload=False,
             expected_status_codes=[204],
@@ -261,8 +261,8 @@ class ScimClient:
         """
         search_request = SearchRequest(filter=f'externalId eq "{external_id}"')
         response = self.get_client().query(
-            search_request=search_request,
-            resource_model=resource_model,
+            target=resource_model,
+            query_parameters=search_request,
             check_response_payload=False,
             expected_status_codes=[200],
         )

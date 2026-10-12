@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 import pytest
-from scim2_client import SCIMResponseError
+from scim2_client import SCIMResponseException
 from scim2_models import AuthenticationScheme, Filter, ResourceType, ServiceProviderConfig
 
 from univention.scim.client.scim_client_settings import ScimConsumerSettings
@@ -64,9 +64,9 @@ def _scim_client(
 
     def discover(*, schemas: bool = True, resource_types: bool = True, service_provider_config: bool = True) -> None:
         if (schemas or resource_types) and resource_type_discovery_fails:
-            raise SCIMResponseError("simulated: server does not implement /ResourceTypes or /Schemas")
+            raise SCIMResponseException("simulated: server does not implement /ResourceTypes or /Schemas")
         if service_provider_config and service_provider_config_discovery_fails:
-            raise SCIMResponseError("simulated: server does not implement /ServiceProviderConfig")
+            raise SCIMResponseException("simulated: server does not implement /ServiceProviderConfig")
 
     mock_instance = MagicMock()
     mock_instance.get_resource_model.side_effect = get_resource_model

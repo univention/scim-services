@@ -4,7 +4,7 @@
 import asyncio
 from unittest.mock import AsyncMock, Mock, call
 
-import httpx
+import httpx2
 import pytest
 from scim2_client import RequestNetworkException
 
@@ -94,7 +94,7 @@ def test_handle_udm_message_http_error_moves_task_to_morgue(monkeypatch, databas
     monkeypatch.setattr(
         consumer,
         "write_udm_object",
-        lambda udm_object, topic: (_ for _ in ()).throw(httpx.ConnectError("connection refused")),
+        lambda udm_object, topic: (_ for _ in ()).throw(httpx2.ConnectError("connection refused")),
     )
 
     asyncio.run(consumer.handle_udm_message(get_provisioning_message("user_create")))

@@ -190,7 +190,8 @@ async def test_remove_group_member(
     group = scim_http_client.get_group(pm_group.body.new["properties"]["univentionObjectIdentifier"])
 
     assert group["displayName"] == pm_group.body.new["properties"].get("name")
-    assert len(group["members"]) == 0
+    members = group.get("members", [])  # Omitted value is equivalent to empty list.
+    assert len(members) == 0
 
     #
     # Cleaning up

@@ -8,7 +8,7 @@ import uuid
 from collections.abc import Generator
 from typing import Any
 
-import httpx
+import httpx2
 import pytest
 from faker import Faker
 from loguru import logger
@@ -222,7 +222,7 @@ def scim_client_settings() -> ScimConsumerSettings:
 @pytest.fixture(scope="function")
 def scim_http_client(scim_client_settings: ScimConsumerSettings) -> Generator[ScimClient, None, None]:
     logger.info("Fixture scim_http_client start")
-    scim_http_client = ScimClient(httpx.Auth(), scim_client_settings)
+    scim_http_client = ScimClient(httpx2.Auth(), scim_client_settings)
 
     yield scim_http_client
 

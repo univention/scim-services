@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-import httpx
+import httpx2
 import pytest
 
 from univention.scim.client.scim_client_settings import get_scim_consumer_settings
@@ -15,4 +15,4 @@ def test_get_scim_consumer_settings_populates_auth(monkeypatch: pytest.MonkeyPat
 
     settings = get_scim_consumer_settings()
 
-    assert isinstance(settings.auth, httpx.BasicAuth)
+    assert isinstance(settings.auth, httpx2.BasicAuth)
