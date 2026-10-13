@@ -4,7 +4,7 @@
 import asyncio
 import os
 import time
-from typing import Any, Final
+from typing import Any, Final, Literal
 
 import httpx2
 from aiohttp import ClientResponseError
@@ -80,16 +80,16 @@ def wait_for_resource_deleted(
     scim_http_client: ScimClient,
     udm_object: object,
     max_attempts: int = DEFAULT_MAX_ATTEMPTS,
-) -> bool:
+) -> Literal[True]:
     """ """
     udm_module, external_id = _get_module_and_external_id(udm_object)
     resource_model = scim_http_client.get_resource_model_for_topic(udm_module)
     try:
         for i in range(1, max_attempts):
-            logger.info("Try to get user with uoi: {}. Attemp {}", external_id, i)
+            logger.info("Try to get user with uoi: {}. Attempt {}", external_id, i)
             scim_http_client.get_resource(external_id, resource_model)
             time.sleep(5)
-        return False
+        raise Exception(f"User with uoi {external_id} still exists after {max_attempts} attempts.")
 
     except ScimClientNoDataFoundException:
         return True
