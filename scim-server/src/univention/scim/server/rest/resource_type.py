@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, status
 from loguru import logger
 
 # Import models from scim2-models
-from scim2_models import Error, ListResponse, QueryRequestContext, ResourceType
+from scim2_models import Error, ListResponse, QueryResponseContext, ResourceType
 
 from univention.scim.server.container import ApplicationContainer
 from univention.scim.server.model_service.load_schemas import LoadSchemas
@@ -32,11 +32,11 @@ def _get_resource_type_by_id(schema_loader: LoadSchemas, resource_id: str) -> Re
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error.model_dump())
 
 
-@router.get("", response_model=QueryRequestContext[ListResponse[ResourceType]], response_model_exclude_none=True)
+@router.get("", response_model=QueryResponseContext[ListResponse[ResourceType]], response_model_exclude_none=True)
 @inject
 async def get_resource_types(
     schema_loader: Annotated[LoadSchemas, Depends(Provide[ApplicationContainer.schema_loader])],
-) -> QueryRequestContext[ListResponse[ResourceType]]:
+) -> QueryResponseContext[ListResponse[ResourceType]]:
     """
     Get the list of resource types supported by the SCIM service.
 
@@ -54,12 +54,12 @@ async def get_resource_types(
     )
 
 
-@router.get("/{resource_id}", response_model=QueryRequestContext[ResourceType], response_model_exclude_none=True)
+@router.get("/{resource_id}", response_model=QueryResponseContext[ResourceType], response_model_exclude_none=True)
 @inject
 async def get_resource_type_by_id(
     schema_loader: Annotated[LoadSchemas, Depends(Provide[ApplicationContainer.schema_loader])],
     resource_id: str = Path(..., description="Resource type ID"),
-) -> QueryRequestContext[ResourceType]:
+) -> QueryResponseContext[ResourceType]:
     """
     Get a specific resource type by ID.
 
