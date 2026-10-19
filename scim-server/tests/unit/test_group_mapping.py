@@ -105,6 +105,26 @@ def test_get_group_mapping(udm_client: MockUdm, client: TestClient) -> None:
     assert expected_data == response.json()
 
 
+def test_get_group_mapping_with_no_members_omits_empty_members_list(udm_client: MockUdm, client: TestClient) -> None:
+    fake = Faker()
+
+    group = udm_client.add_raw_group(
+        {
+            **udm_properties,
+            "testExternalId": fake.uuid4(),
+            "createTimestamp": int(time.time()),
+            "modifyTimestamp": int(time.time()),
+            "univentionObjectIdentifier": fake.uuid4(),
+            "users": [],
+        }
+    )
+
+    response = client.get(f"/scim/v2/Groups/{group.properties['univentionObjectIdentifier']}")
+
+    assert response.status_code == 200
+    assert "members" not in response.json()
+
+
 def test_create_group_mapping(udm_client: MockUdm, client: TestClient) -> None:
     fake = Faker()
 
@@ -173,5 +193,6 @@ def test_get_group_with_invalid_member(udm_client: MockUdm, client: TestClient) 
     data = response.json()
 
     # Verify response data
-    # If mapping from UDM to SCIM we ignore invalid users/groups and just remove them from the list
-    assert len(data["members"]) == 0
+    # If mapping from UDM to SCIM we ignore invalid users/groups and just remove them from the list. An empty members
+    # list is omitted from the response.
+    assert "members" not in data
