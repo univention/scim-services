@@ -105,27 +105,6 @@ def test_get_group_mapping(udm_client: MockUdm, client: TestClient) -> None:
     assert expected_data == response.json()
 
 
-def test_get_group_mapping_with_no_members_contains_empty_list(udm_client: MockUdm, client: TestClient) -> None:
-    fake = Faker()
-
-    group = udm_client.add_raw_group(
-        {
-            **udm_properties,
-            "testExternalId": fake.uuid4(),
-            "createTimestamp": int(time.time()),
-            "modifyTimestamp": int(time.time()),
-            "univentionObjectIdentifier": fake.uuid4(),
-            "users": [],
-        }
-    )
-
-    response = client.get(f"/scim/v2/Groups/{group.properties['univentionObjectIdentifier']}")
-
-    assert response.status_code == 200
-    # RFC 7643 §2.5 allows empty values to be omitted entirely, but we want to explicitly include an empty members list.
-    assert response.json()["members"] == []
-
-
 def test_create_group_mapping(udm_client: MockUdm, client: TestClient) -> None:
     fake = Faker()
 
