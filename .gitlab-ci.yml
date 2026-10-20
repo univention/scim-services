@@ -87,6 +87,8 @@ check-debian-updates:
 test-unit-and-integration:
   stage: test
   extends: .dind
+  variables:
+    COMPOSE_FILE: "docker-compose.yml:docker-compose.ci.yml"
   image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
   rules: &rules_dind
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
@@ -108,7 +110,7 @@ test-unit-and-integration:
     - docker compose config test
     - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
   script:
-    - docker compose run --build --quiet-pull --name test-unit-and-integration test
+    - docker compose run --quiet-pull --name test-unit-and-integration test
   after_script:
     - docker logs ldap-server >& ldap-server.log
     - docker logs udm-rest-api >& udm-rest-api.log
@@ -132,6 +134,8 @@ test-unit-and-integration:
 test-scim2-compliance:
   stage: test
   extends: .dind
+  variables:
+    COMPOSE_FILE: "docker-compose.yml:docker-compose.ci.yml"
   image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
   rules: *rules_dind
   before_script:
@@ -162,6 +166,8 @@ test-helm-charts:
 test-scim-client:
   stage: test
   extends: .dind
+  variables:
+    COMPOSE_FILE: "docker-compose.yaml:docker-compose.ci.yaml"
   image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
   rules: *rules_dind
   before_script:
@@ -177,7 +183,7 @@ test-scim-client:
     - docker compose config test
     - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
   script:
-    - docker compose run --build --quiet-pull --name test-scim-client test
+    - docker compose run --quiet-pull --name test-scim-client test
   after_script:
     - cd scim-client/tests
     - docker cp test-scim-client:/tmp/pytest-junit.xml ../../pytest-junit-test-scim-client.xml
@@ -210,6 +216,8 @@ test-scim-client:
 test-scim-server-and-client-integration:
   stage: test
   extends: .dind
+  variables:
+    COMPOSE_FILE: "docker-compose.yaml:docker-compose.ci.yaml"
   image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
   rules: *rules_dind
   before_script:
@@ -225,7 +233,7 @@ test-scim-server-and-client-integration:
     - docker compose config test-integration
     - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
   script:
-    - docker compose run --build --quiet-pull --name test-integration-scim-services test-integration
+    - docker compose run --quiet-pull --name test-integration-scim-services test-integration
   after_script:
     - cd scim-client/tests
     - docker compose logs ldap-server >& ../../ldap-server.log

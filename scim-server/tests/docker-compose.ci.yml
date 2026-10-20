@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2026 Univention GmbH
+
+# CI runs the images the build stage pushed. Without build:, a failed pull fails the job instead of building silently.
+services:
+  test:
+    build: !reset null
+  scim-server:
+    build: !reset null
