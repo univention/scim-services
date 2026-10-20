@@ -15,7 +15,7 @@ RUN mkdir -p /opt/univention/scim-dev-server && mkdir -p /var/log
 RUN apt-get -qq update \
     && apt-get --assume-yes --verbose-versions --no-install-recommends install python3-pip \
     && rm -fr /var/lib/apt/lists/* /var/cache/apt/archives/* \
-    && pip3 install --no-cache-dir --break-system-packages scim2-server requests
+    && pip3 install --no-cache-dir --break-system-packages scim2-server==0.8.1 requests
 
 CMD ["nohup", \
      "scim2-server", \
