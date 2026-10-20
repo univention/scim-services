@@ -9,7 +9,7 @@ services:
       context: ../../
       dockerfile: docker/scim-server/Dockerfile
       target: test
-    #image: gitregistry.knut.univention.de/dev/projects/scim/scim-services/scim-server/testrunner:${IMAGE_TAG:-latest}
+    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/testrunner:${IMAGE_TAG:-latest}
     depends_on:
       udm-rest-api:
         condition: service_healthy
@@ -85,6 +85,7 @@ services:
       context: ../../
       dockerfile: docker/scim-server/Dockerfile
       target: final
+    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-server:${IMAGE_TAG:-latest}
     environment:
       UDM_URL: http://udm-rest-api:9979/udm/
       UDM_USERNAME: cn=admin

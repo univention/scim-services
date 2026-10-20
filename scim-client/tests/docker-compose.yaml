@@ -90,6 +90,7 @@ services:
       context: ../../
       dockerfile: docker/scim-server/Dockerfile
       target: final
+    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-server:${IMAGE_TAG:-latest}
     container_name: "scim-server"
     profiles:
       - test-integration
