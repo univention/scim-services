@@ -850,7 +850,7 @@ null
 			<td>scimServer.waitForDependency.image.tag</td>
 			<td>string</td>
 			<td><pre lang="json">
-"0.36.17@sha256:7bd68c29709d7519967fe507c47ebd88434ba8125a0793e0f77a55af0367da0d"
+"0.36.19@sha256:88431382301b8a05189b0a4211fdaaf075d0d5b9316a856714759cea478038ae"
 </pre>
 </td>
 			<td></td>
