@@ -11,6 +11,8 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
+/docs/*/_build/*
+/generated-config-doc.yml
 **/.coverage
 **/kyverno-test.yaml
 **/*.bkp
