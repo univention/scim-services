@@ -32,6 +32,40 @@ lint-pre-commit:
     # Compose lint would fail without the referenced env files
     - helm repo add bitnami https://charts.bitnami.com/bitnami
 
+generate-docs-pipeline-config:
+  stage: prepare
+  image:
+    name: docker-registry.knut.univention.de/knut/deb-builder@sha256:b1b9f7be8795fbc3e920d9a4bb2f7dddce85d032a06d0d885a78bf5a39222c7d
+    entrypoint: [""]
+  script:
+    - >
+      .gitlab-ci/doc-builder
+      --yaml .gitlab-ci/base-doc.yml
+      --out generated-config-doc.yml
+  rules:
+    - changes: &changes-docs
+        - "docs/**/*"
+  artifacts:
+    paths:
+      - generated-config-doc.yml
+
+trigger-docs:
+  stage: "build"
+  needs:
+    - job: generate-docs-pipeline-config
+  trigger:
+    strategy: "depend"
+    include:
+      - artifact: generated-config-doc.yml
+        job: generate-docs-pipeline-config
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: "never"
+    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
+      changes: *changes-docs
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      changes: *changes-docs
+
 .build-matrix: &build-matrix
   - IMAGE_NAME: "scim-server"
     BUILD_CONTEXT: $CI_PROJECT_DIR
