@@ -8,9 +8,11 @@ from pydantic import HttpUrl
 from scim2_client import RequestNetworkException, SCIMClientException
 from scim2_client.engines.httpx2 import SyncSCIMClient
 from scim2_models import (
+    Error,
     Group,
     Resource,
     ResourceType,
+    SCIMException,
     ScimPolicy,
     ScimProvider,
     SearchRequest,
@@ -34,6 +36,10 @@ class ScimClientNoDataFoundException(Exception): ...
 
 
 class ScimClientTooManyResultsException(Exception): ...
+
+
+class ScimClientInvalidServerResponseException(Exception):
+    """Raised when a server response isn't even a valid SCIM error."""
 
 
 class ScimClient:
@@ -206,11 +212,10 @@ class ScimClient:
         logger.info("Create SCIM resource {}", resource.external_id)
         logger.debug("Resource data:\n{}", cust_pformat(resource.model_dump()))
 
-        response = self.get_client().create(
-            target=resource,
-            expected_status_codes=[201],
-        )
+        response = self.get_client().create(target=resource)
+
         logger.debug("Response:\n{}", cust_pformat(response))
+        self._raise_for_response_error(response)
 
     def update_resource(self, resource: Resource) -> None:
         """
@@ -222,24 +227,19 @@ class ScimClient:
         logger.info("Update SCIM resource {}", resource.external_id)
         logger.debug("Resource data:\n{}", cust_pformat(resource.model_dump()))
 
-        response = self.get_client().replace(
-            target=resource,
-            expected_status_codes=[200],
-        )
+        response = self.get_client().replace(target=resource)
 
         logger.debug("Response:\n{}", cust_pformat(response))
+        self._raise_for_response_error(response)
 
     def delete_resource(self, id: str, resource_model: type[Resource]) -> None:
         """
         Deletes a SCIM resource by id.
         """
-        response = self.get_client().delete(
-            target=resource_model,
-            id=id,
-            expected_status_codes=[204],
-        )
+        response = self.get_client().delete(target=resource_model, id=id)
 
         logger.debug("Delete response:\n{}", cust_pformat(response))
+        self._raise_for_response_error(response)
 
     def get_resource(self, external_id: str, resource_model: type[Resource]) -> dict:
         """
@@ -259,12 +259,10 @@ class ScimClient:
             If more than one record with the given external_id is found.
         """
         search_request = SearchRequest(filter=f'externalId eq "{external_id}"')
-        response = self.get_client().query(
-            target=resource_model,
-            query_parameters=search_request,
-            expected_status_codes=[200],
-        )
+        response = self.get_client().query(target=resource_model, query_parameters=search_request)
+
         logger.debug("SCIM query response:\n{}", response)
+        self._raise_for_response_error(response)
 
         if response["totalResults"] == 0:
             raise ScimClientNoDataFoundException(f"No data found for record with external_id = {external_id}!")
@@ -287,6 +285,31 @@ class ScimClient:
         Returns the SCIM group data as a dict for the given external_id.
         """
         return self.get_resource(external_id, self.get_resource_model_for_topic("groups/group"))
+
+    def _raise_for_response_error(self, response: object) -> None:
+        """
+        Raise an exception if the response looks like an error.
+
+        Normally, the scim2_client library would do this for us, but since
+        we're using check_response_payload=False it skips this check.
+        """
+        if isinstance(response, dict):
+            if response.get("schemas") == [Error.__schema__]:
+                try:
+                    error = Error.model_validate(response)
+                except Exception as e:
+                    raise ScimClientInvalidServerResponseException(
+                        "error parsing response that looked like a SCIM error"
+                    ) from e
+                raise SCIMException.from_error(error)
+        elif isinstance(response, Resource):
+            logger.warning("Was expecting raw JSON response, but found already-parsed SCIM resource.")
+        elif isinstance(response, Error):
+            logger.warning("Was expecting raw JSON response, but found already-parsed SCIM error.")
+            raise SCIMException.from_error(response)
+        elif response is not None:
+            # None can be returned on success.
+            raise ScimClientInvalidServerResponseException(f"invalid SCIM payload {response}")
 
 
 class WireComScimClient(ScimClient):
@@ -317,11 +340,6 @@ class WireComScimClient(ScimClient):
                 if json_payload and "message" in json_payload:
                     logger.warning("Rewrite response to be SCIM RFC compliant")
                     e.response._content = json_payload["message"].encode()
-
-                # Keep the server error detail in the traceback stored in the Morgue.
-                if isinstance(json_payload, dict) and json_payload.get("detail"):
-                    e.add_note(f"SCIM server error: {json_payload['detail']}")
-                    raise
 
         http_client = Client(
             auth=self.auth,
