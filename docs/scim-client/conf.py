@@ -114,7 +114,7 @@ if "spelling" in sys.argv:
     spelling_show_suggestions = True
     spelling_word_list_filename = ["spelling_wordlist"]
 
-root_doc = "index"
+root_doc = "contents"
 
 intersphinx_mapping = {}
 

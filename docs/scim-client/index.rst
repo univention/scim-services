@@ -2,5 +2,8 @@
 
 .. SPDX-FileCopyrightText: 2026 Univention GmbH
 
-SCIM Client
-===========
+.. _introduction:
+
+************
+Introduction
+************
