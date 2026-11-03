@@ -38,7 +38,7 @@ def read_version_from_ci() -> str:
     return ""
 
 
-release = read_version_from_ci()
+release = doc_target_version(read_version_from_ci())
 version = release
 project = f"SCIM Client for Nubus documentation {release}".rstrip()
 author = "Univention GmbH"
@@ -87,8 +87,15 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 #
 html_theme = "univention_sphinx_book_theme"
 
+doc_base = os.path.basename(os.path.dirname(__file__))
+
 html_theme_options = {
     "show_source_license": True,
+    "typesense_search": True,
+    "typesense_document": doc_base,
+    "typesense_document_version": release,
+    "univention_matomo_tracking": True,
+    "univention_docs_deployment": True,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -114,3 +121,13 @@ intersphinx_mapping = {}
 linkcheck_ignore = []
 
 git_untracked_show_sourcelink = True
+# See Univention Sphinx Extension for its options.
+# https://git.knut.univention.de/univention/documentation/univention_sphinx_extension
+# Information about the feedback link.
+univention_feedback = True
+# Information about the license statement for the source files
+univention_pdf_show_source_license = True
+univention_doc_basename = doc_base
+univention_use_doc_base = True
+univention_project_basename = doc_base
+univention_release_language_scheme = "{release}"
