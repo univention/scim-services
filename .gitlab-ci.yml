@@ -1,6 +1,25 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+.changes-container:
+  changes: &changes-container
+    - ".gitlab-ci.yml"
+    - ".gitlab-ci/**/*"
+    - ".pre-commit-config.yaml"
+    - "docker/**/*"
+    - "docker-compose.yaml"
+    - "helm/**/*"
+    - "pyproject.toml"
+    - "scim-client/**/*"
+    - "scim-server/**/*"
+    - "scim-udm-transformer-lib/**/*"
+    - "scripts/**/*"
+    - "sonar-project.properties"
+    - "tests/**/*"
+    - "Tiltfile"
+    - "tilt-values.yaml"
+    - "uv.lock"
+
 include:
   - project: "univention/dev/nubus-for-k8s/common-ci"
     ref: "v1.72.0"
@@ -10,15 +29,12 @@ include:
       - "jobs/lint-pre-commit.yaml"
       - "jobs/lint-commit-messages.yaml"
       - "jobs/semantic-release-env.yaml"
-      - "jobs/container-build-external-buildkit.yaml"
-      - "jobs/package-and-publish-helm-charts-external.yaml"
-      - "jobs/check-debian-updates.yaml"
-      - "templates/compose-test.yaml"
 
-  - component: "$CI_SERVER_FQDN/univention/dev/nubus-for-k8s/common-ci/vul-man@v1.72.0"
-    inputs:
-      helm_chart_name: "scim-client"
-      helm_values: "--helm-values ${CI_PROJECT_DIR}/helm/scim-client/linter_values.yaml"
+  - local: ".gitlab-ci/product-jobs.yml"
+    rules:
+      - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+        changes: *changes-container
+      - if: '$CI_PIPELINE_SOURCE != "merge_request_event"'
 
 variables:
   RENOVATE_USER_ID: "1393"
@@ -61,177 +77,3 @@ trigger-docs:
       changes: *changes-docs
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       changes: *changes-docs
-
-.build-matrix: &build-matrix
-  - IMAGE_NAME: "scim-server"
-    BUILD_CONTEXT: $CI_PROJECT_DIR
-    DOCKERFILE_PATH: "docker/scim-server/Dockerfile"
-  - IMAGE_NAME: "testrunner"
-    BUILD_CONTEXT: $CI_PROJECT_DIR
-    DOCKERFILE_PATH: "docker/scim-server/Dockerfile"
-    BUILD_TARGET: "test"
-  - IMAGE_NAME: "scim-client-testrunner"
-    BUILD_CONTEXT: $CI_PROJECT_DIR
-    DOCKERFILE_PATH: "docker/scim-client/Dockerfile"
-    BUILD_TARGET: "test"
-  - IMAGE_NAME: "scim-client"
-    BUILD_CONTEXT: $CI_PROJECT_DIR
-    DOCKERFILE_PATH: "docker/scim-client/Dockerfile"
-  - IMAGE_NAME: "scim-dev-server"
-    BUILD_CONTEXT: $CI_PROJECT_DIR
-    DOCKERFILE_PATH: "docker/scim-dev-server/Dockerfile"
-
-# Separate publish matrix to accomodate testrunner images
-# that should not be mirrored to artifacts.software-univention.de
-.publish-matrix: &publish-matrix
-  - IMAGE_NAME:
-      - "scim-server"
-      - "scim-client"
-
-container-build:
-  parallel:
-    matrix: *build-matrix
-
-container-malware-scan:
-  parallel:
-    matrix: *publish-matrix
-
-push-image-external:
-  parallel:
-    matrix: *publish-matrix
-
-container-sign-external:
-  parallel:
-    matrix: *publish-matrix
-
-container-release-attestation:
-  parallel:
-    matrix: *publish-matrix
-
-check-debian-updates:
-  parallel:
-    matrix: *build-matrix
-  variables:
-    TARGET_IMAGE: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:latest"
-
-test-unit-and-integration:
-  extends: ".compose-test"
-  stage: test
-  variables:
-    COMPOSE_TEST_DIR: "scim-server/tests"
-    COMPOSE_FILE: "docker-compose.yml:docker-compose.ci.yml"
-    COMPOSE_TEST_SERVICES: "ldap-server udm-rest-api"
-    COMPOSE_TEST_WAIT_TIMEOUT: "180"
-  script:
-    - docker compose run --quiet-pull --name test-unit-and-integration test
-  after_script:
-    # The template unsets the inherited DOCKER_API_VERSION only in its own steps.
-    - unset DOCKER_API_VERSION
-    - docker cp test-unit-and-integration:/tmp/scim-coverage.xml ./coverage-test-unit-and-integration.xml
-    - docker cp test-unit-and-integration:/tmp/pytest-junit.xml ./pytest-junit-test-unit-and-integration.xml
-    - !reference [".compose-test", "after_script"]
-  artifacts:
-    paths:
-      - compose-logs/
-      - coverage-test-unit-and-integration.xml
-      - pytest-junit-test-unit-and-integration.xml
-    reports:
-      junit: pytest-junit-test-unit-and-integration.xml
-
-test-scim2-compliance:
-  extends: ".compose-test"
-  stage: test
-  variables:
-    COMPOSE_TEST_DIR: "scim-server/tests"
-    COMPOSE_FILE: "docker-compose.yml:docker-compose.ci.yml"
-    COMPOSE_TEST_SERVICES: "ldap-server udm-rest-api scim-server"
-    COMPOSE_TEST_WAIT_TIMEOUT: "180"
-  script:
-    - docker compose run scim2-tester | tee scim2-tester.log 2>&1
-  artifacts:
-    paths:
-      - compose-logs/
-      - scim-server/tests/scim2-tester.log
-
-test-helm-charts:
-  stage: test
-  image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/common-helm/testrunner:0.29.10@sha256:5cba2a8fc4c6d5fa82bcec177ad433ab74695b4e02b2a2e9ed9b53c734b34dbf
-  script:
-    - helm dep build helm/scim-server
-    - helm dep build helm/scim-client
-    - pytest tests/helm_unit/scim_server
-    - pytest tests/helm_unit/scim_client
-
-test-scim-client:
-  extends: ".compose-test"
-  stage: test
-  variables:
-    COMPOSE_TEST_DIR: "scim-client/tests"
-    COMPOSE_FILE: "docker-compose.yaml:docker-compose.ci.yaml"
-    COMPOSE_PROFILES: "dependencies-reference-server"
-    COMPOSE_TEST_WAIT_TIMEOUT: "180"
-  script:
-    - docker compose --profile test-reference-server run --quiet-pull --name test-scim-client test-against-reference-server
-  after_script:
-    # The template unsets the inherited DOCKER_API_VERSION only in its own steps.
-    - unset DOCKER_API_VERSION
-    - docker cp test-scim-client:/tmp/pytest-junit.xml ./pytest-junit-test-scim-client.xml
-    - docker cp test-scim-client:/tmp/scim-coverage.xml ./coverage-test-scim-client.xml
-    - !reference [".compose-test", "after_script"]
-  artifacts:
-    paths:
-      - compose-logs/
-      - coverage-test-scim-client.xml
-      - pytest-junit-test-scim-client.xml
-    reports:
-      junit: pytest-junit-test-scim-client.xml
-
-test-scim-server-and-client-integration:
-  extends: ".compose-test"
-  stage: test
-  variables:
-    COMPOSE_TEST_DIR: "scim-client/tests"
-    COMPOSE_FILE: "docker-compose.yaml:docker-compose.ci.yaml"
-    COMPOSE_PROFILES: "dependencies-univention-server"
-    COMPOSE_TEST_WAIT_TIMEOUT: "180"
-  script:
-    - docker compose --profile test-univention-server run --quiet-pull --name test-integration-scim-services test-against-univention-server
-
-test-scim-client-and-wire-com-integration:
-  extends: ".compose-test"
-  stage: test
-  rules:
-    - when: manual
-      allow_failure: true
-  variables:
-    COMPOSE_TEST_DIR: "scim-client/tests"
-    COMPOSE_FILE: "docker-compose.yaml:docker-compose.ci.yaml"
-    COMPOSE_PROFILES: "dependencies-reference-server"
-    COMPOSE_TEST_WAIT_TIMEOUT: "180"
-  script:
-    - docker compose --profile test-reference-server run --quiet-pull --name test-scim-client-against-wire-com test-against-wire-com
-
-sonarqube-scan:
-  stage: analysis
-  # needs:
-    #- test-unit-and-integration
-    #- test-scim-client
-  when: always # Runs the job even if a earlier job in the stage fails.
-  image:
-      name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/sonarsource/sonar-scanner-cli:11
-      entrypoint: [""]
-  variables:
-    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
-    GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
-  cache:
-    policy: pull-push
-    key: "sonar-cache-$CI_COMMIT_REF_SLUG"
-    paths:
-      - "${SONAR_USER_HOME}/cache"
-      - sonar-scanner/
-  script:
-    - sonar-scanner -Dsonar.host.url="${SONAR_HOST_URL}"
-  allow_failure: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_PROTECTED == "true"
