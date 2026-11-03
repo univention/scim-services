@@ -1,15 +1,17 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-# SPDX-FileCopyrightText: 2025 Univention GmbH
+# SPDX-FileCopyrightText: 2026 Univention GmbH
+
+from typing import Annotated
 
 import httpx2
-from pydantic import PrivateAttr
+from pydantic import HttpUrl, PrivateAttr, UrlConstraints
 from pydantic_settings import BaseSettings
 
 from univention.scim.client.authentication import AuthMethod, get_auth
 
 
 class ScimConsumerSettings(BaseSettings):
-    scim_server_base_url: str
+    scim_server_base_url: Annotated[HttpUrl, UrlConstraints(host_required=True)]
     scim_auth_method: AuthMethod
     provisioning_db: str
     # Disabled by default: get_client() runs the check on every access, which adds

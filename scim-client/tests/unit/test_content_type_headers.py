@@ -91,7 +91,7 @@ def test_scim_client_preserves_auth_for_any_configured_method(auth_method: str) 
             call_kwargs: dict[str, Any] = mock_client.call_args[1]
 
             assert call_kwargs["auth"] == mock_auth
-            assert str(call_kwargs["base_url"]) == settings_with_auth.scim_server_base_url
+            assert str(call_kwargs["base_url"]) == str(settings_with_auth.scim_server_base_url)
             assert call_kwargs["headers"]["Accept"] == "application/scim+json"
             assert call_kwargs["headers"]["Content-Type"] == "application/scim+json"
 
@@ -115,6 +115,6 @@ def test_scim_client_no_auth_when_method_is_none(settings: ScimConsumerSettings)
             call_kwargs: dict[str, Any] = mock_client.call_args[1]
 
             assert call_kwargs["auth"] is None
-            assert str(call_kwargs["base_url"]) == settings.scim_server_base_url
+            assert str(call_kwargs["base_url"]) == str(settings.scim_server_base_url)
             assert call_kwargs["headers"]["Accept"] == "application/scim+json"
             assert call_kwargs["headers"]["Content-Type"] == "application/scim+json"

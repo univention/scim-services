@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-# SPDX-FileCopyrightText: 2025 Univention GmbH
+# SPDX-FileCopyrightText: 2026 Univention GmbH
 
 
 from httpx2 import Auth, Client, HTTPStatusError
 from loguru import logger
+from pydantic import HttpUrl
 from scim2_client import RequestNetworkException, SCIMClientException
 from scim2_client.engines.httpx2 import SyncSCIMClient
 from scim2_models import Resource, ResourceType, SearchRequest, ServiceProviderConfig
@@ -27,15 +28,21 @@ class ScimClientTooManyResultsException(Exception): ...
 
 
 class ScimClient:
-    _scim_client: SyncSCIMClient | None = None
+    """
+    SCIM client wrapper.
 
-    def __init__(
-        self,
-        auth: Auth | None,
-        settings: ScimConsumerSettings,
-    ):
+    Wrapper class around a SCIM client that configures it with our settings.
+
+    The underlying client is configured with check_response_content_type=False
+    and check_response_payload=False, which means on the one hand that
+    responses are not validated, but also that they return raw dicts parsed
+    from JSON rather than objects inheriting from scim2_models.Resource.
+    """
+
+    def __init__(self, auth: Auth | None, settings: ScimConsumerSettings):
         self.settings = settings
         self.auth = auth
+        self._scim_client: SyncSCIMClient | None = None
 
     def _create_client(self) -> SyncSCIMClient:
         """
@@ -47,41 +54,13 @@ class ScimClient:
         """
         logger.info("Connect to SCIM server ({}).", self.settings.scim_server_base_url)
 
-        def manipulate_response_to_be_RFC_compliant(response):
-            try:
-                response.raise_for_status()
-            except HTTPStatusError as e:
-                if e.response.status_code == 404:
-                    return
-
-                e.response.read()
-                json_payload = e.response.json()
-                if json_payload and "message" in json_payload:
-                    logger.warning("Rewrite response to be SCIM RFC compliant")
-                    e.response._content = json_payload["message"].encode()
-
-                # Keep the server error detail in the traceback stored in the Morgue.
-                if isinstance(json_payload, dict) and json_payload.get("detail"):
-                    e.add_note(f"SCIM server error: {json_payload['detail']}")
-                    raise
-
-        client = Client(
-            auth=self.auth,
-            base_url=self.settings.scim_server_base_url,
-            headers={
-                "Accept": "application/scim+json",
-                "Content-Type": "application/scim+json",
-            },
-            event_hooks={"response": [manipulate_response_to_be_RFC_compliant]},
-        )
-
-        scim = SyncSCIMClient(client=client, check_response_content_type=False)
+        http_client, scim_client = self._make_clients()
 
         try:
-            scim.discover(schemas=True, service_provider_config=False, resource_types=True)
+            scim_client.discover(schemas=True, service_provider_config=False, resource_types=True)
         except RequestNetworkException:
             # Let task processing retry instead of caching incomplete capabilities.
-            client.close()
+            http_client.close()
             raise
         except SCIMClientException as e:
             logger.warning(
@@ -91,9 +70,9 @@ class ScimClient:
             )
 
         try:
-            scim.discover(schemas=False, service_provider_config=True, resource_types=False)
+            scim_client.discover(schemas=False, service_provider_config=True, resource_types=False)
         except RequestNetworkException:
-            client.close()
+            http_client.close()
             raise
         except SCIMClientException as e:
             logger.warning(
@@ -102,7 +81,7 @@ class ScimClient:
                 error=str(e),
             )
 
-        service_provider_config = scim.service_provider_config
+        service_provider_config = scim_client.provider.config
 
         if service_provider_config is None:
             logger.warning(
@@ -117,16 +96,30 @@ class ScimClient:
 
         self._verify_auth_scheme(service_provider_config)
 
-        if scim.get_resource_model("User") is None:
+        if scim_client.get_resource_model("User") is None:
             logger.warning("Scim server does not support User resource.", capability="User resource type")
 
-        if scim.get_resource_model("Group") is None:
+        if scim_client.get_resource_model("Group") is None:
             if self.settings.group_sync_enabled:
                 logger.warning("Scim server does not support Group resource.", capability="Group resource type")
             else:
                 logger.info("Scim server does not support Group resource. Continuing in users-only mode.")
 
-        return scim
+        return scim_client
+
+    def _make_clients(self) -> tuple[Client, SyncSCIMClient]:
+        http_client = Client(
+            auth=self.auth,
+            base_url=str(self.settings.scim_server_base_url),
+            headers={
+                "Accept": "application/scim+json",
+                "Content-Type": "application/scim+json",
+            },
+        )
+        scim_client = SyncSCIMClient(
+            client=http_client, check_response_content_type=False, check_response_payload=False
+        )
+        return http_client, scim_client
 
     def _verify_auth_scheme(self, service_provider_config: ServiceProviderConfig | None) -> None:
         """
@@ -206,7 +199,6 @@ class ScimClient:
 
         response = self.get_client().create(
             target=resource,
-            check_response_payload=False,
             expected_status_codes=[201],
         )
         logger.debug("Response:\n{}", cust_pformat(response))
@@ -223,7 +215,6 @@ class ScimClient:
 
         response = self.get_client().replace(
             target=resource,
-            check_response_payload=False,
             expected_status_codes=[200],
         )
 
@@ -236,7 +227,6 @@ class ScimClient:
         response = self.get_client().delete(
             target=resource_model,
             id=id,
-            check_response_payload=False,
             expected_status_codes=[204],
         )
 
@@ -263,7 +253,6 @@ class ScimClient:
         response = self.get_client().query(
             target=resource_model,
             query_parameters=search_request,
-            check_response_payload=False,
             expected_status_codes=[200],
         )
         logger.debug("SCIM query response:\n{}", response)
@@ -289,3 +278,71 @@ class ScimClient:
         Returns the SCIM group data as a dict for the given external_id.
         """
         return self.get_resource(external_id, self.get_resource_model_for_topic("groups/group"))
+
+
+class WireComScimClient(ScimClient):
+    """
+    SCIM client with quirks for wire.com.
+
+    wire.com's SCIM server is not standard-compliant in a few ways that would
+    break our client. This class implements workarounds.
+    """
+
+    def __init__(self, auth: Auth | None, settings: ScimConsumerSettings):
+        if not _is_wire_com_base_url(settings.scim_server_base_url):
+            logger.warning(
+                "Using a wire.com-specific client for non-wire.com base URL.", base_url=settings.scim_server_base_url
+            )
+        super().__init__(auth, settings)
+
+    def _make_clients(self) -> tuple[Client, SyncSCIMClient]:
+        def manipulate_response_to_be_RFC_compliant(response):
+            try:
+                response.raise_for_status()
+            except HTTPStatusError as e:
+                if e.response.status_code == 404:
+                    return
+
+                e.response.read()
+                json_payload = e.response.json()
+                if json_payload and "message" in json_payload:
+                    logger.warning("Rewrite response to be SCIM RFC compliant")
+                    e.response._content = json_payload["message"].encode()
+
+                # Keep the server error detail in the traceback stored in the Morgue.
+                if isinstance(json_payload, dict) and json_payload.get("detail"):
+                    e.add_note(f"SCIM server error: {json_payload['detail']}")
+                    raise
+
+        http_client = Client(
+            auth=self.auth,
+            base_url=str(self.settings.scim_server_base_url),
+            headers={
+                "Accept": "application/scim+json",
+                "Content-Type": "application/scim+json",
+            },
+            event_hooks={"response": [manipulate_response_to_be_RFC_compliant]},
+        )
+
+        scim_client = SyncSCIMClient(
+            client=http_client,
+            check_response_content_type=False,
+            check_response_payload=False,
+        )
+        return http_client, scim_client
+
+
+def make_scim_client(auth: Auth | None, settings: ScimConsumerSettings) -> ScimClient:
+    """
+    Create a SCIM client.
+
+    Returns the correct subclass based on base URL.
+    """
+    client_class = ScimClient
+    if _is_wire_com_base_url(settings.scim_server_base_url):
+        client_class = WireComScimClient
+    return client_class(auth, settings)
+
+
+def _is_wire_com_base_url(url: HttpUrl) -> bool:
+    return bool(url.host and url.host.endswith("wire.com"))

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0-only
-# SPDX-FileCopyrightText: 2025 Univention GmbH
+# SPDX-FileCopyrightText: 2026 Univention GmbH
 
 import asyncio
 
@@ -13,8 +13,9 @@ from univention.provisioning.consumer.api import (
 
 from univention.provisioning.error_handling.db import DBSession, initialize_db
 from univention.scim.client.group_membership_resolver import GroupMembershipLdapResolver, LdapSettings
-from univention.scim.client.scim_client import ScimClient, ScimConsumer
+from univention.scim.client.scim_client import ScimConsumer
 from univention.scim.client.scim_client_settings import get_scim_consumer_settings
+from univention.scim.client.scim_http_client import make_scim_client
 
 
 async def main() -> None:
@@ -31,7 +32,7 @@ async def main() -> None:
         logger.error("Failed to initialize database. Shutting down.")
         raise
 
-    scim_client = ScimClient(settings.auth, settings)
+    scim_client = make_scim_client(settings.auth, settings)
     try:
         scim_client.get_client()  # eager connect + capability verification
     except RequestNetworkException as exc:
