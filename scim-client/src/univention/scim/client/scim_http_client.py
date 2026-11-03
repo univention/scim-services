@@ -7,7 +7,16 @@ from loguru import logger
 from pydantic import HttpUrl
 from scim2_client import RequestNetworkException, SCIMClientException
 from scim2_client.engines.httpx2 import SyncSCIMClient
-from scim2_models import Resource, ResourceType, SearchRequest, ServiceProviderConfig
+from scim2_models import (
+    Group,
+    Resource,
+    ResourceType,
+    ScimPolicy,
+    ScimProvider,
+    SearchRequest,
+    ServiceProviderConfig,
+    User,
+)
 
 from univention.scim.client.authentication import required_scim_scheme_types
 from univention.scim.client.helper import cust_pformat
@@ -324,10 +333,12 @@ class WireComScimClient(ScimClient):
             event_hooks={"response": [manipulate_response_to_be_RFC_compliant]},
         )
 
+        # wire.com's schema discovery is broken because their /ServiceProviderConfig endpoint returns an invalid schemas
+        # array and extensions are missing from /Schemas. Provide the basic user and group models here explicitly so the
+        # client skips schema discovery. Use a policy to keep any unknown attributes from their extensions.
+        provider = ScimProvider(models=[User, Group], policy=ScimPolicy(unknown=ScimPolicy.Unknown.keep))
         scim_client = SyncSCIMClient(
-            client=http_client,
-            check_response_content_type=False,
-            check_response_payload=False,
+            client=http_client, check_response_content_type=False, check_response_payload=False, provider=provider
         )
         return http_client, scim_client
 
