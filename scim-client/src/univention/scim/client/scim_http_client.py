@@ -2,6 +2,8 @@
 # SPDX-FileCopyrightText: 2026 Univention GmbH
 
 
+import json
+
 from httpx2 import Auth, Client, HTTPStatusError
 from loguru import logger
 from pydantic import HttpUrl
@@ -328,18 +330,18 @@ class WireComScimClient(ScimClient):
         super().__init__(auth, settings)
 
     def _make_clients(self) -> tuple[Client, SyncSCIMClient]:
-        def manipulate_response_to_be_RFC_compliant(response):
+        def wrap_non_json_response_in_scim_error(response):
             try:
                 response.raise_for_status()
             except HTTPStatusError as e:
-                if e.response.status_code == 404:
-                    return
-
-                e.response.read()
-                json_payload = e.response.json()
-                if json_payload and "message" in json_payload:
-                    logger.warning("Rewrite response to be SCIM RFC compliant")
-                    e.response._content = json_payload["message"].encode()
+                # For error responses, make sure the content actually parses as JSON. Wrap into a SCIM error otherwise.
+                try:
+                    e.response.read()
+                    e.response.json()
+                except json.JSONDecodeError:
+                    logger.warning("Response didn't parse as JSON, wrapping it in a SCIM error.")
+                    error = Error(status=response.status_code, detail=e.response.text)
+                    e.response._content = error.model_dump_json().encode()
 
         http_client = Client(
             auth=self.auth,
@@ -348,7 +350,7 @@ class WireComScimClient(ScimClient):
                 "Accept": "application/scim+json",
                 "Content-Type": "application/scim+json",
             },
-            event_hooks={"response": [manipulate_response_to_be_RFC_compliant]},
+            event_hooks={"response": [wrap_non_json_response_in_scim_error]},
         )
 
         # wire.com's schema discovery is broken because their /ServiceProviderConfig endpoint returns an invalid schemas
