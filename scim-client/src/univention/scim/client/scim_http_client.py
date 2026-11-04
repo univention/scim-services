@@ -296,7 +296,7 @@ class ScimClient:
         we're using check_response_payload=False it skips this check.
         """
         if isinstance(response, dict):
-            if response.get("schemas") == [Error.__schema__]:
+            if Error.__schema__ in response.get("schemas", []):
                 try:
                     error = Error.model_validate(response)
                 except Exception as e:
@@ -376,4 +376,6 @@ def make_scim_client(auth: Auth | None, settings: ScimConsumerSettings) -> ScimC
 
 
 def _is_wire_com_base_url(url: HttpUrl) -> bool:
-    return bool(url.host and url.host.endswith("wire.com"))
+    if not url.host:
+        return False
+    return url.host == "wire.com" or url.host.endswith(".wire.com")

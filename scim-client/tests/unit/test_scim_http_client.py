@@ -33,7 +33,9 @@ class TestMakeScimClient:
         return shc.WireComScimClient
 
     @pytest.mark.parametrize("scheme", ["http", "https"])
-    @pytest.mark.parametrize("url_tail", ["some.host.org/and/a/path", "some.host.org", "1.2.3.4/and/a/path", "1.2.3.4"])
+    @pytest.mark.parametrize(
+        "url_tail", ["some.host.org/and/a/path", "some.host.org", "1.2.3.4/and/a/path", "1.2.3.4", "notwire.com"]
+    )
     def test_returns_basic_client(self, mocked_scim_client, scheme, url_tail):
         url = f"{scheme}://{url_tail}"
         settings = scs.ScimConsumerSettings(scim_server_base_url=url)  # pyright: ignore[reportCallIssue]
@@ -43,7 +45,17 @@ class TestMakeScimClient:
 
     @pytest.mark.parametrize("scheme", ["http", "https"])
     @pytest.mark.parametrize(
-        "url_tail", ["wire.com/and/a/path", "wire.com", "some.subdomain.wire.com/and/a/path", "some.subdomain.wire.com"]
+        "url_tail",
+        [
+            "wire.com",
+            "wire.com/and/a/path",
+            "some.subdomain.wire.com",
+            "some.subdomain.wire.com/and/a/path",
+            "wire.com:1234",
+            "wire.com:1234/and/a/path",
+            "some.subdomain.wire.com:1234",
+            "some.subdomain.wire.com:1234/and/a/path",
+        ],
     )
     def test_returns_wire_com_client_for_wire_com_urls(self, mocked_wire_com_scim_client, scheme, url_tail):
         url = f"{scheme}://{url_tail}"
