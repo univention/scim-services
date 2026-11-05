@@ -1,0 +1,674 @@
+:Name: ``scim-client``
+:Version: ``0.49.0``
+:Description: A Helm chart for the Nubus SCIM client
+
+You find the configuration options for ``scim-client`` in the following sections.
+
+.. _helm-ref-scim-client-additionalannotations:
+
+``additionalAnnotations``
+-------------------------
+
+.. envvar:: scim-client:additionalAnnotations
+
+   .. note:: ``scim-client`` is a prefix to avoid name clashes for documentation cross-references.
+      In your :file:`values.yaml` file, use the key ``additionalAnnotations``.
+
+
+   Additional custom annotations to add to all deployed objects.
+
+   **Default value**: ``{}``
+
+.. _helm-ref-scim-client-additionallabels:
+
+``additionalLabels``
+--------------------
+
+.. envvar:: scim-client:additionalLabels
+
+   .. note:: ``scim-client`` is a prefix to avoid name clashes for documentation cross-references.
+      In your :file:`values.yaml` file, use the key ``additionalLabels``.
+
+
+   Additional custom labels to add to all deployed objects.
+
+   **Default value**: ``{}``
+
+.. _helm-ref-scim-client-containersecuritycontext:
+
+``containerSecurityContext``
+----------------------------
+
+.. envvar:: containerSecurityContext.allowPrivilegeEscalation
+
+
+   Enable container privileged escalation.
+
+   **Default value**: ``false``
+
+
+.. envvar:: containerSecurityContext.capabilities.drop
+
+
+   .. FIXME: Add documentation string for containerSecurityContext.capabilities.drop.
+
+   **Default value**: ``["ALL"]``
+
+
+.. envvar:: containerSecurityContext.enabled
+
+
+   Enable security context.
+
+   **Default value**: ``true``
+
+
+.. envvar:: containerSecurityContext.privileged
+
+
+   .. FIXME: Add documentation string for containerSecurityContext.privileged.
+
+   **Default value**: ``false``
+
+
+.. envvar:: containerSecurityContext.readOnlyRootFilesystem
+
+
+   Mounts the container's root file system as read-only.
+
+   **Default value**: ``true``
+
+
+.. envvar:: containerSecurityContext.runAsGroup
+
+
+   Process group id.
+
+   **Default value**: ``1000``
+
+
+.. envvar:: containerSecurityContext.runAsNonRoot
+
+
+   Run container as a user.
+
+   **Default value**: ``true``
+
+
+.. envvar:: containerSecurityContext.runAsUser
+
+
+   Process user id.
+
+   **Default value**: ``1000``
+
+
+.. envvar:: containerSecurityContext.seccompProfile.type
+
+
+   Disallow custom Seccomp profile by setting it to RuntimeDefault.
+
+   **Default value**: ``"RuntimeDefault"``
+
+.. _helm-ref-scim-client-extraenvvars:
+
+``extraEnvVars``
+----------------
+
+.. envvar:: extraEnvVars
+
+
+   Array with extra environment variables to add to containers. # extraEnvVars:   - name: FOO     value: "bar"
+
+   **Default value**: ``[]``
+
+.. _helm-ref-scim-client-extravolumemounts:
+
+``extraVolumeMounts``
+---------------------
+
+.. envvar:: extraVolumeMounts
+
+
+   Optionally specify an extra list of additional volumeMounts.
+
+   **Default value**: ``[]``
+
+.. _helm-ref-scim-client-extravolumes:
+
+``extraVolumes``
+----------------
+
+.. envvar:: extraVolumes
+
+
+   Optionally specify an extra list of additional volumes.
+
+   **Default value**: ``[]``
+
+.. _helm-ref-scim-client-global:
+
+``global``
+----------
+
+.. envvar:: global.imagePullPolicy
+
+
+   Define an ImagePullPolicy. # Ref.: https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy #
+
+   **Default value**: ``null``
+
+
+.. envvar:: global.imagePullSecrets
+
+
+   Credentials to fetch images from private registry. Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ # imagePullSecrets:   - "docker-registry"
+
+   **Default value**: ``[]``
+
+
+.. envvar:: global.imageRegistry
+
+
+   Container registry address.
+
+   **Default value**:
+
+   .. code-block:: json
+
+      "artifacts.software-univention.de"
+
+
+
+.. envvar:: scim-client:global.secrets.masterPassword
+
+   .. note:: ``scim-client`` is a prefix to avoid name clashes for documentation cross-references.
+      In your :file:`values.yaml` file, use the key ``global.secrets.masterPassword``.
+
+
+   .. FIXME: Add documentation string for global.secrets.masterPassword.
+
+   **Default value**: ``null``
+
+.. _helm-ref-scim-client-ldap:
+
+``ldap``
+--------
+
+.. envvar:: ldap.auth.bindDn
+
+
+   Bind distinguished name to authenticate with the LDAP Server.
+
+   **Default value**: ``null``
+
+
+.. envvar:: ldap.auth.existingSecret.keyMapping.password
+
+
+   The key to retrieve the password from. Setting this value allows to use a key with a different name.
+
+   **Default value**: ``null``
+
+
+.. envvar:: ldap.auth.existingSecret.name
+
+
+   The name of an existing Secret to use for retrieving the password to authenticate with the source LDAP directory. # "udm.auth.password" will be ignored if this value is set.
+
+   **Default value**: ``null``
+
+
+.. envvar:: ldap.auth.password
+
+
+   The password used to authenticate with the LDAP Server. Either this value or an existing Secret has to be specified.
+
+   **Default value**: ``null``
+
+
+.. envvar:: ldap.connection.host
+
+
+   LDAP Server hostname (e.g. "nubus-ldap-server")
+
+   **Default value**: ``null``
+
+.. _helm-ref-scim-client-podsecuritycontext:
+
+``podSecurityContext``
+----------------------
+
+.. envvar:: podSecurityContext.enabled
+
+
+   Enable security context.
+
+   **Default value**: ``true``
+
+
+.. envvar:: podSecurityContext.fsGroup
+
+
+   If specified, all processes of the container are also part of the supplementary group.
+
+   **Default value**: ``1000``
+
+
+.. envvar:: podSecurityContext.fsGroupChangePolicy
+
+
+   Change ownership and permission of the volume before being exposed inside a Pod.
+
+   **Default value**: ``"Always"``
+
+
+.. envvar:: podSecurityContext.sysctls
+
+
+   Allow binding to ports below 1024 without root access.
+
+   **Default value**:
+
+   .. code-block:: json
+
+      [{"name": "net.ipv4.ip_unprivileged_port_start", "value": "1"}]
+
+
+.. _helm-ref-scim-client-probes:
+
+``probes``
+----------
+
+.. envvar:: probes.liveness.enabled
+
+
+   Enable liveness probe
+
+   **Default value**: ``true``
+
+
+.. envvar:: probes.liveness.exec.command
+
+
+   .. FIXME: Add documentation string for probes.liveness.exec.command.
+
+   **Default value**:
+
+   .. code-block:: json
+
+      ["/bin/sh", "-c", "pgrep -f scim-client"]
+
+
+
+.. envvar:: probes.liveness.initialDelaySeconds
+
+
+   .. FIXME: Add documentation string for probes.liveness.initialDelaySeconds.
+
+   **Default value**: ``30``
+
+
+.. envvar:: probes.liveness.periodSeconds
+
+
+   .. FIXME: Add documentation string for probes.liveness.periodSeconds.
+
+   **Default value**: ``10``
+
+
+.. envvar:: probes.readiness.enabled
+
+
+   Enable readiness probe
+
+   **Default value**: ``true``
+
+
+.. envvar:: probes.readiness.exec.command
+
+
+   .. FIXME: Add documentation string for probes.readiness.exec.command.
+
+   **Default value**:
+
+   .. code-block:: json
+
+      ["/bin/sh", "-c", "pgrep -f scim-client"]
+
+
+
+.. envvar:: probes.readiness.initialDelaySeconds
+
+
+   .. FIXME: Add documentation string for probes.readiness.initialDelaySeconds.
+
+   **Default value**: ``5``
+
+
+.. envvar:: probes.readiness.periodSeconds
+
+
+   .. FIXME: Add documentation string for probes.readiness.periodSeconds.
+
+   **Default value**: ``5``
+
+.. _helm-ref-scim-client-provisioningapi:
+
+``provisioningApi``
+-------------------
+
+.. envvar:: provisioningApi.auth.existingSecret.keyMapping.password
+
+
+   The key to retrieve the password from. Setting this value allows to use a key with a different name.
+
+   **Default value**: ``null``
+
+
+.. envvar:: provisioningApi.auth.existingSecret.name
+
+
+   The name of an existing Secret to use for retrieving the password to authenticate with the Provisioning API. # "provisioningApi.auth.password" will be ignored if this value is set.
+
+   **Default value**: ``null``
+
+
+.. envvar:: provisioningApi.auth.password
+
+
+   The password used to authenticate with the Provisioning API. Either this value or an existing Secret has to be specified.
+
+   **Default value**: ``null``
+
+
+.. envvar:: provisioningApi.auth.username
+
+
+   Username of the nubus provisioning subscription / this client For a given nubus deployment, all provisioning subscription names must be unique.
+
+   **Default value**: ``null``
+
+
+.. envvar:: provisioningApi.config.maxAcknowledgementRetries
+
+
+   The maximum number of retries for acknowledging a message
+
+   **Default value**: ``3``
+
+
+.. envvar:: provisioningApi.connection.url
+
+
+   The base URL the provisioning API is reachable at. (e.g. "http://provisioning-api")
+
+   **Default value**: ``null``
+
+.. _helm-ref-scim-client-resources:
+
+``resources``
+-------------
+
+.. envvar:: resources.limits.cpu
+
+
+   .. FIXME: Add documentation string for resources.limits.cpu.
+
+   **Default value**: ``"4"``
+
+
+.. envvar:: resources.limits.memory
+
+
+   .. FIXME: Add documentation string for resources.limits.memory.
+
+   **Default value**: ``"4Gi"``
+
+
+.. envvar:: resources.requests.cpu
+
+
+   .. FIXME: Add documentation string for resources.requests.cpu.
+
+   **Default value**: ``"250m"``
+
+
+.. envvar:: resources.requests.memory
+
+
+   .. FIXME: Add documentation string for resources.requests.memory.
+
+   **Default value**: ``"512Mi"``
+
+.. _helm-ref-scim-client-scimclient:
+
+``scimClient``
+--------------
+
+.. envvar:: scimClient.config.externalIdGroupMapping
+
+
+   Define external_id UDM attribute for groups
+
+   **Default value**: ``"univentionObjectIdentifier"``
+
+
+.. envvar:: scimClient.config.externalIdUserMapping
+
+
+   Define external_id UDM attribute for users
+
+   **Default value**: ``"univentionObjectIdentifier"``
+
+
+.. envvar:: scimClient.config.groupSync
+
+
+   .. FIXME: Add documentation string for scimClient.config.groupSync.
+
+   **Default value**: ``true``
+
+
+.. envvar:: scimClient.config.logLevel
+
+
+   The log level for the SCIM client. valid values are: ERROR WARNING, INFO, DEBUG
+
+   **Default value**: ``"INFO"``
+
+
+.. envvar:: scimClient.config.prefill
+
+
+   Toggle prefill for the provisioning subscription If activated, the client will receive a synthetic "create" event for all existing objects in the Domain before receiving live events.
+
+   **Default value**: ``true``
+
+
+.. envvar:: scimClient.extraEnvVars
+
+
+   Array with extra environment variables to add to containers. # extraEnvVars:   - name: FOO     value: "bar"
+
+   **Default value**: ``[]``
+
+
+.. envvar:: scimClient.image.pullPolicy
+
+
+   .. FIXME: Add documentation string for scimClient.image.pullPolicy.
+
+   **Default value**: ``""``
+
+
+.. envvar:: scimClient.image.registry
+
+
+   .. FIXME: Add documentation string for scimClient.image.registry.
+
+   **Default value**: ``""``
+
+
+.. envvar:: scimClient.image.repository
+
+
+   .. FIXME: Add documentation string for scimClient.image.repository.
+
+   **Default value**: ``"nubus/images/scim-client"``
+
+
+.. envvar:: scimClient.image.sha256
+
+
+   Define image sha256 as an alternative to `tag`
+
+   **Default value**: ``null``
+
+
+.. envvar:: scimClient.image.tag
+
+
+   .. FIXME: Add documentation string for scimClient.image.tag.
+
+   **Default value**:
+
+   .. code-block:: json
+
+      "0.49.0@sha256:ac8ef92764b092bd5af45f086e896d62a170193efbe79fc704a59a3bcde1be9e"
+
+
+.. _helm-ref-scim-client-scimserver:
+
+``scimServer``
+--------------
+
+.. envvar:: scimServer.auth.basic.username
+
+
+   The username used to authenticate with the SCIM Server via HTTP Basic Auth. Only used when "scimServer.auth.method" is "basic".
+
+   **Default value**: ``null``
+
+
+.. envvar:: scimServer.auth.existingSecret.keyMapping.password
+
+
+   The key to retrieve the password from. Setting this value allows to use a key with a different name.
+
+   **Default value**: ``null``
+
+
+.. envvar:: scimServer.auth.existingSecret.name
+
+
+   The name of an existing Secret to use for retrieving the password to authenticate with the SCIM Server. # "scimServer.auth.password" will be ignored if this value is set.
+
+   **Default value**: ``null``
+
+
+.. envvar:: scimServer.auth.method
+
+
+   Authentication method to use against the downstream SCIM server. One of: "none", "oidc", "basic", "bearer".
+
+   **Default value**: ``null``
+
+
+.. envvar:: scimServer.auth.oidc.clientId
+
+
+   Service account client ID (username). Only used when "scimServer.auth.method" is "oidc".
+
+   **Default value**: ``null``
+
+
+.. envvar:: scimServer.auth.oidc.oidcTokenUrl
+
+
+   URL to obtain an OIDC access token from the Identity Provider using the client-credentials-flow. Only used when "scimServer.auth.method" is "oidc".
+
+   **Default value**: ``null``
+
+
+.. envvar:: scimServer.auth.oidc.scopes
+
+
+   List of additional scopes to send when requesting an OIDC authentication token. The scope `openid` will always be added even if the value is null. Only used when "scimServer.auth.method" is "oidc".
+
+   **Default value**: ``null``
+
+
+.. envvar:: scimServer.auth.password
+
+
+   The secret used to authenticate with the SCIM Server: the OIDC client secret when method is "oidc", the password when method is "basic", or the static token when method is "bearer". Not used when method is "none". Either this value or an existing Secret has to be specified.
+
+   **Default value**: ``null``
+
+
+.. envvar:: scimServer.connection.url
+
+
+   The base URL the SCIM server is reachable at. (e.g. "http://scim-server")
+
+   **Default value**: ``null``
+
+.. _helm-ref-scim-client-serviceaccount:
+
+``serviceAccount``
+------------------
+
+.. envvar:: serviceAccount.annotations
+
+
+   Annotations to add to the service account
+
+   **Default value**: ``{}``
+
+
+.. envvar:: serviceAccount.automountServiceAccountToken
+
+
+   #\@param serviceAccount.automountServiceAccountToken Allows auto mount of ServiceAccountToken on the serviceAccount created #Can be set to false if pods using this serviceAccount do not need to use K8s API ##
+
+   **Default value**: ``false``
+
+
+.. envvar:: serviceAccount.create
+
+
+   Specifies whether a service account should be created
+
+   **Default value**: ``true``
+
+
+.. envvar:: serviceAccount.labels
+
+
+   Additional custom labels for the ServiceAccount.
+
+   **Default value**: ``{}``
+
+
+.. envvar:: serviceAccount.name
+
+
+   The name of the service account to use. If not set and create is true, a name is generated using the full name template
+
+   **Default value**: ``""``
+
+.. _helm-ref-scim-client-tolerations:
+
+``tolerations``
+---------------
+
+.. envvar:: tolerations
+
+
+   .. FIXME: Add documentation string for tolerations.
+
+   **Default value**: ``[]``
+
+
+.. vim: filetype=rst

@@ -11,3 +11,12 @@ SCIM Client for Nubus documentation
    :maxdepth: 3
 
    index
+   prerequisites
+   installation
+   configuration
+   schemas
+   provisioning
+   deployment
+   troubleshooting
+   limitations
+   reference

@@ -1,0 +1,15 @@
+Seccomp
+automountServiceAccountToken
+extraEnvVars
+imagePullSecrets
+ldap
+liveness
+nubus
+oidc
+param
+prefill
+provisioningApi
+scimServer
+serviceAccount
+sha
+volumeMounts

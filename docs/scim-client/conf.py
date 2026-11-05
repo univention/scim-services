@@ -116,7 +116,12 @@ if "spelling" in sys.argv:
 
 root_doc = "contents"
 
-intersphinx_mapping = {}
+intersphinx_mapping = {
+    "uv-nubus-kubernetes-operation": (
+        "https://docs.software-univention.de/nubus-kubernetes-operation/1.x/en/",
+        None,
+    ),
+}
 
 linkcheck_ignore = []
 
@@ -130,4 +135,4 @@ univention_pdf_show_source_license = True
 univention_doc_basename = doc_base
 univention_use_doc_base = True
 univention_project_basename = doc_base
-univention_release_language_scheme = "{release}"
+univention_release_language_scheme = "{release}/{language}"
