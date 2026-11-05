@@ -1,5 +1,5 @@
 :Name: ``scim-client``
-:Version: ``0.49.0``
+:Version: ``0.55.4``
 :Description: A Helm chart for the Nubus SCIM client
 
 You find the configuration options for ``scim-client`` in the following sections.
@@ -275,84 +275,6 @@ You find the configuration options for ``scim-client`` in the following sections
       [{"name": "net.ipv4.ip_unprivileged_port_start", "value": "1"}]
 
 
-.. _helm-ref-scim-client-probes:
-
-``probes``
-----------
-
-.. envvar:: probes.liveness.enabled
-
-
-   Enable liveness probe
-
-   **Default value**: ``true``
-
-
-.. envvar:: probes.liveness.exec.command
-
-
-   .. FIXME: Add documentation string for probes.liveness.exec.command.
-
-   **Default value**:
-
-   .. code-block:: json
-
-      ["/bin/sh", "-c", "pgrep -f scim-client"]
-
-
-
-.. envvar:: probes.liveness.initialDelaySeconds
-
-
-   .. FIXME: Add documentation string for probes.liveness.initialDelaySeconds.
-
-   **Default value**: ``30``
-
-
-.. envvar:: probes.liveness.periodSeconds
-
-
-   .. FIXME: Add documentation string for probes.liveness.periodSeconds.
-
-   **Default value**: ``10``
-
-
-.. envvar:: probes.readiness.enabled
-
-
-   Enable readiness probe
-
-   **Default value**: ``true``
-
-
-.. envvar:: probes.readiness.exec.command
-
-
-   .. FIXME: Add documentation string for probes.readiness.exec.command.
-
-   **Default value**:
-
-   .. code-block:: json
-
-      ["/bin/sh", "-c", "pgrep -f scim-client"]
-
-
-
-.. envvar:: probes.readiness.initialDelaySeconds
-
-
-   .. FIXME: Add documentation string for probes.readiness.initialDelaySeconds.
-
-   **Default value**: ``5``
-
-
-.. envvar:: probes.readiness.periodSeconds
-
-
-   .. FIXME: Add documentation string for probes.readiness.periodSeconds.
-
-   **Default value**: ``5``
-
 .. _helm-ref-scim-client-provisioningapi:
 
 ``provisioningApi``
@@ -446,6 +368,14 @@ You find the configuration options for ``scim-client`` in the following sections
 ``scimClient``
 --------------
 
+.. envvar:: scimClient.config.dbConnectionString
+
+
+   SQLAlchemy connection string for the SQL bookkeeping database.
+
+   **Default value**: ``""``
+
+
 .. envvar:: scimClient.config.externalIdGroupMapping
 
 
@@ -465,9 +395,9 @@ You find the configuration options for ``scim-client`` in the following sections
 .. envvar:: scimClient.config.groupSync
 
 
-   .. FIXME: Add documentation string for scimClient.config.groupSync.
+   Toggle experimental group provisioning support.
 
-   **Default value**: ``true``
+   **Default value**: ``false``
 
 
 .. envvar:: scimClient.config.logLevel
@@ -484,6 +414,14 @@ You find the configuration options for ``scim-client`` in the following sections
    Toggle prefill for the provisioning subscription If activated, the client will receive a synthetic "create" event for all existing objects in the Domain before receiving live events.
 
    **Default value**: ``true``
+
+
+.. envvar:: scimClient.config.usernameMapping
+
+
+   Define UDM attribute to use as SCIM userName (overrides default 'username')
+
+   **Default value**: ``"username"``
 
 
 .. envvar:: scimClient.extraEnvVars
@@ -535,7 +473,7 @@ You find the configuration options for ``scim-client`` in the following sections
 
    .. code-block:: json
 
-      "0.49.0@sha256:ac8ef92764b092bd5af45f086e896d62a170193efbe79fc704a59a3bcde1be9e"
+      "0.55.4@sha256:a300912e9f77460fdc632f685e75dacfb43f9015d810b1b0f3cb3f182fcdd821"
 
 
 .. _helm-ref-scim-client-scimserver:

@@ -7,38 +7,32 @@
 Limitations
 ===========
 
-.. important::
-
-   The *SCIM Client* is experimental and intended for preliminary testing only.
-   It isn't yet recommended for production use.
-
-This section outlines the current limitations and considerations when using the *SCIM Client*.
+Consider the following limitations when integrating a SCIM target with the *SCIM Client*.
 
 .. _conf-scim-client-limitations-data-sync:
 
 Data synchronization
 --------------------
 
-Limitations on how the *SCIM Client* synchronizes user and user group data to the SCIM target.
+When user group provisioning is enabled, the following limitations apply.
 
 Group membership sync
-   * The *SCIM Client* synchronizes the list of direct members of a ``Group``,
-     but not the list of groups that include a ``User``.
+   * The *SCIM Client* includes direct user members in the ``members`` attribute of a ``Group``.
 
-   * The *SCIM Client* lists only ``User`` objects as members of ``Group`` objects.
-     It doesn't synchronize other member ``Group`` objects, such as nested groups.
+   * It doesn't populate the ``groups`` attribute of a ``User``.
+
+   * It doesn't include nested groups as members of a ``Group``.
 
 .. _conf-scim-client-limitations-configuration:
 
 Configuration
 -------------
 
-Limitations on the configuration of the *SCIM Client*.
-
 Attribute mapping
-   * Limited configuration for attribute mapping between UDM and SCIM schemas.
+   You can configure the UDM source attributes for the following SCIM fields:
 
-   * You can only customize the ``externalId`` field mapping
-     through the ``externalIdUserMapping`` and ``externalIdGroupMapping`` configuration options.
+   * ``externalId`` for users and user groups, through :envvar:`scimClient.config.externalIdUserMapping` and :envvar:`scimClient.config.externalIdGroupMapping`.
 
-   * Fixed attribute mapping for other SCIM fields, not customizable through configuration.
+   * ``userName`` for users, through ``scimClient.config.usernameMapping``.
+
+   The mappings for other fields are fixed.

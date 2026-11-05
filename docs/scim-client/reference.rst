@@ -7,6 +7,7 @@
 Reference values
 ================
 
-This section provides a reference for the Helm Chart values of the *SCIM Client*.
+Use this reference to look up values and defaults for the *SCIM Client* Helm Chart.
+The version shown below is the Helm Chart version used to generate the reference.
 
 .. include:: reference-values-scim-client.txt

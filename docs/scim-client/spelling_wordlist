@@ -12,4 +12,5 @@ provisioningApi
 scimServer
 serviceAccount
 sha
+userName
 volumeMounts

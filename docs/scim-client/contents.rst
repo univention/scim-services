@@ -12,11 +12,10 @@ SCIM Client for Nubus documentation
 
    index
    prerequisites
-   installation
    configuration
-   schemas
    provisioning
-   deployment
+   installation
    troubleshooting
+   schemas
    limitations
    reference

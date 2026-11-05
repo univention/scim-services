@@ -7,22 +7,16 @@
 Provisioning subscription
 =========================
 
-The *SCIM Client* is a consumer of the *Provisioning Service* in Nubus for Kubernetes.
-It requires a provisioning subscription to receive events about users and user groups.
-For each SCIM target, you need to configure a *SCIM Client* consumer
-by configuring a provisioning subscription for it.
+The *SCIM Client* receives user and user group changes from the Nubus *Provisioning Service* through a subscription.
+Configure a separate client and subscription for each SCIM target.
 
-To configure a provisioning subscription,
-you need to register the consumer in the :file:`nubus-values.yaml` values file of your Nubus for Kubernetes installation,
-not the Helm Chart for the *SCIM Client*.
-The separation ensures
-that the subscription is idempotent
-and that you can manage it as part of your Nubus for Kubernetes installation.
+In the setup described in this manual, the *SCIM Client* Helm Chart creates a Secret with the registration data for its subscription.
+The Nubus deployment uses this data to register the client with the *Provisioning Service*.
 
-To add a subscription for the *SCIM Client*,
-add the configuration in
-:numref:`conf-scim-client-provisioning-listing`
-to your ``nubus-values.yaml`` values file.
+Add the configuration in :numref:`conf-scim-client-provisioning-listing` to the :file:`nubus-values.yaml` file for your existing Nubus deployment.
+If ``nubusProvisioning.registerConsumers.createUsers`` already exists, add the ``scimClient`` entry to it and keep the existing entries.
+The configuration references the ``registration`` entry in the ``scim-client-provisioning`` Secret.
+This entry contains the subscription name, topics, prefill setting, and password.
 
 .. code-block:: yaml
    :caption: Add subscription for *SCIM Client* to Nubus for Kubernetes Helm Chart
@@ -35,4 +29,6 @@ to your ``nubus-values.yaml`` values file.
            existingSecret:
              name: scim-client-provisioning
              keyMapping:
-               password: "registration"
+               registration: "registration"
+
+After preparing both values files, continue with :ref:`conf-scim-client-installation`.

@@ -123,7 +123,10 @@ intersphinx_mapping = {
     ),
 }
 
-linkcheck_ignore = []
+linkcheck_ignore = [
+    r"http://provisioning-api",  # From SCIM Client Helm Chart reference
+    r"http://scim-server",  # From SCIM Client Helm Chart reference
+]
 
 git_untracked_show_sourcelink = True
 # See Univention Sphinx Extension for its options.

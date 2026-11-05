@@ -1,0 +1,41 @@
+:Name: ``{{ name }}``
+:Version: ``{{ version }}``
+:Description: {{ description|trim }}
+
+You find the configuration options for ``{{ name }}`` in the following sections.
+
+{%- set ns = namespace(last_heading="") %}
+{% for (param, comment, default) in values %}
+{%- set heading = param.split('.')[0] %}
+{%- if ns.last_heading != heading %}
+.. _helm-ref-scim-client-{{ heading|lower }}:
+
+``{{ heading }}``
+{{ "-" * (heading|length + 4) }}
+{%- set ns.last_heading = heading %}
+{%- endif %}
+{% if param|trim == "global.secrets.masterPassword" or param|trim == "additionalAnnotations" or param|trim == "additionalLabels" %}
+.. envvar:: scim-client:{{ param|trim }}
+
+   .. note:: ``scim-client`` is a prefix to avoid name clashes for documentation cross-references.
+      In your :file:`values.yaml` file, use the key ``{{ param|trim }}``.
+{% else %}
+.. envvar:: {{ param|trim }}
+{% endif %}
+{% if comment|length > 0 %}
+   {{ comment|trim }}
+{% else %}
+   .. FIXME: Add documentation string for {{ param|trim }}.
+{% endif %}
+{%- if default|length > 30 or default.startswith('"{{') %}
+   **Default value**:
+
+   .. code-block:: json
+
+      {{ default|trim }}
+{% else %}
+   **Default value**: ``{{ default|trim }}``
+{%- endif %}
+{% endfor %}
+
+.. vim: filetype=rst
