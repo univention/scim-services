@@ -89,6 +89,11 @@ Updates replace the resource with a representation built from the current Nubus 
 The client uses ``PUT``, not ``PATCH``.
 It doesn't merge additional writable attributes from the target into the replacement request.
 
+.. _conf-scim-client-integration-user-states:
+
+User account states
+-------------------
+
 For a user that remains selected for provisioning, the client maps the Nubus ``disabled`` property to the inverse SCIM ``active`` value.
 A change to ``disabled: true`` therefore produces an update with ``active: false`` when the target supports that writable attribute.
 It doesn't produce a delete request.
@@ -96,6 +101,28 @@ It doesn't produce a delete request.
 The client requests deletion when the source object is deleted or no longer matches the configured selection filter.
 For the filter settings, see :ref:`conf-scim-client-configuration-selection`.
 If the resource is already absent from the target's lookup results, no delete request is needed.
+
+Univention recommends the following behavior for user accounts provisioned from Nubus:
+
+.. list-table:: Recommended handling of user account states
+   :header-rows: 1
+   :widths: 2 3 6
+
+   * - State
+     - SCIM value or request
+     - Application behavior
+   * - Active
+     - ``active: true``
+     - Allow the user to log in and use the application.
+   * - Disabled
+     - ``active: false``
+     - Prevent login and keep the user's data.
+   * - Deleted
+     - ``DELETE /Users/{id}``
+     - Remove the user account and its personal data according to the application's own deletion rules.
+
+For these user accounts, the application should treat Nubus as the authoritative source of account data.
+It should not create or change these accounts independently.
 
 .. _conf-scim-client-integration-identifiers:
 
