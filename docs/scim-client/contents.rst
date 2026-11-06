@@ -16,6 +16,7 @@ SCIM Client for Nubus documentation
    provisioning
    installation
    troubleshooting
+   integration
    schemas
    limitations
    reference

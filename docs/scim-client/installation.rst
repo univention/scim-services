@@ -85,3 +85,5 @@ This confirms that Kubernetes reports an available client instance; it doesn't v
 The client may need a few minutes to start, for example while Kubernetes downloads the container image.
 If ``READY`` shows ``0/1`` or ``AVAILABLE`` shows ``0``, wait a few minutes and run the command again.
 If the client remains unavailable, see :ref:`conf-scim-client-troubleshooting`.
+
+To also check synchronization with the SCIM target, follow the optional test-user check in :ref:`conf-scim-client-troubleshooting-verification`.

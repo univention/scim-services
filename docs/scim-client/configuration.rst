@@ -12,6 +12,8 @@ Create a :file:`scim-client-values.yaml` file before you run the installation co
 Use this file to set the connection details and authentication credentials for your environment.
 The following sections describe the required settings and selected optional values.
 The chart's :file:`values.yaml` file lists all available settings and their defaults.
+The chart passes the settings to the client container as environment variables.
+Apply changes to the client settings through Helm, as described in :ref:`conf-scim-client-installation`.
 
 .. _conf-scim-client-configuration-mandatory:
 
@@ -179,6 +181,10 @@ You can override the following defaults in your :file:`scim-client-values.yaml` 
    The UDM attribute used for the SCIM ``externalId`` field of user groups.
    The default value is ``univentionObjectIdentifier``.
 
+:envvar:`scimClient.config.usernameMapping`
+   The UDM attribute used for the SCIM ``userName`` field.
+   The default value is ``username``.
+
 :envvar:`scimServer.auth.oidc.scopes`
    Only applies when :envvar:`scimServer.auth.method` is ``oidc``.
    A list of additional scopes to request when obtaining an OIDC access token for SCIM server authentication.
@@ -209,5 +215,47 @@ You can override the following defaults in your :file:`scim-client-values.yaml` 
 
    The default value for the mapping is ``univentionObjectIdentifier`` for both users and user groups.
    To use different UDM source attributes for ``externalId``, adapt :envvar:`scimClient.config.externalIdUserMapping` and :envvar:`scimClient.config.externalIdGroupMapping`.
+
+.. _conf-scim-client-configuration-selection:
+
+Select users and user groups
+----------------------------
+
+By default, the client provisions all users received through its subscription.
+Set :envvar:`scimClient.config.groupSync` to ``true`` to also provision user groups.
+The default value ``false`` excludes user groups.
+
+To provision only selected users or user groups, you can filter them by an existing Boolean UDM property.
+For example, if your deployment provides ``isNextcloudUser``, you can use it to select users for the target application.
+The client provisions users whose ``isNextcloudUser`` property is ``true``.
+
+The client reads the property names from the environment variables ``SCIM_USER_FILTER_ATTRIBUTE`` for users and ``SCIM_GROUP_FILTER_ATTRIBUTE`` for user groups.
+The Helm Chart has no dedicated filter settings, so add the variables through ``scimClient.extraEnvVars`` in :file:`scim-client-values.yaml`.
+
+:numref:`conf-scim-client-selection-listing` sets these variables to the property names ``isNextcloudUser`` and ``isKMGroup``.
+The client doesn't create these properties.
+Replace the example names with properties provided by your integration.
+
+.. code-block:: yaml
+   :caption: Select users and user groups through Boolean UDM properties
+   :name: conf-scim-client-selection-listing
+
+   scimClient:
+     config:
+       groupSync: true
+     extraEnvVars:
+       - name: SCIM_USER_FILTER_ATTRIBUTE
+         value: isNextcloudUser
+       - name: SCIM_GROUP_FILTER_ATTRIBUTE
+         value: isKMGroup
+
+Use Boolean values for the UDM properties on the individual objects.
+A nonempty string such as ``"false"`` also selects an object.
+
+.. warning::
+
+   When a configured property becomes ``false`` or is removed, the client deletes the matching object from the SCIM target if it already exists there.
+   The same applies if the property is already ``false`` or missing when the client first processes the object.
+   Deletion happens when the client processes the object's provisioning event.
 
 After you have prepared :file:`scim-client-values.yaml`, configure the :ref:`conf-scim-client-provisioning` in your Nubus values file.

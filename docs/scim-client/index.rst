@@ -11,11 +11,15 @@ Introduction
 ************
 
 The *SCIM Client* provisions users and user groups from Nubus for Kubernetes to an external application using the System for Cross-domain Identity Management (SCIM) protocol.
-This manual refers to the external application as the *SCIM target*.
+The external application provides a SCIM server interface.
+This manual refers to that application as the *SCIM target*.
 
-This manual is for operators who want to connect an application with a SCIM interface to Nubus for Kubernetes.
-It describes how to install and configure the *SCIM Client*, set up provisioning, and troubleshoot problems.
-You need to be familiar with Kubernetes and Helm.
+This manual is for operators who connect applications to Nubus for Kubernetes and for software vendors who implement a SCIM interface in their applications.
 
-Before you start, check the :ref:`conf-scim-client-installation-prerequisites`.
+If you operate the *SCIM Client*, start with the :ref:`conf-scim-client-installation-prerequisites`.
+The installation and configuration procedures assume that you are familiar with Kubernetes and Helm.
+
+If you develop a SCIM interface for an application, start with :ref:`conf-scim-client-integration`.
+That chapter describes the requests the client sends and the responses it expects from your application.
+
 For installation and operation of Nubus for Kubernetes itself, see the :external+uv-nubus-kubernetes-operation:ref:`Nubus for Kubernetes Operation Manual <doc-entry>`.

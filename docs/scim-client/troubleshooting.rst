@@ -23,6 +23,57 @@ Replace ``<namespace>`` with your Nubus namespace and ``<scim-client-pod>`` with
 
    $ kubectl logs -n <namespace> <scim-client-pod> -c main
 
+.. _conf-scim-client-troubleshooting-log-messages:
+
+.. _conf-scim-client-troubleshooting-verification:
+
+Check provisioning
+------------------
+
+To check synchronization with the SCIM target, you can use a test user:
+
+#. Create a test user in Nubus, for example through the UMC.
+   If you use a selection filter, set the corresponding property so that the client selects this user.
+#. Find the user through the SCIM target's user interface or its documented search function.
+#. Change an attribute supported by the target, such as the user's display name, and confirm the change there.
+
+Allow time for the client to process each change.
+Use the log command above to follow processing.
+
+At the default ``INFO`` log level, the client emits the following message texts:
+
+* ``All expected tables present`` confirms that the client found its required database tables.
+* ``Created entry in old db`` or ``Updating entry in old db`` indicates that the client is recording an object's processed state.
+* ``Create SCIM resource ...`` and ``Update SCIM resource ...`` announce requests before they are sent.
+  These messages alone don't confirm successful processing.
+
+These messages refer to startup or individual objects; they don't confirm that all users have been synchronized.
+Use the ``show-item`` command described in :ref:`conf-scim-client-troubleshooting-cli` to inspect the state of an affected object.
+
+.. _conf-scim-client-troubleshooting-common-errors:
+
+Common errors
+-------------
+
+HTTP ``401`` or ``403``
+   Check which service rejected the request.
+   For the SCIM target, check ``scimServer.auth`` and the referenced Secret and key.
+   For the *Provisioning API*, check ``provisioningApi.auth`` and the registered subscription.
+   With OIDC authentication, also check the token URL, client ID, client secret, and scopes.
+
+HTTP ``400`` or ``409`` when writing a resource
+   Read the target's error detail for missing required attributes or a name conflict.
+   The client matches existing resources by ``externalId``, so an account with the same ``userName`` alone doesn't count as a match.
+   See :ref:`conf-scim-client-integration-identifiers` before connecting existing accounts.
+
+Unexpected HTTP ``404`` or a connection error
+   Check :envvar:`scimServer.connection.url`, including the SCIM path, hostname, and port.
+   Confirm that the service is reachable from the client container.
+
+``Failed to initialize database. Shutting down.``
+   Check :envvar:`scimClient.config.dbConnectionString` and the database connection error in the logs.
+   The database must exist, be reachable, and allow the configured user to create the client tables.
+
 .. _conf-scim-client-troubleshooting-cli:
 
 Monitor the current state from the command line
