@@ -20,3 +20,8 @@ SCIM Client for Nubus documentation
    schemas
    limitations
    reference
+
+.. toctree::
+   :maxdepth: 1
+
+   changelog
