@@ -31,4 +31,16 @@ This entry contains the subscription name, topics, prefill setting, and password
              keyMapping:
                registration: "registration"
 
+.. note::
+
+   If you enable ``scimClient.config.groupSync`` after registering the client for users only, use a new subscription name with Nubus for Kubernetes 1.24.0.
+   This version doesn't support changing the topics of an existing subscription.
+   Set ``provisioningApi.auth.username`` to an unused name, for example ``scim-client-groups``, in :file:`scim-client-values.yaml`.
+   Apply both Helm updates in :ref:`conf-scim-client-installation-helm` to register the new subscription for both users and user groups.
+   The previous subscription remains registered and can accumulate unprocessed messages.
+
+   After verifying the new subscription, remove the old one once its pending messages have been processed or are no longer needed.
+   Use ``DELETE /v1/subscriptions/{name}`` as described in the `Provisioning API documentation <https://docs.software-univention.de/nubus-customization/latest/en/api/provisioning.html#openapi-schema>`_, which also explains API access and administrative credentials.
+   Deleting a subscription discards its remaining queued messages.
+
 After preparing both values files, continue with :ref:`conf-scim-client-installation`.
