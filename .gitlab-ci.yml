@@ -125,6 +125,8 @@ test-unit-and-integration:
   script:
     - docker compose run --quiet-pull --name test-unit-and-integration test
   after_script:
+    # The template unsets the inherited DOCKER_API_VERSION only in its own steps.
+    - unset DOCKER_API_VERSION
     - docker cp test-unit-and-integration:/tmp/scim-coverage.xml ./coverage-test-unit-and-integration.xml
     - docker cp test-unit-and-integration:/tmp/pytest-junit.xml ./pytest-junit-test-unit-and-integration.xml
     - !reference [".compose-test", "after_script"]
@@ -173,6 +175,8 @@ test-scim-client:
   script:
     - docker compose run --quiet-pull --name test-scim-client test
   after_script:
+    # The template unsets the inherited DOCKER_API_VERSION only in its own steps.
+    - unset DOCKER_API_VERSION
     - docker cp test-scim-client:/tmp/pytest-junit.xml ./pytest-junit-test-scim-client.xml
     - docker cp test-scim-client:/tmp/scim-coverage.xml ./coverage-test-scim-client.xml
     - !reference [".compose-test", "after_script"]
