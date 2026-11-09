@@ -2,7 +2,7 @@
 ..
 .. SPDX-License-Identifier: AGPL-3.0-only
 
-.. _conf-scim-client-configuration:
+.. _scim-client-configuration:
 
 Prepare the client configuration
 ================================
@@ -13,14 +13,14 @@ Use this file to set the connection details and authentication credentials for y
 The following sections describe the required settings and selected optional values.
 The chart's :file:`values.yaml` file lists all available settings and their defaults.
 The chart passes the settings to the client container as environment variables.
-Apply changes to the client settings through Helm, as described in :ref:`conf-scim-client-installation`.
+Apply changes to the client settings through Helm, as described in :ref:`scim-client-installation`.
 
-.. _conf-scim-client-configuration-mandatory:
+.. _scim-client-configuration-mandatory:
 
 Mandatory values
 ----------------
 
-The *SCIM Client* needs connection details for the SCIM target, the Nubus *Provisioning API*, the *LDAP Server*, and its PostgreSQL database.
+The *SCIM Client* needs connection details for the services outlined in :ref:`scim-client-prerquesites`.
 Set the following values in your :file:`scim-client-values.yaml` file:
 
 * :envvar:`scimServer.connection.url`: The URL of the SCIM target.
@@ -36,14 +36,14 @@ The example below uses an existing LDAP Secret from the Nubus deployment.
 
 You also need to configure authentication for the SCIM target.
 The authentication method determines the required authentication values.
-For details, see :ref:`conf-scim-client-configuration-auth`.
+For details, see :ref:`scim-client-configuration-auth`.
 
-:numref:`conf-scim-client-configuration-mandatory-listing` shows a configuration example with OIDC authentication.
+:numref:`scim-client-configuration-mandatory-listing` shows a configuration example with OIDC authentication.
 Replace the URLs, credentials, database connection details, and LDAP settings with the values for your environment.
 
 .. code-block:: yaml
    :caption: Minimal example for *SCIM Client* configuration
-   :name: conf-scim-client-configuration-mandatory-listing
+   :name: scim-client-configuration-mandatory-listing
 
    scimClient:
      config:
@@ -74,21 +74,21 @@ Replace the URLs, credentials, database connection details, and LDAP settings wi
        existingSecret:
          name: nubus-ldap-server-admin
 
-.. _conf-scim-client-configuration-database:
+.. _scim-client-configuration-database:
 
 Database
 --------
 
 The *SCIM Client* uses PostgreSQL to store provisioning tasks, their processing state, and information about failed tasks.
 This data supports retries and helps you investigate provisioning errors.
-For details on inspecting tasks and errors, see :ref:`conf-scim-client-troubleshooting-cli`.
+For details on inspecting tasks and errors, see :ref:`scim-client-troubleshooting-cli`.
 
 The PostgreSQL database isn't included in the Helm Chart.
 You are responsible for operating the database, including backups and upgrades.
 The *SCIM Client* creates its tables on startup.
 
 Set :envvar:`scimClient.config.dbConnectionString` to the SQLAlchemy connection URL for the PostgreSQL database.
-Add this value to your :file:`scim-client-values.yaml` file, as shown in :numref:`conf-scim-client-configuration-mandatory-listing`.
+Add this value to your :file:`scim-client-values.yaml` file, as shown in :numref:`scim-client-configuration-mandatory-listing`.
 The connection string uses the following pattern::
 
    postgresql+psycopg2://<DATABASE_USERNAME>:<PASSWORD>@<HOSTNAME>/<DATABASE_NAME>
@@ -100,12 +100,12 @@ Replace ``<DATABASE_USERNAME>``, ``<PASSWORD>``, ``<HOSTNAME>``, and ``<DATABASE
    Without the connection URL, a Helm installation or upgrade fails.
    The Helm Chart passes the value to the client through a Secret as ``PROVISIONING_DB``.
 
-.. _conf-scim-client-configuration-auth:
+.. _scim-client-configuration-auth:
 
 Authentication for the SCIM target
 -----------------------------------
 
-Set :envvar:`scimServer.auth.method` to one of the values in :numref:`conf-scim-client-auth-methods-table`.
+Set :envvar:`scimServer.auth.method` to one of the values in :numref:`scim-client-auth-methods-table`.
 
 For all authentication methods except ``none``, the *SCIM Client* needs a secret value for authentication.
 Provide it directly through :envvar:`scimServer.auth.password` or use an existing Kubernetes Secret through :envvar:`scimServer.auth.existingSecret.name`.
@@ -113,8 +113,9 @@ Provide it directly through :envvar:`scimServer.auth.password` or use an existin
 The value ``none`` sends no ``Authorization`` header.
 Use this value only for testing, never in production.
 
+.. _scim-client-auth-methods-table:
+
 .. list-table:: Authentication methods for the SCIM target
-   :name: conf-scim-client-auth-methods-table
    :header-rows: 1
    :widths: 1 6 5
 
@@ -139,11 +140,11 @@ Use this value only for testing, never in production.
 
 When you use an existing Secret, the chart reads the entry named ``password`` by default.
 If your Secret uses a different key, set :envvar:`scimServer.auth.existingSecret.keyMapping.password` to that key.
-For example, :numref:`conf-scim-client-auth-secret-listing` uses a Bearer token stored under the key ``token`` in the ``scim-target-auth`` Secret.
+For example, :numref:`scim-client-auth-secret-listing` uses a Bearer token stored under the key ``token`` in the ``scim-target-auth`` Secret.
 
 .. code-block:: yaml
    :caption: Use a Bearer token from an existing Secret
-   :name: conf-scim-client-auth-secret-listing
+   :name: scim-client-auth-secret-listing
 
    scimServer:
      auth:
@@ -153,13 +154,13 @@ For example, :numref:`conf-scim-client-auth-secret-listing` uses a Bearer token 
          keyMapping:
            password: token
 
-.. _conf-scim-client-configuration-optional:
+.. _scim-client-configuration-optional:
 
 Optional values
 ---------------
 
 You can override the following defaults in your :file:`scim-client-values.yaml` file.
-:numref:`conf-scim-client-configuration-optional-listing` shows an example.
+:numref:`scim-client-configuration-optional-listing` shows an example.
 
 :envvar:`scimClient.config.logLevel`
   The log level for the *SCIM Client*.
@@ -194,7 +195,7 @@ You can override the following defaults in your :file:`scim-client-values.yaml` 
 
 .. code-block:: yaml
    :caption: Example for optional *SCIM Client* configuration
-   :name: conf-scim-client-configuration-optional-listing
+   :name: scim-client-configuration-optional-listing
 
    scimClient:
      config:
@@ -216,7 +217,7 @@ You can override the following defaults in your :file:`scim-client-values.yaml` 
    The default value for the mapping is ``univentionObjectIdentifier`` for both users and user groups.
    To use different UDM source attributes for ``externalId``, adapt :envvar:`scimClient.config.externalIdUserMapping` and :envvar:`scimClient.config.externalIdGroupMapping`.
 
-.. _conf-scim-client-configuration-selection:
+.. _scim-client-configuration-selection:
 
 Select users and user groups
 ----------------------------

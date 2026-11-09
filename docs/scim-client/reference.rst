@@ -2,7 +2,7 @@
 ..
 .. SPDX-License-Identifier: AGPL-3.0-only
 
-.. _conf-scim-client-reference-values:
+.. _scim-client-reference-values:
 
 Reference values
 ================

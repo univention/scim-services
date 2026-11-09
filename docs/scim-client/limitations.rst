@@ -2,14 +2,14 @@
 ..
 .. SPDX-License-Identifier: AGPL-3.0-only
 
-.. _conf-scim-client-limitations:
+.. _scim-client-limitations:
 
 Limitations
 ===========
 
 The following limitations apply to the current *SCIM Client* implementation when integrating a SCIM target.
 
-.. _conf-scim-client-limitations-data-sync:
+.. _scim-client-limitations-data-sync:
 
 Data synchronization
 --------------------
@@ -26,7 +26,7 @@ Group membership sync
    * Member lookup uses the user's Nubus ``univentionObjectIdentifier`` as the SCIM ``externalId``.
      If a custom user ``externalId`` mapping produces a different value, the client can't resolve that member.
 
-.. _conf-scim-client-limitations-configuration:
+.. _scim-client-limitations-configuration:
 
 Configuration
 -------------

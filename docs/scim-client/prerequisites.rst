@@ -2,7 +2,7 @@
 ..
 .. SPDX-License-Identifier: AGPL-3.0-only
 
-.. _conf-scim-client-installation-prerequisites:
+.. _scim-client-prerquesites:
 
 Prerequisites
 =============

@@ -2,7 +2,7 @@
 ..
 .. SPDX-License-Identifier: AGPL-3.0-only
 
-.. _conf-scim-client-integration:
+.. _scim-client-integration:
 
 Integrating a SCIM target
 =========================
@@ -11,9 +11,9 @@ This chapter is for software vendors and developers who want to receive users an
 Your application provides the SCIM API; the *SCIM Client* sends provisioning requests to it.
 The API uses SCIM 2.0 as defined in :rfc:`7643` and :rfc:`7644`.
 
-For deployment and connection settings, see :ref:`conf-scim-client-configuration`.
+For deployment and connection settings, see :ref:`scim-client-configuration`.
 
-.. _conf-scim-client-integration-api:
+.. _scim-client-integration-api:
 
 Resources and discovery
 -----------------------
@@ -37,7 +37,7 @@ The client uses the discovered schemas and attribute mutability to build request
 It logs warnings when it can't discover capabilities or the target doesn't advertise a capability it needs.
 For the supported attributes and extensions, see :ref:`conf-scim-client-schemas`.
 
-.. _conf-scim-client-integration-auth:
+.. _scim-client-integration-auth:
 
 Authentication
 --------------
@@ -55,17 +55,18 @@ Support the method selected for your integration and advertise it in ``authentic
 The client checks for ``oauthbearertoken`` for both ``bearer`` and ``oidc``, and ``httpbasic`` for ``basic``.
 For the corresponding Helm values and Secret configuration, see :ref:`conf-scim-client-configuration-auth`.
 
-.. _conf-scim-client-integration-operations:
+.. _scim-client-integration-operations:
 
 Resource operations
 -------------------
 
 The client sends requests with ``Accept: application/scim+json`` and ``Content-Type: application/scim+json``.
-:numref:`conf-scim-client-integration-operations-table` shows the user operations and their expected success responses.
+:numref:`scim-client-integration-operations-table` shows the user operations and their expected success responses.
 The client uses the same operations for groups when group provisioning is enabled.
 
+.. _scim-client-integration-operations-table:
+
 .. list-table:: User operations
-   :name: conf-scim-client-integration-operations-table
    :header-rows: 1
    :widths: 2 4 3
 
@@ -89,7 +90,7 @@ Updates replace the resource with a representation built from the current Nubus 
 The client uses ``PUT``, not ``PATCH``.
 It doesn't merge additional writable attributes from the target into the replacement request.
 
-.. _conf-scim-client-integration-user-states:
+.. _scim-client-integration-user-states:
 
 User account states
 -------------------
@@ -99,7 +100,7 @@ A change to ``disabled: true`` therefore produces an update with ``active: false
 It doesn't produce a delete request.
 
 The client requests deletion when the source object is deleted or no longer matches the configured selection filter.
-For the filter settings, see :ref:`conf-scim-client-configuration-selection`.
+For the filter settings, see :ref:`scim-client-configuration-selection`.
 If the resource is already absent from the target's lookup results, no delete request is needed.
 
 Univention recommends the following behavior for user accounts provisioned from Nubus:
@@ -124,7 +125,7 @@ Univention recommends the following behavior for user accounts provisioned from 
 For these user accounts, the application should treat Nubus as the authoritative source of account data.
 It should not create or change these accounts independently.
 
-.. _conf-scim-client-integration-identifiers:
+.. _scim-client-integration-identifiers:
 
 Matching existing users and groups
 ----------------------------------
@@ -145,11 +146,11 @@ For example, it sends the following filter as the URL-encoded ``filter`` query p
 
 The target must support this equality filter and return a SCIM ``ListResponse`` containing ``totalResults`` and ``Resources``.
 Return the target-assigned ``id`` and the stored ``externalId`` in each matching resource.
-:numref:`conf-scim-client-integration-lookup-listing` shows a shortened example of a matching response.
+:numref:`scim-client-integration-lookup-listing` shows a shortened example of a matching response.
 
 .. code-block:: json
    :caption: Lookup response for an existing user (shortened)
-   :name: conf-scim-client-integration-lookup-listing
+   :name: scim-client-integration-lookup-listing
 
    {
      "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
@@ -172,17 +173,17 @@ The client doesn't automatically adopt an existing account with the same ``userN
 Such an account can cause a name conflict when the client attempts to create the resource.
 For an existing account that should receive updates, arrange for its ``externalId`` to match the configured source identifier before provisioning it.
 
-.. _conf-scim-client-integration-payload:
+.. _scim-client-integration-payload:
 
 Example user data
 -----------------
 
-:numref:`conf-scim-client-integration-user-listing` shows a shortened create request body for a target that supports the corresponding core attributes.
+:numref:`scim-client-integration-user-listing` shows a shortened create request body for a target that supports the corresponding core attributes.
 The available Nubus properties and the target's schema determine the attributes in an actual request.
 
 .. code-block:: json
    :caption: Example user create request body
-   :name: conf-scim-client-integration-user-listing
+   :name: scim-client-integration-user-listing
 
    {
      "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
@@ -205,23 +206,23 @@ The available Nubus properties and the target's schema determine the attributes 
    }
 
 The target assigns ``id`` and ``meta``; the client omits them from create requests.
-For the complete mapping of supported attributes and optional extensions, see :ref:`conf-scim-client-schemas`.
+For the complete mapping of supported attributes and optional extensions, see :ref:`scim-client-schemas`.
 
-.. _conf-scim-client-integration-wire:
+.. _scim-client-integration-wire:
 
 Wire connection example
 -----------------------
 
 Wire's `user provisioning documentation <https://docs.wire.com/latest/understand/single-sign-on/understand/main.html#user-provisioning-scimldap>`_ explains how to obtain a SCIM token and prepare your Wire team.
 
-:numref:`conf-scim-client-integration-wire-listing` shows connection settings for Wire Cloud with user group provisioning disabled.
-Add these settings to :file:`scim-client-values.yaml` and keep the Nubus and database settings described in :ref:`conf-scim-client-configuration`.
+:numref:`scim-client-integration-wire-listing` shows connection settings for Wire Cloud with user group provisioning disabled.
+Add these settings to :file:`scim-client-values.yaml` and keep the Nubus and database settings described in :ref:`scim-client-configuration`.
 Create a Kubernetes Secret named ``scim-target-auth`` with the Wire SCIM token under the key ``token``, or adapt the Secret name and key to your existing Secret.
 For a self-hosted Wire deployment, replace the URL with its SCIM API URL.
 
 .. code-block:: yaml
    :caption: Wire Cloud connection settings for user provisioning
-   :name: conf-scim-client-integration-wire-listing
+   :name: scim-client-integration-wire-listing
 
    scimClient:
      config:

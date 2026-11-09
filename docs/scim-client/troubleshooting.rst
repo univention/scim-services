@@ -2,7 +2,7 @@
 ..
 .. SPDX-License-Identifier: AGPL-3.0-only
 
-.. _conf-scim-client-troubleshooting:
+.. _scim-client-troubleshooting:
 
 Troubleshooting
 ===============
@@ -14,18 +14,16 @@ Tasks in the morgue aren't retried automatically.
 The client continues processing other pending tasks.
 Pending tasks remain in the database and are processed when the client restarts.
 
-Start by checking the container logs for warnings and errors, as shown in :numref:`conf-scim-client-troubleshooting-logs-listing`.
+Start by checking the container logs for warnings and errors, as shown in :numref:`scim-client-troubleshooting-logs-listing`.
 Replace ``<namespace>`` with your Nubus namespace and ``<scim-client-pod>`` with the name of the *SCIM Client* pod.
 
 .. code-block:: console
    :caption: Show *SCIM Client* logs
-   :name: conf-scim-client-troubleshooting-logs-listing
+   :name: scim-client-troubleshooting-logs-listing
 
    $ kubectl logs -n <namespace> <scim-client-pod> -c main
 
-.. _conf-scim-client-troubleshooting-log-messages:
-
-.. _conf-scim-client-troubleshooting-verification:
+.. _scim-client-troubleshooting-verification:
 
 Check provisioning
 ------------------
@@ -50,7 +48,7 @@ At the default ``INFO`` log level, the client emits the following message texts:
 These messages refer to startup or individual objects; they don't confirm that all users have been synchronized.
 Use the ``show-item`` command described in :ref:`conf-scim-client-troubleshooting-cli` to inspect the state of an affected object.
 
-.. _conf-scim-client-troubleshooting-common-errors:
+.. _scim-client-troubleshooting-common-errors:
 
 Common errors
 -------------
@@ -64,7 +62,7 @@ HTTP ``401`` or ``403``
 HTTP ``400`` or ``409`` when writing a resource
    Read the target's error detail for missing required attributes or a name conflict.
    The client matches existing resources by ``externalId``, so an account with the same ``userName`` alone doesn't count as a match.
-   See :ref:`conf-scim-client-integration-identifiers` before connecting existing accounts.
+   See :ref:`scim-client-integration-identifiers` before connecting existing accounts.
 
 Unexpected HTTP ``404`` or a connection error
    Check :envvar:`scimServer.connection.url`, including the SCIM path, hostname, and port.
@@ -74,7 +72,7 @@ Unexpected HTTP ``404`` or a connection error
    Check :envvar:`scimClient.config.dbConnectionString` and the database connection error in the logs.
    The database must exist, be reachable, and allow the configured user to create the client tables.
 
-.. _conf-scim-client-troubleshooting-cli:
+.. _scim-client-troubleshooting-cli:
 
 Monitor the current state from the command line
 -----------------------------------------------
@@ -89,11 +87,11 @@ Use the task-management command-line interface to inspect the provisioning state
   The client doesn't actively process these tasks.
   You can examine them and decide how to proceed.
 
-Run the tool inside the *SCIM Client* container, where ``PROVISIONING_DB`` is already configured, as shown in :numref:`conf-scim-client-troubleshooting-cli-listing`.
+Run the tool inside the *SCIM Client* container, where ``PROVISIONING_DB`` is already configured, as shown in :numref:`scim-client-troubleshooting-cli-listing`.
 
 .. code-block:: console
    :caption: List the task-management commands
-   :name: conf-scim-client-troubleshooting-cli-listing
+   :name: scim-client-troubleshooting-cli-listing
 
    $ kubectl exec -n <namespace> <scim-client-pod> -c main -- \
        univention-scim-connector-task-management --help
@@ -142,7 +140,7 @@ Use ``<command> --help`` for its options.
 
    Move a pending task aside for investigation.
 
-.. _conf-scim-client-troubleshooting-errors:
+.. _scim-client-troubleshooting-errors:
 
 Retry failed tasks
 ------------------
@@ -150,13 +148,13 @@ Retry failed tasks
 To investigate and retry a task in the morgue, follow these steps:
 
 #. Inspect the stored failure with :option:`search-morgue`.
-   :numref:`conf-scim-client-morgue-output-listing` shows a username conflict with a shortened traceback.
+   :numref:`scim-client-morgue-output-listing` shows a username conflict with a shortened traceback.
    The traceback describes the saved provisioning error.
    It doesn't indicate a failure of the task-management command.
 
    .. code-block:: console
       :caption: Example of a stored error in the morgue
-      :name: conf-scim-client-morgue-output-listing
+      :name: scim-client-morgue-output-listing
 
       $ kubectl exec -n <namespace> <scim-client-pod> -c main -- \
           univention-scim-connector-task-management search-morgue \
@@ -186,11 +184,11 @@ To investigate and retry a task in the morgue, follow these steps:
    To process them without waiting for a new message, restart an idle client.
 
 #. Run :option:`show-item --obj-id OBJECT_ID` to check the result.
-   After a successful create or update, the output shows ``Synced as``, ``Currently no pending tasks``, and ``Currently no errors``, as in :numref:`conf-scim-client-retry-success-output-listing`.
+   After a successful create or update, the output shows ``Synced as``, ``Currently no pending tasks``, and ``Currently no errors``, as in :numref:`scim-client-retry-success-output-listing`.
 
    .. code-block:: console
       :caption: Example of a successfully retried item
-      :name: conf-scim-client-retry-success-output-listing
+      :name: scim-client-retry-success-output-listing
 
       $ kubectl exec -n <namespace> <scim-client-pod> -c main -- \
           univention-scim-connector-task-management show-item \
@@ -211,7 +209,7 @@ Use :option:`move-task-to-morgue` to move a pending task to the morgue for manua
 Moving a task doesn't cancel a request that the client has already sent to the SCIM target.
 If the client is waiting before retrying, it checks the task queue again only after that wait ends.
 
-.. _conf-scim-client-troubleshooting-support:
+.. _scim-client-troubleshooting-support:
 
 Information for support
 -----------------------

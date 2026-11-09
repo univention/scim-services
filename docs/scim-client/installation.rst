@@ -2,9 +2,7 @@
 ..
 .. SPDX-License-Identifier: AGPL-3.0-only
 
-.. _conf-scim-client-installation:
-
-.. _conf-scim-client-deployment:
+.. _scim-client-installation:
 
 Installation
 ============
@@ -16,9 +14,9 @@ Install the *SCIM Client* in the same Kubernetes namespace as Nubus for Kubernet
 The client needs internal access to the *Provisioning API* and the *LDAP Server*.
 
 Use the :file:`scim-client-values.yaml` and :file:`nubus-values.yaml` files prepared in the previous chapters.
-For the preparation steps, see :ref:`conf-scim-client-installation-overview`.
+For the preparation steps, see :ref:`scim-client-installation-overview`.
 
-.. _conf-scim-client-installation-helm:
+.. _scim-client-installation-helm:
 
 Installation through Helm
 -------------------------
@@ -36,11 +34,9 @@ The ``--install`` option installs the client if its Helm release doesn't exist y
 If your Nubus deployment uses additional values files, repeat ``--values`` for each file, for example ``--values nubus-values.yaml --values prod_values.yaml``.
 Keep the files in the same order as before.
 
-.. _conf-scim-client-installation-helm-listing:
-
 .. code-block:: console
    :caption: Install or update *SCIM Client* and register its subscription
-   :name: conf-scim-client-deployment-listing
+   :name: scim-client-deployment-listing
 
    $ export NUBUS_NAMESPACE="<Your Nubus for Kubernetes namespace>"
    $ export RELEASE_NAME_FOR_NUBUS="<The release name of your Nubus installation>"
@@ -63,7 +59,7 @@ Keep the files in the same order as before.
        --version "$NUBUS_HELM_VERSION" \
        --values nubus-values.yaml
 
-.. _conf-scim-client-installation-verify:
+.. _scim-client-installation-verify:
 
 Check deployment status
 -----------------------
@@ -86,4 +82,4 @@ The client may need a few minutes to start, for example while Kubernetes downloa
 If ``READY`` shows ``0/1`` or ``AVAILABLE`` shows ``0``, wait a few minutes and run the command again.
 If the client remains unavailable, see :ref:`conf-scim-client-troubleshooting`.
 
-To also check synchronization with the SCIM target, follow the optional test-user check in :ref:`conf-scim-client-troubleshooting-verification`.
+To also check synchronization with the SCIM target, follow the optional test-user check in :ref:`scim-client-troubleshooting-verification`.

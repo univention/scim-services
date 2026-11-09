@@ -2,7 +2,7 @@
 ..
 .. SPDX-License-Identifier: AGPL-3.0-only
 
-.. _conf-scim-client-schemas:
+.. _scim-client-schemas:
 
 Supported schemas
 =================
@@ -15,10 +15,10 @@ The client maps the attributes described in this chapter.
 
 The *SCIM Client* supports the following schemas when provisioning data to a SCIM target:
 
-* :ref:`conf-scim-client-schemas-user`
-* :ref:`conf-scim-client-schemas-group`
+* :ref:`scim-client-schemas-user`
+* :ref:`scim-client-schemas-group`
 
-.. _conf-scim-client-schemas-user:
+.. _scim-client-schemas-user:
 
 User schema
 -----------
@@ -30,23 +30,24 @@ The following list includes the core ``User`` schema from :rfc:`7643` and the su
 * ``urn:ietf:params:scim:schemas:extension:Univention:1.0:User``
 * ``urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User``
 
-.. _conf-scim-client-schemas-user-attributes:
+.. _scim-client-schemas-user-attributes:
 
 User attributes
 ~~~~~~~~~~~~~~~
 
 The core ``User`` schema requires ``userName``.
 The *SCIM Client* also requires a nonempty ``externalId`` to identify the corresponding resource at the target.
-The target assigns its own ``id``; see :ref:`conf-scim-client-integration-identifiers`.
+The target assigns its own ``id``; see :ref:`scim-client-integration-identifiers`.
 
-:numref:`conf-scim-client-schemas-user-attributes-table` shows the available core mappings.
+:numref:`scim-client-schemas-user-attributes-table` shows the available core mappings.
 The other mapped attributes are optional from the client's perspective and depend on the available source data and the target's schema.
 If your application requires additional attributes, make sure that Nubus provides the corresponding values and that the client has a mapping for them.
 The client doesn't send a ``password`` attribute.
 Configure user sign-in separately in the target application, for example through single sign-on or the application's invitation and password setup process.
 
+.. _scim-client-schemas-user-attributes-table:
+
 .. list-table:: Core user attribute mapping
-   :name: conf-scim-client-schemas-user-attributes-table
    :header-rows: 1
    :widths: 2 3 4
 
@@ -103,7 +104,7 @@ Configure user sign-in separately in the target application, for example through
      - ``userCertificate``, ``certificateSubjectCommonName``
      - A certificate entry with the certificate as ``value`` and its common name as ``display``.
 
-.. _conf-scim-client-schemas-user-extensions:
+.. _scim-client-schemas-user-extensions:
 
 User extension attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -120,7 +121,7 @@ The client maps the following extension attributes when the target advertises th
 ``urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User``
    ``primaryOrgUnit`` and ``secondaryOrgUnits`` from the corresponding Nubus properties.
 
-.. _conf-scim-client-schemas-group:
+.. _scim-client-schemas-group:
 
 Group schema
 ------------
@@ -132,16 +133,16 @@ The following list includes the core ``Group`` schema from :rfc:`7643` and the s
 
 The ``scimClient.config.groupSync`` setting controls whether the client provisions user groups; see :ref:`conf-scim-client-configuration-optional`.
 
-.. _conf-scim-client-schemas-group-attributes:
+.. _scim-client-schemas-group-attributes:
 
 Group attributes
 ~~~~~~~~~~~~~~~~
 
 The core ``Group`` schema requires ``displayName``.
-:numref:`conf-scim-client-schemas-group-attributes-table` shows the available core mappings.
+:numref:`scim-client-schemas-group-attributes-table` shows the available core mappings.
 
 .. list-table:: Core group attribute mapping
-   :name: conf-scim-client-schemas-group-attributes-table
+   :name: scim-client-schemas-group-attributes-table
    :header-rows: 1
    :widths: 2 3 4
 
@@ -163,7 +164,7 @@ It also maps ``type: User`` and the target user's ``displayName`` to ``display``
 Members that the client can't find at the SCIM target are omitted.
 For the group membership restrictions, see :ref:`conf-scim-client-limitations-data-sync`.
 
-.. _conf-scim-client-schemas-group-extensions:
+.. _scim-client-schemas-group-extensions:
 
 Group extension attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

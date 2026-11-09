@@ -2,9 +2,7 @@
 
 .. SPDX-FileCopyrightText: 2025-2026 Univention GmbH
 
-.. _introduction:
-
-.. _conf-scim-client:
+.. _scim-client-intro:
 
 ************
 Introduction
@@ -16,10 +14,11 @@ This manual refers to that application as the *SCIM target*.
 
 This manual is for operators who connect applications to Nubus for Kubernetes and for software vendors who implement a SCIM interface in their applications.
 
-If you operate the *SCIM Client*, start with the :ref:`conf-scim-client-installation-prerequisites`.
+If you operate the *SCIM Client*, start with the :ref:`scim-client-prerquesites`.
 The installation and configuration procedures assume that you are familiar with Kubernetes and Helm.
 
-If you develop a SCIM interface for an application, start with :ref:`conf-scim-client-integration`.
+If you develop a SCIM interface for an application,
+start with :ref:`scim-client-target-integration-requirements`.
 That chapter describes the requests the client sends and the responses it expects from your application.
 
 For installation and operation of Nubus for Kubernetes itself, see the :external+uv-nubus-kubernetes-operation:ref:`Nubus for Kubernetes Operation Manual <doc-entry>`.
