@@ -3,7 +3,7 @@
 
 include:
   - project: "univention/dev/nubus-for-k8s/common-ci"
-    ref: "v1.70.0"
+    ref: "v1.72.0"
     file:
       - "defaults/stages.yaml"
       - "defaults/nubus-workflow.yaml"
@@ -13,16 +13,12 @@ include:
       - "jobs/container-build-external-buildkit.yaml"
       - "jobs/package-and-publish-helm-charts-external.yaml"
       - "jobs/check-debian-updates.yaml"
+      - "templates/compose-test.yaml"
 
-  - component: "$CI_SERVER_FQDN/univention/dev/nubus-for-k8s/common-ci/vul-man@v1.70.0"
+  - component: "$CI_SERVER_FQDN/univention/dev/nubus-for-k8s/common-ci/vul-man@v1.72.0"
     inputs:
       helm_chart_name: "scim-client"
       helm_values: "--helm-values ${CI_PROJECT_DIR}/helm/scim-client/linter_values.yaml"
-
-  - project: "univention/infrastructure/docker-services"
-    ref: "master"
-    file:
-      - "dind.yml"
 
 variables:
   RENOVATE_USER_ID: "1393"
@@ -119,74 +115,41 @@ check-debian-updates:
     TARGET_IMAGE: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:latest"
 
 test-unit-and-integration:
+  extends: ".compose-test"
   stage: test
-  extends: .dind
   variables:
+    COMPOSE_TEST_DIR: "scim-server/tests"
     COMPOSE_FILE: "docker-compose.yml:docker-compose.ci.yml"
-  image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
-  rules: &rules_dind
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
-      when: "never"
-    - if: '$GITLAB_USER_ID == $RENOVATE_USER_ID && $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_LABELS !~ /Renovate run dind/'
-      when: "manual"
-    - when: "on_success"
-
-  before_script:
-    - cd scim-server/tests
-    # Allow that the Docker API version is negotiated between client and server
-    - unset DOCKER_API_VERSION
-    - export IMAGE_TAG=${RELEASE_VERSION}
-    - echo -e "\e[0Ksection_start:`date +%s`:docker_debug[collapsed=true]\r\e[0KDocker version details"
-    - echo $IMAGE_TAG
-    - docker version
-    - echo -e "\e[0Ksection_end:`date +%s`:docker_debug\r\e[0K"
-    - echo -e "\e[0Ksection_start:`date +%s`:docker_compose_config[collapsed=true]\r\e[0KDocker Compose configuration"
-    - docker compose config test
-    - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
+    COMPOSE_TEST_SERVICES: "ldap-server udm-rest-api"
+    COMPOSE_TEST_WAIT_TIMEOUT: "180"
   script:
     - docker compose run --quiet-pull --name test-unit-and-integration test
   after_script:
-    - docker logs ldap-server >& ldap-server.log
-    - docker logs udm-rest-api >& udm-rest-api.log
     - docker cp test-unit-and-integration:/tmp/scim-coverage.xml ./coverage-test-unit-and-integration.xml
     - docker cp test-unit-and-integration:/tmp/pytest-junit.xml ./pytest-junit-test-unit-and-integration.xml
-    - docker stop -t0 test-unit-and-integration
-    - docker rm test-unit-and-integration
-    - docker compose -f scim-server/tests/docker-compose.yml down --volumes
+    - !reference [".compose-test", "after_script"]
   artifacts:
     paths:
-      - ldap-server.log
-      - udm-rest-api.log
+      - compose-logs/
       - coverage-test-unit-and-integration.xml
       - pytest-junit-test-unit-and-integration.xml
-    expire_in: "1 day"
-    when: "always"
-    expose_as: "docker compose server logs"
     reports:
       junit: pytest-junit-test-unit-and-integration.xml
 
 test-scim2-compliance:
+  extends: ".compose-test"
   stage: test
-  extends: .dind
   variables:
+    COMPOSE_TEST_DIR: "scim-server/tests"
     COMPOSE_FILE: "docker-compose.yml:docker-compose.ci.yml"
-  image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
-  rules: *rules_dind
-  before_script:
-    - cd scim-server/tests
-    - unset DOCKER_API_VERSION
-    - export IMAGE_TAG=${RELEASE_VERSION}
-    - docker compose up -d ldap-server udm-rest-api scim-server
+    COMPOSE_TEST_SERVICES: "ldap-server udm-rest-api scim-server"
+    COMPOSE_TEST_WAIT_TIMEOUT: "180"
   script:
     - docker compose run scim2-tester | tee scim2-tester.log 2>&1
-  after_script:
-    - docker compose down --volumes
   artifacts:
     paths:
+      - compose-logs/
       - scim-server/tests/scim2-tester.log
-    expire_in: "1 day"
-    when: "always"
-    expose_as: "SCIM2 Tester logs"
 
 test-helm-charts:
   stage: test
@@ -198,102 +161,41 @@ test-helm-charts:
     - pytest tests/helm_unit/scim_client
 
 test-scim-client:
+  extends: ".compose-test"
   stage: test
-  extends: .dind
   variables:
+    COMPOSE_TEST_DIR: "scim-client/tests"
     COMPOSE_FILE: "docker-compose.yaml:docker-compose.ci.yaml"
-  image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
-  rules: *rules_dind
-  before_script:
-    - cd scim-client/tests
-    # Allow that the Docker API version is negotiated between client and server
-    - unset DOCKER_API_VERSION
-    - export IMAGE_TAG=${RELEASE_VERSION}
-    - echo -e "\e[0Ksection_start:`date +%s`:docker_debug[collapsed=true]\r\e[0KDocker version details"
-    - echo $IMAGE_TAG
-    - docker version
-    - echo -e "\e[0Ksection_end:`date +%s`:docker_debug\r\e[0K"
-    - echo -e "\e[0Ksection_start:`date +%s`:docker_compose_config[collapsed=true]\r\e[0KDocker Compose configuration"
-    - docker compose config test
-    - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
+    COMPOSE_PROFILES: "test"
+    # The dependencies of the test service; naming the stack keeps the test runner itself out of `up`.
+    COMPOSE_TEST_SERVICES: "scim-dev-server udm-rest-api udm-listener keycloak prefill udm-transformer dispatcher"
+    COMPOSE_TEST_WAIT_TIMEOUT: "180"
   script:
     - docker compose run --quiet-pull --name test-scim-client test
   after_script:
-    - cd scim-client/tests
-    - docker cp test-scim-client:/tmp/pytest-junit.xml ../../pytest-junit-test-scim-client.xml
-    - docker cp test-scim-client:/tmp/scim-coverage.xml ../../coverage-test-scim-client.xml
-    - docker compose logs ldap-server >& ../../ldap-server.log
-    - docker compose logs udm-rest-api >& ../../udm-rest-api.log
-    - docker compose logs udm-listener >& ../../udm-listener.log
-    - docker compose logs keycloak >& ../../keycloak.log
-    - docker compose logs scim-dev-server >& ../../scim-dev-server.log
-    - docker logs test-scim-client >& ../../test-scim-client.log
-    - docker stop -t0 test-scim-client
-    - docker rm test-scim-client
-    - docker compose --profile test down --volumes
+    - docker cp test-scim-client:/tmp/pytest-junit.xml ./pytest-junit-test-scim-client.xml
+    - docker cp test-scim-client:/tmp/scim-coverage.xml ./coverage-test-scim-client.xml
+    - !reference [".compose-test", "after_script"]
   artifacts:
     paths:
-      - ldap-server.log
-      - udm-rest-api.log
-      - udm-listener.log
-      - keycloak.log
-      - scim-dev-server.log
-      - test-scim-client.log
+      - compose-logs/
       - coverage-test-scim-client.xml
       - pytest-junit-test-scim-client.xml
-    expire_in: "1 day"
-    when: "always"
-    expose_as: "docker compose server logs"
     reports:
       junit: pytest-junit-test-scim-client.xml
 
 test-scim-server-and-client-integration:
+  extends: ".compose-test"
   stage: test
-  extends: .dind
   variables:
+    COMPOSE_TEST_DIR: "scim-client/tests"
     COMPOSE_FILE: "docker-compose.yaml:docker-compose.ci.yaml"
-  image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:28.5.0"
-  rules: *rules_dind
-  before_script:
-    - cd scim-client/tests
-    # Allow that the Docker API version is negotiated between client and server
-    - unset DOCKER_API_VERSION
-    - export IMAGE_TAG=${RELEASE_VERSION}
-    - echo -e "\e[0Ksection_start:`date +%s`:docker_debug[collapsed=true]\r\e[0KDocker version details"
-    - echo $IMAGE_TAG
-    - docker version
-    - echo -e "\e[0Ksection_end:`date +%s`:docker_debug\r\e[0K"
-    - echo -e "\e[0Ksection_start:`date +%s`:docker_compose_config[collapsed=true]\r\e[0KDocker Compose configuration"
-    - docker compose config test-integration
-    - echo -e "\e[0Ksection_end:`date +%s`:docker_compose_config\r\e[0K"
+    COMPOSE_PROFILES: "test-integration"
+    # The dependencies of the test-integration service, without the test runner itself.
+    COMPOSE_TEST_SERVICES: "scim-server udm-rest-api udm-listener keycloak prefill udm-transformer dispatcher"
+    COMPOSE_TEST_WAIT_TIMEOUT: "180"
   script:
     - docker compose run --quiet-pull --name test-integration-scim-services test-integration
-  after_script:
-    - cd scim-client/tests
-    - docker compose logs ldap-server >& ../../ldap-server.log
-    - docker compose logs udm-rest-api >& ../../udm-rest-api.log
-    - docker compose logs udm-listener >& ../../udm-listener.log
-    - docker compose logs keycloak >& ../../keycloak.log
-    - docker compose logs provisioning-api >& ../../provisioning-api.log
-    - docker compose logs scim-server >& ../../scim-server.log
-    - docker compose logs downstream-udm-rest-api >& ../../downstream-udm-rest-api.log
-    - docker logs test-integration-scim-services >& ../../test-integration-scim-services.log
-    - docker stop -t0 test-integration-scim-services
-    - docker rm test-integration-scim-services
-    - docker compose --profile test-integration down --volumes
-  artifacts:
-    paths:
-      - ldap-server.log
-      - udm-rest-api.log
-      - udm-listener.log
-      - keycloak.log
-      - provisioning-api.log
-      - scim-server.log
-      - downstream-udm-rest-api.log
-      - test-integration-scim-services.log
-    expire_in: "1 day"
-    when: "always"
-    expose_as: "docker compose server logs"
 
 sonarqube-scan:
   stage: analysis
