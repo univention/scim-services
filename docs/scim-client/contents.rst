@@ -25,3 +25,4 @@ SCIM Client for Nubus documentation
    :maxdepth: 1
 
    changelog
+   bibliography
