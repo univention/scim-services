@@ -127,6 +127,10 @@ intersphinx_mapping = {
         "https://docs.software-univention.de/nubus-kubernetes-operation/1.x/en/",
         None,
     ),
+    "uv-nubus-customization": (
+        "https://docs.software-univention.de/nubus-customization/1.x/en/",
+        None,
+    ),
 }
 
 linkcheck_ignore = [
