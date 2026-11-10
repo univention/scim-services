@@ -7,16 +7,25 @@
 Installation
 ============
 
-Install or update the *SCIM Client* and register its provisioning subscription with Nubus for Kubernetes.
-The client and Nubus for Kubernetes use separate Helm releases.
+This page describes how to install and update the *SCIM Client*.
+Before you start,
+make sure that you completed the following sections:
 
-Install the *SCIM Client* in the same Kubernetes namespace as Nubus for Kubernetes.
-The client needs internal access to the *Provisioning API* and the *LDAP Server*.
+* :ref:`scim-client-prerquesites`
+* :ref:`scim-client-configuration`
+* :ref:`scim-client-provisioning`
 
-Use the :file:`scim-client-values.yaml` and :file:`nubus-values.yaml` files prepared in the previous chapters.
+The *SCIM Client* and Nubus for Kubernetes use separate Helm releases.
+Install the *SCIM Client* in the same Kubernetes namespace
+as Nubus for Kubernetes.
+
+Use the :file:`scim-client-values.yaml` and :file:`nubus-values.yaml` files
+prepared in the previous sections.
+For an example with multiple SCIM targets,
+see :ref:`scim-client-provisioning-multiple`.
 
 The *SCIM Client* has its own Helm Chart, separate from your existing Nubus deployment.
-Before you install the client, prepare the settings for both charts in Helm *values files*.
+Before you install the client, prepare the settings for both charts in Helm Chart values files.
 Helm uses these files when installing or updating the components.
 
 The installation consists of the following steps:
@@ -28,14 +37,16 @@ The installation consists of the following steps:
    * *LDAP Server*
    * PostgreSQL database
 
-   For more information, see :ref:`conf-scim-client-configuration`.
+   For the required settings, see :ref:`scim-client-configuration-mandatory`.
 
 #. Add the subscription configuration to the :file:`nubus-values.yaml` file for your existing Nubus deployment
-   so that the client can receive user and user group changes.
-   For more information, see :ref:`conf-scim-client-provisioning`.
+   so that the client can receive user changes.
+   If you enable group synchronization,
+   the client can also receive user group changes.
+   For more information, see :ref:`scim-client-provisioning`.
 
 #. Install the client first, then update Nubus to register the subscription,
-   as described in :ref:`conf-scim-client-installation`.
+   as described in :ref:`scim-client-installation-helm`.
    The commands in those instructions apply the values files prepared in the previous steps.
 
 .. _scim-client-installation-helm:
@@ -43,65 +54,105 @@ The installation consists of the following steps:
 Installation through Helm
 -------------------------
 
-Set ``NUBUS_NAMESPACE`` to the namespace of your existing Nubus deployment and ``RELEASE_NAME_FOR_NUBUS`` to its Helm release name.
-Set ``SCIM_CLIENT_HELM_VERSION`` to the version of the *SCIM Client* Helm Chart that you want to install.
-Set ``NUBUS_HELM_VERSION`` to the Helm Chart version of your existing Nubus deployment.
-You can find the installed chart version in the ``CHART`` column of ``helm list --namespace <namespace>``.
-Using the same Nubus chart version applies the subscription configuration without upgrading Nubus to a different version.
+To install the *SCIM Client* through Helm, use the following steps.
 
-Run the following commands to install or update the *SCIM Client* first, then register the subscription in Nubus for Kubernetes.
-The client chart creates the registration Secret needed for the Nubus update.
-The ``--install`` option installs the client if its Helm release doesn't exist yet.
+#. Prepare the environment variables with the commands in :numref:`scim-client-deployment-prepare-env-listing`:
 
-If your Nubus deployment uses additional values files, repeat ``--values`` for each file, for example ``--values nubus-values.yaml --values prod_values.yaml``.
-Keep the files in the same order as before.
+   * For your existing Nubus for Kubernetes deployment,
+     set the following environment variables to their respective values:
 
-.. code-block:: console
-   :caption: Install or update *SCIM Client* and register its subscription
-   :name: scim-client-deployment-listing
+     :``NUBUS_NAMESPACE``: the namespace
+     :``RELEASE_NAME_FOR_NUBUS``: the Helm release name
+     :``NUBUS_HELM_VERSION``: the Helm Chart version
 
-   $ export NUBUS_NAMESPACE="<Your Nubus for Kubernetes namespace>"
-   $ export RELEASE_NAME_FOR_NUBUS="<The release name of your Nubus installation>"
-   $ export SCIM_CLIENT_HELM_VERSION="<The SCIM Client Helm Chart version to install>"
-   $ export NUBUS_HELM_VERSION="<The Helm Chart version of your Nubus installation>"
+   * Set ``SCIM_CLIENT_HELM_VERSION`` to the version of the *SCIM Client* Helm Chart
+     that you want to install.
 
-   $ helm upgrade \
-       --install \
-       scim-client \
-       --namespace "$NUBUS_NAMESPACE" \
-       oci://artifacts.software-univention.de/nubus/charts/scim-client \
-       --version "$SCIM_CLIENT_HELM_VERSION" \
-       --values scim-client-values.yaml
+   .. tip::
 
-   $ helm upgrade \
-       --install \
-       "$RELEASE_NAME_FOR_NUBUS" \
-       --namespace "$NUBUS_NAMESPACE" \
-       oci://artifacts.software-univention.de/nubus/charts/nubus \
-       --version "$NUBUS_HELM_VERSION" \
-       --values nubus-values.yaml
+      You can find the installed chart version in the ``CHART`` column of
+      :command:`helm list --namespace <namespace>`.
+
+      When you use the same Nubus Helm Chart version,
+      Helm applies the subscription configuration without upgrading Nubus to a different version.
+
+   .. code-block:: console
+      :caption: Prepare environment variables for the installation
+      :name: scim-client-deployment-prepare-env-listing
+
+      $ export NUBUS_NAMESPACE="<Your Nubus for Kubernetes namespace>"
+      $ export RELEASE_NAME_FOR_NUBUS="<The release name of your Nubus installation>"
+      $ export SCIM_CLIENT_HELM_VERSION="<The SCIM Client Helm Chart version to install>"
+      $ export NUBUS_HELM_VERSION="<The Helm Chart version of your Nubus installation>"
+
+#. To install or update the *SCIM Client*,
+   run the commands in :numref:`scim-client-deployment-install-scim-client-listing`.
+
+   .. code-block:: console
+      :caption: Install or update the *SCIM Client*
+      :name: scim-client-deployment-install-scim-client-listing
+
+      $ helm upgrade \
+          --install \
+          scim-client \
+          --namespace "$NUBUS_NAMESPACE" \
+          oci://artifacts.software-univention.de/nubus/charts/scim-client \
+          --version "$SCIM_CLIENT_HELM_VERSION" \
+          --values scim-client-values.yaml
+
+#. To register the subscription in Nubus for Kubernetes,
+   run the commands in :numref:`scim-client-deployment-subscription-listing`.
+
+   If you don't configure an existing provisioning secret,
+   the client chart creates the registration secret needed for the Nubus update.
+   The ``--install`` option installs Nubus
+   if the specified Nubus Helm release doesn't exist.
+
+   .. important::
+
+      If your Nubus deployment uses additional values files,
+      repeat ``--values`` for each file,
+      for example ``--values nubus-values.yaml --values prod_values.yaml``.
+      Keep the files in the same order.
+
+   .. code-block:: console
+      :caption: Update Nubus and register the subscription
+      :name: scim-client-deployment-subscription-listing
+
+      $ helm upgrade \
+          --install \
+          "$RELEASE_NAME_FOR_NUBUS" \
+          --namespace "$NUBUS_NAMESPACE" \
+          oci://artifacts.software-univention.de/nubus/charts/nubus \
+          --version "$NUBUS_HELM_VERSION" \
+          --values nubus-values.yaml
 
 .. _scim-client-installation-verify:
 
-Check deployment status
------------------------
+Verify deployment status
+------------------------
 
-Optionally, check the Kubernetes deployment status of the *SCIM Client*:
+To verify the deployment status of the *SCIM Client*,
+run the command in :numref:`scim-client-installation-verification-listing`.
+
+Expect ``READY`` to show ``1/1`` and ``AVAILABLE`` to show ``1``.
+This confirms that Kubernetes reports an available client instance.
+It doesn't verify data synchronization with the *SCIM target*.
+
+The client may need a few minutes to start,
+for example while Kubernetes downloads the container image.
+If ``READY`` shows ``0/1`` or ``AVAILABLE`` shows ``0``,
+wait a few minutes and run the command again.
+If the client remains unavailable, see :ref:`scim-client-troubleshooting`.
+
+To also verify the synchronization with the *SCIM target*,
+follow the optional test-user check in :ref:`scim-client-troubleshooting-verification`.
 
 .. code-block:: console
    :caption: Check the *SCIM Client* deployment (example output)
-   :name: conf-scim-client-installation-verification-listing
+   :name: scim-client-installation-verification-listing
 
    $ kubectl get deployment scim-client --namespace "$NUBUS_NAMESPACE"
 
    NAME          READY   UP-TO-DATE   AVAILABLE   AGE
    scim-client   1/1     1            1           2m
-
-Expect ``READY`` to show ``1/1`` and ``AVAILABLE`` to show ``1``.
-This confirms that Kubernetes reports an available client instance; it doesn't verify data synchronization with the SCIM target.
-
-The client may need a few minutes to start, for example while Kubernetes downloads the container image.
-If ``READY`` shows ``0/1`` or ``AVAILABLE`` shows ``0``, wait a few minutes and run the command again.
-If the client remains unavailable, see :ref:`conf-scim-client-troubleshooting`.
-
-To also check synchronization with the SCIM target, follow the optional test-user check in :ref:`scim-client-troubleshooting-verification`.
