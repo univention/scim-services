@@ -9,6 +9,13 @@ Prerequisites
 
 Before you install the *SCIM Client*, make sure that you have the following:
 
+#. Helm configured to authenticate to the Kubernetes cluster running Nubus.
+   The Kubernetes API must be reachable from the system
+   where you run the installation commands.
+   Your credentials must allow Helm to install the *SCIM Client* release
+   and upgrade the existing Nubus release in the Nubus namespace,
+   including access to the chart resources and Helm's release Secrets.
+
 #. A Nubus for Kubernetes deployment.
    For installation,
    see :external+uv-nubus-kubernetes-operation:ref:`nubus-deployment`
@@ -31,3 +38,8 @@ Before you install the *SCIM Client*, make sure that you have the following:
    The Helm Chart requires LDAP connection and authentication settings
    even if you don't enable group synchronization.
    For the required settings, see :ref:`scim-client-configuration-mandatory`.
+
+For the optional :ref:`deployment status check <scim-client-installation-verify>`,
+you also need ``kubectl`` configured for the same cluster
+and permission to ``get`` ``deployments`` in the ``apps`` API group
+in the Nubus namespace.
