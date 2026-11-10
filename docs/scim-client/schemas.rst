@@ -131,7 +131,7 @@ The following list includes the core ``Group`` schema from :rfc:`7643` and the s
 * ``urn:ietf:params:scim:schemas:core:2.0:Group``
 * ``urn:ietf:params:scim:schemas:extension:Univention:1.0:Group``
 
-The ``scimClient.config.groupSync`` setting controls whether the client provisions user groups; see :ref:`conf-scim-client-configuration-optional`.
+The ``scimClient.config.groupSync`` setting controls whether the client provisions user groups; see :ref:`scim-client-configuration-optional`.
 
 .. _scim-client-schemas-group-attributes:
 
@@ -162,7 +162,7 @@ The core ``Group`` schema requires ``displayName``.
 For direct user memberships, the client maps the target-assigned user ID to ``members.value``.
 It also maps ``type: User`` and the target user's ``displayName`` to ``display`` when the target's schema supports them.
 Members that the client can't find at the SCIM target are omitted.
-For the group membership restrictions, see :ref:`conf-scim-client-limitations-data-sync`.
+For the group membership restrictions, see :ref:`scim-client-limitations-data-sync`.
 
 .. _scim-client-schemas-group-extensions:
 

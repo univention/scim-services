@@ -15,14 +15,14 @@ Before you install the *SCIM Client*, make sure that you have the following:
    in :cite:t:`uv-nubus-kubernetes-operation`.
 
 #. An external application that provides a SCIM interface, referred to as the SCIM target in this manual.
-   For the supported schemas, see :ref:`conf-scim-client-schemas`.
+   For the supported schemas, see :ref:`scim-client-schemas`.
 
 #. Connection details for the SCIM target,
    including its endpoint URL and authentication credentials.
 
 #. A separate PostgreSQL database for each *SCIM Client*
    and a dedicated database user with permission to create and modify its tables.
-   For more information, see :ref:`conf-scim-client-configuration-database`.
+   For more information, see :ref:`scim-client-configuration-database`.
 
 #. If you enable group synchronization,
    internal network access from the *SCIM Client* to the *LDAP Server*.

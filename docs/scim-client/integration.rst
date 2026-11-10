@@ -35,7 +35,7 @@ When establishing the connection, the client queries the following discovery end
 Advertise the resources and attributes that your application supports.
 The client uses the discovered schemas and attribute mutability to build requests.
 It logs warnings when it can't discover capabilities or the target doesn't advertise a capability it needs.
-For the supported attributes and extensions, see :ref:`conf-scim-client-schemas`.
+For the supported attributes and extensions, see :ref:`scim-client-schemas`.
 
 .. _scim-client-integration-auth:
 
@@ -53,7 +53,7 @@ The client supports the following methods:
 
 Support the method selected for your integration and advertise it in ``authenticationSchemes`` in ``/ServiceProviderConfig``.
 The client checks for ``oauthbearertoken`` for both ``bearer`` and ``oidc``, and ``httpbasic`` for ``basic``.
-For the corresponding Helm values and Secret configuration, see :ref:`conf-scim-client-configuration-auth`.
+For the corresponding Helm values and Secret configuration, see :ref:`scim-client-configuration-auth`.
 
 .. _scim-client-integration-operations:
 

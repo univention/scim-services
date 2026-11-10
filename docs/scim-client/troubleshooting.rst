@@ -46,7 +46,7 @@ At the default ``INFO`` log level, the client emits the following message texts:
   These messages alone don't confirm successful processing.
 
 These messages refer to startup or individual objects; they don't confirm that all users have been synchronized.
-Use the ``show-item`` command described in :ref:`conf-scim-client-troubleshooting-cli` to inspect the state of an affected object.
+Use the ``show-item`` command described in :ref:`scim-client-troubleshooting-cli` to inspect the state of an affected object.
 
 .. _scim-client-troubleshooting-common-errors:
 
