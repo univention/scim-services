@@ -16,7 +16,7 @@
 # The script downloads the SCIM Client Helm Chart, generates the Frigate values
 # reference, and writes:
 #
-#   docs/scim-client/reference-values-scim-client.txt
+#   docs/scim-client/references/reference-values-scim-client.txt
 
 set -euo pipefail
 
@@ -28,7 +28,7 @@ if [[ -z "$SCIM_CLIENT_HELM_VERSION" ]]; then
   exit 2
 fi
 
-output_file="docs/scim-client/reference-values-scim-client.txt"
+output_file="docs/scim-client/references/reference-values-scim-client.txt"
 frigate_template="docs/.frigate-scim-client"
 
 if [[ ! -f "$frigate_template" || ! -d "docs/scim-client" ]]; then

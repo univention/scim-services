@@ -11,15 +11,9 @@ SCIM Client for Nubus documentation
    :maxdepth: 3
 
    index
-   prerequisites
-   configuration
-   provisioning
-   installation
-   troubleshooting
+   setup-and-operation/index
    integration
-   schemas
-   limitations
-   reference
+   references/index
 
 .. toctree::
    :maxdepth: 1
