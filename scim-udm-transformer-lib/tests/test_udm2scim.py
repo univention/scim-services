@@ -24,7 +24,7 @@ def test_map_emails(udm2scim_mapper: UdmToScimMapper) -> None:
         "e-mail": ["test.two@test.de"],
     }
     expected_emails = [
-        {"value": "test@test.de", "type": "mailbox", "primary": False},
+        {"value": "test@test.de", "type": "mailbox", "primary": True},
         {"value": "test.alt@test.de", "type": "alias", "primary": False},
         {"value": "test.two@test.de", "type": "other", "primary": False},
     ]

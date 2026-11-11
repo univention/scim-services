@@ -92,7 +92,7 @@ async def test_put_user_endpoint(
             assert email["type"] == "mailbox"
         else:
             assert email["type"] == "other"
-        assert not email["primary"]
+        assert email["primary"] == (email["type"] == "mailbox")
         assert email["value"] in [x["value"] for x in updated_user_data["emails"]]
 
     # Verify the new email exists in the GET response

@@ -77,7 +77,7 @@ scim_schema = {
     "preferredLanguage": "EN",
     "active": False,
     "emails": [
-        {"type": "mailbox", "primary": False, "value": "primary@testmail.org"},
+        {"type": "mailbox", "primary": True, "value": "primary@testmail.org"},
         {"type": "alias", "primary": False, "value": "alternative2@testmail.org"},
         {"type": "alias", "primary": False, "value": "alternative42@testmail.org"},
         {"type": "other", "primary": False, "value": "other5@testmail.org"},

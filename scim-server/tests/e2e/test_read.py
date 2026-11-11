@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from scim2_models import GroupMember
 
 from tests.conftest import CreateGroupFactory, CreateUserFactory, skip_if_no_udm
+from univention.scim.server.models.user import Email
 
 
 @pytest.mark.asyncio
@@ -56,6 +57,12 @@ async def test_get_user_endpoint(
     """Test retrieving a user through the REST API endpoint."""
     print("\n=== E2E Testing GET User Endpoint ===")
 
+    user_with_mailbox = create_random_user.random_user_factory([])
+    assert user_with_mailbox.emails
+    mailbox_address = user_with_mailbox.emails[0].value
+    user_with_mailbox.emails[0] = Email(value=mailbox_address, type="mailbox", primary=False)
+    create_random_user.random_user_factory = lambda _: user_with_mailbox
+
     test_user = await create_random_user()
     user_id = test_user.id
     user_url = f"{api_prefix}/Users/{user_id}"
@@ -75,14 +82,18 @@ async def test_get_user_endpoint(
     assert user_data["name"]["familyName"] == test_user.name.family_name
 
     # Verify email addresses
-    # email type can not be mapped so all emails have type "other" when queried from UDM
+    # Non-mailbox/alias email types are returned as "other" when queried from UDM.
     # there are to special cases:
     #  * type == mailbox: This is the "mailPrimaryAddress" property in UDM
     #  * type == alias: This is the "mailAlternativeAddress" property in UDM
     assert len(user_data["emails"]) == len(test_user.emails)
+    assert any(email["value"] == mailbox_address for email in user_data["emails"])
     for email in user_data["emails"]:
-        assert email["type"] == "other"
-        assert not email["primary"]
+        if email["value"] == mailbox_address:
+            assert email["type"] == "mailbox"
+        else:
+            assert email["type"] == "other"
+        assert email["primary"] == (email["type"] == "mailbox")
         assert email["value"] in [email.value for email in test_user.emails]
 
 

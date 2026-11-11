@@ -267,7 +267,7 @@ class UdmToScimMapper(Generic[UserType, GroupType]):
         if "mailPrimaryAddress" in props and props["mailPrimaryAddress"] is not None:
             if not emails:
                 emails = []
-            emails.append({"value": props["mailPrimaryAddress"], "type": "mailbox", "primary": False})
+            emails.append({"value": props["mailPrimaryAddress"], "type": "mailbox", "primary": True})
 
         if "mailAlternativeAddress" in props and props["mailAlternativeAddress"] is not None:
             if not emails:

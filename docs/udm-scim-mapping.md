@@ -247,10 +247,14 @@
     - `e-mail`: A list of email addresses used for address books. They can be hosted externally.
     - `mailPrimaryAddress`: A mailbox hosted by the UCS (Nubus?) mail server.
     - `mailAlternativeAddress`: A list of email aliases for the mailbox (`mailPrimaryAddress`) hosted by the UCS (Nubus?) mail server.
+  - When mapping from UDM to SCIM:
+    - `mailPrimaryAddress` becomes an entry with `type=mailbox` and `primary=true`.
+    - `mailAlternativeAddress` entries have `type=alias` and `primary=false`.
+    - `e-mail` entries have `type=other` and `primary=false`.
   - SCIM doesn't have a notion of email hosting, and it doesn't know about _hosted mail domains_.
     It just stores contact information.
     Thus, `e-mail` is the natural choice for mapping `emails`.
-  - But we can use the `type` sub-field to define a mapping that allows clients to target
+  - When mapping from SCIM to UDM, we use the `type` sub-field to allow clients to target
     `mailPrimaryAddress` (specifying `type=mailbox`) and `mailAlternativeAddress` (specifying `type=alias`).
     All other addresses (`email.type` is unset or not `alias|mailbox`) are mapped to `e-mail`.
     - We don't use `primary=true` to define the mapping to `mailPrimaryAddress`,
