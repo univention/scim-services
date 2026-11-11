@@ -131,6 +131,10 @@ intersphinx_mapping = {
         "https://docs.software-univention.de/nubus-customization/1.x/en/",
         None,
     ),
+    "uv-nubus-manual": (
+        "https://docs.software-univention.de/nubus-manual/1.x/en/",
+        None,
+    ),
 }
 
 linkcheck_ignore = [
