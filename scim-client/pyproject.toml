@@ -33,6 +33,7 @@ dev = [
     # get udm cli to manually test aginst third-party servers like wire.com
     "udm-rest-api-client[cli]>=0.0.2",
     "pytest-httpserver>=1.2.0",
+    "pyhamcrest>=2.1.0",
 ]
 
 [tool.uv.sources]
