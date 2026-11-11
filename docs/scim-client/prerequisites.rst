@@ -21,7 +21,8 @@ Before you install the *SCIM Client*, make sure that you have the following:
    see :external+uv-nubus-kubernetes-operation:ref:`nubus-deployment`
    in :cite:t:`uv-nubus-kubernetes-operation`.
 
-#. An external application that provides a SCIM interface, referred to as the SCIM target in this manual.
+#. An external application that provides a SCIM interface,
+   referred to as the *SCIM target* in this manual.
    For the supported schemas, see :ref:`scim-client-schemas`.
 
 #. Connection details for the SCIM target,
@@ -41,16 +42,16 @@ Before you install the *SCIM Client*, make sure that you have the following:
 
 For the optional :ref:`deployment status check <scim-client-installation-verify>`,
 you also need ``kubectl`` configured for the same cluster
-and permission to ``get`` ``deployments`` in the ``apps`` API group
-in the Nubus namespace.
+and permission for the ``deployments`` resource
+in the ``apps`` API group in the Nubus namespace.
+The required action is ``get``.
 
 For troubleshooting,
 you also need permission to read pod logs
 and run commands in the *SCIM Client* container in the Nubus namespace.
 
-For troubleshooting,
-you also need permission to read pod logs
-and run commands in the *SCIM Client* container in the Nubus namespace.
-To restart the client and wait for its rollout,
-you also need permission to ``get``, ``patch``, ``list``, and ``watch``
-``deployments`` in the ``apps`` API group in the Nubus namespace.
+To restart the client and process queued retries without waiting for a new message,
+as shown in :numref:`scim-client-retry-restart-listing`,
+you also need permissions for the ``deployments`` resource
+in the ``apps`` API group in the Nubus namespace.
+The required actions are ``get``, ``patch``, ``list``, and ``watch``.
