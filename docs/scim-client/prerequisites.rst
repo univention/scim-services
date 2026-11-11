@@ -43,3 +43,14 @@ For the optional :ref:`deployment status check <scim-client-installation-verify>
 you also need ``kubectl`` configured for the same cluster
 and permission to ``get`` ``deployments`` in the ``apps`` API group
 in the Nubus namespace.
+
+For troubleshooting,
+you also need permission to read pod logs
+and run commands in the *SCIM Client* container in the Nubus namespace.
+
+For troubleshooting,
+you also need permission to read pod logs
+and run commands in the *SCIM Client* container in the Nubus namespace.
+To restart the client and wait for its rollout,
+you also need permission to ``get``, ``patch``, ``list``, and ``watch``
+``deployments`` in the ``apps`` API group in the Nubus namespace.
