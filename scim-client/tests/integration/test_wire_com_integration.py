@@ -175,7 +175,6 @@ class TestWireComIntegration:
         """Create a deterministic external ID for the user."""
         return uuid.UUID(int=user_index, version=4)  # UDM wants valid UUID1 or UUID4.
 
-    @pytest.mark.asyncio
     async def test_create_user(
         self,
         udm_object_janitor: UDMObjectJanitor,

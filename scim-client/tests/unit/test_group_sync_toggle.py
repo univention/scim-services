@@ -27,7 +27,6 @@ def make_consumer(group_sync_enabled: bool, scim_http_client: MagicMock, databas
     return ScimConsumer(scim_http_client, group_membership_resolver=None, settings=settings, database=database)
 
 
-@pytest.mark.asyncio
 async def test_group_message_skipped_when_group_sync_disabled(scim_http_client: MagicMock, database: DBSession) -> None:
     consumer = make_consumer(group_sync_enabled=False, scim_http_client=scim_http_client, database=database)
     consumer.write_udm_object = MagicMock()  # type: ignore[method-assign]
@@ -38,7 +37,6 @@ async def test_group_message_skipped_when_group_sync_disabled(scim_http_client: 
     consumer.write_udm_object.assert_not_called()
 
 
-@pytest.mark.asyncio
 async def test_group_message_processed_when_group_sync_enabled(
     scim_http_client: MagicMock, database: DBSession
 ) -> None:
@@ -51,7 +49,6 @@ async def test_group_message_processed_when_group_sync_enabled(
     consumer.write_udm_object.assert_called_once()
 
 
-@pytest.mark.asyncio
 async def test_user_message_processed_regardless_of_group_sync_setting(
     scim_http_client: MagicMock, database: DBSession
 ) -> None:

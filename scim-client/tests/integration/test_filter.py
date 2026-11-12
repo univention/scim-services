@@ -15,7 +15,6 @@ def _uoi(udm_props: dict) -> str:
     return udm_props["univentionObjectIdentifier"]
 
 
-@pytest.mark.asyncio
 async def test_create_user(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
     # Create user
     pm = get_provisioning_message("user_create")
@@ -44,7 +43,6 @@ async def test_create_user(scim_http_client: ScimClient, scim_client: ScimConsum
     wait_for_resource_deleted(scim_http_client, pm.body.old)
 
 
-@pytest.mark.asyncio
 async def test_create_user_with_update(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
     #
     # Create user, should not created in SCIM
@@ -82,7 +80,6 @@ async def test_create_user_with_update(scim_http_client: ScimClient, scim_client
     wait_for_resource_deleted(scim_http_client, pm.body.old)
 
 
-@pytest.mark.asyncio
 async def test_not_create_user(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
     #
     # Create user, should not created in SCIM
@@ -109,7 +106,6 @@ async def test_not_create_user(scim_http_client: ScimClient, scim_client: ScimCo
         scim_http_client.get_user(_uoi(pm.body.new["properties"]))
 
 
-@pytest.mark.asyncio
 async def test_create_group(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
     # Create group
     pm = get_provisioning_message("group_create")
@@ -138,7 +134,6 @@ async def test_create_group(scim_http_client: ScimClient, scim_client: ScimConsu
     wait_for_resource_deleted(scim_http_client, pm.body.old)
 
 
-@pytest.mark.asyncio
 async def test_create_group_with_update(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
     #
     # Create group, should not be created in SCIM
@@ -175,7 +170,6 @@ async def test_create_group_with_update(scim_http_client: ScimClient, scim_clien
     wait_for_resource_deleted(scim_http_client, pm.body.old)
 
 
-@pytest.mark.asyncio
 async def test_not_create_group(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
     #
     # Create group, should not be created in SCIM

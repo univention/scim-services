@@ -54,6 +54,7 @@ scim-client = "univention.scim.client.main:run"
 univention-scim-connector-task-management = "univention.scim.client.task_management:run"
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 env = [
     "D:SCIM_SERVER_BASE_URL = http://localhost:8888/v2/",

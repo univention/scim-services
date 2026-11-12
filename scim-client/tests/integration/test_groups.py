@@ -13,7 +13,6 @@ from ..data.provisioning_message_factory import get_provisioning_message
 from ..data.scim_helper import wait_for_resource_deleted
 
 
-@pytest.mark.asyncio
 async def test_create_group(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
     #
     # Create Group
@@ -32,7 +31,6 @@ async def test_create_group(scim_http_client: ScimClient, scim_client: ScimConsu
     wait_for_resource_deleted(scim_http_client, pm.body.old)
 
 
-@pytest.mark.asyncio
 async def test_create_group_is_idempotent_on_rerun(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
     pm = get_provisioning_message("group_create")
 
@@ -53,7 +51,6 @@ async def test_create_group_is_idempotent_on_rerun(scim_http_client: ScimClient,
     wait_for_resource_deleted(scim_http_client, pm.body.old)
 
 
-@pytest.mark.asyncio
 async def test_update_group(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
     #
     # Create Group
@@ -77,7 +74,6 @@ async def test_update_group(scim_http_client: ScimClient, scim_client: ScimConsu
     wait_for_resource_deleted(scim_http_client, pm.body.old)
 
 
-@pytest.mark.asyncio
 async def test_delete_group(scim_http_client: ScimClient, scim_client: ScimConsumer) -> None:
     #
     # Create Group
@@ -94,7 +90,6 @@ async def test_delete_group(scim_http_client: ScimClient, scim_client: ScimConsu
     wait_for_resource_deleted(scim_http_client, pm.body.old)
 
 
-@pytest.mark.asyncio
 async def test_add_group_member(scim_http_client: ScimClient, scim_client: ScimConsumer, mocker: MockerFixture) -> None:
     #
     # Create User
@@ -145,7 +140,6 @@ async def test_add_group_member(scim_http_client: ScimClient, scim_client: ScimC
 @pytest.mark.skipif(
     "UNIVENTION_SCIM_SERVER" in os.environ, reason="Not working with Univention SCIM server at the moment!"
 )
-@pytest.mark.asyncio
 async def test_remove_group_member(
     scim_http_client: ScimClient, scim_client: ScimConsumer, mocker: MockerFixture
 ) -> None:
