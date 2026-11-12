@@ -6,11 +6,12 @@ import os
 import time
 import uuid
 from collections.abc import Awaitable, Callable
-from typing import Protocol
+from typing import Any, Literal, Protocol
 
 import httpx2
 import pytest
 from hamcrest import all_of, assert_that, has_properties, instance_of
+from hamcrest.core.matcher import Matcher
 from loguru import logger
 from scim2_client.engines.httpx2 import SyncSCIMClient
 from scim2_models import (
@@ -24,7 +25,7 @@ from scim2_models import (
     SearchRequest,
     User,
 )
-from univention.admin.rest.client import UDM
+from univention.admin.rest.client import UDM, Object
 
 from univention.scim.client.authentication import AuthMethod, BearerAuth, BearerAuthSettings
 
@@ -36,21 +37,22 @@ NUM_TEST_USERS = 1
 WIRE_COM_SCIM_SERVER_BASE_URL = "https://prod-nginz-https.wire.com/scim/v2"
 
 
-class UserFactory(Protocol):
-    def __call__(self, user_index: int, *, email_type) -> User: ...
+class UserPropertiesFactory(Protocol):
+    def __call__(
+        self, user_index: int, *, email_attrs: list[Literal["mailPrimaryAddress", "mailAlternativeAddress", "e-mail"]]
+    ) -> dict[str, str]: ...
 
 
-def equivalent_user(user: User, active: bool):
+def expected_user_for_udm_user(udm_user: Object, *, active: bool) -> Matcher:
     return all_of(
         instance_of(User),
         has_properties(
-            external_id=user.external_id,
-            user_name=user.user_name,
-            name=user.name,
-            display_name=user.display_name,
-            preferred_language=user.preferred_language,
-            emails=user.emails,
-            roles=user.roles,
+            external_id=udm_user.properties["univentionObjectIdentifier"],
+            user_name=udm_user.properties["username"],
+            display_name=udm_user.properties["displayName"],
+            preferred_language=udm_user.properties["preferredLanguage"],
+            emails=[Email(value=udm_user.properties["mailPrimaryAddress"], type="mailbox", primary=False)],
+            roles=[Role(value="member")],
             active=active,
         ),
     )
@@ -111,18 +113,28 @@ class TestWireComIntegration:
                 independent_client.delete(user)
 
     @pytest.fixture
-    def make_wire_com_user(self, maildomain: str) -> UserFactory:
-        def factory(user_index: int, *, email_type) -> User:
+    def make_wire_com_user_properties(self, maildomain: str) -> UserPropertiesFactory:
+        def factory(
+            user_index: int, *, email_attrs: list[Literal["mailPrimaryAddress", "mailAlternativeAddress", "e-mail"]]
+        ) -> dict[str, Any]:
             assert user_index < NUM_TEST_USERS
             unique_user_name = f"univention-test-user-{user_index}-{uuid.uuid4()}"
-            return User(
-                external_id=str(self._id_for_user_index(user_index)),
-                user_name=unique_user_name,
-                display_name=f"Test user {user_index}",
-                preferred_language="en",
-                emails=[Email(value=f"{unique_user_name}@{maildomain}", type=email_type, primary=False)],
-                roles=[Role(value="member")],
-            )
+            properties: dict[str, Any] = {
+                "univentionObjectIdentifier": str(self._id_for_user_index(user_index)),
+                "username": unique_user_name,
+                "displayName": f"Test user {user_index}",
+                "preferredLanguage": "en",
+            }
+            # We need to set lastname and password for the sake of UDM, but wire.com doesn't store these.
+            properties |= {"lastname": "lastname", "password": "univention"}
+            for i, email_attr in enumerate(email_attrs):
+                email = f"{unique_user_name}-{i}@{maildomain}"
+                if email_attr == "e-mail":
+                    properties.setdefault("e-mail", []).append(email)
+                else:
+                    assert email_attr not in properties
+                    properties[email_attr] = email
+            return properties
 
         return factory
 
@@ -165,21 +177,17 @@ class TestWireComIntegration:
 
     @pytest.mark.asyncio
     async def test_create_user(
-        self, make_wire_com_user: UserFactory, udm_client: UDM, wait_for_user: Callable[[int], Awaitable[User]]
+        self,
+        make_wire_com_user_properties: UserPropertiesFactory,
+        udm_client: UDM,
+        wait_for_user: Callable[[int], Awaitable[User]],
     ):
         async with BackgroundConsumer():
-            expected_user = make_wire_com_user(0, email_type="mailbox")
-            properties = {
-                "univentionObjectIdentifier": expected_user.external_id,
-                "username": expected_user.user_name,
-                "displayName": expected_user.display_name,
-                "preferredLanguage": expected_user.preferred_language,
-                "mailPrimaryAddress": expected_user.emails[0].value,
-            }
-            properties |= {"lastname": "lastname", "password": "univention"}
-            create_udm_user(udm_client=udm_client, user_data=properties)
-            actual_user = await wait_for_user(0)
-            assert_that(actual_user, equivalent_user(expected_user, active=False))
-
-            # Cleanup.
-            delete_udm_user(udm_client=udm_client, user_data=properties)
+            try:
+                properties = make_wire_com_user_properties(0, email_attrs=["mailPrimaryAddress"])
+                udm_user = create_udm_user(udm_client=udm_client, user_data=properties)
+                actual_user = await wait_for_user(0)
+                assert_that(actual_user, expected_user_for_udm_user(udm_user, active=False))
+            finally:
+                # Cleanup.
+                delete_udm_user(udm_client=udm_client, user_data=properties)
