@@ -29,15 +29,13 @@ def test_get_univention_object_identifier_by_dn(
 
 
 def test_get_user(
-    background_scim_client: ScimConsumer,
+    background_consumer: ScimConsumer,
     scim_http_client: ScimClient,
     group_membership_resolver: GroupMembershipLdapResolver,
     udm_client: UDM,
     user_data: dict[str, Any],
     mocker: MockerFixture,
 ) -> None:
-    assert background_scim_client
-
     udm_user = create_udm_user(udm_client=udm_client, user_data=user_data)
     assert wait_for_resource_exists(
         scim_http_client=scim_http_client,

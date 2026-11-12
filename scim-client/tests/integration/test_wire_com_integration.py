@@ -2,7 +2,6 @@
 # SPDX-FileCopyrightText: 2026 Univention GmbH
 
 import asyncio
-import multiprocessing
 import os
 import time
 import uuid
@@ -11,7 +10,6 @@ from typing import Protocol
 
 import httpx2
 import pytest
-from aiohttp import ClientResponseError
 from hamcrest import all_of, assert_that, has_properties, instance_of
 from loguru import logger
 from scim2_client.engines.httpx2 import SyncSCIMClient
@@ -27,15 +25,10 @@ from scim2_models import (
     User,
 )
 from univention.admin.rest.client import UDM
-from univention.provisioning.consumer.api import (
-    ProvisioningConsumerClient,
-    ProvisioningConsumerClientSettings,
-    RealmTopic,
-)
 
 from univention.scim.client.authentication import AuthMethod, BearerAuth, BearerAuthSettings
-from univention.scim.client.main import run as scim_client_run
 
+from ..data.helper import BackgroundConsumer
 from ..data.udm_helper import create_udm_user, delete_udm_user
 
 
@@ -174,33 +167,7 @@ class TestWireComIntegration:
     async def test_create_user(
         self, make_wire_com_user: UserFactory, udm_client: UDM, wait_for_user: Callable[[int], Awaitable[User]]
     ):
-        admin_settings = ProvisioningConsumerClientSettings(
-            provisioning_api_base_url=os.environ["PROVISIONING_API_BASE_URL"],
-            provisioning_api_username=os.environ["PROVISIONING_API_ADMIN_USERNAME"],
-            provisioning_api_password=os.environ["PROVISIONING_API_ADMIN_PASSWORD"],
-            log_level="DEBUG",
-        )
-        async with ProvisioningConsumerClient(admin_settings) as admin_client:
-            try:
-                await admin_client.create_subscription(
-                    name=os.environ["PROVISIONING_API_USERNAME"],
-                    password=os.environ["PROVISIONING_API_PASSWORD"],
-                    realms_topics=[
-                        RealmTopic(realm="udm", topic="users/user"),
-                        RealmTopic(realm="udm", topic="groups/group"),
-                    ],
-                    # do not request prefill to speed up tests, in the tests we are only interested
-                    # in the new users/groups created within the test not all the default users/groups
-                    request_prefill=False,
-                )
-            except ClientResponseError as e:
-                logger.warning("%s, Client already exists", e)
-            else:
-                logger.info("Subscription {} created.", os.environ["PROVISIONING_API_USERNAME"])
-
-        proc = multiprocessing.Process(target=scim_client_run)
-        proc.start()
-        try:
+        async with BackgroundConsumer():
             expected_user = make_wire_com_user(0, email_type="mailbox")
             properties = {
                 "univentionObjectIdentifier": expected_user.external_id,
@@ -216,14 +183,3 @@ class TestWireComIntegration:
 
             # Cleanup.
             delete_udm_user(udm_client=udm_client, user_data=properties)
-        finally:
-            proc.terminate()
-            admin_settings = ProvisioningConsumerClientSettings(
-                provisioning_api_base_url=os.environ["PROVISIONING_API_BASE_URL"],
-                provisioning_api_username=os.environ["PROVISIONING_API_ADMIN_USERNAME"],
-                provisioning_api_password=os.environ["PROVISIONING_API_ADMIN_PASSWORD"],
-                log_level="DEBUG",
-            )
-            async with ProvisioningConsumerClient(admin_settings) as admin_client:
-                await admin_client.cancel_subscription(name=os.environ["PROVISIONING_API_USERNAME"])
-                logger.info("Subscription {} deleted.", os.environ["PROVISIONING_API_USERNAME"])

@@ -95,52 +95,50 @@ def wait_for_resource_deleted(
         return True
 
 
-def create_provisioning_subscription() -> None:
-    """ """
-
-    async def create_provisioning_subscription_async() -> None:
-        admin_settings = ProvisioningConsumerClientSettings(
-            provisioning_api_base_url=os.environ["PROVISIONING_API_BASE_URL"],
-            provisioning_api_username=os.environ["PROVISIONING_API_ADMIN_USERNAME"],
-            provisioning_api_password=os.environ["PROVISIONING_API_ADMIN_PASSWORD"],
-            log_level="DEBUG",
-        )
-        async with ProvisioningConsumerClient(admin_settings) as admin_client:
-            try:
-                await admin_client.create_subscription(
-                    name=os.environ["PROVISIONING_API_USERNAME"],
-                    password=os.environ["PROVISIONING_API_PASSWORD"],
-                    realms_topics=[
-                        RealmTopic(realm="udm", topic="users/user"),
-                        RealmTopic(realm="udm", topic="groups/group"),
-                    ],
-                    # do not request prefill to speed up tests, in the tests we are only interested
-                    # in the new users/groups created within the test not all the default users/groups
-                    request_prefill=False,
-                )
-            except ClientResponseError as e:
-                logger.warning("%s, Client already exists", e)
-            else:
-                logger.info("Subscription {} created.", os.environ["PROVISIONING_API_USERNAME"])
-
-    asyncio.run(create_provisioning_subscription_async())
+async def create_provisioning_subscription() -> None:
+    admin_settings = ProvisioningConsumerClientSettings(
+        provisioning_api_base_url=os.environ["PROVISIONING_API_BASE_URL"],
+        provisioning_api_username=os.environ["PROVISIONING_API_ADMIN_USERNAME"],
+        provisioning_api_password=os.environ["PROVISIONING_API_ADMIN_PASSWORD"],
+        log_level="DEBUG",
+    )
+    async with ProvisioningConsumerClient(admin_settings) as admin_client:
+        try:
+            await admin_client.create_subscription(
+                name=os.environ["PROVISIONING_API_USERNAME"],
+                password=os.environ["PROVISIONING_API_PASSWORD"],
+                realms_topics=[
+                    RealmTopic(realm="udm", topic="users/user"),
+                    RealmTopic(realm="udm", topic="groups/group"),
+                ],
+                # do not request prefill to speed up tests, in the tests we are only interested
+                # in the new users/groups created within the test not all the default users/groups
+                request_prefill=False,
+            )
+        except ClientResponseError as e:
+            logger.warning("%s, Client already exists", e)
+        else:
+            logger.info("Subscription {} created.", os.environ["PROVISIONING_API_USERNAME"])
 
 
-def delete_provisioning_subscription() -> None:
-    """ """
+def create_provisioning_subscription_sync() -> None:
+    asyncio.run(create_provisioning_subscription())
 
-    async def delete_provisioning_subscription_async() -> None:
-        admin_settings = ProvisioningConsumerClientSettings(
-            provisioning_api_base_url=os.environ["PROVISIONING_API_BASE_URL"],
-            provisioning_api_username=os.environ["PROVISIONING_API_ADMIN_USERNAME"],
-            provisioning_api_password=os.environ["PROVISIONING_API_ADMIN_PASSWORD"],
-            log_level="DEBUG",
-        )
-        async with ProvisioningConsumerClient(admin_settings) as admin_client:
-            await admin_client.cancel_subscription(name=os.environ["PROVISIONING_API_USERNAME"])
-            logger.info("Subscription {} deleted.", os.environ["PROVISIONING_API_USERNAME"])
 
-    asyncio.run(delete_provisioning_subscription_async())
+async def delete_provisioning_subscription() -> None:
+    admin_settings = ProvisioningConsumerClientSettings(
+        provisioning_api_base_url=os.environ["PROVISIONING_API_BASE_URL"],
+        provisioning_api_username=os.environ["PROVISIONING_API_ADMIN_USERNAME"],
+        provisioning_api_password=os.environ["PROVISIONING_API_ADMIN_PASSWORD"],
+        log_level="DEBUG",
+    )
+    async with ProvisioningConsumerClient(admin_settings) as admin_client:
+        await admin_client.cancel_subscription(name=os.environ["PROVISIONING_API_USERNAME"])
+        logger.info("Subscription {} deleted.", os.environ["PROVISIONING_API_USERNAME"])
+
+
+def delete_provisioning_subscription_sync() -> None:
+    asyncio.run(delete_provisioning_subscription())
 
 
 def capture_authorization_header(scim_server_base_url: str, auth: httpx2.Auth | None) -> str | None:

@@ -22,13 +22,11 @@ from ..data.udm_helper import (
 
 def test_user_crud(
     udm_client: UDM,
-    background_scim_client: ScimConsumer,
+    background_consumer: ScimConsumer,
     scim_http_client: ScimClient,
     user_data: dict[str, Any],
     user_data_updated: dict[str, Any],
 ) -> None:
-    assert background_scim_client
-
     # Test create
     udm_user = create_udm_user(udm_client=udm_client, user_data=user_data)
     user: dict = wait_for_resource_exists(scim_http_client, udm_user)
@@ -53,12 +51,10 @@ def test_user_crud(
 
 def test_user_with_extensions(
     udm_client: UDM,
-    background_scim_client: ScimConsumer,
+    background_consumer: ScimConsumer,
     scim_http_client: ScimClient,
     user_data_with_extensions: dict[str, Any],
 ) -> None:
-    assert background_scim_client
-
     # Test create
     udm_user = create_udm_user(udm_client=udm_client, user_data=user_data_with_extensions)
     user: dict = wait_for_resource_exists(scim_http_client, udm_user)
@@ -75,13 +71,11 @@ def test_user_with_extensions(
 
 def test_add_group_member(
     udm_client: UDM,
-    background_scim_client: ScimConsumer,
+    background_consumer: ScimConsumer,
     group_data: dict[str, Any],
     user_data: dict[str, Any],
     scim_http_client: ScimClient,
 ) -> None:
-    assert background_scim_client
-
     #
     # Create group
     #
@@ -131,13 +125,11 @@ def test_add_group_member(
 @pytest.mark.skip("No impact at the moment. Activate again when needed.")
 def test_update_group_member_dn(
     udm_client: UDM,
-    background_scim_client: ScimConsumer,
+    background_consumer: ScimConsumer,
     group_data: dict[str, Any],
     user_data: dict[str, Any],
     scim_http_client: ScimClient,
 ) -> None:
-    assert background_scim_client
-
     #
     # Create user
     #

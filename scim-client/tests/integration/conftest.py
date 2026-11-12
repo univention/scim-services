@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
-import multiprocessing
 import os
 import random
 import uuid
@@ -16,16 +15,12 @@ from univention.admin.rest.client import UDM
 
 from univention.provisioning.error_handling.db import DBSession
 from univention.scim.client.group_membership_resolver import GroupMembershipLdapResolver, LdapSettings
-from univention.scim.client.main import run as scim_client_run
 from univention.scim.client.scim_client import ScimConsumer
 from univention.scim.client.scim_client_settings import ScimConsumerSettings
 from univention.scim.client.scim_http_client import ScimClient
 
-from ..data.scim_helper import (
-    create_provisioning_subscription,
-    delete_provisioning_subscription,
-    wait_for_resource_deleted,
-)
+from ..data.helper import BackgroundConsumer
+from ..data.scim_helper import wait_for_resource_deleted
 from ..data.udm_helper import create_udm_group, delete_udm_group, delete_udm_user, generate_udm_users
 
 
@@ -169,26 +164,14 @@ def keycloak_base_url() -> str:
 
 
 @pytest.fixture(scope="session")
-def background_scim_client() -> Generator[bool, None, None]:
-    logger.info("Fixture background_scim_client started.")
-
-    create_provisioning_subscription()
-
-    proc = multiprocessing.Process(target=scim_client_run)
-    proc.start()
-
-    yield True
-
-    proc.terminate()
-
-    delete_provisioning_subscription()
-
-    logger.info("Fixture background_scim_client exited.", exitcode=proc.exitcode)
+def background_consumer() -> Generator[None]:
+    with BackgroundConsumer():
+        yield
 
 
 @pytest.fixture
 def create_user_and_group(
-    background_scim_client: ScimConsumer,
+    background_consumer: ScimConsumer,
     udm_client: UDM,
     scim_http_client: ScimClient,
     group_data: dict[str, Any],
