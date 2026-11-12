@@ -21,7 +21,7 @@ from univention.scim.client.scim_http_client import ScimClient
 
 from ..data.helper import BackgroundConsumer
 from ..data.scim_helper import wait_for_resource_deleted
-from ..data.udm_helper import create_udm_group, delete_udm_group, delete_udm_user, generate_udm_users
+from ..data.udm_helper import UDMObjectJanitor, create_udm_group, delete_udm_group, delete_udm_user, generate_udm_users
 
 
 @pytest.fixture(scope="session")
@@ -151,6 +151,11 @@ def udm_client() -> UDM:
     udm = UDM.http(os.environ["UDM_BASE_URL"], os.environ["UDM_USERNAME"], os.environ["UDM_PASSWORD"])
 
     return udm
+
+
+@pytest.fixture
+def udm_object_janitor(udm_client: UDM) -> UDMObjectJanitor:
+    return UDMObjectJanitor(udm_client)
 
 
 @pytest.fixture(scope="session")

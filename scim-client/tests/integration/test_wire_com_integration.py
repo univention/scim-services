@@ -25,12 +25,12 @@ from scim2_models import (
     SearchRequest,
     User,
 )
-from univention.admin.rest.client import UDM, Object
+from univention.admin.rest.client import Object
 
 from univention.scim.client.authentication import AuthMethod, BearerAuth, BearerAuthSettings
 
 from ..data.helper import BackgroundConsumer
-from ..data.udm_helper import create_udm_user, delete_udm_user
+from ..data.udm_helper import UDMObjectJanitor
 
 
 NUM_TEST_USERS = 1
@@ -178,16 +178,12 @@ class TestWireComIntegration:
     @pytest.mark.asyncio
     async def test_create_user(
         self,
+        udm_object_janitor: UDMObjectJanitor,
         make_wire_com_user_properties: UserPropertiesFactory,
-        udm_client: UDM,
         wait_for_user: Callable[[int], Awaitable[User]],
     ):
-        async with BackgroundConsumer():
-            try:
-                properties = make_wire_com_user_properties(0, email_attrs=["mailPrimaryAddress"])
-                udm_user = create_udm_user(udm_client=udm_client, user_data=properties)
-                actual_user = await wait_for_user(0)
-                assert_that(actual_user, expected_user_for_udm_user(udm_user, active=False))
-            finally:
-                # Cleanup.
-                delete_udm_user(udm_client=udm_client, user_data=properties)
+        async with BackgroundConsumer(), udm_object_janitor as janitor:
+            properties = make_wire_com_user_properties(0, email_attrs=["mailPrimaryAddress"])
+            udm_user = janitor.create_udm_user(properties)
+            actual_user = await wait_for_user(0)
+            assert_that(actual_user, expected_user_for_udm_user(udm_user, active=False))
