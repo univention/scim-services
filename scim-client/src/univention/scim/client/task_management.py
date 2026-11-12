@@ -121,7 +121,6 @@ def remove_from_morgue(db: DBSession, obj_id: str) -> None:
 def move_task_to_morgue(db: DBSession, task_id: int, error_msg: str) -> None:
     """Move a pending task to the Morgue with a reason for manual investigation.
 
-    Stop the client first if it is currently processing this task.
     This does not cancel an in-flight request or interrupt a retry wait.
     """
     db.move_task_to_morgue(task_id, error_msg)

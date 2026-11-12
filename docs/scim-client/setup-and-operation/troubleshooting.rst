@@ -314,6 +314,15 @@ The client still processes later UDM changes to the object normally.
 Use :option:`move-task-to-morgue` to move a pending task to the morgue for manual investigation.
 Moving a task doesn't cancel a request
 that the client has already sent to the SCIM target.
+
+.. warning::
+
+   If you run :option:`move-task-to-morgue` for a task
+   while a SCIM request for that same task is still in progress,
+   a network error on that request can cause the client to restart.
+   This doesn't apply during the wait between retries.
+   After restarting, the client resumes processing pending tasks.
+
 If the client is waiting before retrying,
 it checks the task queue again only after that wait ends.
 
