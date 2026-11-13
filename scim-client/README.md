@@ -68,15 +68,15 @@ This will also leave the dependencies running for further tests (local or docker
 
 ### Integration tests against the reference server
 
-Integration tests against the Univention SCIM server work almost the same, except: the profile is called `dependencies-univention-server`, and the environment variable `UNIVENTION_SCIM_SERVER=true` must be set:
+Integration tests against the Univention SCIM server work almost the same, except: the profile is called `dependencies-univention-server`, and the environment variable `TESTCONF_UNIVENTION_SCIM_SERVER=true` must be set:
 
 ```bash
 docker compose --profile dependencies-univention-server up --build  # optionally -d
-UNIVENTION_SCIM_SERVER=true uv run pytest
+TESTCONF_UNIVENTION_SCIM_SERVER=true uv run pytest
 docker compose --profile dependencies-univention-server down --volumes
 ```
 
-Or fully dockerized (`UNIVENTION_SCIM_SERVER=true` is set by the service):
+Or fully dockerized (`TESTCONF_UNIVENTION_SCIM_SERVER=true` is set by the service):
 
 ```bash
 docker compose --profile test-univention-server run --rm --build test-against-univention-server

@@ -494,12 +494,12 @@ services:
       GROUP_SYNC_ENABLED: "true"
       KEYCLOAK_BASE_URL: "http://keycloak:8080"
       #
-      # Configuration for tests with Univention SCIM-Server
+      # Configuration for tests with Univention SCIM server
       #
-      UNIVENTION_SCIM_SERVER: "true"
-      DOWNSTREAM_UDM_BASE_URL: http://downstream-udm-rest-api:9979/udm/
-      DOWNSTREAM_UDM_USERNAME: cn=admin
-      DOWNSTREAM_UDM_PASSWORD: univention
+      TESTCONF_UNIVENTION_SCIM_SERVER: "true"
+      TESTCONF_DOWNSTREAM_UDM_BASE_URL: http://downstream-udm-rest-api:9979/udm/
+      TESTCONF_DOWNSTREAM_UDM_USERNAME: cn=admin
+      TESTCONF_DOWNSTREAM_UDM_PASSWORD: univention
 
 volumes:
   ldap-shared-data:

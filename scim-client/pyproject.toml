@@ -80,11 +80,11 @@ env = [
     "D:KEYCLOAK_BASE_URL = http://localhost:5050",
     #
     # Configuration for integration tests against the Univention SCIM-Server.
-    # To use it, set UNIVENTION_SCIM_SERVER=true.
-    "D:UNIVENTION_SCIM_SERVER = false",
-    "D:DOWNSTREAM_UDM_BASE_URL = http://localhost:9999/udm/",
-    "D:DOWNSTREAM_UDM_USERNAME = cn=admin",
-    "D:DOWNSTREAM_UDM_PASSWORD = univention",
+    # To use it, set TESTCONF_UNIVENTION_SCIM_SERVER=true.
+    "D:TESTCONF_UNIVENTION_SCIM_SERVER = false",
+    "D:TESTCONF_DOWNSTREAM_UDM_BASE_URL = http://localhost:9999/udm/",
+    "D:TESTCONF_DOWNSTREAM_UDM_USERNAME = cn=admin",
+    "D:TESTCONF_DOWNSTREAM_UDM_PASSWORD = univention",
 ]
 addopts = "-lvv --cov --cov-report term-missing --junit-xml=/tmp/pytest-junit.xml"
 markers = ["unittest: tests that don't rely on external services"]
