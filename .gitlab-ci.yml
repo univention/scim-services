@@ -168,12 +168,10 @@ test-scim-client:
   variables:
     COMPOSE_TEST_DIR: "scim-client/tests"
     COMPOSE_FILE: "docker-compose.yaml:docker-compose.ci.yaml"
-    COMPOSE_PROFILES: "test"
-    # The dependencies of the test service; naming the stack keeps the test runner itself out of `up`.
-    COMPOSE_TEST_SERVICES: "scim-dev-server udm-rest-api udm-listener keycloak prefill udm-transformer dispatcher"
+    COMPOSE_PROFILES: "dependencies-reference-server"
     COMPOSE_TEST_WAIT_TIMEOUT: "180"
   script:
-    - docker compose run --quiet-pull --name test-scim-client test
+    - docker compose --profile test-reference-server run --quiet-pull --name test-scim-client test-against-reference-server
   after_script:
     # The template unsets the inherited DOCKER_API_VERSION only in its own steps.
     - unset DOCKER_API_VERSION
@@ -194,12 +192,10 @@ test-scim-server-and-client-integration:
   variables:
     COMPOSE_TEST_DIR: "scim-client/tests"
     COMPOSE_FILE: "docker-compose.yaml:docker-compose.ci.yaml"
-    COMPOSE_PROFILES: "test-integration"
-    # The dependencies of the test-integration service, without the test runner itself.
-    COMPOSE_TEST_SERVICES: "scim-server udm-rest-api udm-listener keycloak prefill udm-transformer dispatcher"
+    COMPOSE_PROFILES: "dependencies-univention-server"
     COMPOSE_TEST_WAIT_TIMEOUT: "180"
   script:
-    - docker compose run --quiet-pull --name test-integration-scim-services test-integration
+    - docker compose --profile test-univention-server run --quiet-pull --name test-integration-scim-services test-against-univention-server
 
 sonarqube-scan:
   stage: analysis

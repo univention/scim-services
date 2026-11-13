@@ -74,13 +74,14 @@ env = [
     "D:LDAP_BIND_PASSWORD = univention",
     "D:EXTERNAL_ID_USER_MAPPING = univentionObjectIdentifier",
     "D:EXTERNAL_ID_GROUP_MAPPING = univentionObjectIdentifier",
+    "D:USERNAME_MAPPING = username",
     "D:SCIM_AUTH_METHOD = none",
+    "D:GROUP_SYNC_ENABLED = true",
     "D:KEYCLOAK_BASE_URL = http://localhost:5050",
     #
-    # Configuration for tests with Univention SCIM-Server
-    #   To run the tests locally pytest must be run with:
-    #     UNIVENTION_SCIM_SERVER=true pytest ...
-    #
+    # Configuration for integration tests against the Univention SCIM-Server.
+    # To use it, set UNIVENTION_SCIM_SERVER=true.
+    "D:UNIVENTION_SCIM_SERVER = false",
     "D:DOWNSTREAM_UDM_BASE_URL = http://localhost:9999/udm/",
     "D:DOWNSTREAM_UDM_USERNAME = cn=admin",
     "D:DOWNSTREAM_UDM_PASSWORD = univention",

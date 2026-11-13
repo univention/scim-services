@@ -1,37 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-# SPDX-FileCopyrightText: 2024 Univention GmbH
+# SPDX-FileCopyrightText: 2026 Univention GmbH
 
 services:
-
-  scim-dev-server:
-    platform: linux/amd64
-    build:
-      context: ../../
-      dockerfile: docker/scim-dev-server/Dockerfile
-    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-dev-server:${IMAGE_TAG:-latest}
-    container_name: "scim-dev-server"
-    profiles:
-      - develop
-      - test
-    ports:
-      - 8888:8080
-    healthcheck:
-      test: ["CMD", "python3", "-c", "import sys, requests; sys.exit(0) if requests.get('http://localhost:8080/ServiceProviderConfig').status_code == 200 else sys.exit(1)"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
-    networks:
-      - scim
 
   # UDM for the Univention SCIM server
   downstream-udm-rest-api:
     image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/udm-rest-api/udm-rest-api:latest
-    # image: artifacts.software-univention.de/nubus/images/udm-rest-api:0.36.0
     container_name: "downstream-udm-rest-api"
     platform: "linux/amd64"
     profiles:
-      - test-integration
+      - dependencies-univention-server
+      - test-univention-server
     depends_on:
       downstream-ldap-server:
         condition: service_healthy
@@ -55,17 +34,15 @@ services:
       timeout: 10s
       retries: 5
       start_period: 15s
-    networks:
-      - scim
 
   # LDAP for the Univention SCIM server
   downstream-ldap-server:
     platform: linux/amd64
     image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/ldap/ldap-server:latest
-    # image: artifacts.software-univention.de/nubus/images/ldap-server:0.43.0
     container_name: "downstream-ldap-server"
     profiles:
-      - test-integration
+      - dependencies-univention-server
+      - test-univention-server
     healthcheck:
       test: ["CMD-SHELL", "ldapsearch -H ldapi:/// -Y EXTERNAL -b \"cn=config\" -LLL \"(&(objectClass=mdb))\" dn"]
       start_period: 20s
@@ -82,28 +59,28 @@ services:
     volumes:
       # Mounted as base.conf, not base-defaults.conf, so the image's own defaults layer still applies.
       - ./conf/base-scim-server.conf:/etc/univention/base.conf:ro
-    networks:
-      - scim
 
-  scim-server:
+  # Univention SCIM server implementation to test against.
+  scim-server-univention:
     build:
       context: ../../
       dockerfile: docker/scim-server/Dockerfile
       target: final
     image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-server:${IMAGE_TAG:-latest}
-    container_name: "scim-server"
+    container_name: "scim-server-univention"
     profiles:
-      - test-integration
+      - dependencies-univention-server
+      - test-univention-server
     environment:
       UDM_URL: http://downstream-udm-rest-api:9979/udm/
       UDM_USERNAME: cn=admin
       UDM_PASSWORD: univention
-      AUTH_ENABLED: false
+      AUTH_ENABLED: "false"
       API_PREFIX: /v2
       LOG_LEVEL: DEBUG
       EXTERNAL_ID_USER_MAPPING: description
       EXTERNAL_ID_GROUP_MAPPING: description
-      ADD_LDAP_ATTRIBUTES: true
+      ADD_LDAP_ATTRIBUTES: "true"
     ports:
       - 8888:8000
     depends_on:
@@ -116,17 +93,36 @@ services:
       retries: 3
       start_period: 5s
     command: uvicorn univention.scim.server.main:app --host 0.0.0.0 --port 8000
-    networks:
-      - scim
+
+  # Reference SCIM server implementation to test against.
+  scim-server-reference:
+    platform: linux/amd64
+    build:
+      context: ../../
+      dockerfile: docker/scim-dev-server/Dockerfile
+    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-dev-server:${IMAGE_TAG:-latest}
+    container_name: "scim-server-reference"
+    profiles:
+      - dependencies-reference-server
+      - test-reference-server
+    ports:
+      - 8888:8080
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import sys, requests; sys.exit(0) if requests.get('http://localhost:8080/ServiceProviderConfig').status_code == 200 else sys.exit(1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
 
   provisioning-api:
     image: gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-api:latest
     container_name: "provisioning-api-dev"
     restart: "on-failure"
     profiles:
-      - develop
-      - test
-      - test-integration
+      - dependencies-univention-server
+      - test-univention-server
+      - dependencies-reference-server
+      - test-reference-server
     environment:
       LOG_LEVEL: "DEBUG"
       NATS_HOST: "nats"
@@ -152,16 +148,15 @@ services:
         condition: service_started
     ports:
       - "7777:7777"
-    networks:
-      - scim
 
   nats:
     image: "nats:latest"
     container_name: nats
     profiles:
-      - develop
-      - test
-      - test-integration
+      - dependencies-univention-server
+      - test-univention-server
+      - dependencies-reference-server
+      - test-reference-server
     environment:
       jetstream: "enabled"
     ports:
@@ -171,8 +166,6 @@ services:
       - ./conf/nats.dev.conf:/etc/nats-config/nats.conf
       - type: tmpfs
         target: /var/run
-    networks:
-      - scim
     command: --name nats --cluster_name JetStreamCluster --jetstream -m 8222 -p 4222 -config /etc/nats-config/nats.conf
 
   dispatcher:
@@ -180,9 +173,10 @@ services:
     container_name: "provisioning-dispatcher"
     restart: "on-failure"
     profiles:
-      - develop
-      - test
-      - test-integration
+      - dependencies-univention-server
+      - test-univention-server
+      - dependencies-reference-server
+      - test-reference-server
     environment:
       LOG_LEVEL: "DEBUG"
       NATS_HOST: "nats"
@@ -198,17 +192,16 @@ services:
         condition: service_started
       provisioning-api:
         condition: service_started
-    networks:
-      - scim
 
   udm-transformer:
     image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-udm-transformer:latest"
     container_name: "provisioning-udm-transformer"
     restart: "on-failure"
     profiles:
-      - develop
-      - test
-      - test-integration
+      - dependencies-univention-server
+      - test-univention-server
+      - dependencies-reference-server
+      - test-reference-server
     environment:
       LOG_LEVEL: "DEBUG"
       NATS_HOST: "nats"
@@ -237,17 +230,16 @@ services:
         condition: service_started
       udm-rest-api:
         condition: service_healthy
-    networks:
-      - scim
 
   prefill:
     image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-prefill:latest"
     container_name: "provisioning-prefill"
     restart: "on-failure"
     profiles:
-      - develop
-      - test
-      - test-integration
+      - dependencies-univention-server
+      - test-univention-server
+      - dependencies-reference-server
+      - test-reference-server
     environment:
       LOG_LEVEL: "DEBUG"
       NATS_HOST: "nats"
@@ -274,17 +266,16 @@ services:
         condition: service_started
       provisioning-api:
         condition: service_started
-    networks:
-      - scim
 
   udm-listener:
     image: "gitregistry.knut.univention.de/univention/dev/projects/provisioning/provisioning-udm-listener:latest"
     container_name: "udm-listener"
     restart: "on-failure"
     profiles:
-      - develop
-      - test
-      - test-integration
+      - dependencies-univention-server
+      - test-univention-server
+      - dependencies-reference-server
+      - test-reference-server
     environment:
       NATS_HOST: "nats"
       NATS_PORT: "4222"
@@ -293,7 +284,7 @@ services:
       NATS_MAX_RECONNECT_ATTEMPTS: 2
       NATS_RETRY_DELAY: 10
       NATS_MAX_RETRY_COUNT: 3
-      TERMINATE_LISTENER_ON_EXCEPTION: true
+      TERMINATE_LISTENER_ON_EXCEPTION: "true"
       LDAP_HOST: "ldap-server"
       LDAP_BASE_DN: "dc=univention-organization,dc=intranet"
       LDAP_HOST_DN: "cn=admin,dc=univention-organization,dc=intranet"
@@ -312,18 +303,16 @@ services:
         condition: service_started
     volumes:
       - /etc/ldap/
-    networks:
-      - scim
 
   ldap-notifier:
     platform: linux/amd64
     image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/ldap/ldap-notifier:latest
-    # image: artifacts.software-univention.de/nubus/images/ldap-notifier:0.43.0
     container_name: "ldap-notifier"
     profiles:
-      - develop
-      - test
-      - test-integration
+      - dependencies-univention-server
+      - test-univention-server
+      - dependencies-reference-server
+      - test-reference-server
     depends_on:
       ldap-server:
         condition: service_healthy
@@ -332,18 +321,16 @@ services:
     volumes:
       - ldap-shared-data:/var/lib/univention-ldap/:rw
       - ldap-shared-run:/var/run/slapd/:ro
-    networks:
-      - scim
 
   ldap-server:
     platform: linux/amd64
     image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/ldap/ldap-server:latest
-    # image: artifacts.software-univention.de/nubus/images/ldap-server:0.43.0
     container_name: "ldap-server"
     profiles:
-      - develop
-      - test
-      - test-integration
+      - dependencies-univention-server
+      - test-univention-server
+      - dependencies-reference-server
+      - test-reference-server
     healthcheck:
       test: ["CMD-SHELL", "ldapsearch -H ldapi:/// -Y EXTERNAL -b \"cn=config\" -LLL \"(&(objectClass=mdb))\" dn"]
       start_period: 20s
@@ -363,18 +350,16 @@ services:
       - ldap-shared-run:/var/run/slapd/:rw
       # Mounted as base.conf, not base-defaults.conf, so the image's own defaults layer still applies.
       - ./conf/base-defaults.conf:/etc/univention/base.conf:ro
-    networks:
-      - scim
 
   udm-rest-api:
     image: gitregistry.knut.univention.de/univention/dev/nubus-for-k8s/udm-rest-api/udm-rest-api:latest
-    # image: artifacts.software-univention.de/nubus/images/udm-rest-api:0.36.0
     container_name: "udm-rest-api"
     platform: "linux/amd64"
     profiles:
-      - develop
-      - test
-      - test-integration
+      - dependencies-univention-server
+      - test-univention-server
+      - dependencies-reference-server
+      - test-reference-server
     depends_on:
       ldap-server:
         condition: service_healthy
@@ -399,16 +384,15 @@ services:
       timeout: 10s
       retries: 5
       start_period: 15s
-    networks:
-      - scim
 
   keycloak:
     image: artifacts.software-univention.de/nubus-dev/images/keycloak:0.2.0-post-main
-    container_name: keycloak
+    container_name: keycloak-test
     profiles:
-      - develop
-      - test
-      - test-integration
+      - dependencies-univention-server
+      - test-univention-server
+      - dependencies-reference-server
+      - test-reference-server
     command: start-dev --http-enabled=true --import-realm
     ports:
       - 5050:8080
@@ -419,17 +403,15 @@ services:
       - KC_PROXY=edge
       - KEYCLOAK_LOGLEVEL=ALL
       - ROOT_LOGLEVEL=ALL
-    networks:
-      - scim
 
-  test:
+  test-against-reference-server:
     build:
       context: ../../
       dockerfile: docker/scim-client/Dockerfile
       target: test
     image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-client-testrunner:${IMAGE_TAG:-latest}
     profiles:
-      - test
+      - test-reference-server
     depends_on:
       udm-rest-api:
         condition: service_healthy
@@ -443,10 +425,10 @@ services:
         condition: service_started
       dispatcher:
         condition: service_started
-      scim-dev-server:
+      scim-server-reference:
         condition: service_healthy
     environment:
-      SCIM_SERVER_BASE_URL: http://scim-dev-server:8080/
+      SCIM_SERVER_BASE_URL: http://scim-server-reference:8080/
       PROVISIONING_DB: sqlite:////tmp/scim-client.db
       PROVISIONING_API_BASE_URL: http://provisioning-api:7777/
       PROVISIONING_API_USERNAME: scim-client
@@ -463,19 +445,18 @@ services:
       LDAP_BIND_PASSWORD: univention
       EXTERNAL_ID_USER_MAPPING: univentionObjectIdentifier
       EXTERNAL_ID_GROUP_MAPPING: univentionObjectIdentifier
+      USERNAME_MAPPING: username
       GROUP_SYNC_ENABLED: "true"
       KEYCLOAK_BASE_URL: "http://keycloak:8080"
-    networks:
-      - scim
 
-  test-integration:
+  test-against-univention-server:
     build:
       context: ../../
       dockerfile: docker/scim-client/Dockerfile
       target: test
     image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-client-testrunner:${IMAGE_TAG:-latest}
     profiles:
-      - test-integration
+      - test-univention-server
     depends_on:
       udm-rest-api:
         condition: service_healthy
@@ -487,12 +468,12 @@ services:
         condition: service_started
       dispatcher:
         condition: service_started
-      scim-server:
+      scim-server-univention:
         condition: service_healthy
       keycloak:
         condition: service_started
     environment:
-      SCIM_SERVER_BASE_URL: http://scim-server:8000/v2/
+      SCIM_SERVER_BASE_URL: http://scim-server-univention:8000/v2/
       PROVISIONING_DB: sqlite:////tmp/scim-client.db
       PROVISIONING_API_BASE_URL: http://provisioning-api:7777/
       PROVISIONING_API_USERNAME: scim-client
@@ -515,18 +496,12 @@ services:
       #
       # Configuration for tests with Univention SCIM-Server
       #
-      UNIVENTION_SCIM_SERVER: true
+      UNIVENTION_SCIM_SERVER: "true"
       DOWNSTREAM_UDM_BASE_URL: http://downstream-udm-rest-api:9979/udm/
       DOWNSTREAM_UDM_USERNAME: cn=admin
       DOWNSTREAM_UDM_PASSWORD: univention
-    networks:
-      - scim
 
 volumes:
   ldap-shared-data:
   ldap-shared-run:
   pre-commit-cache:
-
-networks:
-  scim:
-    driver: bridge

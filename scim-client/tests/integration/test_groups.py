@@ -138,7 +138,8 @@ async def test_add_group_member(scim_http_client: ScimClient, scim_client: ScimC
 
 
 @pytest.mark.skipif(
-    "UNIVENTION_SCIM_SERVER" in os.environ, reason="Not working with Univention SCIM server at the moment!"
+    os.environ.get("UNIVENTION_SCIM_SERVER", "false").lower() == "true",
+    reason="Not working with Univention SCIM server at the moment!",
 )
 async def test_remove_group_member(
     scim_http_client: ScimClient, scim_client: ScimConsumer, mocker: MockerFixture

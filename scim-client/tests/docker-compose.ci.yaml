@@ -3,11 +3,11 @@
 
 # CI runs the images the build stage pushed. Without build:, a failed pull fails the job instead of building silently.
 services:
-  scim-dev-server:
+  scim-server-reference:
     build: !reset null
-  scim-server:
+  scim-server-univention:
     build: !reset null
-  test:
+  test-against-reference-server:
     build: !reset null
-  test-integration:
+  test-against-univention-server:
     build: !reset null

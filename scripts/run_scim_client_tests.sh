@@ -1,14 +1,14 @@
 #!/bin/bash
 # SPDX-License-Identifier: AGPL-3.0-only
-# SPDX-FileCopyrightText: 2025 Univention GmbH
+# SPDX-FileCopyrightText: 2026 Univention GmbH
 
 set -e
 
-for profile in test test-integration; do
+for profile in test-against-reference-server test-against-univention-server; do
   (
     echo "Running ${profile} tests"
     function cleanup {
-      docker compose logs scim-dev-server > ../../scim-server.logs
+      docker compose logs scim-server-reference > ../../scim-server.logs
       docker compose logs udm-rest-api > ../../udm-rest-api.logs
       docker compose logs udm-listener > ../../udm-listener.logs
       docker compose logs provisioning-api > ../../provisioning-api.logs
@@ -20,9 +20,9 @@ for profile in test test-integration; do
 
     docker compose --profile ${profile} pull
     if [ "${profile}" == "test" ]; then
-      docker compose --profile ${profile} build scim-dev-server
+      docker compose --profile ${profile} build scim-server-reference
     else
-      docker compose --profile ${profile} build scim-server
+      docker compose --profile ${profile} build scim-server-univention
     fi
     docker compose build ${profile}
     docker compose run --name scim-client-${profile} --rm -ti ${profile} $@

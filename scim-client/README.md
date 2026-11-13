@@ -31,33 +31,58 @@ Run `univention-scim-connector-task-management --help` inside the client contain
 
 ## How to Execute Tests
 
-The tests running agains the SCIM server from
+There are different kinds of tests. The easiest are unit tests that don't depend on any external service. Locally, these can be run separately by selecting the `unittest` mark: `uv run pytest -m unittest`. They are also run as part of the dockerized tests.
+
+Then there are integration tests against either a reference SCIM server (the Python `scim2-server` implementation), or the Univention SCIM server (`scim-server` in this repository). They let the app interact with the server and then check that the correct results show up on the server. In general, they start the consumer in a background process, modify something in LDAP (e.g. create a new user), let those changes propagate to the provisioning API and to the app, and wait for the app to process the change correctly with the SCIM serve (e.g. creating the new user). Integration tests try to clean up after themselves, which may not always work if a test fails.
+
+Integration tests require the SCIM server and a few other dependencies to be available. The dependencies can be started from the `tests/docker-compose.yaml`, which has 4 profiles:
+
+- `dependencies-univention-server`: just the dependencies to run against the Univention server
+- `dependencies-reference-server`: just the dependencies to run against the reference server
+- `test-univention-server`: dependencies plus the test service itself
+- `test-reference-server`: dependencies plus the test service itself
+
+Use the `dependencies-*` profiles to `up` the services so you can run pytest locally.
+
+### Integration tests against the reference server
+
+To run tests against the reference server:
 
 ```bash
-docker compose --profile develop up --build --remove-orphans -d
-
-docker compose --profile develop run --rm --build --remove-orphans test
-# or
-pytest -v -s ./
-# or without active venv
-uv run pytest -v -s ./
-
-docker compose --profile develop down --volumes
+docker compose --profile dependencies-reference-server up --build  # optionally -d
+# Now the dependencies are running and pytest can run integration tests.
+uv run pytest
+# The dependencies are still running and can be used for further tests. Shut them down with
+docker compose --profile dependencies-reference-server down --volumes
 ```
 
-To run the tests against the Univention SCIM server
+For local pytest runs, the `pyproject.toml` sets default values for environment variables that mean it _should_ all just work. Otherwise see also the environment of the `test-against-reference-server`/`test-against-univention-server` services in the test compose file.
+
+Alternatively, run the tests completely dockerized with a single command:
 
 ```bash
-docker compose --profile test-integration up -d --remove-orphans --build
-
-docker compose --profile test-integration run --rm --build --remove-orphans test-integration
-# or
-UNIVENTION_SCIM_SERVER=true pytest -v -s ./
-# or without active venv
-UNIVENTION_SCIM_SERVER=true uv run pytest -v -s ./
-
-docker compose --profile test-integration down --volumes
+docker compose --profile test-reference-server run --rm --build test-against-reference-server
 ```
+
+This will also leave the dependencies running for further tests (local or dockerized).
+
+### Integration tests against the reference server
+
+Integration tests against the Univention SCIM server work almost the same, except: the profile is called `dependencies-univention-server`, and the environment variable `UNIVENTION_SCIM_SERVER=true` must be set:
+
+```bash
+docker compose --profile dependencies-univention-server up --build  # optionally -d
+UNIVENTION_SCIM_SERVER=true uv run pytest
+docker compose --profile dependencies-univention-server down --volumes
+```
+
+Or fully dockerized (`UNIVENTION_SCIM_SERVER=true` is set by the service):
+
+```bash
+docker compose --profile test-univention-server run --rm --build test-against-univention-server
+```
+
+Note that the `*-reference-server` and `*-univention-server` profiles can't be `up`ped at the same time since both SCIM servers bind to the same port on localhost.
 
 ## How to rum scim-client against a dedicated scim-server
 
