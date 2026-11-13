@@ -1,17 +1,17 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-# SPDX-FileCopyrightText: 2025 Univention GmbH
+# SPDX-FileCopyrightText: 2026 Univention GmbH
 
 import os
 import random
 import uuid
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from typing import Any
 
 import httpx2
 import pytest
 from faker import Faker
 from loguru import logger
-from univention.admin.rest.client import UDM
+from univention.admin.rest.client import UDM, Object
 
 from univention.provisioning.error_handling.db import DBSession
 from univention.scim.client.group_membership_resolver import GroupMembershipLdapResolver, LdapSettings
@@ -37,65 +37,94 @@ def fake(pytestconfig) -> Faker:
 
 
 @pytest.fixture(scope="session")
-def downstream_udm_client() -> UDM:
-    if "UNIVENTION_SCIM_SERVER" not in os.environ:
-        return None
+def using_univention_scim_server() -> bool:
+    """
+    Whether we're testing against the univention SCIM server.
 
-    logger.info("Create downstream udm_client.")
-    udm = UDM.http(
-        os.environ["DOWNSTREAM_UDM_BASE_URL"],
-        os.environ["DOWNSTREAM_UDM_USERNAME"],
-        os.environ["DOWNSTREAM_UDM_PASSWORD"],
-    )
+    We can run our integration tests against a reference server or against our
+    own server implementation. The latter needs some extra setup in the
+    downstream UDM (the separate UDM the server is connected to).
+    """
+    if "UNIVENTION_SCIM_SERVER" not in os.environ:
+        return False
+    try:
+        assert os.environ["UNIVENTION_SCIM_SERVER"].lower() in ["true", "false"]
+        assert "DOWNSTREAM_UDM_BASE_URL" in os.environ
+        assert "DOWNSTREAM_UDM_USERNAME" in os.environ
+        assert "DOWNSTREAM_UDM_PASSWORD" in os.environ
+    except KeyError:
+        return False
+    except AssertionError as e:
+        raise ValueError("invalid configuration of UNIVENTION_SCIM_SERVER") from e
+    return os.environ["UNIVENTION_SCIM_SERVER"].lower() == "true"
+
+
+@pytest.fixture(scope="session")
+def udm_client() -> UDM:
+    logger.info("Create udm_client.")
+    udm = UDM.http(os.environ["UDM_BASE_URL"], os.environ["UDM_USERNAME"], os.environ["UDM_PASSWORD"])
 
     return udm
 
 
-@pytest.fixture(scope="session", autouse=True)
-def downstream_maildomain(downstream_udm_client: ScimClient) -> Generator[str | None, None, None]:
-    """
-    Is only needed, when the tests are running against the
-    Univention SCIM server. This uses UDM as backend and there
-    we need the maildomain configuration too!
-    """
-    if "UNIVENTION_SCIM_SERVER" not in os.environ:
-        yield None
+@pytest.fixture(scope="session")
+def get_downstream_udm_client(using_univention_scim_server: bool) -> Callable[[], UDM]:
+    udm_client = None
 
-    else:
-        name = "scim-client.unittests"
-        domains = downstream_udm_client.get("mail/domain")
+    def getter() -> UDM:
+        if not using_univention_scim_server:
+            raise ValueError(
+                "attempt to get a downstream UDM client, but we're not configured to use the Univention SCIM server."
+            )
+        nonlocal udm_client
+        if udm_client is None:
+            logger.info("Create downstream udm_client.")
+            udm_client = UDM.http(
+                os.environ["DOWNSTREAM_UDM_BASE_URL"],
+                os.environ["DOWNSTREAM_UDM_USERNAME"],
+                os.environ["DOWNSTREAM_UDM_PASSWORD"],
+            )
+        return udm_client
+
+    return getter
+
+
+@pytest.fixture(scope="session")
+def maildomain(
+    udm_client: UDM, using_univention_scim_server: bool, get_downstream_udm_client: Callable[[], UDM]
+) -> Generator[str]:
+    """
+    Get maildomain for testing.
+
+    Creates the domain in UDM. If we're testing against a Univention SCIM
+    server, also creates it in the downstream UDM.
+    """
+
+    def ensure_maildomain(udm_client: UDM, name: str) -> Object:
+        domains = udm_client.get("mail/domain")
+        assert domains is not None
         if maildomains := list(domains.search(f"name={name}")):
+            assert maildomains[0].dn is not None
             maildomain = domains.get(maildomains[0].dn)
-            logger.info(f"Using existing mail domain {maildomain!r} on UDM for SCIM.")
+            logger.info(f"Using existing mail domain {maildomain!r} at {udm_client.uri}.")
         else:
             maildomain = domains.new()
             maildomain.properties.update({"name": name})
             maildomain.save()
-            logger.info(f"Created new mail domain {maildomain!r} on UDM for SCIM.")
+            logger.info(f"Created new mail domain {maildomain!r} at {udm_client.uri}.")
+        return maildomain
 
-        yield name
-
-        maildomain.delete()
-        logger.info(f"Deleted mail domain {maildomain!r} on UDM for SCIM.")
-
-
-@pytest.fixture(scope="session")
-def maildomain(udm_client: UDM) -> Generator[str, None, None]:
-    name = "scim-client.unittests"
-    domains = udm_client.get("mail/domain")
-    if maildomains := list(domains.search(f"name={name}")):
-        maildomain = domains.get(maildomains[0].dn)
-        logger.info(f"Using existing mail domain {maildomain!r}.")
-    else:
-        maildomain = domains.new()
-        maildomain.properties.update({"name": name})
-        maildomain.save()
-        logger.info(f"Created new mail domain {maildomain!r}.")
+    udm_clients = [udm_client]
+    if using_univention_scim_server:
+        udm_clients.append(get_downstream_udm_client())
+    name = "scim-client.tests"
+    maildomains = [ensure_maildomain(udm_client, name) for udm_client in udm_clients]
 
     yield name
 
-    maildomain.delete()
-    logger.info(f"Deleted mail domain {maildomain!r}.")
+    for maildomain in maildomains:
+        maildomain.delete()
+        logger.info(f"Deleted mail domain {maildomain!r}.")
 
 
 @pytest.fixture(scope="function")
@@ -143,14 +172,6 @@ def user_data_with_extensions(user_data: dict[str, Any]) -> dict[str, Any]:
     user_data_with_extensions["employeeNumber"] = "4711"
 
     return user_data_with_extensions
-
-
-@pytest.fixture(scope="session")
-def udm_client() -> UDM:
-    logger.info("Create udm_client.")
-    udm = UDM.http(os.environ["UDM_BASE_URL"], os.environ["UDM_USERNAME"], os.environ["UDM_PASSWORD"])
-
-    return udm
 
 
 @pytest.fixture
