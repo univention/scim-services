@@ -86,6 +86,7 @@ env = [
     "D:DOWNSTREAM_UDM_PASSWORD = univention",
 ]
 addopts = "-lvv --cov --cov-report term-missing --junit-xml=/tmp/pytest-junit.xml"
+markers = ["unittest: tests that don't rely on external services"]
 
 [tool.coverage.run]
 data_file = "/tmp/scim-coverage"
