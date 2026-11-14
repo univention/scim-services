@@ -33,6 +33,20 @@ from ..data.helper import BackgroundConsumer
 from ..data.udm_helper import UDMObjectJanitor
 
 
+def _tests_should_be_run() -> bool:
+    conf_str = os.environ.get("TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS", "true").lower()
+    if conf_str not in ["true", "false"]:
+        raise ValueError("invalid configuration of TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS (use true|false)")
+    should_be_run = conf_str == "true"
+    if not should_be_run and "TESTCONF_WIRE_COM_SCIM_BEARER_TOKEN" in os.environ:
+        # If a token is configured the intention is probably to run the tests. Make sure we don't skip them
+        # accidentally.
+        raise RuntimeError(
+            "configuration says wire.com tests should be skipped, but TESTCONF_WIRE_COM_SCIM_BEARER_TOKEN is configured"
+        )
+    return should_be_run
+
+
 NUM_TEST_USERS = 1
 WIRE_COM_SCIM_SERVER_BASE_URL = "https://prod-nginz-https.wire.com/scim/v2"
 
@@ -58,10 +72,14 @@ def expected_user_for_udm_user(udm_user: Object, *, active: bool) -> Matcher:
     )
 
 
+@pytest.mark.skipif(
+    not _tests_should_be_run(), reason="Test has been deconfigured via TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS=false."
+)
+@pytest.mark.wire_com_integration_tests
 class TestWireComIntegration:
     @pytest.fixture
     def wire_com_scim_bearer_token(self):
-        return os.environ["WIRE_COM_SCIM_BEARER_TOKEN"]
+        return os.environ["TESTCONF_WIRE_COM_SCIM_BEARER_TOKEN"]
 
     @pytest.fixture(autouse=True)
     def set_up_env(self, monkeypatch: pytest.MonkeyPatch, wire_com_scim_bearer_token):

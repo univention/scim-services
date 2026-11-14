@@ -1,6 +1,52 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2026 Univention GmbH
 
+x-test-against-reference-server: &test-against-reference-server-template
+  build:
+    context: ../../
+    dockerfile: docker/scim-client/Dockerfile
+    target: test
+  image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-client-testrunner:${IMAGE_TAG:-latest}
+  profiles:
+    - test-reference-server
+  depends_on:
+    udm-rest-api:
+      condition: service_healthy
+    keycloak:
+      condition: service_started
+    udm-listener:
+      condition: service_started
+    prefill:
+      condition: service_started
+    udm-transformer:
+      condition: service_started
+    dispatcher:
+      condition: service_started
+    scim-server-reference:
+      condition: service_healthy
+  environment: &test-against-reference-server-env
+    SCIM_SERVER_BASE_URL: http://scim-server-reference:8080/
+    PROVISIONING_DB: sqlite:////tmp/scim-client.db
+    PROVISIONING_API_BASE_URL: http://provisioning-api:7777/
+    PROVISIONING_API_USERNAME: scim-client
+    PROVISIONING_API_PASSWORD: univention
+    PROVISIONING_API_ADMIN_USERNAME: admin
+    PROVISIONING_API_ADMIN_PASSWORD: provisioning
+    LOG_LEVEL: INFO
+    MAX_ACKNOWLEDGEMENT_RETRIES: 10
+    UDM_BASE_URL: http://udm-rest-api:9979/udm/
+    UDM_USERNAME: cn=admin
+    UDM_PASSWORD: univention
+    LDAP_HOST: ldap-server
+    LDAP_BIND_DN: cn=admin,dc=univention-organization,dc=intranet
+    LDAP_BIND_PASSWORD: univention
+    EXTERNAL_ID_USER_MAPPING: univentionObjectIdentifier
+    EXTERNAL_ID_GROUP_MAPPING: univentionObjectIdentifier
+    USERNAME_MAPPING: username
+    GROUP_SYNC_ENABLED: "true"
+    KEYCLOAK_BASE_URL: "http://keycloak:8080"
+    TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS: "false"
+
 services:
 
   # UDM for the Univention SCIM server
@@ -404,51 +450,6 @@ services:
       - KEYCLOAK_LOGLEVEL=ALL
       - ROOT_LOGLEVEL=ALL
 
-  test-against-reference-server:
-    build:
-      context: ../../
-      dockerfile: docker/scim-client/Dockerfile
-      target: test
-    image: gitregistry.knut.univention.de/univention/dev/projects/scim/scim-services/scim-client-testrunner:${IMAGE_TAG:-latest}
-    profiles:
-      - test-reference-server
-    depends_on:
-      udm-rest-api:
-        condition: service_healthy
-      keycloak:
-        condition: service_started
-      udm-listener:
-        condition: service_started
-      prefill:
-        condition: service_started
-      udm-transformer:
-        condition: service_started
-      dispatcher:
-        condition: service_started
-      scim-server-reference:
-        condition: service_healthy
-    environment:
-      SCIM_SERVER_BASE_URL: http://scim-server-reference:8080/
-      PROVISIONING_DB: sqlite:////tmp/scim-client.db
-      PROVISIONING_API_BASE_URL: http://provisioning-api:7777/
-      PROVISIONING_API_USERNAME: scim-client
-      PROVISIONING_API_PASSWORD: univention
-      PROVISIONING_API_ADMIN_USERNAME: admin
-      PROVISIONING_API_ADMIN_PASSWORD: provisioning
-      LOG_LEVEL: INFO
-      MAX_ACKNOWLEDGEMENT_RETRIES: 10
-      UDM_BASE_URL: http://udm-rest-api:9979/udm/
-      UDM_USERNAME: cn=admin
-      UDM_PASSWORD: univention
-      LDAP_HOST: ldap-server
-      LDAP_BIND_DN: cn=admin,dc=univention-organization,dc=intranet
-      LDAP_BIND_PASSWORD: univention
-      EXTERNAL_ID_USER_MAPPING: univentionObjectIdentifier
-      EXTERNAL_ID_GROUP_MAPPING: univentionObjectIdentifier
-      USERNAME_MAPPING: username
-      GROUP_SYNC_ENABLED: "true"
-      KEYCLOAK_BASE_URL: "http://keycloak:8080"
-
   test-against-univention-server:
     build:
       context: ../../
@@ -493,6 +494,7 @@ services:
       USERNAME_MAPPING: username
       GROUP_SYNC_ENABLED: "true"
       KEYCLOAK_BASE_URL: "http://keycloak:8080"
+      TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS: "false"
       #
       # Configuration for tests with Univention SCIM server
       #
@@ -500,6 +502,17 @@ services:
       TESTCONF_DOWNSTREAM_UDM_BASE_URL: http://downstream-udm-rest-api:9979/udm/
       TESTCONF_DOWNSTREAM_UDM_USERNAME: cn=admin
       TESTCONF_DOWNSTREAM_UDM_PASSWORD: univention
+
+  test-against-reference-server:
+    <<: *test-against-reference-server-template
+
+  test-against-wire-com:
+    <<: *test-against-reference-server-template
+    command: ["-m", "wire_com_integration_tests"]
+    environment:
+      <<: *test-against-reference-server-env
+      TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS: "true"
+      TESTCONF_WIRE_COM_SCIM_BEARER_TOKEN:
 
 volumes:
   ldap-shared-data:

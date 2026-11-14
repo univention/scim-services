@@ -84,59 +84,22 @@ docker compose --profile test-univention-server run --rm --build test-against-un
 
 Note that the `*-reference-server` and `*-univention-server` profiles can't be `up`ped at the same time since both SCIM servers bind to the same port on localhost.
 
-## How to rum scim-client against a dedicated scim-server
+### Integration tests against the real wire.com SCIM server
 
-### wire.com
+There are also integration tests that run against the real deployment of wire.com's SCIM server. These are disabled by default via `TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS=false` because they need a real bearer token for authentication. They create/modify/delete a bunch of users, which equates to inviting users to a wire.com team on the account of the user who owns the bearer token.
 
-Create a `.env` file for the configuration
+To run these tests locally, start the same dependencies as for the regular integration tests (`docker compose --profile dependencies-reference-server up --build`), then
 
 ```bash
-export SCIM_SERVER_BASE_URL="https://prod-nginz-https.wire.com/scim/v2"
-export PROVISIONING_API_BASE_URL="http://localhost:7777/"
-export PROVISIONING_API_USERNAME="scim-client"
-export PROVISIONING_API_PASSWORD="univention"
-export PROVISIONING_API_ADMIN_USERNAME="admin"
-export PROVISIONING_API_ADMIN_PASSWORD="provisioning"
-export LOG_LEVEL="DEBUG"
-export MAX_ACKNOWLEDGEMENT_RETRIES="10"
-export UDM_BASE_URL="http://localhost:9979/udm/"
-export UDM_USERNAME="cn=admin"
-export UDM_PASSWORD="univention"
-export LDAP_HOST="localhost"
-export LDAP_BIND_DN="cn=admin,dc=univention-organization,dc=intranet"
-export LDAP_BIND_PASSWORD="univention"
-export EXTERNAL_ID_USER_MAPPING="univentionObjectIdentifier"
-export EXTERNAL_ID_GROUP_MAPPING="univentionObjectIdentifier"
-export GROUP_SYNC_ENABLED="false"
-export KEYCLOAK_BASE_URL="http://localhost:5050"
-export SCIM_AUTH_METHOD="bearer"
-export SCIM_BEARER_TOKEN="<wire.com scim token>"
+TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS=true TESTCONF_WIRE_COM_SCIM_BEARER_TOKEN=<your_token> uv run pytest -m wire_com_integration_tests
 ```
 
-Create the subscription
+With the mark `wire_com_integration_tests` you run only the wire.com tests, but of course leaving it out will run the other tests just fine. During the wire.com tests the SCIM server in the dependencies will not be used (since we're using wire.com). The tests will overwrite the `SCIM_SERVER_BASE_URL` automatically to point to wire.com.
+
+You can also run the wire.com tests dockerized with the `test-against-wire-com` service (`TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS` gets set automatically by the compose file):
 
 ```bash
-cd scim-client
-docker compose -f tests/docker-compose.yaml --profile develop up --build --remove-orphans -d
-(source .env && uv run /bin/bash)
-python3 -c "import tests.data.scim_helper as scim_helper; scim_helper.create_provisioning_subscription()"
-```
-
-Run the scim client and do your tests
-
-```bash
-(source .env && uv run scim-client)
-```
-
-```bash
-(source .env && uv run /bin/bash)
-udm --uri "http://localhost:9979/udm/" --username "cn=admin" --bindpwd "univention" users/user create --set username="jbu12345" --set lastname="Burgmeier" --set password="Test1234" --set e-mail="jbu@scim-client.unittests"
-```
-
-Cleanup
-
-```bash
-docker compose -f tests/docker-compose.yaml --profile develop down --volumes
+TESTCONF_WIRE_COM_SCIM_BEARER_TOKEN=<your_token> docker compose --profile test-reference-server run --rm --build test-against-wire-com
 ```
 
 ## Interfaces

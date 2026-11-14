@@ -7,7 +7,9 @@ services:
     build: !reset null
   scim-server-univention:
     build: !reset null
+  test-against-univention-server:
+    build: !reset null
   test-against-reference-server:
     build: !reset null
-  test-against-univention-server:
+  test-against-wire-com:
     build: !reset null

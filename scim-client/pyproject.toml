@@ -78,6 +78,9 @@ env = [
     "D:SCIM_AUTH_METHOD = none",
     "D:GROUP_SYNC_ENABLED = true",
     "D:KEYCLOAK_BASE_URL = http://localhost:5050",
+    # Whether to run wire.com integration tests. Running them requires a bearer
+    # token configured via TESTCONF_WIRE_COM_SCIM_BEARER_TOKEN.
+    "D:TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS = false",
     #
     # Configuration for integration tests against the Univention SCIM-Server.
     # To use it, set TESTCONF_UNIVENTION_SCIM_SERVER=true.
@@ -87,7 +90,10 @@ env = [
     "D:TESTCONF_DOWNSTREAM_UDM_PASSWORD = univention",
 ]
 addopts = "-lvv --cov --cov-report term-missing --junit-xml=/tmp/pytest-junit.xml"
-markers = ["unittest: tests that don't rely on external services"]
+markers = [
+    "unittest: tests that don't rely on external services",
+    "wire_com_integration_tests: tests against the wire.com SCIM server",
+]
 
 [tool.coverage.run]
 data_file = "/tmp/scim-coverage"
