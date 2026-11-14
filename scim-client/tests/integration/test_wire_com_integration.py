@@ -83,7 +83,6 @@ class TestWireComIntegration:
 
     @pytest.fixture(autouse=True)
     def set_up_env(self, monkeypatch: pytest.MonkeyPatch, wire_com_scim_bearer_token):
-        monkeypatch.setenv("PROVISIONING_DB", "sqlite:////tmp/scim-client.db")
         monkeypatch.setenv("SCIM_SERVER_BASE_URL", WIRE_COM_SCIM_SERVER_BASE_URL)
         monkeypatch.setenv("SCIM_AUTH_METHOD", AuthMethod.BEARER)
         monkeypatch.setenv("SCIM_BEARER_TOKEN", wire_com_scim_bearer_token)
