@@ -11,7 +11,7 @@ from typing import Any, Literal, Protocol
 
 import httpx2
 import pytest
-from hamcrest import all_of, anything, assert_that, has_properties, instance_of
+from hamcrest import all_of, assert_that, has_properties, instance_of, is_not
 from hamcrest.core.matcher import Matcher
 from lancelog import logger
 from scim2_client.engines.httpx2 import SyncSCIMClient
@@ -88,7 +88,7 @@ def expected_user_for_udm_user(udm_user: Object, **override_properties) -> Match
         "display_name": udm_user.properties["displayName"],
         "preferred_language": udm_user.properties["preferredLanguage"],
         # wire.com only stores one email. This assumes we use the mailPrimaryAddress.
-        "emails": [Email(value=udm_user.properties["mailPrimaryAddress"], type=Email.Type("mailbox"), primary=False)],
+        "emails": [Email(value=udm_user.properties["mailPrimaryAddress"], type=Email.Type("mailbox"), primary=True)],
         # wire.com always sets role to member. We have no influence over this.
         "roles": [Role(value="member")],
         # wire.com always sets active=False.
@@ -282,7 +282,7 @@ class TestWireComIntegration:
     def wait_for_user_to_exist(self, wait_for_user_to_match: Callable[[int, Matcher], Awaitable[User]]):
         async def waiter(user_index: int) -> User:
             """Wait for a user to exist at wire.com."""
-            return await wait_for_user_to_match(user_index, anything())
+            return await wait_for_user_to_match(user_index, is_not(None))
 
         return waiter
 
@@ -335,7 +335,7 @@ class TestWireComIntegration:
         make_wire_com_user_properties: UserPropertiesFactory,
         wait_for_user_to_exist: Callable[[int], Awaitable[User]],
     ):
-        # wire.com will only store one email address. The primary should be the first choice.
+        # wire.com will only store one email address. The primary should be the first choice, setting primary=True.
         async with BackgroundConsumer(), udm_object_janitor:
             properties = make_wire_com_user_properties(
                 0, email_attrs=["mailPrimaryAddress", "mailAlternativeAddress", "e-mail"]
@@ -343,7 +343,7 @@ class TestWireComIntegration:
             udm_user = udm_object_janitor.create_udm_user(properties)
             actual_user = await wait_for_user_to_exist(0)
             expected_email = Email(
-                value=udm_user.properties["mailPrimaryAddress"], type=Email.Type("mailbox"), primary=False
+                value=udm_user.properties["mailPrimaryAddress"], type=Email.Type("mailbox"), primary=True
             )
             assert_that(actual_user, expected_user_for_udm_user(udm_user, emails=[expected_email]))
 
@@ -353,6 +353,7 @@ class TestWireComIntegration:
         make_wire_com_user_properties: UserPropertiesFactory,
         wait_for_user_to_exist: Callable[[int], Awaitable[User]],
     ):
+        # mailAlternativeAddress is the next fallback address, with primary=False.
         async with BackgroundConsumer(), udm_object_janitor:
             properties = make_wire_com_user_properties(0, email_attrs=["mailAlternativeAddress", "e-mail"])
             udm_user = udm_object_janitor.create_udm_user(properties)
