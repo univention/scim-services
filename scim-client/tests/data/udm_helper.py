@@ -62,6 +62,9 @@ class UDMObjectJanitor:
     or an exception is raised. Can be used as either sync or async context
     manager.
 
+    Uses the univentionObjectIdentifier to keep track of objects, since that's
+    a stable ID.
+
     If any objects vanish by other means while the context is active, a
     message is logged but no exception is raised.
     """

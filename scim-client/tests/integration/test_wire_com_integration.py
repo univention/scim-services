@@ -72,14 +72,26 @@ class UserPropertiesFactory(Protocol):
 
 
 def expected_user_for_udm_user(udm_user: Object, **override_properties) -> Matcher:
+    """
+    Match the expected SCIM user for a UDM user.
+
+    The matcher matches what we'd expect to exist at wire.com from the given
+    UDM user. It makes some assumptions (happy path) which can be overridden.
+
+    wire.com sets their own metadata (create/modify timestamps), so we don't
+    check those.
+    """
     external_id_property_name = os.environ["EXTERNAL_ID_USER_MAPPING"]
     expected_properties = {
         "external_id": udm_user.properties[external_id_property_name],
         "user_name": udm_user.properties["username"],
         "display_name": udm_user.properties["displayName"],
         "preferred_language": udm_user.properties["preferredLanguage"],
+        # wire.com only stores one email. This assumes we use the mailPrimaryAddress.
         "emails": [Email(value=udm_user.properties["mailPrimaryAddress"], type=Email.Type("mailbox"), primary=False)],
+        # wire.com always sets role to member. We have no influence over this.
         "roles": [Role(value="member")],
+        # wire.com always sets active=False.
         "active": False,
     }
     expected_properties |= override_properties
@@ -91,6 +103,23 @@ def expected_user_for_udm_user(udm_user: Object, **override_properties) -> Match
 )
 @pytest.mark.wire_com_integration_tests
 class TestWireComIntegration:
+    """
+    Tests for the integration with wire.com.
+
+    Tests in this suite start a background process running main.run(), i.e.
+    the whole application. The environment is modified to connect to a test
+    account on wire.com (TESTCONF_WIRE_COM_SCIM_BEARER_TOKEN must be set). The
+    tests modify UDM on the input side and then observe the intended effects
+    on wire.com or in our morgue.
+
+    Test users are cleaned up after the tests. wire.com doesn't allow
+    searching for users by anything but externalId, so we have to set
+    predictable external IDs as UUID(int=N, version=4) with N the index of the
+    test user. That way we can find and delete them when we're done.
+
+    Only users are tested.
+    """
+
     @pytest.fixture(scope="session")
     def wire_com_scim_bearer_token(self):
         return os.environ["TESTCONF_WIRE_COM_SCIM_BEARER_TOKEN"]
@@ -113,6 +142,7 @@ class TestWireComIntegration:
                 "Content-Type": "application/scim+json",
             },
         )
+        # We have to explicitly specify the models because wire.com's schema discovery is broken.
         provider = ScimProvider(models=[User, Group], policy=ScimPolicy(unknown=ScimPolicy.Unknown.keep))
         return SyncSCIMClient(client=http_client, provider=provider)
 
@@ -153,6 +183,29 @@ class TestWireComIntegration:
             email_attrs: list[Literal["mailPrimaryAddress", "mailAlternativeAddress", "e-mail"]],
             **override_properties: Any,
         ) -> dict[str, Any]:
+            """
+            Make a UDM properties dict to create a wire.com user.
+
+            Creates a dictionary from which a UDM user can be created that can
+            be provisioned into wire.com in the flow in which created users
+            receive and invitation email into a team. wire.com's SCIM users
+            only store these attributes:
+            - external_id
+            - user_name
+            - display_name
+            - preferred_language (only 2 characters, ISO 639-1)
+            - emails (only one, and only attributes value, type, and primary)
+            - roles (we can't change it, always stores type=member)
+            - active (we can't set it, always false initially until the user
+              accepts the invite)
+
+            Creates a random unique user name and email address to not pollute
+            wire.com's namespace with usernames that others might want to use.
+
+            :param email_attrs: List of attributes for which emails should be
+                generated. For mailPrimaryAddress the attribute itself is set,
+                for others a list is created and the address appended.
+            """
             assert user_index < NUM_TEST_USERS
             unique_user_name = f"univention-test-user-{user_index}-{uuid.uuid4()}"
             properties: dict[str, Any] = {

@@ -19,15 +19,82 @@ There are no known issues at this time.
 
 ## How to Execute
 
-To run the SCIM client, deploy it using the provided Helm chart. See the [SCIM Client chapter in the Nubus Operation Manual](https://docs.software-univention.de/nubus-kubernetes-operation/latest/en/connect-external-iam/scim-client.html) for installation and configuration.
+To run the SCIM client, deploy it using the provided Helm chart. The [SCIM Client chapter in the Nubus Operation Manual](https://docs.software-univention.de/nubus-kubernetes-operation/latest/en/connect-external-iam/scim-client.html) describes how to configure and install the chart.
 
-For Kubernetes deployments, provide a separate PostgreSQL database for each SCIM Client and set `scimClient.config.dbConnectionString` in the Helm values. The chart passes it to the client as `PROVISIONING_DB`.
+For Kubernetes deployments, provide a separate PostgreSQL database for each SCIM Client and set `scimClient.config.dbConnectionString` in the Helm values.
 
 ## Error handling
 
 The client stores provisioning tasks in a database and automatically retries network errors. Other failed tasks are kept in the Morgue for inspection, while processing continues.
 
 Run `univention-scim-connector-task-management --help` inside the client container to see the available commands for inspecting and managing tasks.
+
+## Configuration internals
+
+Here are some details about the SCIM client's configuration for developers.
+
+The scim-client needs credentials to the provisioning API that have an active subscription to the relevant topics. This needs to be done in an external setup by an admin user. For the tests, there are helper functions in `scim_helper.py` that can do this.
+
+The client is configured via environment variables that are read in pydantic settings models.
+
+### General configuration
+
+- `SCIM_SERVER_BASE_URL`: URL of the SCIM server to connect to.
+- `SCIM_AUTH_METHOD`: Authentication method with the SCIM server. One of "none", "oidc", "basic", "bearer". Depending on this, additional configuration becomes necessary.
+- `PROVISIONING_DB`: A connection string to a database that is used to store active and failed tasks.
+- `PROVISIONING_API_BASE_URL`: Base URL for the provisioning API (source data).
+- `PROVISIONING_API_USERNAME`
+- `PROVISIONING_API_PASSWORD`
+- `MAX_ACKNOWLEDGEMENT_RETRIES`: Maximum retries to acknowledge a message in the provisioning API. Default 10.
+- `HEALTH_CHECK_ENABLED`: Whether to do a connection check before each request. true|false, default false.
+- `GROUP_SYNC_ENABLED`: Whether groups should be synchronized to the server. Experimental. true|false, default false.
+- `SCIM_USER_FILTER_ATTRIBUTE`: UDM attribute that must exist on a user and be truthy for the user to be synced. Optional, by default all users are synced.
+- `SCIM_GROUP_FILTER_ATTRIBUTE`: Similar to `SCIM_USER_FILTER_ATTRIBUTE`, but for group sync.
+- `EXTERNAL_ID_USER_MAPPING`: The UDM attribute of a user that gets mapped to `externalId` in the SCIM target. Default unset (no `externalId` is written). Setting this to "univentionObjectIdentifier" often makes sense.
+- `EXTERNAL_ID_GROUP_MAPPING`: Similar to `EXTERNAL_ID_USER_MAPPING` for group sync.
+- `USERNAME_MAPPING`: The UDM attribute of a user that gets mapped to the user name in the SCIM target. Default "username".
+- `LOG_LEVEL`: One of "TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL". Default "INFO".
+
+### Configuration for OIDC authentication
+
+- `SCIM_OIDC_TOKEN_URL`
+- `SCIM_CLIENT_ID`
+- `SCIM_CLIENT_SECRET`
+- `SCIM_SCOPES`: List of strings like '["scope1","scope2"]'.
+
+### Configuration for HTTP basic authentication
+
+- `SCIM_BASIC_AUTH_USERNAME`
+- `SCIM_BASIC_AUTH_PASSWORD`
+
+### Configuration for bearer token authentication
+
+- `SCIM_BEARER_TOKEN`
+
+### LDAP configuration
+
+A connection to the source LDAP is required when group sync is enabled.
+
+- `LDAP_HOST`
+- `LDAP_BIND_DN`
+- `LDAP_BIND_PASSWORD`
+
+### Test configuration
+
+Some environment variables govern how tests are run. They are prefixed with `TESTCONF_`.
+
+- `TESTCONF_UDM_BASE_URL`: Base URL for the UDM in which tests create users and groups.
+- `TESTCONF_UDM_USERNAME`
+- `TESTCONF_UDM_PASSWORD`
+- `TESTCONF_PROVISIONING_API_ADMIN_USERNAME`: Admin username for the provisioning API, used to create/delete subscriptions.
+- `TESTCONF_PROVISIONING_API_ADMIN_PASSWORD`
+- `TESTCONF_UNIVENTION_SCIM_SERVER`: Whether the target system is the Univention SCIM server.
+- `TESTCONF_DOWNSTREAM_UDM_BASE_URL`: When the target system is the Univention SCIM server, base URL of the target UDM (tests need to access it for setup).
+- `TESTCONF_DOWNSTREAM_UDM_USERNAME`
+- `TESTCONF_DOWNSTREAM_UDM_PASSWORD`
+- `TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS`: Whether to run integration tests against the real deployment of wire.com's SCIM server.
+- `TESTCONF_WIRE_COM_SCIM_BEARER_TOKEN`: Bearer token for wire.com integration tests.
+- `TESTCONF_KEYCLOAK_BASE_URL`
 
 ## How to Execute Tests
 
@@ -86,7 +153,7 @@ Note that the `*-reference-server` and `*-univention-server` profiles can't be `
 
 ### Integration tests against the real wire.com SCIM server
 
-There are also integration tests that run against the real deployment of wire.com's SCIM server. These are disabled by default via `TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS=false` because they need a real bearer token for authentication. They create/modify/delete a bunch of users, which equates to inviting users to a wire.com team on the account of the user who owns the bearer token.
+There are also integration tests that run against the real deployment of wire.com's SCIM server. These are disabled by default via `TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS=false` because they need a real bearer token for authentication (created on the wire.com web UI). They create/modify/delete a bunch of users, which equates to inviting users to a wire.com team on the account of the user who owns the bearer token.
 
 To run these tests locally, start the same dependencies as for the regular integration tests (`docker compose --profile dependencies-reference-server up --build`), then
 
