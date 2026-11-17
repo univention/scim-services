@@ -10,7 +10,7 @@ from typing import Any, Self
 
 from faker import Faker
 from faker.providers import address, profile
-from loguru import logger
+from lancelog import logger
 from univention.admin.rest.client import UDM, Module, Object, ShallowObject
 
 from univention.scim.client.helper import cust_pformat

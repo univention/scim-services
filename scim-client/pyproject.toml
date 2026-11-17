@@ -10,6 +10,7 @@ dependencies = [
     "udm-rest-api-client[async]>=0.0.2",
     "scim-udm-transformer-lib",
     "error-handling",
+    "lancelog>=0.3.4",
     "nubus-provisioning-consumer>=0.54.0",
     "scim2-client[httpx2]>=0.13.2,<0.14.0",
     "icecream>=2.2.0",
@@ -37,14 +38,23 @@ dev = [
 ]
 
 [tool.uv.sources]
-nubus-provisioning-consumer = { index = "univention" }
+nubus-provisioning-consumer = { index = "provisioning" }
+lancelog = { index = "lancelog" }
 scim-udm-transformer-lib = { workspace = true }
 scim-server = { workspace = true }
 error-handling = { workspace = true }
 
 [[tool.uv.index]]
-name = "univention"
+name = "provisioning"
 url = "https://git.knut.univention.de/api/v4/projects/882/packages/pypi/simple"
+explicit = true
+default = false
+
+[[tool.uv.index]]
+name = "lancelog"
+url = "https://git.knut.univention.de/api/v4/projects/1449/packages/pypi/simple"
+explicit = true
+default = false
 
 [tool.uv]
 package = true
@@ -64,7 +74,7 @@ env = [
     "D:PROVISIONING_API_PASSWORD = univention",
     "D:PROVISIONING_API_ADMIN_USERNAME = admin",
     "D:PROVISIONING_API_ADMIN_PASSWORD = provisioning",
-    "D:LOG_LEVEL = INFO",
+    "D:LOG_LEVEL = DEBUG",
     "D:MAX_ACKNOWLEDGEMENT_RETRIES = 10",
     "D:UDM_BASE_URL = http://localhost:9979/udm/",
     "D:UDM_USERNAME = cn=admin",

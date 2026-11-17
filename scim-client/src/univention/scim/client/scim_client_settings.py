@@ -4,6 +4,7 @@
 from typing import Annotated
 
 import httpx2
+from lancelog import LogLevel
 from pydantic import HttpUrl, PrivateAttr, UrlConstraints
 from pydantic_settings import BaseSettings
 
@@ -28,6 +29,7 @@ class ScimConsumerSettings(BaseSettings):
     external_id_user_mapping: str | None = None
     external_id_group_mapping: str | None = None
     username_mapping: str | None = None
+    log_level: LogLevel = LogLevel.INFO
     _auth: httpx2.Auth | None = PrivateAttr(default=None)
 
     @property

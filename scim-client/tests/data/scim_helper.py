@@ -8,7 +8,7 @@ from typing import Any, Final, Literal
 
 import httpx2
 from aiohttp import ClientResponseError
-from loguru import logger
+from lancelog import logger
 from univention.provisioning.consumer.api import (
     ProvisioningConsumerClient,
     ProvisioningConsumerClientSettings,

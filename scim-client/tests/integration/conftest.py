@@ -10,7 +10,7 @@ from typing import Any
 import httpx2
 import pytest
 from faker import Faker
-from loguru import logger
+from lancelog import logger
 from univention.admin.rest.client import UDM, Object
 
 from univention.provisioning.error_handling.db import DBSession

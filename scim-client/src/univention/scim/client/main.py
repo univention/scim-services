@@ -4,7 +4,7 @@
 
 import asyncio
 
-from loguru import logger
+from lancelog import logger, setup_logging
 from scim2_client import RequestNetworkException
 from univention.provisioning.consumer.api import (
     MessageHandler,
@@ -20,6 +20,7 @@ from univention.scim.client.scim_http_client import make_scim_client
 
 async def main() -> None:
     settings = get_scim_consumer_settings()
+    setup_logging(level=settings.log_level)
 
     try:
         database = DBSession(settings.provisioning_db)

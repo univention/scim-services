@@ -6,7 +6,7 @@ import json
 import traceback
 from typing import cast
 
-from loguru import logger
+from lancelog import logger
 from scim2_client import RequestNetworkException
 from scim2_models import Resource
 from univention.provisioning.models import Message

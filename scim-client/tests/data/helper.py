@@ -4,7 +4,7 @@
 import multiprocessing
 from typing import Literal
 
-from loguru import logger
+from lancelog import logger
 
 from univention.scim.client.main import run as scim_client_run
 

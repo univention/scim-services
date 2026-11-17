@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2025 Univention GmbH
 
+from lancelog import logger
 from ldap3 import AUTO_BIND_NO_TLS, BASE, SAFE_SYNC, Connection, Server
 from ldap3.core.exceptions import LDAPSessionTerminatedByServerError
-from loguru import logger
 from pydantic_settings import BaseSettings
 
 from univention.scim.client.helper import cust_pformat

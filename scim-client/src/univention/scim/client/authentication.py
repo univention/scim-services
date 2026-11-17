@@ -9,7 +9,7 @@ from collections.abc import Generator
 from enum import StrEnum
 
 import httpx2
-from loguru import logger
+from lancelog import logger
 from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings
 from scim2_models import AuthenticationScheme

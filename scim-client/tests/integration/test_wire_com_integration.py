@@ -13,7 +13,7 @@ import httpx2
 import pytest
 from hamcrest import all_of, anything, assert_that, has_properties, instance_of
 from hamcrest.core.matcher import Matcher
-from loguru import logger
+from lancelog import logger
 from scim2_client.engines.httpx2 import SyncSCIMClient
 from scim2_models import (
     Email,

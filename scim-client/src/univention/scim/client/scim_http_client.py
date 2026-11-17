@@ -5,7 +5,7 @@
 import json
 
 from httpx2 import Auth, Client, HTTPStatusError
-from loguru import logger
+from lancelog import logger
 from pydantic import HttpUrl
 from scim2_client import RequestNetworkException, SCIMClientException
 from scim2_client.engines.httpx2 import SyncSCIMClient
