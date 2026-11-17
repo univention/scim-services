@@ -127,7 +127,8 @@ for example through single sign-on or the application's invitation and password 
    :Nubus UDM properties: ``mailPrimaryAddress``, ``mailAlternativeAddress``, ``e-mail``
    :Mappings: Entries with types ``mailbox``, ``alias``, and ``other``, respectively.
 
-      The client sets ``primary`` to ``false`` for each entry.
+      The client sets ``primary`` to ``true`` for ``mailPrimaryAddress``.
+      It sets ``primary`` to ``false`` for the other entries.
 
 .. _scim-client-schemas-user-attributes-phonenumbers:
 

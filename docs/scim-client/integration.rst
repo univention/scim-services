@@ -269,7 +269,7 @@ see :ref:`scim-client-schemas`.
        {
          "value": "alice@example.org",
          "type": "mailbox",
-         "primary": false
+         "primary": true
        }
      ]
    }
