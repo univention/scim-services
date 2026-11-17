@@ -91,7 +91,7 @@ def expected_user_for_udm_user(udm_user: Object, **override_properties) -> Match
 )
 @pytest.mark.wire_com_integration_tests
 class TestWireComIntegration:
-    @pytest.fixture
+    @pytest.fixture(scope="session")
     def wire_com_scim_bearer_token(self):
         return os.environ["TESTCONF_WIRE_COM_SCIM_BEARER_TOKEN"]
 
@@ -102,7 +102,7 @@ class TestWireComIntegration:
         monkeypatch.setenv("SCIM_AUTH_METHOD", AuthMethod.BEARER)
         monkeypatch.setenv("SCIM_BEARER_TOKEN", wire_com_scim_bearer_token)
 
-    @pytest.fixture
+    @pytest.fixture(scope="session")
     def independent_client(self, wire_com_scim_bearer_token):
         auth = BearerAuth(BearerAuthSettings(scim_bearer_token=wire_com_scim_bearer_token))
         http_client = httpx2.Client(
@@ -121,8 +121,9 @@ class TestWireComIntegration:
         existing_test_users = [get_user(user_index) for user_index in range(NUM_TEST_USERS)]
         if any(existing_test_users):
             logger.warning(
-                f"Found existing test users {existing_test_users}. Is there another test going on right now? We'll "
-                "wait a while to let it finish."
+                "Found existing test users. Is there another test going on right now? We'll wait a while to let it "
+                "finish.",
+                existing_users=existing_test_users,
             )
             time.sleep(60)
             existing_test_users = [get_user(user_index) for user_index in range(NUM_TEST_USERS)]
@@ -141,7 +142,7 @@ class TestWireComIntegration:
         # After the test, clean up all test users that still exist at wire.com.
         for user in [get_user(user_index) for user_index in range(NUM_TEST_USERS)]:
             if user:
-                logger.info(f"Deleting user {user.external_id} after tests.")
+                logger.info("Deleting user after tests.", user_external_id=user.external_id)
                 independent_client.delete(user)
 
     @pytest.fixture
@@ -251,7 +252,9 @@ class TestWireComIntegration:
                     while True:
                         morgue = await asyncio.to_thread(list, database.get_errors(object_id))
                         if len(morgue) > 1:
-                            logger.warning(f"Found {len(morgue)} entries in the morgue for {object_id}.")
+                            logger.warning(
+                                "Found more than one entry in the morgue.", object_id=object_id, num_entries=len(morgue)
+                            )
                         if morgue:
                             return
                         await asyncio.sleep(0.01)
@@ -416,7 +419,6 @@ class TestWireComIntegration:
         self,
         udm_object_janitor: UDMObjectJanitor,
         make_wire_com_user_properties: UserPropertiesFactory,
-        wait_for_user_to_exist: Callable[[int], Awaitable[User]],
         wait_for_morgue_entry: Callable[[Object], Awaitable[None]],
     ):
         async with BackgroundConsumer(), udm_object_janitor:
