@@ -98,8 +98,8 @@ def wait_for_resource_deleted(
 async def create_provisioning_subscription() -> None:
     admin_settings = ProvisioningConsumerClientSettings(
         provisioning_api_base_url=os.environ["PROVISIONING_API_BASE_URL"],
-        provisioning_api_username=os.environ["PROVISIONING_API_ADMIN_USERNAME"],
-        provisioning_api_password=os.environ["PROVISIONING_API_ADMIN_PASSWORD"],
+        provisioning_api_username=os.environ["TESTCONF_PROVISIONING_API_ADMIN_USERNAME"],
+        provisioning_api_password=os.environ["TESTCONF_PROVISIONING_API_ADMIN_PASSWORD"],
         log_level="DEBUG",
     )
     async with ProvisioningConsumerClient(admin_settings) as admin_client:
@@ -128,8 +128,8 @@ def create_provisioning_subscription_sync() -> None:
 async def delete_provisioning_subscription() -> None:
     admin_settings = ProvisioningConsumerClientSettings(
         provisioning_api_base_url=os.environ["PROVISIONING_API_BASE_URL"],
-        provisioning_api_username=os.environ["PROVISIONING_API_ADMIN_USERNAME"],
-        provisioning_api_password=os.environ["PROVISIONING_API_ADMIN_PASSWORD"],
+        provisioning_api_username=os.environ["TESTCONF_PROVISIONING_API_ADMIN_USERNAME"],
+        provisioning_api_password=os.environ["TESTCONF_PROVISIONING_API_ADMIN_PASSWORD"],
         log_level="DEBUG",
     )
     async with ProvisioningConsumerClient(admin_settings) as admin_client:

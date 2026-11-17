@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-# SPDX-FileCopyrightText: 2025 Univention GmbH
+# SPDX-FileCopyrightText: 2026 Univention GmbH
 
+import os
 from collections.abc import Generator
 
 import pytest
@@ -13,6 +14,11 @@ from ..data.scim_helper import capture_authorization_header
 
 AUDIENCE = "nubus-scim"
 REALM = "master"
+
+
+@pytest.fixture(scope="session")
+def keycloak_base_url() -> str:
+    return os.environ["TESTCONF_KEYCLOAK_BASE_URL"]
 
 
 @pytest.fixture(scope="session")

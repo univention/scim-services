@@ -72,13 +72,8 @@ env = [
     "D:PROVISIONING_API_BASE_URL = http://localhost:7777/",
     "D:PROVISIONING_API_USERNAME = scim-client",
     "D:PROVISIONING_API_PASSWORD = univention",
-    "D:PROVISIONING_API_ADMIN_USERNAME = admin",
-    "D:PROVISIONING_API_ADMIN_PASSWORD = provisioning",
     "D:LOG_LEVEL = DEBUG",
     "D:MAX_ACKNOWLEDGEMENT_RETRIES = 10",
-    "D:UDM_BASE_URL = http://localhost:9979/udm/",
-    "D:UDM_USERNAME = cn=admin",
-    "D:UDM_PASSWORD = univention",
     "D:LDAP_HOST = localhost",
     "D:LDAP_BIND_DN = cn=admin,dc=univention-organization,dc=intranet",
     "D:LDAP_BIND_PASSWORD = univention",
@@ -87,7 +82,13 @@ env = [
     "D:USERNAME_MAPPING = username",
     "D:SCIM_AUTH_METHOD = none",
     "D:GROUP_SYNC_ENABLED = true",
-    "D:KEYCLOAK_BASE_URL = http://localhost:5050",
+    # Variables used only for testing.
+    "D:TESTCONF_UDM_BASE_URL = http://localhost:9979/udm/",
+    "D:TESTCONF_UDM_USERNAME = cn=admin",
+    "D:TESTCONF_UDM_PASSWORD = univention",
+    "D:TESTCONF_PROVISIONING_API_ADMIN_USERNAME = admin",
+    "D:TESTCONF_PROVISIONING_API_ADMIN_PASSWORD = provisioning",
+    "D:TESTCONF_KEYCLOAK_BASE_URL = http://localhost:5050",
     # Whether to run wire.com integration tests. Running them requires a bearer
     # token configured via TESTCONF_WIRE_COM_SCIM_BEARER_TOKEN.
     "D:TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS = false",

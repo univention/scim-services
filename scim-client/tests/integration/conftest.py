@@ -62,7 +62,9 @@ def using_univention_scim_server() -> bool:
 @pytest.fixture(scope="session")
 def udm_client() -> UDM:
     logger.info("Create udm_client.")
-    udm = UDM.http(os.environ["UDM_BASE_URL"], os.environ["UDM_USERNAME"], os.environ["UDM_PASSWORD"])
+    udm = UDM.http(
+        os.environ["TESTCONF_UDM_BASE_URL"], os.environ["TESTCONF_UDM_USERNAME"], os.environ["TESTCONF_UDM_PASSWORD"]
+    )
 
     return udm
 
@@ -182,11 +184,6 @@ def udm_object_janitor(udm_client: UDM) -> UDMObjectJanitor:
 @pytest.fixture(scope="session")
 def scim_server_base_url() -> str:
     return os.environ["SCIM_SERVER_BASE_URL"]
-
-
-@pytest.fixture(scope="session")
-def keycloak_base_url() -> str:
-    return os.environ["KEYCLOAK_BASE_URL"]
 
 
 @pytest.fixture(scope="session")
