@@ -303,3 +303,15 @@ class TestWireComScimClient:
         with pytest.raises(SCIMException) as excinfo:
             client.get_resource(str(external_id), User)
         assert excinfo.value.detail == response
+
+    def test_get_resource_with_invalid_uuid(self, client: shc.WireComScimClient, httpserver: HTTPServer):
+        """
+        Another test with non-JSON responses that actually happens.
+        """
+        not_a_uuid = "not_a_uuid"
+        response = "invalid UUID"
+        httpserver.expect_request(f"/Users/{not_a_uuid}", method="DELETE").respond_with_data(response, status=400)
+
+        with pytest.raises(SCIMException) as excinfo:
+            client.delete_resource(not_a_uuid, User)
+        assert excinfo.value.detail == response
