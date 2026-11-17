@@ -197,6 +197,20 @@ test-scim-server-and-client-integration:
   script:
     - docker compose --profile test-univention-server run --quiet-pull --name test-integration-scim-services test-against-univention-server
 
+test-scim-client-and-wire-com-integration:
+  extends: ".compose-test"
+  stage: test
+  rules:
+    - when: manual
+      allow_failure: true
+  variables:
+    COMPOSE_TEST_DIR: "scim-client/tests"
+    COMPOSE_FILE: "docker-compose.yaml:docker-compose.ci.yaml"
+    COMPOSE_PROFILES: "dependencies-reference-server"
+    COMPOSE_TEST_WAIT_TIMEOUT: "180"
+  script:
+    - docker compose --profile test-reference-server run --quiet-pull --name test-scim-client-against-wire-com test-against-wire-com
+
 sonarqube-scan:
   stage: analysis
   # needs:
