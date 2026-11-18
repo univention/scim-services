@@ -45,18 +45,18 @@ def using_univention_scim_server() -> bool:
     own server implementation. The latter needs some extra setup in the
     downstream UDM (the separate UDM the server is connected to).
     """
-    if "TESTCONF_UNIVENTION_SCIM_SERVER" not in os.environ:
+    using_univention_scim_server_str = os.environ.get("TESTCONF_UNIVENTION_SCIM_SERVER")
+    if using_univention_scim_server_str is None:
         return False
-    try:
-        assert os.environ["TESTCONF_UNIVENTION_SCIM_SERVER"].lower() in ["true", "false"]
-        assert "TESTCONF_DOWNSTREAM_UDM_BASE_URL" in os.environ
-        assert "TESTCONF_DOWNSTREAM_UDM_USERNAME" in os.environ
-        assert "TESTCONF_DOWNSTREAM_UDM_PASSWORD" in os.environ
-    except KeyError:
-        return False
-    except AssertionError as e:
-        raise ValueError("invalid configuration of TESTCONF_UNIVENTION_SCIM_SERVER") from e
-    return os.environ["TESTCONF_UNIVENTION_SCIM_SERVER"].lower() == "true"
+    if (
+        using_univention_scim_server_str.lower() not in ["true", "false"]
+        # If we're using the univention SCIM server, the downstream UDM must be configured.
+        or "TESTCONF_DOWNSTREAM_UDM_BASE_URL" not in os.environ
+        or "TESTCONF_DOWNSTREAM_UDM_USERNAME" not in os.environ
+        or "TESTCONF_DOWNSTREAM_UDM_PASSWORD" not in os.environ
+    ):
+        raise ValueError("invalid configuration of TESTCONF_UNIVENTION_SCIM_SERVER")
+    return using_univention_scim_server_str.lower() == "true"
 
 
 @pytest.fixture(scope="session")
