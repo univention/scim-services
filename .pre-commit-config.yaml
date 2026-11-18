@@ -87,6 +87,7 @@ repos:
       - id: "conventional-pre-commit"
         name: "Conventional Commit"
         stages: ["commit-msg"]
+        args: [--strict]
 
   - repo: "https://github.com/norwoodj/helm-docs"
     rev: "v1.12.0"
