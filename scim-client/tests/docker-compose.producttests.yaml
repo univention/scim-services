@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-FileCopyrightText: 2026 Univention GmbH
+
+networks:
+  scim-client-test:
+  nubus-provisioning:
+    external: true
+  keycloak_appcenter_net:
+    external: true
+
+x-service-override-config: &x-service-override-config
+  environment:
+    PROVISIONING_API_BASE_URL: "${PROVISIONING_API_BASE_URL}"
+    LDAP_HOST: "${LDAP_HOST}"
+    LDAP_BIND_DN: "${LDAP_BIND_DN}"
+    LDAP_BIND_PASSWORD: "${LDAP_BIND_PASSWORD}"
+    TESTCONF_UDM_BASE_URL: "${TESTCONF_UDM_BASE_URL}"
+    TESTCONF_UDM_USERNAME: "${TESTCONF_UDM_USERNAME}"
+    TESTCONF_UDM_PASSWORD: "${TESTCONF_UDM_PASSWORD}"
+    TESTCONF_PROVISIONING_API_ADMIN_PASSWORD: "${TESTCONF_PROVISIONING_API_ADMIN_PASSWORD}"
+    TESTCONF_KEYCLOAK_BASE_URL: "${TESTCONF_KEYCLOAK_BASE_URL}"
+    TESTCONF_KEYCLOAK_ADMIN_PASSWORD: "${TESTCONF_KEYCLOAK_ADMIN_PASSWORD}"
+    REQUESTS_CA_BUNDLE: /usr/local/share/ca-certificates/ucs-root-ca.crt
+  volumes:
+    - "/var/www/ucs-root-ca.crt:/usr/local/share/ca-certificates/ucs-root-ca.crt:ro"
+  networks:
+    - "scim-client-test"
+    - "nubus-provisioning"
+    - "keycloak_appcenter_net"
+
+services:
+  downstream-udm-rest-api:
+    networks:
+      - "scim-client-test"
+
+  downstream-ldap-server:
+    networks:
+      - "scim-client-test"
+
+  scim-server-univention:
+    networks:
+      - "scim-client-test"
+
+  scim-server-reference:
+    networks:
+      - "scim-client-test"
+
+  test-against-wire-com:
+    <<: *x-service-override-config
+
+  test-against-reference-server:
+    <<: *x-service-override-config
+
+  test-against-univention-server:
+    <<: *x-service-override-config
