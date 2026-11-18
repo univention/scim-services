@@ -27,3 +27,4 @@ __pycache__/
 /provisioning-api.logs
 /udm-listener.logs
 .vscode/
+.zed/
