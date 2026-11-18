@@ -326,10 +326,16 @@ set :envvar:`scimClient.config.externalIdUserMapping` to the UDM property
 that provides the identifier required by your Wire sign-in setup:
 
 * For SAML single sign-on, the mapped ``externalId`` must match the user's SAML ``NameID``.
-* For email and password authentication, the mapped ``externalId`` must be the user's email address.
+* For email and password authentication, Wire's documentation says that the mapped ``externalId``
+  must be the user's email address.
 
   For example, set :envvar:`scimClient.config.externalIdUserMapping` to ``mailPrimaryAddress``
   if that UDM property contains the user's Wire sign-in address.
+
+  However, we have found that Wire still accepts users with ``externalId`` set to something else
+  like ``univentionObjectIdentifier``, as long as the user has an email address. The email address
+  that is used is taken, in order of preference, from the UDM properties ``mailPrimaryAddress``,
+  ``mailAlternativeAddress``, or ``e-mail``.
 
 Make sure that the selected Nubus users
 also meet the username and display name requirements
