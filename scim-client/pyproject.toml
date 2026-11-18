@@ -89,6 +89,7 @@ env = [
     "D:TESTCONF_PROVISIONING_API_ADMIN_USERNAME = admin",
     "D:TESTCONF_PROVISIONING_API_ADMIN_PASSWORD = provisioning",
     "D:TESTCONF_KEYCLOAK_BASE_URL = http://localhost:5050",
+    "D:TESTCONF_KEYCLOAK_ADMIN_PASSWORD = univention",
     # Whether to run wire.com integration tests. Running them requires a bearer
     # token configured via TESTCONF_WIRE_COM_SCIM_BEARER_TOKEN.
     "D:TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS = false",

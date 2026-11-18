@@ -45,6 +45,7 @@ x-test-against-reference-server: &test-against-reference-server-template
     TESTCONF_PROVISIONING_API_ADMIN_USERNAME: admin
     TESTCONF_PROVISIONING_API_ADMIN_PASSWORD: provisioning
     TESTCONF_KEYCLOAK_BASE_URL: "http://keycloak:8080"
+    TESTCONF_KEYCLOAK_ADMIN_PASSWORD: "univention"
     TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS: "false"
 
 services:
@@ -494,6 +495,7 @@ services:
       TESTCONF_PROVISIONING_API_ADMIN_USERNAME: admin
       TESTCONF_PROVISIONING_API_ADMIN_PASSWORD: provisioning
       TESTCONF_KEYCLOAK_BASE_URL: "http://keycloak:8080"
+      TESTCONF_KEYCLOAK_ADMIN_PASSWORD: "univention"
       TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS: "false"
       #
       # Configuration for tests with Univention SCIM server
@@ -517,4 +519,3 @@ services:
 volumes:
   ldap-shared-data:
   ldap-shared-run:
-  pre-commit-cache:

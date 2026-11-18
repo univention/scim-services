@@ -22,6 +22,11 @@ def keycloak_base_url() -> str:
 
 
 @pytest.fixture(scope="session")
+def keycloak_admin_password() -> str:
+    return os.environ["TESTCONF_KEYCLOAK_ADMIN_PASSWORD"]
+
+
+@pytest.fixture(scope="session")
 def authenticator_settings(keycloak_base_url: str) -> OidcAuthSettings:
     return OidcAuthSettings(
         scim_client_id="scim-client-test-client",
@@ -32,11 +37,11 @@ def authenticator_settings(keycloak_base_url: str) -> OidcAuthSettings:
 
 
 @pytest.fixture(scope="session")
-def keycloak_admin(keycloak_base_url: str) -> KeycloakAdmin:
+def keycloak_admin(keycloak_base_url: str, keycloak_admin_password: str) -> KeycloakAdmin:
     keycloak_admin = KeycloakAdmin(
         server_url=keycloak_base_url,
         username="admin",
-        password="univention",
+        password=keycloak_admin_password,
         realm_name=REALM,
         verify=True,
     )

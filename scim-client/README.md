@@ -95,6 +95,7 @@ Some environment variables govern how tests are run. They are prefixed with `TES
 - `TESTCONF_RUN_WIRE_COM_INTEGRATION_TESTS`: Whether to run integration tests against the real deployment of wire.com's SCIM server.
 - `TESTCONF_WIRE_COM_SCIM_BEARER_TOKEN`: Bearer token for wire.com integration tests.
 - `TESTCONF_KEYCLOAK_BASE_URL`
+- `TESTCONF_KEYCLOAK_ADMIN_PASSWORD`
 
 ## How to Execute Tests
 

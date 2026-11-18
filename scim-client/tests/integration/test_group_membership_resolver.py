@@ -18,10 +18,9 @@ def test_get_univention_object_identifier_by_dn(
     group_membership_resolver: GroupMembershipLdapResolver, udm_client: UDM, user_data: dict[str, Any]
 ) -> None:
     udm_user = create_udm_user(udm_client=udm_client, user_data=user_data)
+    assert udm_user.dn is not None
 
-    univention_object_identifier = group_membership_resolver.get_univention_object_identifier_by_dn(
-        f"uid={user_data['username']},cn=users,dc=univention-organization,dc=intranet"
-    )
+    univention_object_identifier = group_membership_resolver.get_univention_object_identifier_by_dn(udm_user.dn)
 
     assert univention_object_identifier == udm_user.properties.get("univentionObjectIdentifier")
 
@@ -37,6 +36,7 @@ def test_get_user(
     mocker: MockerFixture,
 ) -> None:
     udm_user = create_udm_user(udm_client=udm_client, user_data=user_data)
+    assert udm_user.dn is not None
     assert wait_for_resource_exists(
         scim_http_client=scim_http_client,
         udm_object=udm_user,
