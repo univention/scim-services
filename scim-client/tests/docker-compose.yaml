@@ -433,7 +433,7 @@ services:
       start_period: 15s
 
   keycloak:
-    image: artifacts.software-univention.de/nubus-dev/images/keycloak:0.2.0-post-main
+    image: artifacts.software-univention.de/nubus-dev/images/keycloak:26.8.2-nubus1
     container_name: keycloak-test
     profiles:
       - dependencies-univention-server

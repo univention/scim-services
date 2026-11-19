@@ -65,7 +65,7 @@ def audience_client_scope(keycloak_admin: KeycloakAdmin) -> Generator[str, None,
         "protocol": "openid-connect",
         "protocolMapper": "oidc-audience-mapper",
         "config": {
-            "included.client.audience": AUDIENCE,
+            "included.custom.audience": AUDIENCE,
             "access.token.claim": "true",
         },
     }
