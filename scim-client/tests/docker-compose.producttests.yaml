@@ -1,6 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # SPDX-FileCopyrightText: 2026 Univention GmbH
 
+# This compose file serves as an override file for the product tests running on
+# Jenkins. It changes the test services to take the configuration from the
+# environment so the Jenkins job can set them accordingly. It also attaches
+# the relevant services to networks of services running on the UCS machine (it
+# makes a few assumtions here about what they're called).
+
 networks:
   scim-client-test:
   nubus-provisioning:
