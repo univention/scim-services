@@ -40,7 +40,7 @@ generate-docs-pipeline-config:
       --out generated-config-doc.yml
   rules:
     - changes: &changes-docs
-        - "docs/**/*"
+        - "docs/scim-client/**/*"
   artifacts:
     paths:
       - generated-config-doc.yml
