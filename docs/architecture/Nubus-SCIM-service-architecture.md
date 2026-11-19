@@ -222,7 +222,7 @@ We will implement this in the following way:
 - `externalId`
   - The UDM property for the mapping is configurable.
     - See section _Scoping of `externalId`_ for an additional configuration requirement.
-    - The customer "BaWü" wants us to map `externalId` to the UDM property `dapExternalIdentifier`.
+    - For example, a customer may want to map `externalId` to a custom UDM property (extended attribute).
   - The format will be a `String` without further limitations.
 
 #### Scoping of `externalId`

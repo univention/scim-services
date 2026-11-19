@@ -26,7 +26,7 @@
 - `Uni:Core`: Abbreviation for the custom SCIM schema `urn:ietf:params:scim:schemas:extension:Univention:1.0:Core`
 - `Uni:User`: Abbreviation for the custom SCIM schema `urn:ietf:params:scim:schemas:extension:Univention:1.0:User`
 - `Uni:Group`: Abbreviation for the custom SCIM schema `urn:ietf:params:scim:schemas:extension:Univention:1.0:Group`
-- `BaWü:User`: Abbreviation for the custom SCIM schema `urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User`
+- `Customer1:User`: Abbreviation for the custom SCIM schema `urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User`
 
 | UDM REST API field                | avail    | type                 | SCIM attribute     | avail    | type            | RFC 7643          | Comment   | MS | Impl |
 |-----------------------------------|----------|----------------------|--------------------|----------|-----------------|-------------------|-----------|----|------|
@@ -55,7 +55,7 @@
 - ~~(*3) **TODO:** Discuss if we want this LDAP specific data to be available in SCIM (in a read-only field in a Univention custom schema).~~
 - (*4) This mapping is configurable. By default, there is _no mapping_.
   - For details see [section "Identifiers" of the architecture overview page](architecture/Nubus-SCIM-service-architecture.md#identifiers).
-  - Customer "BaWü" wants us to map `externalId` to the UDM property `dapExternalIdentifier`.
+  - For example, a customer may want to map `externalId` to a custom UDM property (extended attribute).
 - (*5) Static rewrite of `users/user` to `User` and `groups/group` to `Group`.
 - (*6) Values are _not_ synchronized. Each REST service generates them on their own. Just mentioned here, as they are the equivalent of one another.
 - (*7) Already provided in MS1, although only required in MS2.
@@ -216,8 +216,8 @@
 | certificateDateNotAfter                            | optional | string or DateTime       | -                                          | -        | -                                              |          | (*1)         |    |      |
 | certificateVersion                                 | optional | string                   | -                                          | -        | -                                              |          | (*1)         |    |      |
 | certificateSerial                                  | optional | string                   | -                                          | -        | -                                              |          | (*1)         |    |      |
-| primaryOrgUnit (*23)                               | optional | string                   | BaWü:User .primaryOrgUnit                  | optional | string                                         |          | (*23)        | 1  | -    |
-| secondaryOrgUnits (*23)                            | optional | list of string           | BaWü:User .secondaryOrgUnits               | optional | list of string                                 |          | (*23)        | 1  | -    |
+| primaryOrgUnit (*23)                               | optional | string                   | Customer1:User .primaryOrgUnit             | optional | string                                         |          | (*23)        | 1  | -    |
+| secondaryOrgUnits (*23)                            | optional | list of string           | Customer1:User .secondaryOrgUnits          | optional | list of string                                 |          | (*23)        | 1  | -    |
 
 - (*1) **TODO:** Discuss if we want to map this field, adding either a field to a Univention custom SCIM schema or a UDM extended attribute.
 - (*2) Postal addresses in SCIM are stored in a list of complex in the field `addresses`.
@@ -310,8 +310,8 @@
 - (*21) Map the `gidNumber` (primary Group) to the entry in `User.groups` with `User.groups.primary=True`.
 - (*22) Create a new standard UDM property for `users/user` ([here](https://git.knut.univention.de/univention/dev/ucs/-/blob/5.2-1/management/univention-directory-manager-modules/modules/univention/admin/handlers/users/user.py?ref_type=heads#L99)).
   Requested by openDesk. It will be needed for the Portal and other applications in the future, too.
-- (*23) `primaryOrgUnit` and `secondaryOrgUnits` are UDM extended attributes that customer BaWü requires in SCIM.
-  - In MS1 we will create and deliver a custom SCIM schema and mapping for BaWü with the SCIM server software.
+- (*23) `primaryOrgUnit` and `secondaryOrgUnits` are UDM extended attributes that a customer requires in SCIM.
+  - In MS1 we will create and deliver a custom SCIM schema and mapping for this customer with the SCIM server software.
     The goal of MS1 is for the customer to test the servie. Thus, although this is a customer extension, we'll deliver it.
     - We will need to create those UDM extended attributes for testing.
       This can be done with the UDM module `settings/extended_attribute`.

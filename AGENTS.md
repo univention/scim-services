@@ -157,8 +157,8 @@ The full mapping table is in `docs/udm-scim-mapping.md`. The `MS` column in thos
 | `roles[type="guardian-direct"]` | `guardianRoles[]` | |
 | `roles[type="guardian-indirect"]` | `guardianInheritedRoles[]` | Read-only |
 | `Uni:User.description` | `description` | Univention User extension |
-| `BaWü:User.primaryOrgUnit` | `primaryOrgUnit` | Customer extension (deprecated) |
-| `BaWü:User.secondaryOrgUnits` | `secondaryOrgUnits` | Customer extension (deprecated) |
+| `Customer1:User.primaryOrgUnit` | `primaryOrgUnit` | Customer extension (deprecated) |
+| `Customer1:User.secondaryOrgUnits` | `secondaryOrgUnits` | Customer extension (deprecated) |
 | Group `displayName` | `name` | |
 | Group `members[type="User"]` | `users[]` | DNs resolved to UUIDs |
 | Group `members[type="Group"]` | `nestedGroup[]` | DNs resolved to UUIDs |
@@ -178,7 +178,7 @@ The server serves the following schema URNs. The model classes live in `scim-ser
 | `urn:ietf:params:scim:schemas:core:2.0:User` | User | RFC 7643 core |
 | `urn:ietf:params:scim:schemas:extension:enterprise:2.0:User` | User | RFC 7643 enterprise extension |
 | `urn:ietf:params:scim:schemas:extension:Univention:1.0:User` | User | Univention custom (description, passwordRecoveryEmail) |
-| `urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User` | User | **Deprecated** — BaWü/DapUser customer extension; requires extended LDAP attributes |
+| `urn:ietf:params:scim:schemas:extension:UniventionUser:2.0:User` | User | **Deprecated** — customer extension (`Customer1User`); requires extended LDAP attributes |
 | `urn:ietf:params:scim:schemas:core:2.0:Group` | Group | RFC 7643 core |
 | `urn:ietf:params:scim:schemas:extension:Univention:1.0:Group` | Group | Univention custom (description, guardianMemberRoles) |
 
