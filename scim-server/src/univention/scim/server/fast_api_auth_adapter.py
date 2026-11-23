@@ -3,7 +3,7 @@
 
 from typing import Any
 
-from fastapi import Request
+from fastapi.requests import HTTPConnection
 from fastapi.security import OAuth2AuthorizationCodeBearer
 
 from univention.scim.server.authn.authn import Authentication
@@ -22,7 +22,7 @@ class FastAPIAuthAdapter(OAuth2AuthorizationCodeBearer):
         self.authentication = authentication
         self.authorization = authorization
 
-    async def __call__(self, request: Request) -> Any:
+    async def __call__(self, request: HTTPConnection) -> Any:
         token: str | None = await super().__call__(request)
 
         user_data = await self.authentication.authenticate(token)

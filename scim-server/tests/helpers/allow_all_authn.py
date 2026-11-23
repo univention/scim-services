@@ -3,7 +3,7 @@
 
 from typing import Any
 
-from fastapi import Request
+from fastapi.requests import HTTPConnection
 from jwcrypto.jwk import JWKSet
 
 from univention.scim.server.authn.authn import Authentication
@@ -39,7 +39,7 @@ class AllowAllAuthorization(Authorization):
     This is a placeholder implementation for development purposes.
     """
 
-    async def authorize(self, request: Request, user: dict[str, Any]) -> bool:
+    async def authorize(self, request: HTTPConnection, user: dict[str, Any]) -> bool:
         """
         Authorize a request.
         Args:

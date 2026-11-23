@@ -3,7 +3,8 @@
 
 from typing import Any
 
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException, status
+from fastapi.requests import HTTPConnection
 from loguru import logger
 
 from univention.scim.server.authz.authz import Authorization
@@ -17,7 +18,7 @@ class AllowAudience(Authorization):
     def __init__(self, audience: str):
         self.audience = audience
 
-    async def authorize(self, request: Request, user: dict[str, Any]) -> bool:
+    async def authorize(self, request: HTTPConnection, user: dict[str, Any]) -> bool:
         """
         Authorize a request.
         Args:

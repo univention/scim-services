@@ -4,7 +4,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from fastapi import Request
+from fastapi.requests import HTTPConnection
 
 
 class Authorization(ABC):
@@ -13,7 +13,7 @@ class Authorization(ABC):
     """
 
     @abstractmethod
-    async def authorize(self, request: Request, user: dict[str, Any]) -> bool:
+    async def authorize(self, request: HTTPConnection, user: dict[str, Any]) -> bool:
         """
         Authorize a request.
         Args:
