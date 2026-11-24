@@ -23,6 +23,7 @@ Resources and discovery
 The *SCIM Client* provisions ``User`` resources
 and ``Group`` resources if the operator enables :envvar:`scimClient.config.groupSync`.
 By default, the *SCIM Client* doesn't provision groups.
+Group provisioning is experimental.
 A target that receives only users doesn't need to provide group provisioning.
 For more information,
 see :ref:`scim-client-configuration-selection`.
@@ -48,6 +49,9 @@ Advertise the resources and attributes that your application supports.
 The client uses the discovered schemas and attribute mutability to build requests.
 It logs warnings when it can't discover capabilities
 or the target doesn't advertise a capability it needs.
+If a network failure occurs during startup,
+the client attempts discovery again during task processing.
+Other discovery errors can prevent the client from starting.
 For the supported attributes and extensions, see :ref:`scim-client-schemas`.
 
 .. _scim-client-target-integration-requirements-auth:
@@ -199,7 +203,8 @@ as the URL-encoded ``filter`` query parameter on ``/Users``.
 
    externalId eq "11111111-2222-4333-8444-555555555555"
 
-The target must support this equality filter
+The target must accept ``externalId`` when creating a resource.
+It must also support this equality filter
 and return a SCIM ``ListResponse`` that contains ``totalResults`` and ``Resources``.
 Return the target-assigned ``id`` and the stored ``externalId`` in each matching resource.
 :numref:`scim-client-integration-lookup-listing` shows a shortened example of a matching response.
